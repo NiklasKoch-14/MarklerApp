@@ -1,0 +1,1280 @@
+openapi: 3.0.3
+info:
+  title: Real Estate CRM API
+  description: |
+    RESTful API for Real Estate CRM System supporting bilingual operation (German/English),
+    client management, property listings, and call notes with GDPR compliance.
+  version: 1.0.0
+  contact:
+    name: MarklerApp Development Team
+    email: dev@marklerapp.com
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+  - url: https://api.marklerapp.com/v1
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+paths:
+  # Authentication Endpoints
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Agent login
+      description: Authenticate agent and return JWT token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "agent@example.com"
+                password:
+                  type: string
+                  format: password
+                  example: "SecurePass123!"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  agent:
+                    $ref: '#/components/schemas/Agent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Refresh JWT token
+      description: Get new JWT token using refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # Agent Profile Endpoints
+  /agents/profile:
+    get:
+      tags: [Agents]
+      summary: Get current agent profile
+      description: Retrieve authenticated agent's profile information
+      responses:
+        '200':
+          description: Agent profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      tags: [Agents]
+      summary: Update agent profile
+      description: Update authenticated agent's profile information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentUpdateRequest'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # Client Management Endpoints
+  /clients:
+    get:
+      tags: [Clients]
+      summary: List clients
+      description: Get paginated list of clients for authenticated agent
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: search
+          in: query
+          description: Search in client name, email, phone
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: Sort field and direction (e.g., "lastName,asc")
+          schema:
+            type: string
+            default: "lastName,asc"
+      responses:
+        '200':
+          description: Clients retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientPageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Clients]
+      summary: Create new client
+      description: Create new client profile with GDPR consent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientCreateRequest'
+      responses:
+        '201':
+          description: Client created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /clients/{clientId}:
+    get:
+      tags: [Clients]
+      summary: Get client details
+      description: Retrieve detailed client information including search criteria
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Client details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      tags: [Clients]
+      summary: Update client
+      description: Update client information
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientUpdateRequest'
+      responses:
+        '200':
+          description: Client updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    delete:
+      tags: [Clients]
+      summary: Delete client
+      description: Delete client (GDPR compliant - anonymizes data)
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Client deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /clients/{clientId}/search-criteria:
+    put:
+      tags: [Clients]
+      summary: Update client search criteria
+      description: Update or create property search preferences for client
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PropertySearchCriteriaRequest'
+      responses:
+        '200':
+          description: Search criteria updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PropertySearchCriteria'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # Property Management Endpoints
+  /properties:
+    get:
+      tags: [Properties]
+      summary: List properties
+      description: Get paginated list of properties for authenticated agent
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: search
+          in: query
+          description: Search in property title, address
+          schema:
+            type: string
+        - name: propertyType
+          in: query
+          schema:
+            $ref: '#/components/schemas/PropertyType'
+        - name: minPrice
+          in: query
+          schema:
+            type: number
+        - name: maxPrice
+          in: query
+          schema:
+            type: number
+        - name: minSquareMeters
+          in: query
+          schema:
+            type: integer
+        - name: maxSquareMeters
+          in: query
+          schema:
+            type: integer
+        - name: isActive
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Properties retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PropertyPageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Properties]
+      summary: Create new property
+      description: Create new property listing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PropertyCreateRequest'
+      responses:
+        '201':
+          description: Property created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /properties/{propertyId}:
+    get:
+      tags: [Properties]
+      summary: Get property details
+      description: Retrieve detailed property information including images
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Property details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PropertyDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      tags: [Properties]
+      summary: Update property
+      description: Update property information
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PropertyUpdateRequest'
+      responses:
+        '200':
+          description: Property updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /properties/{propertyId}/images:
+    post:
+      tags: [Properties]
+      summary: Upload property image
+      description: Upload image for property listing (max 10MB)
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                altText:
+                  type: string
+                  maxLength: 200
+                isPrimary:
+                  type: boolean
+                  default: false
+      responses:
+        '201':
+          description: Image uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PropertyImage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /properties/{propertyId}/images/{imageId}:
+    delete:
+      tags: [Properties]
+      summary: Delete property image
+      description: Remove image from property listing
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: imageId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Image deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # Call Notes Endpoints
+  /clients/{clientId}/call-notes:
+    get:
+      tags: [Call Notes]
+      summary: List client call notes
+      description: Get chronological list of call notes for specific client
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: fromDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Call notes retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallNotePageResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Call Notes]
+      summary: Create call note
+      description: Document new client interaction
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallNoteCreateRequest'
+      responses:
+        '201':
+          description: Call note created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallNote'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /clients/{clientId}/call-notes/summary:
+    get:
+      tags: [Call Notes]
+      summary: Generate call notes summary
+      description: Create automated summary of all call notes for client
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: fromDate
+          in: query
+          description: Include notes from this date
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          description: Include notes until this date
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Summary generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  clientId:
+                    type: string
+                    format: uuid
+                  clientName:
+                    type: string
+                  totalNotes:
+                    type: integer
+                  dateRange:
+                    type: object
+                    properties:
+                      from:
+                        type: string
+                        format: date
+                      to:
+                        type: string
+                        format: date
+                  summary:
+                    type: string
+                    description: AI-generated summary of all interactions
+                  keyTopics:
+                    type: array
+                    items:
+                      type: string
+                  followUpActions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        action:
+                          type: string
+                        dueDate:
+                          type: string
+                          format: date
+                        priority:
+                          type: string
+                          enum: [LOW, MEDIUM, HIGH]
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # Property Matching Endpoints
+  /clients/{clientId}/property-matches:
+    get:
+      tags: [Property Matching]
+      summary: Find matching properties
+      description: Get properties that match client's search criteria
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Matching properties found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/Property'
+                        - type: object
+                          properties:
+                            matchScore:
+                              type: number
+                              minimum: 0
+                              maximum: 100
+                              description: Percentage match with client criteria
+                  totalElements:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  numberOfElements:
+                    type: integer
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # Agent Schemas
+    Agent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        languagePreference:
+          $ref: '#/components/schemas/Language'
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, email, firstName, lastName, languagePreference, isActive]
+
+    AgentUpdateRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+          minLength: 2
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 2
+          maxLength: 100
+        phone:
+          type: string
+        languagePreference:
+          $ref: '#/components/schemas/Language'
+      required: [firstName, lastName]
+
+    # Client Schemas
+    Client:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+        gdprConsentGiven:
+          type: boolean
+        gdprConsentDate:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, firstName, lastName, gdprConsentGiven]
+
+    ClientDetail:
+      allOf:
+        - $ref: '#/components/schemas/Client'
+        - type: object
+          properties:
+            searchCriteria:
+              $ref: '#/components/schemas/PropertySearchCriteria'
+            callNotesCount:
+              type: integer
+            lastContactDate:
+              type: string
+              format: date-time
+
+    ClientCreateRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+          minLength: 2
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 2
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+        gdprConsentGiven:
+          type: boolean
+        searchCriteria:
+          $ref: '#/components/schemas/PropertySearchCriteriaRequest'
+      required: [firstName, lastName, gdprConsentGiven]
+
+    ClientUpdateRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+          minLength: 2
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 2
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+      required: [firstName, lastName]
+
+    ClientPageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Client'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        numberOfElements:
+          type: integer
+        first:
+          type: boolean
+        last:
+          type: boolean
+
+    # Property Search Criteria Schemas
+    PropertySearchCriteria:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        minSquareMeters:
+          type: integer
+        maxSquareMeters:
+          type: integer
+        minRooms:
+          type: integer
+        maxRooms:
+          type: integer
+        minBudget:
+          type: number
+        maxBudget:
+          type: number
+        preferredLocations:
+          type: array
+          items:
+            type: string
+        propertyTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/PropertyType'
+        additionalRequirements:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PropertySearchCriteriaRequest:
+      type: object
+      properties:
+        minSquareMeters:
+          type: integer
+          minimum: 10
+          maximum: 10000
+        maxSquareMeters:
+          type: integer
+          minimum: 10
+          maximum: 10000
+        minRooms:
+          type: integer
+          minimum: 1
+          maximum: 20
+        maxRooms:
+          type: integer
+          minimum: 1
+          maximum: 20
+        minBudget:
+          type: number
+          minimum: 0
+        maxBudget:
+          type: number
+          minimum: 0
+        preferredLocations:
+          type: array
+          items:
+            type: string
+        propertyTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/PropertyType'
+        additionalRequirements:
+          type: string
+          maxLength: 1000
+
+    # Property Schemas
+    Property:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        propertyType:
+          $ref: '#/components/schemas/PropertyType'
+        address:
+          $ref: '#/components/schemas/Address'
+        price:
+          type: number
+        priceType:
+          $ref: '#/components/schemas/PriceType'
+        squareMeters:
+          type: integer
+        roomCount:
+          type: integer
+        bedroomCount:
+          type: integer
+        bathroomCount:
+          type: integer
+        floorNumber:
+          type: integer
+        hasBalcony:
+          type: boolean
+        hasGarden:
+          type: boolean
+        hasParking:
+          type: boolean
+        yearBuilt:
+          type: integer
+        availableFrom:
+          type: string
+          format: date
+        isActive:
+          type: boolean
+        customFields:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, title, propertyType, address, price, priceType, squareMeters, roomCount, isActive]
+
+    PropertyDetail:
+      allOf:
+        - $ref: '#/components/schemas/Property'
+        - type: object
+          properties:
+            images:
+              type: array
+              items:
+                $ref: '#/components/schemas/PropertyImage'
+            interestedClientsCount:
+              type: integer
+
+    PropertyCreateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 5
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 5000
+        propertyType:
+          $ref: '#/components/schemas/PropertyType'
+        address:
+          $ref: '#/components/schemas/Address'
+        price:
+          type: number
+          minimum: 0
+        priceType:
+          $ref: '#/components/schemas/PriceType'
+        squareMeters:
+          type: integer
+          minimum: 10
+          maximum: 10000
+        roomCount:
+          type: integer
+          minimum: 1
+          maximum: 20
+        bedroomCount:
+          type: integer
+          minimum: 0
+          maximum: 20
+        bathroomCount:
+          type: integer
+          minimum: 0
+          maximum: 10
+        floorNumber:
+          type: integer
+        hasBalcony:
+          type: boolean
+        hasGarden:
+          type: boolean
+        hasParking:
+          type: boolean
+        yearBuilt:
+          type: integer
+          minimum: 1800
+        availableFrom:
+          type: string
+          format: date
+        customFields:
+          type: object
+      required: [title, propertyType, address, price, priceType, squareMeters, roomCount]
+
+    PropertyUpdateRequest:
+      allOf:
+        - $ref: '#/components/schemas/PropertyCreateRequest'
+        - type: object
+          properties:
+            isActive:
+              type: boolean
+
+    PropertyPageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Property'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        numberOfElements:
+          type: integer
+        first:
+          type: boolean
+        last:
+          type: boolean
+
+    PropertyImage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        fileName:
+          type: string
+        filePath:
+          type: string
+        fileSize:
+          type: integer
+        mimeType:
+          type: string
+        altText:
+          type: string
+        displayOrder:
+          type: integer
+        isPrimary:
+          type: boolean
+        uploadedAt:
+          type: string
+          format: date-time
+      required: [id, fileName, filePath, fileSize, mimeType, displayOrder, isPrimary]
+
+    # Call Note Schemas
+    CallNote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        callDate:
+          type: string
+          format: date-time
+        durationMinutes:
+          type: integer
+        callType:
+          $ref: '#/components/schemas/CallType'
+        subject:
+          type: string
+        notes:
+          type: string
+        followUpRequired:
+          type: boolean
+        followUpDate:
+          type: string
+          format: date
+        propertiesDiscussed:
+          type: array
+          items:
+            type: string
+            format: uuid
+        outcome:
+          $ref: '#/components/schemas/CallOutcome'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, callDate, callType, subject, notes]
+
+    CallNoteCreateRequest:
+      type: object
+      properties:
+        callDate:
+          type: string
+          format: date-time
+        durationMinutes:
+          type: integer
+          minimum: 0
+        callType:
+          $ref: '#/components/schemas/CallType'
+        subject:
+          type: string
+          minLength: 5
+          maxLength: 200
+        notes:
+          type: string
+          minLength: 10
+          maxLength: 5000
+        followUpRequired:
+          type: boolean
+        followUpDate:
+          type: string
+          format: date
+        propertiesDiscussed:
+          type: array
+          items:
+            type: string
+            format: uuid
+        outcome:
+          $ref: '#/components/schemas/CallOutcome'
+      required: [callDate, callType, subject, notes]
+
+    CallNotePageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/CallNote'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        numberOfElements:
+          type: integer
+        first:
+          type: boolean
+        last:
+          type: boolean
+
+    # Common Schemas
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
+        city:
+          type: string
+        postalCode:
+          type: string
+          pattern: "^[0-9]{5}$"
+        country:
+          type: string
+          default: "Germany"
+
+    # Enums
+    Language:
+      type: string
+      enum: [DE, EN]
+      description: UI language preference
+
+    PropertyType:
+      type: string
+      enum: [APARTMENT, HOUSE, COMMERCIAL, LAND]
+      description: Type of real estate property
+
+    PriceType:
+      type: string
+      enum: [SALE, RENT_MONTHLY]
+      description: Whether property is for sale or rent
+
+    CallType:
+      type: string
+      enum: [PHONE_INBOUND, PHONE_OUTBOUND, EMAIL, MEETING, OTHER]
+      description: Type of client interaction
+
+    CallOutcome:
+      type: string
+      enum: [INTERESTED, NOT_INTERESTED, SCHEDULED_VIEWING, OFFER_MADE, DEAL_CLOSED]
+      description: Result of client interaction
+
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                    error:
+                      type: string
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Unauthorized"
+              message:
+                type: string
+                example: "Valid authentication token required"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Not Found"
+              message:
+                type: string
+                example: "The requested resource was not found"
