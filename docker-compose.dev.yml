@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  database:
+    # Use SQLite for MVP development
+    image: busybox
+    command: ["sh", "-c", "mkdir -p /data && sleep infinity"]
+    volumes:
+      - ./backend/data:/data
+    ports: []
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:sqlite:/app/data/realestate_crm.db
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      LOGGING_LEVEL_COM_MARKLERAPP: DEBUG
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/data:/app/data
+    ports:
+      - "8085:8085"
+      - "5005:5005"  # Debug port
+    depends_on:
+      - database
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/angular.json:/app/angular.json
+      - ./frontend/package.json:/app/package.json
+      - ./frontend/tailwind.config.js:/app/tailwind.config.js
+    command: ["npm", "run", "start", "--", "--host", "0.0.0.0", "--port", "4200"]
+    ports:
+      - "4200:4200"

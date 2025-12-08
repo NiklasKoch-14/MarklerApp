@@ -1,0 +1,200 @@
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { ClientService } from '../../services/client.service';
+
+@Component({
+  selector: 'app-client-form',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  template: `
+    <div class="p-6">
+      <h1 class="text-xl font-semibold text-gray-900 mb-6">Add New Client</h1>
+
+      <div class="max-w-2xl">
+        <form [formGroup]="clientForm" (ngSubmit)="onSubmit()" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label for="firstName" class="form-label">First Name *</label>
+              <input
+                type="text"
+                id="firstName"
+                formControlName="firstName"
+                class="form-input"
+                placeholder="Enter first name">
+              <div *ngIf="clientForm.get('firstName')?.invalid && clientForm.get('firstName')?.touched" class="form-error">
+                First name is required
+              </div>
+            </div>
+
+            <div>
+              <label for="lastName" class="form-label">Last Name *</label>
+              <input
+                type="text"
+                id="lastName"
+                formControlName="lastName"
+                class="form-input"
+                placeholder="Enter last name">
+              <div *ngIf="clientForm.get('lastName')?.invalid && clientForm.get('lastName')?.touched" class="form-error">
+                Last name is required
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label for="email" class="form-label">Email</label>
+              <input
+                type="email"
+                id="email"
+                formControlName="email"
+                class="form-input"
+                placeholder="Enter email address">
+              <div *ngIf="clientForm.get('email')?.invalid && clientForm.get('email')?.touched" class="form-error">
+                Please enter a valid email address
+              </div>
+            </div>
+
+            <div>
+              <label for="phone" class="form-label">Phone</label>
+              <input
+                type="tel"
+                id="phone"
+                formControlName="phone"
+                class="form-input"
+                placeholder="Enter phone number">
+            </div>
+          </div>
+
+          <div>
+            <label for="addressStreet" class="form-label">Street Address</label>
+            <input
+              type="text"
+              id="addressStreet"
+              formControlName="addressStreet"
+              class="form-input"
+              placeholder="Enter street address">
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label for="addressCity" class="form-label">City</label>
+              <input
+                type="text"
+                id="addressCity"
+                formControlName="addressCity"
+                class="form-input"
+                placeholder="Enter city">
+            </div>
+
+            <div>
+              <label for="addressPostalCode" class="form-label">Postal Code</label>
+              <input
+                type="text"
+                id="addressPostalCode"
+                formControlName="addressPostalCode"
+                class="form-input"
+                placeholder="12345">
+              <div *ngIf="clientForm.get('addressPostalCode')?.invalid && clientForm.get('addressPostalCode')?.touched" class="form-error">
+                Postal code must be 5 digits
+              </div>
+            </div>
+
+            <div>
+              <label for="addressCountry" class="form-label">Country</label>
+              <input
+                type="text"
+                id="addressCountry"
+                formControlName="addressCountry"
+                class="form-input"
+                value="Germany">
+            </div>
+          </div>
+
+          <div>
+            <div class="flex items-center">
+              <input
+                id="gdprConsent"
+                type="checkbox"
+                formControlName="gdprConsentGiven"
+                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+              <label for="gdprConsent" class="ml-2 block text-sm text-gray-900">
+                I consent to the processing of personal data in accordance with GDPR *
+              </label>
+            </div>
+            <div *ngIf="clientForm.get('gdprConsentGiven')?.invalid && clientForm.get('gdprConsentGiven')?.touched" class="form-error">
+              GDPR consent is required
+            </div>
+          </div>
+
+          <div *ngIf="errorMessage" class="rounded-md bg-error-50 p-4">
+            <div class="text-sm text-error-800">{{ errorMessage }}</div>
+          </div>
+
+          <div class="flex justify-end space-x-3">
+            <button
+              type="button"
+              (click)="cancel()"
+              class="btn btn-outline">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              [disabled]="!clientForm.valid || isLoading"
+              class="btn btn-primary">
+              {{ isLoading ? 'Creating...' : 'Create Client' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `
+})
+export class ClientFormComponent {
+  clientForm: FormGroup;
+  isLoading = false;
+  errorMessage = '';
+
+  constructor(
+    private fb: FormBuilder,
+    private clientService: ClientService,
+    private router: Router
+  ) {
+    this.clientForm = this.fb.group({
+      firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      lastName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      email: ['', [Validators.email]],
+      phone: [''],
+      addressStreet: [''],
+      addressCity: [''],
+      addressPostalCode: ['', [Validators.pattern('^[0-9]{5}$')]],
+      addressCountry: ['Germany'],
+      gdprConsentGiven: [false, [Validators.requiredTrue]]
+    });
+  }
+
+  onSubmit(): void {
+    if (this.clientForm.valid && !this.isLoading) {
+      this.isLoading = true;
+      this.errorMessage = '';
+
+      const clientData = this.clientForm.value;
+
+      this.clientService.createClient(clientData).subscribe({
+        next: (client) => {
+          this.isLoading = false;
+          this.router.navigate(['/clients', client.id]);
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.errorMessage = error.error?.message || 'Failed to create client. Please try again.';
+        }
+      });
+    }
+  }
+
+  cancel(): void {
+    this.router.navigate(['/clients']);
+  }
+}

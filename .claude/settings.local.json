@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(..specifyscriptspowershellcheck-prerequisites.ps1 -Json -RequireTasks -IncludeTasks)",
+      "Bash(powershell.exe -ExecutionPolicy Bypass -File ..specifyscriptspowershellcheck-prerequisites.ps1 -Json -RequireTasks -IncludeTasks)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

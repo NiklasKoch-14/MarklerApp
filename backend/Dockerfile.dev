@@ -1,0 +1,24 @@
+FROM eclipse-temurin:17-jdk-alpine
+
+WORKDIR /app
+
+# Install Maven and curl for health checks
+RUN apk update && apk add --no-cache maven curl
+
+# Copy Maven files
+COPY pom.xml .
+
+# Download dependencies
+RUN mvn dependency:go-offline -B
+
+# Copy source code
+COPY src ./src
+
+# Create directories
+RUN mkdir -p /app/uploads /app/data
+
+# Expose ports
+EXPOSE 8085 5005
+
+# Development command with remote debugging
+CMD ["mvn", "spring-boot:run", "-Dspring-boot.run.jvmArguments=-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=*:5005"]

@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgres:15-alpine
+    container_name: realestate-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-realestate_crm}
+      POSTGRES_USER: ${POSTGRES_USER:-crmuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./backend/src/main/resources/db/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-crmuser}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: realestate-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/${POSTGRES_DB:-realestate_crm}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-crmuser}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
+      JWT_SECRET: ${JWT_SECRET:-dev_secret_key_change_in_production}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200}
+      FILE_UPLOAD_PATH: ${FILE_UPLOAD_PATH:-/app/uploads}
+    volumes:
+      - uploaded_files:/app/uploads
+    ports:
+      - "8085:8085"
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8085/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        API_BASE_URL: ${API_BASE_URL:-http://localhost:8085/api/v1}
+    container_name: realestate-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  db_data:
+    name: realestate_db_data
+  uploaded_files:
+    name: realestate_uploads
+
+networks:
+  default:
+    name: realestate-network
