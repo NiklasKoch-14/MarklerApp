@@ -1,0 +1,715 @@
+<div class="p-6">
+  <!-- Restore Draft Dialog -->
+  <div *ngIf="showRestoreDialog" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+
+    <!-- Dialog -->
+    <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
+      <div class="flex items-start">
+        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 dark:bg-amber-900 sm:mx-0 sm:h-10 sm:w-10">
+          <svg class="h-6 w-6 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+        </div>
+        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+          <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+            Restore Draft?
+          </h3>
+          <div class="mt-2">
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              We found a previous draft of this form. Would you like to restore it and continue where you left off?
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse gap-3">
+        <button
+          (click)="restoreFromDraft()"
+          class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:ml-3 sm:w-auto sm:text-sm">
+          Yes, restore draft
+        </button>
+        <button
+          (click)="discardDraft()"
+          class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:w-auto sm:text-sm">
+          No, start fresh
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <h1 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+    {{ isEditMode ? 'Edit Property' : 'Add New Property' }}
+  </h1>
+
+  <!-- Section Navigation -->
+  <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+    <nav class="flex space-x-8 overflow-x-auto">
+      <button
+        type="button"
+        (click)="goToSection('basic')"
+        [class.border-primary-500]="currentSection === 'basic'"
+        [class.text-primary-600]="currentSection === 'basic'"
+        [class.border-transparent]="currentSection !== 'basic'"
+        [class.text-gray-500]="currentSection !== 'basic'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
+        Basic Info
+      </button>
+      <button
+        type="button"
+        (click)="goToSection('location')"
+        [class.border-primary-500]="currentSection === 'location'"
+        [class.text-primary-600]="currentSection === 'location'"
+        [class.border-transparent]="currentSection !== 'location'"
+        [class.text-gray-500]="currentSection !== 'location'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
+        Location
+      </button>
+      <button
+        type="button"
+        (click)="goToSection('specs')"
+        [class.border-primary-500]="currentSection === 'specs'"
+        [class.text-primary-600]="currentSection === 'specs'"
+        [class.border-transparent]="currentSection !== 'specs'"
+        [class.text-gray-500]="currentSection !== 'specs'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
+        Specifications
+      </button>
+      <button
+        type="button"
+        (click)="goToSection('financial')"
+        [class.border-primary-500]="currentSection === 'financial'"
+        [class.text-primary-600]="currentSection === 'financial'"
+        [class.border-transparent]="currentSection !== 'financial'"
+        [class.text-gray-500]="currentSection !== 'financial'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
+        Financial
+      </button>
+      <button
+        type="button"
+        (click)="goToSection('features')"
+        [class.border-primary-500]="currentSection === 'features'"
+        [class.text-primary-600]="currentSection === 'features'"
+        [class.border-transparent]="currentSection !== 'features'"
+        [class.text-gray-500]="currentSection !== 'features'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
+        Features & Energy
+      </button>
+    </nav>
+  </div>
+
+  <div class="max-w-4xl">
+    <form [formGroup]="propertyForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+      <!-- Basic Information Section -->
+      <div *ngIf="currentSection === 'basic'" class="card animation-fade-in">
+        <div class="card-header">
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Basic Information</h3>
+        </div>
+        <div class="card-body space-y-6">
+          <!-- Title -->
+          <div>
+            <label for="title" class="form-label">Property Title *</label>
+            <input
+              type="text"
+              id="title"
+              formControlName="title"
+              class="form-input"
+              placeholder="e.g., Modern 3-bedroom apartment in city center">
+            <div *ngIf="isFieldInvalid('title')" class="form-error">
+              {{ getFieldError('title') }}
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label for="description" class="form-label">Description</label>
+            <textarea
+              id="description"
+              formControlName="description"
+              rows="6"
+              class="form-input"
+              placeholder="Detailed description of the property..."></textarea>
+            <div *ngIf="isFieldInvalid('description')" class="form-error">
+              {{ getFieldError('description') }}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Property Type -->
+            <div>
+              <label for="propertyType" class="form-label">Property Type *</label>
+              <select id="propertyType" formControlName="propertyType" class="form-input">
+                <option value="">Select property type</option>
+                <option *ngFor="let type of propertyTypes" [value]="type">
+                  {{ propertyService.formatPropertyType(type) }}
+                </option>
+              </select>
+              <div *ngIf="isFieldInvalid('propertyType')" class="form-error">
+                {{ getFieldError('propertyType') }}
+              </div>
+            </div>
+
+            <!-- Listing Type -->
+            <div>
+              <label for="listingType" class="form-label">Listing Type *</label>
+              <select id="listingType" formControlName="listingType" class="form-input">
+                <option value="">Select listing type</option>
+                <option *ngFor="let type of listingTypes" [value]="type">
+                  {{ propertyService.formatListingType(type) }}
+                </option>
+              </select>
+              <div *ngIf="isFieldInvalid('listingType')" class="form-error">
+                {{ getFieldError('listingType') }}
+              </div>
+            </div>
+
+            <!-- Status -->
+            <div>
+              <label for="status" class="form-label">Status</label>
+              <select id="status" formControlName="status" class="form-input">
+                <option *ngFor="let status of propertyStatuses" [value]="status">
+                  {{ propertyService.formatPropertyStatus(status) }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Available From -->
+            <div>
+              <label for="availableFrom" class="form-label">Available From</label>
+              <input
+                type="date"
+                id="availableFrom"
+                formControlName="availableFrom"
+                class="form-input">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location Section -->
+      <div *ngIf="currentSection === 'location'" class="card animation-fade-in">
+        <div class="card-header">
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Location Details</h3>
+        </div>
+        <div class="card-body space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Street -->
+            <div class="md:col-span-2">
+              <label for="addressStreet" class="form-label">Street Address *</label>
+              <input
+                type="text"
+                id="addressStreet"
+                formControlName="addressStreet"
+                class="form-input"
+                placeholder="Hauptstraße">
+              <div *ngIf="isFieldInvalid('addressStreet')" class="form-error">
+                {{ getFieldError('addressStreet') }}
+              </div>
+            </div>
+
+            <!-- House Number -->
+            <div>
+              <label for="addressHouseNumber" class="form-label">House Number</label>
+              <input
+                type="text"
+                id="addressHouseNumber"
+                formControlName="addressHouseNumber"
+                class="form-input"
+                placeholder="42">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- City -->
+            <div>
+              <label for="addressCity" class="form-label">City *</label>
+              <input
+                type="text"
+                id="addressCity"
+                formControlName="addressCity"
+                class="form-input"
+                placeholder="Berlin">
+              <div *ngIf="isFieldInvalid('addressCity')" class="form-error">
+                {{ getFieldError('addressCity') }}
+              </div>
+            </div>
+
+            <!-- Postal Code -->
+            <div>
+              <label for="addressPostalCode" class="form-label">Postal Code *</label>
+              <input
+                type="text"
+                id="addressPostalCode"
+                formControlName="addressPostalCode"
+                class="form-input"
+                placeholder="10115">
+              <div *ngIf="isFieldInvalid('addressPostalCode')" class="form-error">
+                {{ getFieldError('addressPostalCode') }}
+              </div>
+            </div>
+
+            <!-- District -->
+            <div>
+              <label for="addressDistrict" class="form-label">District</label>
+              <input
+                type="text"
+                id="addressDistrict"
+                formControlName="addressDistrict"
+                class="form-input"
+                placeholder="Mitte">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- State -->
+            <div>
+              <label for="addressState" class="form-label">State</label>
+              <input
+                type="text"
+                id="addressState"
+                formControlName="addressState"
+                class="form-input"
+                placeholder="Berlin">
+            </div>
+
+            <!-- Country -->
+            <div>
+              <label for="addressCountry" class="form-label">Country</label>
+              <input
+                type="text"
+                id="addressCountry"
+                formControlName="addressCountry"
+                class="form-input">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Specifications Section -->
+      <div *ngIf="currentSection === 'specs'" class="card animation-fade-in">
+        <div class="card-header">
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Property Specifications</h3>
+        </div>
+        <div class="card-body space-y-6">
+          <!-- Area Fields -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label for="livingAreaSqm" class="form-label">Living Area (m²)</label>
+              <input
+                type="number"
+                id="livingAreaSqm"
+                formControlName="livingAreaSqm"
+                step="0.01"
+                class="form-input"
+                placeholder="85.5">
+              <div *ngIf="isFieldInvalid('livingAreaSqm')" class="form-error">
+                {{ getFieldError('livingAreaSqm') }}
+              </div>
+            </div>
+
+            <div>
+              <label for="totalAreaSqm" class="form-label">Total Area (m²)</label>
+              <input
+                type="number"
+                id="totalAreaSqm"
+                formControlName="totalAreaSqm"
+                step="0.01"
+                class="form-input"
+                placeholder="100.0">
+              <div *ngIf="isFieldInvalid('totalAreaSqm')" class="form-error">
+                {{ getFieldError('totalAreaSqm') }}
+              </div>
+            </div>
+
+            <div>
+              <label for="plotAreaSqm" class="form-label">Plot Area (m²)</label>
+              <input
+                type="number"
+                id="plotAreaSqm"
+                formControlName="plotAreaSqm"
+                step="0.01"
+                class="form-input"
+                placeholder="500.0">
+              <div *ngIf="isFieldInvalid('plotAreaSqm')" class="form-error">
+                {{ getFieldError('plotAreaSqm') }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Room Configuration -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label for="rooms" class="form-label">Total Rooms</label>
+              <input
+                type="number"
+                id="rooms"
+                formControlName="rooms"
+                step="0.5"
+                class="form-input"
+                placeholder="3.5">
+              <div *ngIf="isFieldInvalid('rooms')" class="form-error">
+                {{ getFieldError('rooms') }}
+              </div>
+            </div>
+
+            <div>
+              <label for="bedrooms" class="form-label">Bedrooms</label>
+              <input
+                type="number"
+                id="bedrooms"
+                formControlName="bedrooms"
+                class="form-input"
+                placeholder="2">
+              <div *ngIf="isFieldInvalid('bedrooms')" class="form-error">
+                {{ getFieldError('bedrooms') }}
+              </div>
+            </div>
+
+            <div>
+              <label for="bathrooms" class="form-label">Bathrooms</label>
+              <input
+                type="number"
+                id="bathrooms"
+                formControlName="bathrooms"
+                class="form-input"
+                placeholder="1">
+              <div *ngIf="isFieldInvalid('bathrooms')" class="form-error">
+                {{ getFieldError('bathrooms') }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Floor Information -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label for="floorNumber" class="form-label">Floor Number</label>
+              <input
+                type="number"
+                id="floorNumber"
+                formControlName="floorNumber"
+                class="form-input"
+                placeholder="3">
+              <div *ngIf="isFieldInvalid('floorNumber')" class="form-error">
+                {{ getFieldError('floorNumber') }}
+              </div>
+            </div>
+
+            <div>
+              <label for="floors" class="form-label">Total Floors in Building</label>
+              <input
+                type="number"
+                id="floors"
+                formControlName="floors"
+                class="form-input"
+                placeholder="5">
+              <div *ngIf="isFieldInvalid('floors')" class="form-error">
+                {{ getFieldError('floors') }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Construction Details -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label for="constructionYear" class="form-label">Construction Year</label>
+              <input
+                type="number"
+                id="constructionYear"
+                formControlName="constructionYear"
+                class="form-input"
+                placeholder="2010">
+              <div *ngIf="isFieldInvalid('constructionYear')" class="form-error">
+                {{ getFieldError('constructionYear') }}
+              </div>
+            </div>
+
+            <div>
+              <label for="lastRenovationYear" class="form-label">Last Renovation Year</label>
+              <input
+                type="number"
+                id="lastRenovationYear"
+                formControlName="lastRenovationYear"
+                class="form-input"
+                placeholder="2020">
+              <div *ngIf="isFieldInvalid('lastRenovationYear')" class="form-error">
+                {{ getFieldError('lastRenovationYear') }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Section -->
+      <div *ngIf="currentSection === 'financial'" class="card animation-fade-in">
+        <div class="card-header">
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Financial Information</h3>
+        </div>
+        <div class="card-body space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Price -->
+            <div>
+              <label for="price" class="form-label">Price (EUR)</label>
+              <input
+                type="number"
+                id="price"
+                formControlName="price"
+                step="0.01"
+                class="form-input"
+                placeholder="250000.00">
+              <div *ngIf="isFieldInvalid('price')" class="form-error">
+                {{ getFieldError('price') }}
+              </div>
+            </div>
+
+            <!-- Price per sqm -->
+            <div>
+              <label for="pricePerSqm" class="form-label">Price per m² (EUR)</label>
+              <input
+                type="number"
+                id="pricePerSqm"
+                formControlName="pricePerSqm"
+                step="0.01"
+                class="form-input"
+                placeholder="2500.00">
+              <div *ngIf="isFieldInvalid('pricePerSqm')" class="form-error">
+                {{ getFieldError('pricePerSqm') }}
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Additional Costs -->
+            <div>
+              <label for="additionalCosts" class="form-label">Additional Costs (EUR/month)</label>
+              <input
+                type="number"
+                id="additionalCosts"
+                formControlName="additionalCosts"
+                step="0.01"
+                class="form-input"
+                placeholder="150.00">
+              <div *ngIf="isFieldInvalid('additionalCosts')" class="form-error">
+                {{ getFieldError('additionalCosts') }}
+              </div>
+            </div>
+
+            <!-- Heating Costs -->
+            <div>
+              <label for="heatingCosts" class="form-label">Heating Costs (EUR/month)</label>
+              <input
+                type="number"
+                id="heatingCosts"
+                formControlName="heatingCosts"
+                step="0.01"
+                class="form-input"
+                placeholder="80.00">
+              <div *ngIf="isFieldInvalid('heatingCosts')" class="form-error">
+                {{ getFieldError('heatingCosts') }}
+              </div>
+            </div>
+
+            <!-- Commission -->
+            <div>
+              <label for="commission" class="form-label">Commission (EUR)</label>
+              <input
+                type="number"
+                id="commission"
+                formControlName="commission"
+                step="0.01"
+                class="form-input"
+                placeholder="7500.00">
+              <div *ngIf="isFieldInvalid('commission')" class="form-error">
+                {{ getFieldError('commission') }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features & Energy Section -->
+      <div *ngIf="currentSection === 'features'" class="card animation-fade-in">
+        <div class="card-header">
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Features, Amenities & Energy</h3>
+        </div>
+        <div class="card-body space-y-6">
+          <!-- Features Checkboxes -->
+          <div>
+            <label class="form-label">Features & Amenities</label>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+              <label class="flex items-center">
+                <input type="checkbox" formControlName="hasElevator" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Elevator</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" formControlName="hasBalcony" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Balcony</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" formControlName="hasTerrace" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Terrace</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" formControlName="hasGarden" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Garden</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" formControlName="hasGarage" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Garage</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" formControlName="hasParking" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Parking</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" formControlName="hasBasement" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Basement</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" formControlName="hasAttic" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Attic</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" formControlName="isBarrierFree" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Barrier Free</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" formControlName="petsAllowed" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Pets Allowed</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" formControlName="furnished" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Furnished</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Energy Information -->
+          <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
+            <label class="form-label">Energy Efficiency</label>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
+              <div>
+                <label for="energyEfficiencyClass" class="form-label text-sm">Energy Class</label>
+                <input
+                  type="text"
+                  id="energyEfficiencyClass"
+                  formControlName="energyEfficiencyClass"
+                  class="form-input"
+                  placeholder="A+">
+                <div *ngIf="isFieldInvalid('energyEfficiencyClass')" class="form-error">
+                  {{ getFieldError('energyEfficiencyClass') }}
+                </div>
+              </div>
+
+              <div>
+                <label for="energyConsumptionKwh" class="form-label text-sm">Energy Consumption (kWh/m²a)</label>
+                <input
+                  type="number"
+                  id="energyConsumptionKwh"
+                  formControlName="energyConsumptionKwh"
+                  step="0.01"
+                  class="form-input"
+                  placeholder="75.5">
+                <div *ngIf="isFieldInvalid('energyConsumptionKwh')" class="form-error">
+                  {{ getFieldError('energyConsumptionKwh') }}
+                </div>
+              </div>
+
+              <div>
+                <label for="heatingType" class="form-label text-sm">Heating Type</label>
+                <select id="heatingType" formControlName="heatingType" class="form-input">
+                  <option value="">Select heating type</option>
+                  <option *ngFor="let type of heatingTypes" [value]="type">
+                    {{ propertyService.formatHeatingType(type) }}
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact Information -->
+          <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
+            <label class="form-label">Contact & Additional Information</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+              <div>
+                <label for="contactPhone" class="form-label text-sm">Contact Phone</label>
+                <input
+                  type="tel"
+                  id="contactPhone"
+                  formControlName="contactPhone"
+                  class="form-input"
+                  placeholder="+49 30 12345678">
+                <div *ngIf="isFieldInvalid('contactPhone')" class="form-error">
+                  {{ getFieldError('contactPhone') }}
+                </div>
+              </div>
+
+              <div>
+                <label for="contactEmail" class="form-label text-sm">Contact Email</label>
+                <input
+                  type="email"
+                  id="contactEmail"
+                  formControlName="contactEmail"
+                  class="form-input"
+                  placeholder="contact@property.com">
+                <div *ngIf="isFieldInvalid('contactEmail')" class="form-error">
+                  {{ getFieldError('contactEmail') }}
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-6">
+              <label for="virtualTourUrl" class="form-label text-sm">Virtual Tour URL</label>
+              <input
+                type="url"
+                id="virtualTourUrl"
+                formControlName="virtualTourUrl"
+                class="form-input"
+                placeholder="https://example.com/virtual-tour">
+              <div *ngIf="isFieldInvalid('virtualTourUrl')" class="form-error">
+                {{ getFieldError('virtualTourUrl') }}
+              </div>
+            </div>
+
+            <div class="mt-6">
+              <label for="notes" class="form-label text-sm">Additional Notes</label>
+              <textarea
+                id="notes"
+                formControlName="notes"
+                rows="4"
+                class="form-input"
+                placeholder="Any additional information about the property..."></textarea>
+              <div *ngIf="isFieldInvalid('notes')" class="form-error">
+                {{ getFieldError('notes') }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="rounded-md bg-error-50 p-4">
+        <div class="text-sm text-error-800">{{ errorMessage }}</div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="flex justify-between items-center pt-6 border-t border-gray-200 dark:border-gray-700">
+        <button
+          type="button"
+          (click)="cancel()"
+          class="btn btn-outline">
+          Cancel
+        </button>
+
+        <div class="flex space-x-3">
+          <button
+            type="submit"
+            [disabled]="!propertyForm.valid || isLoading"
+            class="btn btn-primary">
+            {{ isLoading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update Property' : 'Create Property') }}
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

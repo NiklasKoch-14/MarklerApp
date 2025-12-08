@@ -48,7 +48,7 @@
   }
 
   .btn-outline {
-    @apply border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-primary-500;
+    @apply border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-primary-500 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800;
   }
 
   .btn-danger {
@@ -58,23 +58,45 @@
   .form-input {
     @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400
            focus:outline-none focus:ring-primary-500 focus:border-primary-500
-           disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed;
+           disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
+           dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400
+           dark:focus:ring-primary-400 dark:focus:border-primary-400 dark:disabled:bg-gray-700;
   }
 
   .form-label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
+    @apply block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300;
   }
 
   .form-error {
-    @apply text-sm text-error-600 mt-1;
+    @apply text-sm text-error-600 mt-1 dark:text-error-400;
+  }
+
+  .form-select {
+    @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm
+           focus:outline-none focus:ring-primary-500 focus:border-primary-500
+           bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200
+           dark:focus:ring-primary-400 dark:focus:border-primary-400;
+  }
+
+  .form-textarea {
+    @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400
+           focus:outline-none focus:ring-primary-500 focus:border-primary-500 resize-vertical
+           dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400
+           dark:focus:ring-primary-400 dark:focus:border-primary-400;
+  }
+
+  .form-checkbox {
+    @apply w-4 h-4 text-primary-600 border-gray-300 rounded
+           focus:ring-primary-500 focus:ring-2
+           dark:border-gray-600 dark:bg-gray-800 dark:focus:ring-primary-400;
   }
 
   .card {
-    @apply bg-white shadow rounded-lg;
+    @apply bg-white shadow rounded-lg dark:bg-gray-800 dark:shadow-gray-900/20;
   }
 
   .card-header {
-    @apply px-4 py-5 border-b border-gray-200 sm:px-6;
+    @apply px-4 py-5 border-b border-gray-200 sm:px-6 dark:border-gray-700;
   }
 
   .card-body {

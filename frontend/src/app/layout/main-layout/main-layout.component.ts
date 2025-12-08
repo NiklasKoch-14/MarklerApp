@@ -21,24 +21,24 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
               </div>
               <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
                 <a routerLink="/dashboard"
-                   routerLinkActive="border-primary-500 text-gray-900 dark:text-gray-100"
+                   routerLinkActive="border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20"
                    [routerLinkActiveOptions]="{exact: true}"
-                   class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                   class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-3 pt-1 pb-1 border-b-2 text-sm font-medium transition-colors duration-200">
                   Dashboard
                 </a>
                 <a routerLink="/clients"
-                   routerLinkActive="border-primary-500 text-gray-900 dark:text-gray-100"
-                   class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                   routerLinkActive="border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20"
+                   class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-3 pt-1 pb-1 border-b-2 text-sm font-medium transition-colors duration-200">
                   Clients
                 </a>
                 <a routerLink="/properties"
-                   routerLinkActive="border-primary-500 text-gray-900 dark:text-gray-100"
-                   class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                   routerLinkActive="border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20"
+                   class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-3 pt-1 pb-1 border-b-2 text-sm font-medium transition-colors duration-200">
                   Properties
                 </a>
                 <a routerLink="/call-notes"
-                   routerLinkActive="border-primary-500 text-gray-900 dark:text-gray-100"
-                   class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                   routerLinkActive="border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20"
+                   class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-3 pt-1 pb-1 border-b-2 text-sm font-medium transition-colors duration-200">
                   Call Notes
                 </a>
               </div>

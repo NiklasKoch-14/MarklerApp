@@ -1,0 +1,40 @@
+
+> realestate-crm-frontend@1.0.0 build
+> ng build
+
+- Generating browser application bundles (phase: setup)...
+✔ Browser application bundle generation complete.
+✔ Browser application bundle generation complete.
+- Copying assets...
+✔ Copying assets complete.
+- Generating index html...
+✔ Index html generation complete.
+
+Initial chunk files           | Names                                                   |  Raw size | Estimated transfer size
+main.94e7fac0fb89163a.js      | main                                                    | 355.15 kB |                95.43 kB
+styles.1730def14e6d9f36.css   | styles                                                  |  59.68 kB |                 8.02 kB
+polyfills.c00f3cd05ae9a637.js | polyfills                                               |  34.02 kB |                11.09 kB
+runtime.d25abdfedea4ec70.js   | runtime                                                 |   3.06 kB |                 1.47 kB
+
+                              | Initial total                                           | 451.91 kB |               116.02 kB
+
+Lazy chunk files              | Names                                                   |  Raw size | Estimated transfer size
+417.0002e787a762c24c.js       | features-auth-login-login-component                     |  41.25 kB |                 8.19 kB
+727.5b8b600cd3397f61.js       | components-property-form-property-form-component        |  33.79 kB |                 6.34 kB
+382.6fd2c5aeb6aba03f.js       | components-call-note-form-call-note-form-component      |  24.94 kB |                 5.03 kB
+559.14c42b1f029caba2.js       | components-property-detail-property-detail-component    |  23.58 kB |                 4.72 kB
+167.08938313ac0f1b51.js       | components-property-list-property-list-component        |  21.63 kB |                 4.64 kB
+411.96ca75b839f0a227.js       | components-call-notes-list-call-notes-list-component    |  20.54 kB |                 4.81 kB
+944.a0f4a62c16d3d916.js       | components-call-summary-call-summary-component          |  18.95 kB |                 4.26 kB
+749.8b91b3fb212814d4.js       | components-client-detail-client-detail-component        |  15.75 kB |                 3.70 kB
+common.86c327fa94458bb0.js    | common                                                  |  11.62 kB |                 3.30 kB
+843.b0a8d6e9f518a69f.js       | layout-main-layout-main-layout-component                |   9.52 kB |                 2.38 kB
+169.2f223d21f8b93f5b.js       | components-client-form-client-form-component            |   7.16 kB |                 1.97 kB
+842.8402e8aaf2933f63.js       | features-auth-login-login-component                     |   4.57 kB |                 1.59 kB
+357.1c46cb88ae5de42f.js       | components-client-list-client-list-component            |   4.30 kB |                 1.50 kB
+626.0368e85277dea220.js       | features-dashboard-dashboard-component                  |   1.46 kB |               686 bytes
+625.48c4b7b6926219f3.js       | features-call-notes-call-notes-routes                   |   1.09 kB |               272 bytes
+183.3451449407eb4ccd.js       | features-property-management-property-management-routes | 678 bytes |               236 bytes
+107.0a170450768d4bfe.js       | features-client-management-client-management-routes     | 660 bytes |               243 bytes
+
+Build at: 2025-12-08T21:37:24.304Z - Hash: 59496f80fe7eb0d8 - Time: 15285ms

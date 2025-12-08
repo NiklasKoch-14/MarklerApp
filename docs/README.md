@@ -31,6 +31,21 @@ docker-compose up -d
 
 # Wait for services to be ready (usually 2-3 minutes)
 docker-compose logs -f backend | grep "Started CrmApplication"
+
+  Option 1: Full Production Stack (Recommended for testing)
+
+  # Build and start all services (database, backend, frontend) with PostgreSQL
+  docker compose up --build
+
+  Option 2: Production Stack in Background
+
+  # Build and start all services in detached mode
+  docker compose up --build -d
+
+  Option 3: Development Stack with SQLite (Faster startup)
+
+  # Build and start all services with SQLite database (faster for development)
+  docker compose -f docker-compose.dev.yml up --build
 ```
 
 ### 2. Access the Application
@@ -53,6 +68,9 @@ For active development with hot reloading:
 ```bash
 # Start with development overrides
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+# test after changes
+docker compose -f docker-compose.dev.yml up --build
 
 # View logs
 docker-compose logs -f backend

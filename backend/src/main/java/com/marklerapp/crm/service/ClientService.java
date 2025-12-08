@@ -84,12 +84,19 @@ public class ClientService {
     public ClientDto createClient(ClientDto clientDto, UUID agentId) {
         log.debug("Creating client for agent: {}", agentId);
 
-        Agent agent = getAgentById(agentId);
+        Agent agent;
+        try {
+            agent = getAgentById(agentId);
+        } catch (ResourceNotFoundException e) {
+            log.error("Agent not found when creating client. AgentId: {}, Error: {}", agentId, e.getMessage());
+            throw new IllegalArgumentException("Unable to create client: Invalid agent session. Please log out and log in again.");
+        }
 
         // Check if client with email already exists for this agent
         if (clientDto.getEmail() != null && !clientDto.getEmail().trim().isEmpty()) {
             if (clientRepository.existsByAgentAndEmail(agent, clientDto.getEmail())) {
-                throw new IllegalArgumentException("A client with this email already exists");
+                log.warn("Attempted to create client with duplicate email: {} for agent: {}", clientDto.getEmail(), agentId);
+                throw new IllegalArgumentException("A client with this email already exists for your account");
             }
         }
 
