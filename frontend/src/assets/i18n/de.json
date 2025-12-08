@@ -1,8 +1,10 @@
 {
   "common": {
     "save": "Speichern",
+    "saving": "Speichern...",
     "cancel": "Abbrechen",
     "delete": "Löschen",
+    "deleting": "Löschen...",
     "edit": "Bearbeiten",
     "add": "Hinzufügen",
     "search": "Suchen",
@@ -24,7 +26,8 @@
     "view": "Anzeigen",
     "download": "Herunterladen",
     "upload": "Hochladen",
-    "export": "Exportieren"
+    "export": "Exportieren",
+    "characters": "Zeichen"
   },
   "auth": {
     "login": "Anmelden",
@@ -126,6 +129,39 @@
     "features": "Ausstattung",
     "status": "Status"
   },
+  "call-notes": {
+    "title": "Gesprächsnotizen",
+    "new-call-note": "Neue Gesprächsnotiz",
+    "edit-call-note": "Gesprächsnotiz bearbeiten",
+    "create-note": "Notiz erstellen",
+    "delete-note": "Notiz löschen",
+    "delete-confirm-title": "Gesprächsnotiz löschen",
+    "delete-confirm-message": "Sind Sie sicher, dass Sie diese Gesprächsnotiz löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "client": "Kunde",
+    "select-client": "Kunde auswählen",
+    "call-type": "Anrufart",
+    "select-call-type": "Anrufart auswählen",
+    "call-date": "Anrufdatum",
+    "duration-minutes": "Dauer (Minuten)",
+    "duration-placeholder": "Dauer in Minuten eingeben",
+    "outcome": "Ergebnis",
+    "select-outcome": "Ergebnis auswählen",
+    "basic-information": "Grundinformationen",
+    "call-details": "Anrufdetails",
+    "subject": "Betreff",
+    "subject-placeholder": "Kurze Zusammenfassung des Anrufs",
+    "notes": "Notizen",
+    "notes-placeholder": "Detaillierte Notizen zum Gespräch",
+    "properties-discussed": "Besprochene Immobilien",
+    "properties-placeholder": "Listen Sie alle während des Anrufs besprochenen Immobilien auf",
+    "properties-help": "Optional: Geben Sie Immobilienreferenzen oder -beschreibungen ein",
+    "follow-up": "Nachfassen",
+    "follow-up-required": "Nachfassen erforderlich",
+    "follow-up-help": "Markieren, wenn dieser Anruf eine Nachfassaktion erfordert",
+    "follow-up-date": "Nachfassen bis zum Datum",
+    "summary": "Zusammenfassung",
+    "generate-summary": "Zusammenfassung generieren"
+  },
   "callNotes": {
     "title": "Gesprächsnotizen",
     "add": "Gesprächsnotiz hinzufügen",
@@ -161,10 +197,11 @@
   "validation": {
     "required": "Dieses Feld ist erforderlich",
     "email": "Ungültige E-Mail-Adresse",
-    "minLength": "Mindestens {0} Zeichen erforderlich",
-    "maxLength": "Höchstens {0} Zeichen erlaubt",
-    "min": "Wert muss mindestens {0} sein",
-    "max": "Wert darf höchstens {0} sein",
+    "minLength": "Mindestens {{min}} Zeichen erforderlich",
+    "min-length": "Mindestens {{min}} Zeichen erforderlich",
+    "maxLength": "Höchstens {{max}} Zeichen erlaubt",
+    "min": "Wert muss mindestens {{min}} sein",
+    "max": "Wert darf höchstens {{max}} sein",
     "pattern": "Ungültiges Format"
   },
   "errors": {

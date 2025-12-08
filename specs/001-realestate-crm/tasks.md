@@ -12,6 +12,18 @@ description: "Task list for Real Estate CRM System implementation"
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
+## 🚨 CURRENT STATUS & PRIORITY FIXES NEEDED
+
+**MVP Status**: ✅ Phases 1-4 marked complete, but several critical bugs discovered:
+
+### ⚠️ HIGH PRIORITY BUGS TO FIX:
+1. **Dashboard buttons not working** - Missing RouterModule imports
+2. **Client editing not functional** - Form connections need debugging
+3. **Call notes creation failing** - Form submission issues
+4. **Missing UI features** - Dark/light mode toggle, language switcher
+
+**Recommendation**: Complete Phase 3.1 and 4.1 bug fixes before proceeding to new features.
+
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: Can run in parallel (different files, no dependencies)
@@ -99,6 +111,15 @@ description: "Task list for Real Estate CRM System implementation"
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
+### Phase 3.1: User Story 1 Bug Fixes & Missing Features
+
+- [ ] T049.1 [P] [US1] Fix dashboard router links - add RouterModule import to dashboard.component.ts
+- [ ] T049.2 [P] [US1] Fix client editing functionality - ensure update forms are properly connected to backend
+- [ ] T049.3 [P] [US1] Add dark/light mode theme toggle in main header/navigation
+- [ ] T049.4 [P] [US1] Add German/English language toggle switch in main header/navigation
+- [ ] T049.5 [P] [US1] Fix client form validation and error handling
+- [ ] T049.6 [P] [US1] Ensure client update/edit forms save data correctly
+
 ---
 
 ## Phase 4: User Story 2 - Call Notes and Communication Tracking (Priority: P2)
@@ -128,6 +149,15 @@ description: "Task list for Real Estate CRM System implementation"
 - [X] T064 [US2] Add follow-up reminder system for call notes
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
+
+### Phase 4.1: User Story 2 Bug Fixes & Missing Features
+
+- [ ] T064.1 [P] [US2] Fix call notes creation form - ensure form submissions work correctly
+- [ ] T064.2 [P] [US2] Debug call notes service integration with backend API
+- [ ] T064.3 [P] [US2] Fix call notes form validation and error handling
+- [ ] T064.4 [P] [US2] Ensure call notes display and formatting works correctly
+- [ ] T064.5 [P] [US2] Fix call notes routing and navigation issues
+- [ ] T064.6 [P] [US2] Test and fix call notes CRUD operations end-to-end
 
 ---
 
@@ -188,6 +218,17 @@ description: "Task list for Real Estate CRM System implementation"
 - [ ] T102 [P] Add responsive design improvements for mobile devices
 - [ ] T103 [P] Implement caching strategies for frequently accessed data
 - [ ] T104 [P] Run deployment validation using quickstart.md guide
+
+### Phase 6.1: UI/UX Enhancements & Theme System
+
+- [ ] T104.1 [P] Implement dark/light mode theme system with Tailwind CSS
+- [ ] T104.2 [P] Add theme toggle button in main application header
+- [ ] T104.3 [P] Create theme service to persist user theme preference
+- [ ] T104.4 [P] Add German/English language switcher in application header
+- [ ] T104.5 [P] Create language service to persist user language preference
+- [ ] T104.6 [P] Ensure all components support both themes (dark/light)
+- [ ] T104.7 [P] Add smooth transitions for theme switching
+- [ ] T104.8 [P] Test theme system across all pages and components
 
 ---
 

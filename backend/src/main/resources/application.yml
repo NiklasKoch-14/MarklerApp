@@ -101,13 +101,19 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none  # Use Flyway for production
+      ddl-auto: update  # Use update for now, can switch to Flyway later
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+    defer-datasource-initialization: true
+
+  sql:
+    init:
+      mode: always
+      continue-on-error: true
 
   flyway:
-    enabled: true
+    enabled: false  # Disable Flyway for now to avoid circular dependency
     locations: classpath:db/migration
     baseline-on-migrate: true
 

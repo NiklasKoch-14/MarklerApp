@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ClientService } from '../../services/client.service';
 
 @Component({
@@ -10,7 +10,7 @@ import { ClientService } from '../../services/client.service';
   imports: [CommonModule, ReactiveFormsModule],
   template: `
     <div class="p-6">
-      <h1 class="text-xl font-semibold text-gray-900 mb-6">Add New Client</h1>
+      <h1 class="text-xl font-semibold text-gray-900 mb-6">{{ isEditMode ? 'Edit Client' : 'Add New Client' }}</h1>
 
       <div class="max-w-2xl">
         <form [formGroup]="clientForm" (ngSubmit)="onSubmit()" class="space-y-6">
@@ -143,7 +143,7 @@ import { ClientService } from '../../services/client.service';
               type="submit"
               [disabled]="!clientForm.valid || isLoading"
               class="btn btn-primary">
-              {{ isLoading ? 'Creating...' : 'Create Client' }}
+              {{ isLoading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update Client' : 'Create Client') }}
             </button>
           </div>
         </form>
@@ -151,15 +151,18 @@ import { ClientService } from '../../services/client.service';
     </div>
   `
 })
-export class ClientFormComponent {
+export class ClientFormComponent implements OnInit {
   clientForm: FormGroup;
   isLoading = false;
   errorMessage = '';
+  isEditMode = false;
+  clientId: string | null = null;
 
   constructor(
     private fb: FormBuilder,
     private clientService: ClientService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.clientForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
@@ -174,6 +177,39 @@ export class ClientFormComponent {
     });
   }
 
+  ngOnInit(): void {
+    this.clientId = this.route.snapshot.paramMap.get('id');
+    this.isEditMode = !!this.clientId;
+
+    if (this.isEditMode && this.clientId) {
+      this.loadClient(this.clientId);
+    }
+  }
+
+  loadClient(id: string): void {
+    this.isLoading = true;
+    this.clientService.getClient(id).subscribe({
+      next: (client) => {
+        this.clientForm.patchValue({
+          firstName: client.firstName,
+          lastName: client.lastName,
+          email: client.email,
+          phone: client.phone,
+          addressStreet: client.addressStreet,
+          addressCity: client.addressCity,
+          addressPostalCode: client.addressPostalCode,
+          addressCountry: client.addressCountry,
+          gdprConsentGiven: client.gdprConsentGiven
+        });
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage = 'Failed to load client data. Please try again.';
+      }
+    });
+  }
+
   onSubmit(): void {
     if (this.clientForm.valid && !this.isLoading) {
       this.isLoading = true;
@@ -181,16 +217,29 @@ export class ClientFormComponent {
 
       const clientData = this.clientForm.value;
 
-      this.clientService.createClient(clientData).subscribe({
-        next: (client) => {
-          this.isLoading = false;
-          this.router.navigate(['/clients', client.id]);
-        },
-        error: (error) => {
-          this.isLoading = false;
-          this.errorMessage = error.error?.message || 'Failed to create client. Please try again.';
-        }
-      });
+      if (this.isEditMode && this.clientId) {
+        this.clientService.updateClient(this.clientId, clientData).subscribe({
+          next: (client) => {
+            this.isLoading = false;
+            this.router.navigate(['/clients', client.id]);
+          },
+          error: (error) => {
+            this.isLoading = false;
+            this.errorMessage = error.error?.message || 'Failed to update client. Please try again.';
+          }
+        });
+      } else {
+        this.clientService.createClient(clientData).subscribe({
+          next: (client) => {
+            this.isLoading = false;
+            this.router.navigate(['/clients', client.id]);
+          },
+          error: (error) => {
+            this.isLoading = false;
+            this.errorMessage = error.error?.message || 'Failed to create client. Please try again.';
+          }
+        });
+      }
     }
   }
 
