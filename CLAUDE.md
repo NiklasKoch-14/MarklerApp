@@ -33,6 +33,8 @@
 - **Node.js 20** for frontend build
 - **Eclipse Temurin 17 JDK** for backend
 - **Development & Production** environment configurations
+- **GitHub** for version control and repository hosting
+- **Vercel** for production deployment
 
 ## 📁 Project Structure
 
@@ -197,6 +199,21 @@ cd backend && mvn test
 # E2E tests
 cd frontend && npm run e2e
 ```
+
+## 🚀 Deployment
+
+### Repository
+- **Hosted on**: GitHub
+- **Repository**: Public/Private repository for version control
+- **Branching**: Main branch for production, feature branches for development
+
+### Vercel Deployment
+- **Platform**: Vercel (Frontend deployment)
+- **Frontend**: Angular 17 application deployed as static site
+- **Backend**: Separate deployment required (Railway, Render, or DigitalOcean recommended)
+- **Database**: PostgreSQL (Vercel Postgres, Supabase, or dedicated PostgreSQL service)
+
+For detailed deployment instructions, see [README.md](README.md)
 
 ## 🎨 Code Style & Conventions
 
