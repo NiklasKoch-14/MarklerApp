@@ -280,3 +280,5 @@ cd frontend && npm run e2e
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
+- you can use the smaller haiku model if you have smaller tasks
+- use your sub agents and use them parallel if approtiate

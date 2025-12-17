@@ -26,6 +26,11 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
     Page<Client> findByAgent(Agent agent, Pageable pageable);
 
     /**
+     * Find all clients by agent (no pagination)
+     */
+    List<Client> findByAgent(Agent agent);
+
+    /**
      * Find clients by agent ID
      */
     Page<Client> findByAgentId(UUID agentId, Pageable pageable);

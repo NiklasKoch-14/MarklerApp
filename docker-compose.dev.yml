@@ -2,35 +2,56 @@ version: '3.8'
 
 services:
   database:
-    # Use SQLite for MVP development
-    image: busybox
-    command: ["sh", "-c", "mkdir -p /data && sleep infinity"]
+    image: postgres:15-alpine
+    container_name: realestate-db-dev
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-realestate_crm_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-crmuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
     volumes:
-      - ./backend/data:/data
-    ports: []
+      - db_data_dev:/var/lib/postgresql/data
+      - ./backend/src/main/resources/db/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-crmuser} -d ${POSTGRES_DB:-realestate_crm_dev}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
+    container_name: realestate-backend-dev
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      SPRING_DATASOURCE_URL: jdbc:sqlite:/app/data/realestate_crm.db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/${POSTGRES_DB:-realestate_crm_dev}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-crmuser}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      JWT_SECRET: ${JWT_SECRET:-dev_secret_key_for_development_only}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200}
+      FILE_UPLOAD_PATH: ${FILE_UPLOAD_PATH:-/app/uploads}
       LOGGING_LEVEL_COM_MARKLERAPP: DEBUG
+      LOGGING_LEVEL_ORG_HIBERNATE_SQL: DEBUG
     volumes:
       - ./backend/src:/app/src
-      - ./backend/data:/app/data
+      - uploaded_files_dev:/app/uploads
     ports:
       - "8085:8085"
       - "5005:5005"  # Debug port
     depends_on:
-      - database
+      database:
+        condition: service_healthy
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
+    container_name: realestate-frontend-dev
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/angular.json:/app/angular.json
@@ -39,3 +60,15 @@ services:
     command: ["npm", "run", "start", "--", "--host", "0.0.0.0", "--port", "4200"]
     ports:
       - "4200:4200"
+    depends_on:
+      - backend
+
+volumes:
+  db_data_dev:
+    name: realestate_db_data_dev
+  uploaded_files_dev:
+    name: realestate_uploads_dev
+
+networks:
+  default:
+    name: realestate-network-dev

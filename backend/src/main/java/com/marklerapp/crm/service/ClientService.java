@@ -290,7 +290,7 @@ public class ClientService {
     /**
      * Convert Client entity to DTO
      */
-    private ClientDto convertToDto(Client client) {
+    public ClientDto convertToDto(Client client) {
         ClientDto dto = ClientDto.builder()
                 .id(client.getId())
                 .agentId(client.getAgent().getId())

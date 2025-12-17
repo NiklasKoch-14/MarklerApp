@@ -45,6 +45,7 @@ public class CallNoteDto {
         @Size(min = 10, max = 5000, message = "Notes must be between 10 and 5000 characters")
         private String notes;
 
+        @Builder.Default
         private Boolean followUpRequired = false;
 
         private LocalDate followUpDate;
@@ -80,6 +81,7 @@ public class CallNoteDto {
         @Size(min = 10, max = 5000, message = "Notes must be between 10 and 5000 characters")
         private String notes;
 
+        @Builder.Default
         private Boolean followUpRequired = false;
 
         private LocalDate followUpDate;
@@ -130,6 +132,7 @@ public class CallNoteDto {
         private LocalDateTime callDate;
         private CallNote.CallType callType;
         private String subject;
+        private String notesSummary;  // Preview of notes for list view
         private Boolean followUpRequired;
         private LocalDate followUpDate;
         private CallNote.CallOutcome outcome;

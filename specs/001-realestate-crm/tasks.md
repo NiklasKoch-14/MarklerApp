@@ -169,32 +169,32 @@ description: "Task list for Real Estate CRM System implementation"
 
 ### Implementation for User Story 3
 
-- [ ] T065 [P] [US3] Create Property entity in backend/src/main/java/com/marklerapp/crm/entity/Property.java
-- [ ] T066 [P] [US3] Create PropertyImage entity in backend/src/main/java/com/marklerapp/crm/entity/PropertyImage.java
-- [ ] T067 [P] [US3] Create Property repository in backend/src/main/java/com/marklerapp/crm/repository/PropertyRepository.java
-- [ ] T068 [P] [US3] Create PropertyImage repository in backend/src/main/java/com/marklerapp/crm/repository/PropertyImageRepository.java
-- [ ] T069 [P] [US3] Create Property DTOs in backend/src/main/java/com/marklerapp/crm/dto/PropertyDto.java
-- [ ] T070 [P] [US3] Create PropertyImage DTOs in backend/src/main/java/com/marklerapp/crm/dto/PropertyImageDto.java
-- [ ] T071 [US3] Implement PropertyService in backend/src/main/java/com/marklerapp/crm/service/PropertyService.java (depends on T067)
-- [ ] T072 [US3] Implement PropertyImageService for file upload handling in backend/src/main/java/com/marklerapp/crm/service/PropertyImageService.java (depends on T068)
-- [ ] T073 [US3] Implement PropertyMatchingService in backend/src/main/java/com/marklerapp/crm/service/PropertyMatchingService.java (depends on T071, T031)
-- [ ] T074 [US3] Create Property REST controller in backend/src/main/java/com/marklerapp/crm/controller/PropertyController.java (depends on T071, T072)
-- [ ] T075 [US3] Create PropertyMatching REST controller in backend/src/main/java/com/marklerapp/crm/controller/PropertyMatchingController.java (depends on T073)
-- [ ] T076 [P] [US3] Create property management feature module in frontend/src/app/features/property-management/property-management.module.ts
-- [ ] T077 [P] [US3] Create property list component in frontend/src/app/features/property-management/components/property-list/property-list.component.ts
-- [ ] T078 [P] [US3] Create property form component in frontend/src/app/features/property-management/components/property-form/property-form.component.ts
-- [ ] T079 [P] [US3] Create property detail component in frontend/src/app/features/property-management/components/property-detail/property-detail.component.ts
-- [ ] T080 [P] [US3] Create property image upload component in frontend/src/app/features/property-management/components/image-upload/image-upload.component.ts
-- [ ] T081 [P] [US3] Create property search component in frontend/src/app/features/property-management/components/property-search/property-search.component.ts
-- [ ] T082 [P] [US3] Create property matching component in frontend/src/app/features/property-management/components/property-matching/property-matching.component.ts
-- [ ] T083 [US3] Create property service in frontend/src/app/features/property-management/services/property.service.ts (depends on T074)
-- [ ] T084 [US3] Create property matching service in frontend/src/app/features/property-management/services/property-matching.service.ts (depends on T075)
-- [ ] T085 [US3] Implement property management routing in frontend/src/app/features/property-management/property-management-routing.module.ts
-- [ ] T086 [US3] Add property image gallery with thumbnail generation
-- [ ] T087 [US3] Implement property search and filtering functionality
-- [ ] T088 [US3] Create property matching algorithm with scoring system
-- [ ] T089 [US3] Add custom fields support for additional property information
-- [ ] T090 [US3] Integrate property matching with client profiles (cross-story integration)
+- [X] T065 [P] [US3] Create Property entity in backend/src/main/java/com/marklerapp/crm/entity/Property.java
+- [X] T066 [P] [US3] Create PropertyImage entity in backend/src/main/java/com/marklerapp/crm/entity/PropertyImage.java
+- [X] T067 [P] [US3] Create Property repository in backend/src/main/java/com/marklerapp/crm/repository/PropertyRepository.java
+- [X] T068 [P] [US3] Create PropertyImage repository in backend/src/main/java/com/marklerapp/crm/repository/PropertyImageRepository.java
+- [X] T069 [P] [US3] Create Property DTOs in backend/src/main/java/com/marklerapp/crm/dto/PropertyDto.java
+- [X] T070 [P] [US3] Create PropertyImage DTOs in backend/src/main/java/com/marklerapp/crm/dto/PropertyImageDto.java
+- [X] T071 [US3] Implement PropertyService in backend/src/main/java/com/marklerapp/crm/service/PropertyService.java (depends on T067)
+- [X] T072 [US3] Implement PropertyImageService for file upload handling in backend/src/main/java/com/marklerapp/crm/service/PropertyImageService.java (depends on T068)
+- [X] T073 [US3] Implement PropertyMatchingService in backend/src/main/java/com/marklerapp/crm/service/PropertyMatchingService.java (depends on T071, T031)
+- [X] T074 [US3] Create Property REST controller in backend/src/main/java/com/marklerapp/crm/controller/PropertyController.java (depends on T071, T072)
+- [X] T075 [US3] Create PropertyMatching REST controller in backend/src/main/java/com/marklerapp/crm/controller/PropertyMatchingController.java (depends on T073)
+- [X] T076 [P] [US3] Create property management feature module in frontend/src/app/features/property-management/property-management.module.ts
+- [X] T077 [P] [US3] Create property list component in frontend/src/app/features/property-management/components/property-list/property-list.component.ts
+- [X] T078 [P] [US3] Create property form component in frontend/src/app/features/property-management/components/property-form/property-form.component.ts
+- [X] T079 [P] [US3] Create property detail component in frontend/src/app/features/property-management/components/property-detail/property-detail.component.ts
+- [X] T080 [P] [US3] Create property image upload component in frontend/src/app/features/property-management/components/image-upload/image-upload.component.ts
+- [X] T081 [P] [US3] Create property search component in frontend/src/app/features/property-management/components/property-search/property-search.component.ts
+- [X] T082 [P] [US3] Create property matching component in frontend/src/app/features/property-management/components/property-matching/property-matching.component.ts
+- [X] T083 [US3] Create property service in frontend/src/app/features/property-management/services/property.service.ts (depends on T074)
+- [X] T084 [US3] Create property matching service in frontend/src/app/features/property-management/services/property-matching.service.ts (depends on T075)
+- [X] T085 [US3] Implement property management routing in frontend/src/app/features/property-management/property-management-routing.module.ts
+- [X] T086 [US3] Add property image gallery with thumbnail generation
+- [X] T087 [US3] Implement property search and filtering functionality
+- [X] T088 [US3] Create property matching algorithm with scoring system
+- [X] T089 [US3] Add custom fields support for additional property information
+- [X] T090 [US3] Integrate property matching with client profiles (cross-story integration)
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -206,14 +206,14 @@ description: "Task list for Real Estate CRM System implementation"
 
 - [ ] T091 [P] Create comprehensive Docker deployment configuration
 - [ ] T092 [P] Implement database migration scripts for SQLite to PostgreSQL
-- [ ] T093 [P] Add health check endpoints in backend/src/main/java/com/marklerapp/crm/controller/HealthController.java
-- [ ] T094 [P] Setup file storage configuration for property images
-- [ ] T095 [P] Implement GDPR data export functionality
+- [X] T093 [P] Add health check endpoints in backend/src/main/java/com/marklerapp/crm/controller/HealthController.java
+- [X] T094 [P] Setup file storage configuration for property images
+- [X] T095 [P] Implement GDPR data export functionality
 - [ ] T096 [P] Create GDPR data anonymization service
-- [ ] T097 [P] Add comprehensive error handling across all components
-- [ ] T098 [P] Implement audit logging for all GDPR-sensitive operations
+- [X] T097 [P] Add comprehensive error handling across all components
+- [X] T098 [P] Implement audit logging for all GDPR-sensitive operations
 - [ ] T099 [P] Add performance optimizations for large datasets
-- [ ] T100 [P] Create API documentation generation with OpenAPI
+- [X] T100 [P] Create API documentation generation with OpenAPI
 - [ ] T101 [P] Setup monitoring and metrics collection
 - [ ] T102 [P] Add responsive design improvements for mobile devices
 - [ ] T103 [P] Implement caching strategies for frequently accessed data
@@ -221,14 +221,36 @@ description: "Task list for Real Estate CRM System implementation"
 
 ### Phase 6.1: UI/UX Enhancements & Theme System
 
-- [ ] T104.1 [P] Implement dark/light mode theme system with Tailwind CSS
-- [ ] T104.2 [P] Add theme toggle button in main application header
-- [ ] T104.3 [P] Create theme service to persist user theme preference
-- [ ] T104.4 [P] Add German/English language switcher in application header
-- [ ] T104.5 [P] Create language service to persist user language preference
-- [ ] T104.6 [P] Ensure all components support both themes (dark/light)
-- [ ] T104.7 [P] Add smooth transitions for theme switching
-- [ ] T104.8 [P] Test theme system across all pages and components
+- [X] T104.1 [P] Implement dark/light mode theme system with Tailwind CSS
+- [X] T104.2 [P] Add theme toggle button in main application header
+- [X] T104.3 [P] Create theme service to persist user theme preference
+- [X] T104.4 [P] Add German/English language switcher in application header
+- [X] T104.5 [P] Create language service to persist user language preference
+- [X] T104.6 [P] Ensure all components support both themes (dark/light)
+- [X] T104.7 [P] Add smooth transitions for theme switching
+- [X] T104.8 [P] Test theme system across all pages and components
+
+### Phase 6.2: Call Notes & Property Image Enhancements
+
+#### T105: Call Notes Client Validation
+- [ ] T105.1 [P] Implement client existence check service method in ClientService
+- [ ] T105.2 [P] Create shared tooltip directive for disabled state with custom message
+- [ ] T105.3 [P] Update call-notes component to check client count before enabling add button
+- [ ] T105.4 [P] Add tooltip "Create client first" to disabled add call note button
+- [ ] T105.5 [P] Apply client validation to all add call note buttons across application
+- [ ] T105.6 [P] Test call notes button states with zero clients and with existing clients
+
+#### T106: Property Image Management
+- [ ] T106.1 [P] Create property-image-upload component in frontend/src/app/features/property-management/components/
+- [ ] T106.2 [P] Add image upload tab to property form with drag & drop support
+- [ ] T106.3 [P] Implement image preview grid with delete functionality in upload component
+- [ ] T106.4 [P] Add "Set as Primary" image functionality with visual indicator
+- [ ] T106.5 [P] Integrate PropertyImageService with property form component
+- [ ] T106.6 [P] Create property-image-gallery component for property detail view
+- [ ] T106.7 [P] Display property images in detail view with carousel/gallery navigation
+- [ ] T106.8 [P] Show primary image prominently in property detail header
+- [ ] T106.9 [P] Add image loading states and error handling
+- [ ] T106.10 [P] Test image upload, delete, and display functionality
 
 ---
 

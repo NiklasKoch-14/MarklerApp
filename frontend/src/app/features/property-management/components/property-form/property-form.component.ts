@@ -23,6 +23,7 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
   propertyForm: FormGroup;
   isLoading = false;
   errorMessage = '';
+  fieldErrors: { [key: string]: string } = {};
   isEditMode = false;
   propertyId: string | null = null;
 
@@ -107,7 +108,10 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
       contactPhone: ['', [Validators.pattern('^[+]?[0-9\\s\\-()]*$'), Validators.maxLength(20)]],
       contactEmail: ['', [Validators.email]],
       virtualTourUrl: ['', [Validators.maxLength(500)]],
-      notes: ['', [Validators.maxLength(2000)]]
+      notes: ['', [Validators.maxLength(2000)]],
+
+      // GDPR
+      dataProcessingConsent: [false, [Validators.requiredTrue]]
     });
   }
 
@@ -205,6 +209,7 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
     if (this.propertyForm.valid && !this.isLoading) {
       this.isLoading = true;
       this.errorMessage = '';
+      this.fieldErrors = {};
 
       const propertyData = this.propertyForm.value;
 
@@ -216,8 +221,7 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
           },
           error: (error) => {
             this.isLoading = false;
-            this.errorMessage = error.error?.message || 'Failed to update property. Please try again.';
-            console.error('Error updating property:', error);
+            this.handleSubmitError(error);
           }
         });
       } else {
@@ -229,8 +233,7 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
           },
           error: (error) => {
             this.isLoading = false;
-            this.errorMessage = error.error?.message || 'Failed to create property. Please try again.';
-            console.error('Error creating property:', error);
+            this.handleSubmitError(error);
           }
         });
       }
@@ -240,7 +243,66 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
         this.propertyForm.get(key)?.markAsTouched();
       });
       this.errorMessage = 'Please fill in all required fields correctly.';
+      this.scrollToFirstError();
     }
+  }
+
+  private handleSubmitError(error: any): void {
+    console.error('Error submitting property:', error);
+
+    // Check if backend sent field-specific errors
+    if (error.error?.fieldErrors) {
+      this.fieldErrors = error.error.fieldErrors;
+
+      // Build a detailed error message listing which fields failed
+      const fieldNames = Object.keys(this.fieldErrors);
+      if (fieldNames.length > 0) {
+        const fieldList = fieldNames
+          .map(field => this.getFieldDisplayName(field))
+          .join(', ');
+        this.errorMessage = `Validation failed for the following field(s): ${fieldList}. Please check the highlighted fields below.`;
+      } else {
+        this.errorMessage = error.error?.message || 'Failed to save property. Please try again.';
+      }
+
+      // Mark fields with errors as touched
+      Object.keys(this.fieldErrors).forEach(fieldName => {
+        const control = this.propertyForm.get(fieldName);
+        if (control) {
+          control.markAsTouched();
+          control.setErrors({ serverError: this.fieldErrors[fieldName] });
+        }
+      });
+
+      this.scrollToFirstError();
+    } else {
+      this.errorMessage = error.error?.message || 'Failed to save property. Please try again.';
+    }
+  }
+
+  private getFieldDisplayName(fieldName: string): string {
+    const fieldMap: { [key: string]: string } = {
+      'title': 'Property Title',
+      'propertyType': 'Property Type',
+      'listingType': 'Listing Type',
+      'addressStreet': 'Street Address',
+      'addressCity': 'City',
+      'addressPostalCode': 'Postal Code',
+      'dataProcessingConsent': 'Data Processing Consent',
+      'price': 'Price',
+      'livingAreaSqm': 'Living Area',
+      'rooms': 'Number of Rooms'
+    };
+    return fieldMap[fieldName] || fieldName;
+  }
+
+  private scrollToFirstError(): void {
+    setTimeout(() => {
+      const firstError = document.querySelector('.ng-invalid:not(form), [data-error="true"]');
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
   }
 
   cancel(): void {
@@ -262,7 +324,20 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
 
   getFieldError(fieldName: string): string {
     const field = this.propertyForm.get(fieldName);
+
+    // Check for server-side errors first (most specific)
+    if (field?.hasError('serverError')) {
+      return field.errors?.['serverError'];
+    }
+
+    // Check for backend field errors
+    if (this.fieldErrors[fieldName]) {
+      return this.fieldErrors[fieldName];
+    }
+
+    // Frontend validation errors
     if (field?.hasError('required')) return 'This field is required';
+    if (field?.hasError('requiredTrue')) return 'You must accept this to continue';
     if (field?.hasError('minlength')) return `Minimum length is ${field.errors?.['minlength'].requiredLength}`;
     if (field?.hasError('maxlength')) return `Maximum length is ${field.errors?.['maxlength'].requiredLength}`;
     if (field?.hasError('min')) return `Minimum value is ${field.errors?.['min'].min}`;

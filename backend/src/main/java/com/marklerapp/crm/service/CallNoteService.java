@@ -279,6 +279,14 @@ public class CallNoteService {
      * Convert CallNote entity to Summary DTO
      */
     private CallNoteDto.Summary convertToSummary(CallNote callNote) {
+        // Create a preview of the notes (first 150 characters)
+        String notesSummary = null;
+        if (callNote.getNotes() != null && !callNote.getNotes().isEmpty()) {
+            notesSummary = callNote.getNotes().length() > 150
+                ? callNote.getNotes().substring(0, 150) + "..."
+                : callNote.getNotes();
+        }
+
         return CallNoteDto.Summary.builder()
             .id(callNote.getId())
             .clientId(callNote.getClient().getId())
@@ -286,6 +294,7 @@ public class CallNoteService {
             .callDate(callNote.getCallDate())
             .callType(callNote.getCallType())
             .subject(callNote.getSubject())
+            .notesSummary(notesSummary)
             .followUpRequired(callNote.getFollowUpRequired())
             .followUpDate(callNote.getFollowUpDate())
             .outcome(callNote.getOutcome())

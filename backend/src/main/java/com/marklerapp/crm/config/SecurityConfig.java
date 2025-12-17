@@ -71,7 +71,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints (note: context-path is already /api/v1, so paths are relative to that)
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/health/**").permitAll()  // Health check endpoints
+                        .requestMatchers("/actuator/health/**").permitAll()
                         .requestMatchers("/actuator/info").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()

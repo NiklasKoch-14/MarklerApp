@@ -1,119 +1,329 @@
 package com.marklerapp.crm.controller;
 
-import com.marklerapp.crm.dto.PropertyDto;
-import com.marklerapp.crm.entity.*;
-import com.marklerapp.crm.repository.ClientRepository;
+import com.marklerapp.crm.dto.*;
+import com.marklerapp.crm.entity.ListingType;
+import com.marklerapp.crm.entity.PropertyStatus;
+import com.marklerapp.crm.entity.PropertyType;
 import com.marklerapp.crm.security.CustomUserDetails;
+import com.marklerapp.crm.service.FileStorageService;
+import com.marklerapp.crm.service.PropertyImageService;
 import com.marklerapp.crm.service.PropertyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
 /**
- * REST controller for property management operations.
+ * REST controller for comprehensive property management operations.
+ *
+ * <p>This controller provides all CRUD operations for properties, including:
+ * <ul>
+ *   <li>Creating, updating, and deleting properties</li>
+ *   <li>Retrieving properties with pagination and sorting</li>
+ *   <li>Advanced search and filtering capabilities</li>
+ *   <li>Image upload and management</li>
+ *   <li>Property statistics and analytics</li>
+ * </ul>
+ * </p>
+ *
+ * <p>Security: All operations automatically extract the authenticated agent from
+ * the JWT token and ensure proper data isolation. Agents can only access their
+ * own properties.</p>
+ *
+ * <p>Error Handling: All validation errors and business logic exceptions are
+ * handled by the global exception handler, returning consistent error responses.</p>
+ *
+ * @see PropertyService
+ * @see PropertyImageService
+ * @see PropertyDto
  */
 @Slf4j
 @RestController
 @RequestMapping("/properties")
 @RequiredArgsConstructor
-@Tag(name = "Property Management", description = "APIs for managing real estate properties")
+@Tag(name = "Property Management", description = "APIs for managing real estate property listings")
 public class PropertyController {
 
     private final PropertyService propertyService;
-    private final ClientRepository clientRepository;
+    private final PropertyImageService propertyImageService;
+    private final FileStorageService fileStorageService;
+
+    // ========================================
+    // Core CRUD Operations
+    // ========================================
 
     /**
-     * Get all properties for the authenticated agent
+     * Create a new property.
+     *
+     * @param request the property creation request with all required fields
+     * @param authentication the authenticated user (agent)
+     * @return the created property with generated ID and timestamps
+     */
+    @PostMapping
+    @Operation(summary = "Create new property",
+               description = "Create a new property listing with comprehensive details including location, specifications, and pricing information. GDPR consent is required.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Property created successfully",
+                     content = @Content(schema = @Schema(implementation = PropertyDto.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request data or validation errors"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
+    })
+    public ResponseEntity<PropertyDto> createProperty(
+            @Parameter(description = "Property creation request with all required fields", required = true)
+            @Valid @RequestBody CreatePropertyRequest request,
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        log.info("Creating new property for agent: {}", agentId);
+
+        PropertyDto createdProperty = propertyService.createProperty(request, agentId);
+
+        log.info("Successfully created property: {} for agent: {}", createdProperty.getId(), agentId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdProperty);
+    }
+
+    /**
+     * Update an existing property (full update).
+     *
+     * @param id the property ID
+     * @param request the update request with all fields
+     * @param authentication the authenticated user (agent)
+     * @return the updated property
+     */
+    @PutMapping("/{id}")
+    @Operation(summary = "Update property",
+               description = "Update an existing property with new data. All fields in the request will be updated.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Property updated successfully",
+                     content = @Content(schema = @Schema(implementation = PropertyDto.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request data or validation errors"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
+        @ApiResponse(responseCode = "404", description = "Property not found or access denied")
+    })
+    public ResponseEntity<PropertyDto> updateProperty(
+            @Parameter(description = "Property ID", required = true)
+            @PathVariable UUID id,
+            @Parameter(description = "Updated property data", required = true)
+            @Valid @RequestBody UpdatePropertyRequest request,
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        log.info("Updating property: {} for agent: {}", id, agentId);
+
+        PropertyDto updatedProperty = propertyService.updateProperty(id, request, agentId);
+
+        log.info("Successfully updated property: {} for agent: {}", id, agentId);
+        return ResponseEntity.ok(updatedProperty);
+    }
+
+    /**
+     * Partially update a property (PATCH operation).
+     *
+     * @param id the property ID
+     * @param request the partial update request with only fields to update
+     * @param authentication the authenticated user (agent)
+     * @return the updated property
+     */
+    @PatchMapping("/{id}")
+    @Operation(summary = "Partially update property",
+               description = "Update specific fields of a property. Only provided fields will be updated, others remain unchanged.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Property partially updated successfully",
+                     content = @Content(schema = @Schema(implementation = PropertyDto.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request data or validation errors"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
+        @ApiResponse(responseCode = "404", description = "Property not found or access denied")
+    })
+    public ResponseEntity<PropertyDto> partialUpdateProperty(
+            @Parameter(description = "Property ID", required = true)
+            @PathVariable UUID id,
+            @Parameter(description = "Partial update data with only fields to change", required = true)
+            @RequestBody UpdatePropertyRequest request,
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        log.info("Partially updating property: {} for agent: {}", id, agentId);
+
+        // UpdatePropertyRequest already supports partial updates (only non-null fields are updated)
+        PropertyDto updatedProperty = propertyService.updateProperty(id, request, agentId);
+
+        log.info("Successfully partially updated property: {} for agent: {}", id, agentId);
+        return ResponseEntity.ok(updatedProperty);
+    }
+
+    /**
+     * Get a single property by ID.
+     *
+     * @param id the property ID
+     * @param authentication the authenticated user (agent)
+     * @return the property details including images
+     */
+    @GetMapping("/{id}")
+    @Operation(summary = "Get property by ID",
+               description = "Retrieve detailed information about a specific property including all associated images.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Property retrieved successfully",
+                     content = @Content(schema = @Schema(implementation = PropertyDto.class))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
+        @ApiResponse(responseCode = "404", description = "Property not found or access denied")
+    })
+    public ResponseEntity<PropertyDto> getProperty(
+            @Parameter(description = "Property ID", required = true)
+            @PathVariable UUID id,
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        log.debug("Getting property: {} for agent: {}", id, agentId);
+
+        PropertyDto property = propertyService.getProperty(id, agentId);
+
+        return ResponseEntity.ok(property);
+    }
+
+    /**
+     * Get all properties for the authenticated agent with pagination.
+     *
+     * @param page page number (0-based)
+     * @param size page size
+     * @param sortBy field to sort by
+     * @param sortDir sort direction (asc/desc)
+     * @param authentication the authenticated user (agent)
+     * @return page of properties
      */
     @GetMapping
-    @Operation(summary = "Get all properties", description = "Retrieve all properties for the authenticated agent with pagination")
+    @Operation(summary = "Get all properties",
+               description = "Retrieve all properties for the authenticated agent with pagination and sorting support.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Properties retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
+    })
     public ResponseEntity<Page<PropertyDto>> getAllProperties(
-            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "Sort field") @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir,
+            @Parameter(description = "Page number (0-based)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20")
+            @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Sort field", example = "createdAt")
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @Parameter(description = "Sort direction (asc/desc)", example = "desc")
+            @RequestParam(defaultValue = "desc") String sortDir,
             Authentication authentication) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
+        log.debug("Getting all properties for agent: {} (page: {}, size: {})", agentId, page, size);
 
-        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc") ?
-                Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
+        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc")
+            ? Sort.Direction.DESC
+            : Sort.Direction.ASC, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<PropertyDto> properties = propertyService.getPropertiesByAgent(agentId, pageable);
+        Page<PropertyDto> properties = propertyService.getAllProperties(agentId, pageable);
 
         return ResponseEntity.ok(properties);
     }
 
     /**
-     * Search properties by term
+     * Delete a property by ID.
+     *
+     * @param id the property ID
+     * @param authentication the authenticated user (agent)
+     * @return no content
+     */
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete property",
+               description = "Delete a property and all associated images. This operation cannot be undone.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Property deleted successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
+        @ApiResponse(responseCode = "404", description = "Property not found or access denied")
+    })
+    public ResponseEntity<Void> deleteProperty(
+            @Parameter(description = "Property ID", required = true)
+            @PathVariable UUID id,
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        log.info("Deleting property: {} for agent: {}", id, agentId);
+
+        propertyService.deleteProperty(id, agentId);
+
+        log.info("Successfully deleted property: {} for agent: {}", id, agentId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // ========================================
+    // Search and Filter Operations
+    // ========================================
+
+    /**
+     * Advanced property search with multiple criteria.
      */
     @GetMapping("/search")
-    @Operation(summary = "Search properties", description = "Search properties by title, description, or address")
+    @Operation(summary = "Advanced property search",
+               description = "Search properties with multiple filter criteria including status, type, location, price range, area, and room count.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Search completed successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
+    })
     public ResponseEntity<Page<PropertyDto>> searchProperties(
-            @Parameter(description = "Search term") @RequestParam String q,
-            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "Sort field") @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir,
+            @Parameter(description = "Property status")
+            @RequestParam(required = false) PropertyStatus status,
+            @Parameter(description = "Property type")
+            @RequestParam(required = false) PropertyType propertyType,
+            @Parameter(description = "Listing type (SALE or RENT)")
+            @RequestParam(required = false) ListingType listingType,
+            @Parameter(description = "City name")
+            @RequestParam(required = false) String city,
+            @Parameter(description = "Minimum price")
+            @RequestParam(required = false) BigDecimal minPrice,
+            @Parameter(description = "Maximum price")
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @Parameter(description = "Minimum living area (sqm)")
+            @RequestParam(required = false) BigDecimal minArea,
+            @Parameter(description = "Maximum living area (sqm)")
+            @RequestParam(required = false) BigDecimal maxArea,
+            @Parameter(description = "Minimum number of rooms")
+            @RequestParam(required = false) BigDecimal minRooms,
+            @Parameter(description = "Maximum number of rooms")
+            @RequestParam(required = false) BigDecimal maxRooms,
+            @Parameter(description = "Page number (0-based)")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size")
+            @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Sort field")
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @Parameter(description = "Sort direction (asc/desc)")
+            @RequestParam(defaultValue = "desc") String sortDir,
             Authentication authentication) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
+        log.debug("Advanced search for agent: {} with filters: status={}, type={}, city={}, priceRange={}-{}",
+            agentId, status, propertyType, city, minPrice, maxPrice);
 
-        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc") ?
-                Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        Page<PropertyDto> properties = propertyService.searchProperties(agentId, q, pageable);
-
-        return ResponseEntity.ok(properties);
-    }
-
-    /**
-     * Advanced property search with filters
-     */
-    @GetMapping("/search/advanced")
-    @Operation(summary = "Advanced property search", description = "Search properties with multiple filter criteria")
-    public ResponseEntity<Page<PropertyDto>> searchPropertiesAdvanced(
-            @Parameter(description = "Property status") @RequestParam(required = false) PropertyStatus status,
-            @Parameter(description = "Property type") @RequestParam(required = false) PropertyType propertyType,
-            @Parameter(description = "Listing type") @RequestParam(required = false) ListingType listingType,
-            @Parameter(description = "City") @RequestParam(required = false) String city,
-            @Parameter(description = "Minimum price") @RequestParam(required = false) BigDecimal minPrice,
-            @Parameter(description = "Maximum price") @RequestParam(required = false) BigDecimal maxPrice,
-            @Parameter(description = "Minimum living area (sqm)") @RequestParam(required = false) BigDecimal minArea,
-            @Parameter(description = "Maximum living area (sqm)") @RequestParam(required = false) BigDecimal maxArea,
-            @Parameter(description = "Minimum rooms") @RequestParam(required = false) BigDecimal minRooms,
-            @Parameter(description = "Maximum rooms") @RequestParam(required = false) BigDecimal maxRooms,
-            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "Sort field") @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir,
-            Authentication authentication) {
-
-        UUID agentId = getAgentIdFromAuth(authentication);
-
-        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc") ?
-                Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
-
+        // Build search filter
         PropertyService.PropertySearchFilter filter = new PropertyService.PropertySearchFilter();
         filter.setStatus(status);
         filter.setPropertyType(propertyType);
@@ -126,247 +336,517 @@ public class PropertyController {
         filter.setMinRooms(minRooms);
         filter.setMaxRooms(maxRooms);
 
-        Page<PropertyDto> properties = propertyService.searchPropertiesAdvanced(agentId, filter, pageable);
+        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc")
+            ? Sort.Direction.DESC
+            : Sort.Direction.ASC, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<PropertyDto> properties = propertyService.searchProperties(filter, agentId, pageable);
 
         return ResponseEntity.ok(properties);
     }
 
     /**
-     * Get property by ID
+     * Simple text search across property title, description, and address.
      */
-    @GetMapping("/{propertyId}")
-    @Operation(summary = "Get property by ID", description = "Retrieve a specific property by ID")
-    public ResponseEntity<PropertyDto> getProperty(
-            @Parameter(description = "Property ID") @PathVariable UUID propertyId,
+    @GetMapping("/filter")
+    @Operation(summary = "Filter properties by text",
+               description = "Search properties by text query across title, description, and address fields.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Search completed successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
+    })
+    public ResponseEntity<Page<PropertyDto>> filterProperties(
+            @Parameter(description = "Search query", required = true)
+            @RequestParam String q,
+            @Parameter(description = "Page number (0-based)")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size")
+            @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Sort field")
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @Parameter(description = "Sort direction (asc/desc)")
+            @RequestParam(defaultValue = "desc") String sortDir,
             Authentication authentication) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
-        PropertyDto property = propertyService.getPropertyById(propertyId, agentId);
+        log.debug("Text search for agent: {} with query: {}", agentId, q);
 
-        return ResponseEntity.ok(property);
+        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc")
+            ? Sort.Direction.DESC
+            : Sort.Direction.ASC, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<PropertyDto> properties = propertyService.searchPropertiesByText(agentId, q, pageable);
+
+        return ResponseEntity.ok(properties);
+    }
+
+    // ========================================
+    // Filtered Retrieval Operations
+    // ========================================
+
+    /**
+     * Get properties by status.
+     */
+    @GetMapping("/status/{status}")
+    @Operation(summary = "Get properties by status",
+               description = "Retrieve properties filtered by status (AVAILABLE, SOLD, RENTED, RESERVED, WITHDRAWN).")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Properties retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
+    })
+    public ResponseEntity<Page<PropertyDto>> getPropertiesByStatus(
+            @Parameter(description = "Property status", required = true)
+            @PathVariable PropertyStatus status,
+            @Parameter(description = "Page number (0-based)")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size")
+            @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Sort field")
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @Parameter(description = "Sort direction (asc/desc)")
+            @RequestParam(defaultValue = "desc") String sortDir,
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        log.debug("Getting properties by status: {} for agent: {}", status, agentId);
+
+        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc")
+            ? Sort.Direction.DESC
+            : Sort.Direction.ASC, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<PropertyDto> properties = propertyService.getPropertiesByStatus(status, agentId, pageable);
+
+        return ResponseEntity.ok(properties);
     }
 
     /**
-     * Create a new property
+     * Get properties by type.
      */
-    @PostMapping
-    @Operation(summary = "Create property", description = "Create a new property")
-    public ResponseEntity<PropertyDto> createProperty(
-            @Parameter(description = "Property data") @Valid @RequestBody PropertyDto propertyDto,
+    @GetMapping("/type/{type}")
+    @Operation(summary = "Get properties by type",
+               description = "Retrieve properties filtered by type (APARTMENT, HOUSE, VILLA, etc.).")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Properties retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
+    })
+    public ResponseEntity<Page<PropertyDto>> getPropertiesByType(
+            @Parameter(description = "Property type", required = true)
+            @PathVariable PropertyType type,
+            @Parameter(description = "Page number (0-based)")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size")
+            @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Sort field")
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @Parameter(description = "Sort direction (asc/desc)")
+            @RequestParam(defaultValue = "desc") String sortDir,
             Authentication authentication) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
-        PropertyDto createdProperty = propertyService.createProperty(propertyDto, agentId);
+        log.debug("Getting properties by type: {} for agent: {}", type, agentId);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdProperty);
+        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc")
+            ? Sort.Direction.DESC
+            : Sort.Direction.ASC, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<PropertyDto> properties = propertyService.getPropertiesByType(type, agentId, pageable);
+
+        return ResponseEntity.ok(properties);
     }
 
     /**
-     * Update an existing property
+     * Get properties by city.
      */
-    @PutMapping("/{propertyId}")
-    @Operation(summary = "Update property", description = "Update an existing property")
-    public ResponseEntity<PropertyDto> updateProperty(
-            @Parameter(description = "Property ID") @PathVariable UUID propertyId,
-            @Parameter(description = "Updated property data") @Valid @RequestBody PropertyDto propertyDto,
+    @GetMapping("/city/{city}")
+    @Operation(summary = "Get properties by city",
+               description = "Retrieve properties filtered by city name.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Properties retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
+    })
+    public ResponseEntity<Page<PropertyDto>> getPropertiesByCity(
+            @Parameter(description = "City name", required = true)
+            @PathVariable String city,
+            @Parameter(description = "Page number (0-based)")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size")
+            @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Sort field")
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @Parameter(description = "Sort direction (asc/desc)")
+            @RequestParam(defaultValue = "desc") String sortDir,
             Authentication authentication) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
-        PropertyDto updatedProperty = propertyService.updateProperty(propertyId, propertyDto, agentId);
+        log.debug("Getting properties by city: {} for agent: {}", city, agentId);
 
-        return ResponseEntity.ok(updatedProperty);
+        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc")
+            ? Sort.Direction.DESC
+            : Sort.Direction.ASC, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<PropertyDto> properties = propertyService.getPropertiesByCity(city, agentId, pageable);
+
+        return ResponseEntity.ok(properties);
+    }
+
+    // ========================================
+    // Image Management Operations
+    // ========================================
+
+    /**
+     * Upload an image for a property.
+     */
+    @PostMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload property image",
+               description = "Upload an image for a property. Supports JPEG, PNG, WebP, and GIF formats up to 10MB. Thumbnails are automatically generated.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Image uploaded successfully",
+                     content = @Content(schema = @Schema(implementation = PropertyImageDto.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid file or validation errors"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
+        @ApiResponse(responseCode = "404", description = "Property not found or access denied")
+    })
+    public ResponseEntity<PropertyImageDto> uploadPropertyImage(
+            @Parameter(description = "Property ID", required = true)
+            @PathVariable UUID id,
+            @Parameter(description = "Image file to upload", required = true)
+            @RequestParam("file") MultipartFile file,
+            @Parameter(description = "Image title")
+            @RequestParam(required = false) String title,
+            @Parameter(description = "Image description")
+            @RequestParam(required = false) String description,
+            @Parameter(description = "Image type")
+            @RequestParam(required = false) String imageType,
+            @Parameter(description = "Set as primary image")
+            @RequestParam(required = false, defaultValue = "false") Boolean isPrimary,
+            Authentication authentication) throws IOException {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        log.info("Uploading image for property: {} by agent: {}", id, agentId);
+
+        // Build metadata DTO
+        PropertyImageDto metadata = PropertyImageDto.builder()
+            .title(title)
+            .description(description)
+            .isPrimary(isPrimary)
+            .build();
+
+        PropertyImageDto uploadedImage = propertyImageService.uploadImage(id, file, metadata, agentId);
+
+        log.info("Successfully uploaded image: {} for property: {}", uploadedImage.getId(), id);
+        return ResponseEntity.status(HttpStatus.CREATED).body(uploadedImage);
     }
 
     /**
-     * Delete a property
+     * Get all images for a property.
      */
-    @DeleteMapping("/{propertyId}")
-    @Operation(summary = "Delete property", description = "Delete a property by ID")
-    public ResponseEntity<Void> deleteProperty(
-            @Parameter(description = "Property ID") @PathVariable UUID propertyId,
+    @GetMapping("/{id}/images")
+    @Operation(summary = "Get property images",
+               description = "Retrieve all images for a property, sorted by sort order.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Images retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
+        @ApiResponse(responseCode = "404", description = "Property not found or access denied")
+    })
+    public ResponseEntity<List<PropertyImageDto>> getPropertyImages(
+            @Parameter(description = "Property ID", required = true)
+            @PathVariable UUID id,
             Authentication authentication) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
-        propertyService.deleteProperty(propertyId, agentId);
+        log.debug("Getting images for property: {} by agent: {}", id, agentId);
 
+        List<PropertyImageDto> images = propertyImageService.getAllImages(id, agentId);
+
+        return ResponseEntity.ok(images);
+    }
+
+    /**
+     * Delete a property image.
+     */
+    @DeleteMapping("/{id}/images/{imageId}")
+    @Operation(summary = "Delete property image",
+               description = "Delete an image from a property. The image file and thumbnail will be permanently removed.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Image deleted successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
+        @ApiResponse(responseCode = "404", description = "Property or image not found or access denied")
+    })
+    public ResponseEntity<Void> deletePropertyImage(
+            @Parameter(description = "Property ID", required = true)
+            @PathVariable UUID id,
+            @Parameter(description = "Image ID", required = true)
+            @PathVariable UUID imageId,
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        log.info("Deleting image: {} for property: {} by agent: {}", imageId, id, agentId);
+
+        propertyImageService.deleteImage(imageId, agentId);
+
+        log.info("Successfully deleted image: {} for property: {}", imageId, id);
         return ResponseEntity.noContent().build();
     }
 
     /**
-     * Get recent properties
+     * Set an image as the primary image for a property.
      */
-    @GetMapping("/recent")
-    @Operation(summary = "Get recent properties", description = "Get recently created properties")
-    public ResponseEntity<List<PropertyDto>> getRecentProperties(
-            @Parameter(description = "Number of days") @RequestParam(defaultValue = "30") int days,
+    @PutMapping("/{id}/images/{imageId}/primary")
+    @Operation(summary = "Set primary image",
+               description = "Set an image as the primary/main image for a property. The previous primary image will be unset.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Primary image set successfully",
+                     content = @Content(schema = @Schema(implementation = PropertyImageDto.class))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
+        @ApiResponse(responseCode = "404", description = "Property or image not found or access denied")
+    })
+    public ResponseEntity<PropertyImageDto> setPrimaryImage(
+            @Parameter(description = "Property ID", required = true)
+            @PathVariable UUID id,
+            @Parameter(description = "Image ID", required = true)
+            @PathVariable UUID imageId,
             Authentication authentication) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
-        List<PropertyDto> recentProperties = propertyService.getRecentProperties(agentId, days);
+        log.info("Setting primary image: {} for property: {} by agent: {}", imageId, id, agentId);
 
-        return ResponseEntity.ok(recentProperties);
+        // First validate that the image exists and belongs to this property and agent
+        PropertyImageDto currentImage = propertyImageService.getImage(imageId, agentId);
+        if (!currentImage.getPropertyId().equals(id)) {
+            throw new IllegalArgumentException("Image does not belong to the specified property");
+        }
+
+        // Update the image metadata to set as primary
+        PropertyImageDto metadata = PropertyImageDto.builder()
+                .isPrimary(true)
+                .build();
+        PropertyImageDto updatedImage = propertyImageService.updateImageMetadata(imageId, metadata, agentId);
+
+        log.info("Successfully set primary image: {} for property: {}", imageId, id);
+        return ResponseEntity.ok(updatedImage);
     }
 
     /**
-     * Get property statistics
+     * Get/download a property image file.
      */
-    @GetMapping("/stats")
-    @Operation(summary = "Get property statistics", description = "Get property count and statistics")
-    public ResponseEntity<PropertyService.PropertyStatsDto> getPropertyStats(Authentication authentication) {
+    @GetMapping("/{id}/images/{imageId}/file")
+    @Operation(summary = "Get property image file",
+               description = "Download or display the full-size property image file. Returns the actual image file with appropriate content type.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Image file retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
+        @ApiResponse(responseCode = "404", description = "Property, image, or file not found")
+    })
+    public ResponseEntity<Resource> getPropertyImageFile(
+            @Parameter(description = "Property ID", required = true)
+            @PathVariable UUID id,
+            @Parameter(description = "Image ID", required = true)
+            @PathVariable UUID imageId,
+            @Parameter(description = "Download as attachment (default: false, display inline)")
+            @RequestParam(required = false, defaultValue = "false") boolean download,
+            Authentication authentication) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
+        log.debug("Getting image file: {} for property: {} by agent: {}", imageId, id, agentId);
+
+        // Get image metadata and validate access
+        PropertyImageDto imageDto = propertyImageService.getImage(imageId, agentId);
+        if (!imageDto.getPropertyId().equals(id)) {
+            throw new IllegalArgumentException("Image does not belong to the specified property");
+        }
+
+        // Load file as resource
+        Resource resource = fileStorageService.loadFileAsResource(imageDto.getFilename(), id);
+
+        // Determine content type
+        String contentType = imageDto.getContentType();
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+
+        // Build response headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(contentType));
+
+        if (download) {
+            // Force download
+            headers.setContentDispositionFormData("attachment", imageDto.getOriginalFilename());
+        } else {
+            // Display inline (in browser)
+            headers.setContentDispositionFormData("inline", imageDto.getOriginalFilename());
+        }
+
+        return ResponseEntity.ok()
+            .headers(headers)
+            .body(resource);
+    }
+
+    /**
+     * Get property image thumbnail file.
+     */
+    @GetMapping("/{id}/images/{imageId}/thumbnail")
+    @Operation(summary = "Get property image thumbnail",
+               description = "Download or display the thumbnail version of a property image. Thumbnails are optimized for fast loading.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Thumbnail retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
+        @ApiResponse(responseCode = "404", description = "Property, image, or thumbnail not found")
+    })
+    public ResponseEntity<Resource> getPropertyImageThumbnail(
+            @Parameter(description = "Property ID", required = true)
+            @PathVariable UUID id,
+            @Parameter(description = "Image ID", required = true)
+            @PathVariable UUID imageId,
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        log.debug("Getting image thumbnail: {} for property: {} by agent: {}", imageId, id, agentId);
+
+        // Get image metadata and validate access
+        PropertyImageDto imageDto = propertyImageService.getImage(imageId, agentId);
+        if (!imageDto.getPropertyId().equals(id)) {
+            throw new IllegalArgumentException("Image does not belong to the specified property");
+        }
+
+        // Generate thumbnail filename
+        String thumbnailFilename = generateThumbnailFilename(imageDto.getFilename());
+
+        // Load thumbnail as resource
+        Resource resource = fileStorageService.loadFileAsResource(thumbnailFilename, id);
+
+        // Determine content type
+        String contentType = imageDto.getContentType();
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+
+        // Build response headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(contentType));
+        headers.setContentDispositionFormData("inline", "thumb_" + imageDto.getOriginalFilename());
+
+        return ResponseEntity.ok()
+            .headers(headers)
+            .body(resource);
+    }
+
+    // ========================================
+    // Statistics and Analytics Operations
+    // ========================================
+
+    /**
+     * Get property statistics for the authenticated agent.
+     */
+    @GetMapping("/stats")
+    @Operation(summary = "Get property statistics",
+               description = "Retrieve comprehensive property statistics including counts by status and listing type.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Statistics retrieved successfully",
+                     content = @Content(schema = @Schema(implementation = PropertyService.PropertyStatsDto.class))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
+    })
+    public ResponseEntity<PropertyService.PropertyStatsDto> getPropertyStats(
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        log.debug("Getting property statistics for agent: {}", agentId);
+
         PropertyService.PropertyStatsDto stats = propertyService.getPropertyStats(agentId);
 
         return ResponseEntity.ok(stats);
     }
 
     /**
-     * Get available properties
+     * Get recent properties added within specified days.
      */
-    @GetMapping("/available")
-    @Operation(summary = "Get available properties", description = "Get properties that are currently available")
-    public ResponseEntity<Page<PropertyDto>> getAvailableProperties(
-            @Parameter(description = "Available from date (YYYY-MM-DD)")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate availableFrom,
-            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "Sort field") @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir,
+    @GetMapping("/recent")
+    @Operation(summary = "Get recent properties",
+               description = "Retrieve properties added within the specified number of days.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Recent properties retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
+    })
+    public ResponseEntity<List<PropertyDto>> getRecentProperties(
+            @Parameter(description = "Number of days to look back", example = "30")
+            @RequestParam(defaultValue = "30") int days,
             Authentication authentication) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
+        log.debug("Getting recent properties for agent: {} (last {} days)", agentId, days);
 
-        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc") ?
-                Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
+        List<PropertyDto> recentProperties = propertyService.getRecentProperties(agentId, days);
+
+        return ResponseEntity.ok(recentProperties);
+    }
+
+    /**
+     * Get available properties from a specific date.
+     */
+    @GetMapping("/available")
+    @Operation(summary = "Get available properties",
+               description = "Retrieve properties available from a specific date onwards.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Available properties retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
+    })
+    public ResponseEntity<Page<PropertyDto>> getAvailableProperties(
+            @Parameter(description = "Available from date (YYYY-MM-DD)", example = "2025-01-01")
+            @RequestParam(required = false) LocalDate availableFrom,
+            @Parameter(description = "Page number (0-based)")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size")
+            @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Sort field")
+            @RequestParam(defaultValue = "availableFrom") String sortBy,
+            @Parameter(description = "Sort direction (asc/desc)")
+            @RequestParam(defaultValue = "asc") String sortDir,
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        log.debug("Getting available properties for agent: {} from: {}", agentId, availableFrom);
+
+        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc")
+            ? Sort.Direction.DESC
+            : Sort.Direction.ASC, sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        // If no date specified, use current date
         LocalDate fromDate = availableFrom != null ? availableFrom : LocalDate.now();
-
         Page<PropertyDto> properties = propertyService.getAvailableProperties(agentId, fromDate, pageable);
 
         return ResponseEntity.ok(properties);
     }
 
-    /**
-     * Find properties matching client criteria
-     */
-    @GetMapping("/matching/{clientId}")
-    @Operation(summary = "Find matching properties", description = "Find properties that match a client's search criteria")
-    public ResponseEntity<Page<PropertyDto>> findMatchingProperties(
-            @Parameter(description = "Client ID") @PathVariable UUID clientId,
-            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "Sort field") @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir,
-            Authentication authentication) {
-
-        UUID agentId = getAgentIdFromAuth(authentication);
-
-        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc") ?
-                Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        // First, fetch the client to get their search criteria
-        Client client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new IllegalArgumentException("Client not found with id: " + clientId));
-
-        // Verify ownership
-        if (!client.getAgent().getId().equals(agentId)) {
-            throw new IllegalArgumentException("Client not found or access denied");
-        }
-
-        // Check if client has search criteria
-        if (client.getSearchCriteria() == null) {
-            throw new IllegalArgumentException("Client does not have search criteria defined");
-        }
-
-        Page<PropertyDto> properties = propertyService.findMatchingProperties(
-                agentId,
-                client.getSearchCriteria(),
-                pageable
-        );
-
-        return ResponseEntity.ok(properties);
-    }
+    // ========================================
+    // Helper Methods
+    // ========================================
 
     /**
-     * Get properties by status
-     */
-    @GetMapping("/by-status/{status}")
-    @Operation(summary = "Get properties by status", description = "Get properties filtered by status")
-    public ResponseEntity<Page<PropertyDto>> getPropertiesByStatus(
-            @Parameter(description = "Property status") @PathVariable PropertyStatus status,
-            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "Sort field") @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir,
-            Authentication authentication) {
-
-        UUID agentId = getAgentIdFromAuth(authentication);
-
-        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc") ?
-                Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        Page<PropertyDto> properties = propertyService.getPropertiesByStatus(agentId, status, pageable);
-
-        return ResponseEntity.ok(properties);
-    }
-
-    /**
-     * Get properties by type
-     */
-    @GetMapping("/by-type/{type}")
-    @Operation(summary = "Get properties by type", description = "Get properties filtered by property type")
-    public ResponseEntity<Page<PropertyDto>> getPropertiesByType(
-            @Parameter(description = "Property type") @PathVariable PropertyType type,
-            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "Sort field") @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir,
-            Authentication authentication) {
-
-        UUID agentId = getAgentIdFromAuth(authentication);
-
-        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc") ?
-                Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        Page<PropertyDto> properties = propertyService.getPropertiesByType(agentId, type, pageable);
-
-        return ResponseEntity.ok(properties);
-    }
-
-    /**
-     * Get properties by listing type
-     */
-    @GetMapping("/by-listing-type/{listingType}")
-    @Operation(summary = "Get properties by listing type", description = "Get properties filtered by listing type (sale/rent)")
-    public ResponseEntity<Page<PropertyDto>> getPropertiesByListingType(
-            @Parameter(description = "Listing type") @PathVariable ListingType listingType,
-            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "Sort field") @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir,
-            Authentication authentication) {
-
-        UUID agentId = getAgentIdFromAuth(authentication);
-
-        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc") ?
-                Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        Page<PropertyDto> properties = propertyService.getPropertiesByListingType(agentId, listingType, pageable);
-
-        return ResponseEntity.ok(properties);
-    }
-
-    /**
-     * Extract agent ID from authentication
+     * Extract agent ID from authentication context.
+     *
+     * @param authentication the authentication object from Spring Security
+     * @return the agent's UUID
      */
     private UUID getAgentIdFromAuth(Authentication authentication) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         return userDetails.getAgent().getId();
+    }
+
+    /**
+     * Generate thumbnail filename from original filename.
+     *
+     * @param filename the original filename
+     * @return the thumbnail filename
+     */
+    private String generateThumbnailFilename(String filename) {
+        if (filename == null || !filename.contains(".")) {
+            return filename + "_thumb";
+        }
+        int dotIndex = filename.lastIndexOf(".");
+        return filename.substring(0, dotIndex) + "_thumb" + filename.substring(dotIndex);
     }
 }

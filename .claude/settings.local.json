@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(..specifyscriptspowershellcheck-prerequisites.ps1 -Json -RequireTasks -IncludeTasks)",
-      "Bash(powershell.exe -ExecutionPolicy Bypass -File ..specifyscriptspowershellcheck-prerequisites.ps1 -Json -RequireTasks -IncludeTasks)"
+      "Bash(powershell.exe -ExecutionPolicy Bypass -File ..specifyscriptspowershellcheck-prerequisites.ps1 -Json -RequireTasks -IncludeTasks)",
+      "Bash(mvn test:*)",
+      "Bash(mvn package:*)",
+      "Bash(npm run build)",
+      "Bash(npm run lint)",
+      "Bash(mvn clean compile:*)",
+      "Bash(mvn clean package:*)",
+      "Bash(docker-compose logs:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []

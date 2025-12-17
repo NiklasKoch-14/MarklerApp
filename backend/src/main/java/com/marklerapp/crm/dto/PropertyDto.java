@@ -15,7 +15,22 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * DTO for Property entity operations.
+ * Comprehensive DTO for Property entity operations.
+ * Used for both request and response operations.
+ *
+ * <p>This DTO includes all property fields with proper validation annotations
+ * for create and update operations, as well as computed fields for responses.</p>
+ *
+ * <p>For more specialized use cases, consider using:
+ * <ul>
+ *   <li>{@link CreatePropertyRequest} - For creating new properties</li>
+ *   <li>{@link UpdatePropertyRequest} - For updating existing properties</li>
+ *   <li>{@link PropertyResponse} - For API responses with computed fields</li>
+ * </ul>
+ * </p>
+ *
+ * @see Property
+ * @see PropertyImageDto
  */
 @Data
 @Builder
@@ -24,8 +39,19 @@ import java.util.UUID;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PropertyDto {
 
+    /**
+     * Unique identifier of the property (read-only for updates)
+     */
     private UUID id;
+
+    /**
+     * Agent responsible for this property
+     */
     private UUID agentId;
+
+    // ========================================
+    // Basic Information
+    // ========================================
 
     @NotBlank(message = "Property title is required")
     @Size(min = 5, max = 200, message = "Title must be between 5 and 200 characters")
@@ -42,7 +68,10 @@ public class PropertyDto {
 
     private PropertyStatus status;
 
-    // Location fields
+    // ========================================
+    // Location Information
+    // ========================================
+
     @NotBlank(message = "Street address is required")
     @Size(max = 200, message = "Street address must not exceed 200 characters")
     private String addressStreet;
@@ -66,7 +95,10 @@ public class PropertyDto {
     @Size(max = 100, message = "District must not exceed 100 characters")
     private String addressDistrict;
 
-    // Property specifications
+    // ========================================
+    // Property Specifications
+    // ========================================
+
     @DecimalMin(value = "0.0", message = "Living area must be positive")
     @DecimalMax(value = "10000.0", message = "Living area must not exceed 10,000 sqm")
     private BigDecimal livingAreaSqm;
@@ -107,7 +139,10 @@ public class PropertyDto {
     @Max(value = 3000, message = "Last renovation year must not exceed 3000")
     private Integer lastRenovationYear;
 
-    // Financial information
+    // ========================================
+    // Financial Information
+    // ========================================
+
     @DecimalMin(value = "0.0", message = "Price must be non-negative")
     @DecimalMax(value = "99999999.99", message = "Price exceeds maximum allowed value")
     private BigDecimal price;
@@ -124,7 +159,10 @@ public class PropertyDto {
     @DecimalMin(value = "0.0", message = "Commission must be non-negative")
     private BigDecimal commission;
 
-    // Features and amenities
+    // ========================================
+    // Features and Amenities
+    // ========================================
+
     private Boolean hasElevator;
     private Boolean hasBalcony;
     private Boolean hasTerrace;
@@ -137,7 +175,10 @@ public class PropertyDto {
     private Boolean petsAllowed;
     private Boolean furnished;
 
-    // Energy efficiency
+    // ========================================
+    // Energy Efficiency (German EneV requirements)
+    // ========================================
+
     @Size(max = 10, message = "Energy efficiency class must not exceed 10 characters")
     private String energyEfficiencyClass;
 
@@ -147,7 +188,10 @@ public class PropertyDto {
 
     private HeatingType heatingType;
 
-    // Additional fields
+    // ========================================
+    // Additional Fields
+    // ========================================
+
     private LocalDate availableFrom;
 
     @Pattern(regexp = "^[+]?[0-9\\s\\-()]*$", message = "Phone number format is invalid")
@@ -163,19 +207,77 @@ public class PropertyDto {
     @Size(max = 2000, message = "Notes must not exceed 2000 characters")
     private String notes;
 
-    // Property images
+    // ========================================
+    // GDPR Compliance
+    // ========================================
+
+    /**
+     * Indicates whether data processing consent has been given.
+     * Required for GDPR compliance.
+     */
+    private Boolean dataProcessingConsent;
+
+    /**
+     * Date when GDPR consent was given.
+     */
+    private LocalDate consentDate;
+
+    // ========================================
+    // Property Images
+    // ========================================
+
+    /**
+     * List of images associated with this property
+     */
     private List<PropertyImageDto> images;
 
-    // Timestamps
+    // ========================================
+    // Audit Fields (Read-Only)
+    // ========================================
+
+    /**
+     * Timestamp when the property was created (read-only)
+     */
     private LocalDateTime createdAt;
+
+    /**
+     * Timestamp when the property was last updated (read-only)
+     */
     private LocalDateTime updatedAt;
 
-    // Read-only computed fields
+    // ========================================
+    // Computed Fields (Read-Only)
+    // ========================================
+
+    /**
+     * Formatted address string (computed field)
+     */
     private String formattedAddress;
+
+    /**
+     * Calculated price per square meter (computed field)
+     */
     private BigDecimal calculatedPricePerSqm;
 
     /**
-     * Get formatted address (computed field)
+     * URL of the main/primary image (computed field)
+     */
+    private String mainImageUrl;
+
+    /**
+     * Count of images (computed field)
+     */
+    private Integer imageCount;
+
+    // ========================================
+    // Helper Methods
+    // ========================================
+
+    /**
+     * Get formatted address (computed field).
+     * Constructs a human-readable address string from components.
+     *
+     * @return formatted address string
      */
     public String getFormattedAddress() {
         if (formattedAddress != null) {
@@ -210,7 +312,10 @@ public class PropertyDto {
     }
 
     /**
-     * Get calculated price per square meter (computed field)
+     * Get calculated price per square meter (computed field).
+     * If pricePerSqm is set, returns that value; otherwise calculates from price and livingAreaSqm.
+     *
+     * @return price per square meter
      */
     public BigDecimal getCalculatedPricePerSqm() {
         if (pricePerSqm != null) {
@@ -222,5 +327,17 @@ public class PropertyDto {
         }
 
         return calculatedPricePerSqm;
+    }
+
+    /**
+     * Get image count (computed field).
+     *
+     * @return number of images associated with this property
+     */
+    public Integer getImageCount() {
+        if (images != null) {
+            return images.size();
+        }
+        return imageCount != null ? imageCount : 0;
     }
 }

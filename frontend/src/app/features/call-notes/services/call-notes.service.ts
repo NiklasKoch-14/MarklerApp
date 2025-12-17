@@ -30,6 +30,7 @@ export interface CallNoteSummary {
   callDate: string;
   callType: CallType;
   subject: string;
+  notesSummary?: string;  // Preview of notes for list view
   followUpRequired?: boolean;
   followUpDate?: string;
   outcome?: CallOutcome;

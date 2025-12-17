@@ -1,6 +1,7 @@
 package com.marklerapp.crm.controller;
 
 import com.marklerapp.crm.dto.CallNoteDto;
+import com.marklerapp.crm.security.CustomUserDetails;
 import com.marklerapp.crm.service.CallNoteService;
 import com.marklerapp.crm.service.CallNoteSummaryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,7 +45,7 @@ public class CallNoteController {
             Authentication authentication,
             @Valid @RequestBody CallNoteDto.CreateRequest request) {
 
-        UUID agentId = UUID.fromString(authentication.getName());
+        UUID agentId = getAgentIdFromAuth(authentication);
         CallNoteDto.Response response = callNoteService.createCallNote(agentId, request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -59,7 +60,7 @@ public class CallNoteController {
             @Parameter(description = "Call note ID") @PathVariable UUID callNoteId,
             @Valid @RequestBody CallNoteDto.UpdateRequest request) {
 
-        UUID agentId = UUID.fromString(authentication.getName());
+        UUID agentId = getAgentIdFromAuth(authentication);
         CallNoteDto.Response response = callNoteService.updateCallNote(agentId, callNoteId, request);
         return ResponseEntity.ok(response);
     }
@@ -73,7 +74,7 @@ public class CallNoteController {
             Authentication authentication,
             @Parameter(description = "Call note ID") @PathVariable UUID callNoteId) {
 
-        UUID agentId = UUID.fromString(authentication.getName());
+        UUID agentId = getAgentIdFromAuth(authentication);
         CallNoteDto.Response response = callNoteService.getCallNote(agentId, callNoteId);
         return ResponseEntity.ok(response);
     }
@@ -87,7 +88,7 @@ public class CallNoteController {
             Authentication authentication,
             @Parameter(description = "Call note ID") @PathVariable UUID callNoteId) {
 
-        UUID agentId = UUID.fromString(authentication.getName());
+        UUID agentId = getAgentIdFromAuth(authentication);
         callNoteService.deleteCallNote(agentId, callNoteId);
         return ResponseEntity.noContent().build();
     }
@@ -102,7 +103,7 @@ public class CallNoteController {
             @Parameter(description = "Client ID") @PathVariable UUID clientId,
             @PageableDefault(size = 20) Pageable pageable) {
 
-        UUID agentId = UUID.fromString(authentication.getName());
+        UUID agentId = getAgentIdFromAuth(authentication);
         Page<CallNoteDto.Summary> callNotes = callNoteService.getCallNotesByClient(agentId, clientId, pageable);
         return ResponseEntity.ok(callNotes);
     }
@@ -116,7 +117,7 @@ public class CallNoteController {
             Authentication authentication,
             @PageableDefault(size = 20) Pageable pageable) {
 
-        UUID agentId = UUID.fromString(authentication.getName());
+        UUID agentId = getAgentIdFromAuth(authentication);
         Page<CallNoteDto.Summary> callNotes = callNoteService.getCallNotesByAgent(agentId, pageable);
         return ResponseEntity.ok(callNotes);
     }
@@ -131,7 +132,7 @@ public class CallNoteController {
             @RequestBody CallNoteDto.SearchFilter filter,
             @PageableDefault(size = 20) Pageable pageable) {
 
-        UUID agentId = UUID.fromString(authentication.getName());
+        UUID agentId = getAgentIdFromAuth(authentication);
         Page<CallNoteDto.Summary> callNotes = callNoteService.searchCallNotes(agentId, filter, pageable);
         return ResponseEntity.ok(callNotes);
     }
@@ -144,7 +145,7 @@ public class CallNoteController {
     public ResponseEntity<List<CallNoteDto.FollowUpReminder>> getFollowUpReminders(
             Authentication authentication) {
 
-        UUID agentId = UUID.fromString(authentication.getName());
+        UUID agentId = getAgentIdFromAuth(authentication);
         List<CallNoteDto.FollowUpReminder> reminders = callNoteService.getFollowUpReminders(agentId);
         return ResponseEntity.ok(reminders);
     }
@@ -157,7 +158,7 @@ public class CallNoteController {
     public ResponseEntity<List<CallNoteDto.FollowUpReminder>> getOverdueFollowUps(
             Authentication authentication) {
 
-        UUID agentId = UUID.fromString(authentication.getName());
+        UUID agentId = getAgentIdFromAuth(authentication);
         List<CallNoteDto.FollowUpReminder> overdue = callNoteService.getOverdueFollowUps(agentId);
         return ResponseEntity.ok(overdue);
     }
@@ -171,7 +172,7 @@ public class CallNoteController {
             Authentication authentication,
             @Parameter(description = "Client ID") @PathVariable UUID clientId) {
 
-        UUID agentId = UUID.fromString(authentication.getName());
+        UUID agentId = getAgentIdFromAuth(authentication);
         CallNoteDto.BulkSummary summary = callNoteService.getClientCallNotesSummary(agentId, clientId);
         return ResponseEntity.ok(summary);
     }
@@ -187,7 +188,7 @@ public class CallNoteController {
             Authentication authentication,
             @Parameter(description = "Client ID") @PathVariable UUID clientId) {
 
-        UUID agentId = UUID.fromString(authentication.getName());
+        UUID agentId = getAgentIdFromAuth(authentication);
         String summary = callNoteSummaryService.generateClientSummary(agentId, clientId);
         return ResponseEntity.ok(summary);
     }
@@ -201,7 +202,7 @@ public class CallNoteController {
             Authentication authentication,
             @Parameter(description = "Client ID") @PathVariable UUID clientId) {
 
-        UUID agentId = UUID.fromString(authentication.getName());
+        UUID agentId = getAgentIdFromAuth(authentication);
         String summary = callNoteSummaryService.generateQuickSummary(agentId, clientId);
         return ResponseEntity.ok(summary);
     }
@@ -215,7 +216,7 @@ public class CallNoteController {
             Authentication authentication,
             @Parameter(description = "Client ID") @PathVariable UUID clientId) {
 
-        UUID agentId = UUID.fromString(authentication.getName());
+        UUID agentId = getAgentIdFromAuth(authentication);
         String summary = callNoteSummaryService.generateTimelineSummary(agentId, clientId);
         return ResponseEntity.ok(summary);
     }
@@ -231,8 +232,16 @@ public class CallNoteController {
             @Parameter(description = "Start date (ISO format)") @RequestParam LocalDateTime startDate,
             @Parameter(description = "End date (ISO format)") @RequestParam LocalDateTime endDate) {
 
-        UUID agentId = UUID.fromString(authentication.getName());
+        UUID agentId = getAgentIdFromAuth(authentication);
         String summary = callNoteSummaryService.generatePeriodSummary(agentId, clientId, startDate, endDate);
         return ResponseEntity.ok(summary);
+    }
+
+    /**
+     * Helper method to extract agent ID from authentication
+     */
+    private UUID getAgentIdFromAuth(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return userDetails.getAgent().getId();
     }
 }

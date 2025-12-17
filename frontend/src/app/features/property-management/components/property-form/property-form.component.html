@@ -687,9 +687,48 @@
         </div>
       </div>
 
+      <!-- GDPR Consent -->
+      <div class="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg border border-blue-200 dark:border-blue-800">
+        <div class="flex items-start">
+          <div class="flex items-center h-5">
+            <input
+              id="dataProcessingConsent"
+              formControlName="dataProcessingConsent"
+              type="checkbox"
+              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+              [class.border-red-500]="isFieldInvalid('dataProcessingConsent')">
+          </div>
+          <div class="ml-3">
+            <label for="dataProcessingConsent" class="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer">
+              I consent to the processing of this property data *
+            </label>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
+              By checking this box, you confirm that you have the right to list this property and consent to the storage and processing of the property information in accordance with GDPR regulations.
+            </p>
+            <div *ngIf="isFieldInvalid('dataProcessingConsent')" class="mt-2 text-sm text-red-600 dark:text-red-400">
+              <span class="font-medium">{{ getFieldError('dataProcessingConsent') }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Error Message -->
-      <div *ngIf="errorMessage" class="rounded-md bg-error-50 p-4">
-        <div class="text-sm text-error-800">{{ errorMessage }}</div>
+      <div *ngIf="errorMessage" class="rounded-md bg-red-50 dark:bg-red-900/20 p-4 border border-red-200 dark:border-red-800">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-red-800 dark:text-red-200">
+              Validation Error
+            </h3>
+            <div class="mt-2 text-sm text-red-700 dark:text-red-300">
+              {{ errorMessage }}
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Form Actions -->

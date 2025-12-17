@@ -81,12 +81,36 @@ application:
     allowed-methods: GET,POST,PUT,DELETE,PATCH,OPTIONS
     allowed-headers: "*"
     allow-credentials: true
-  file:
-    upload-dir: ${FILE_UPLOAD_PATH:./uploads}
-    max-size: 10MB
   gdpr:
     data-retention-days: 1095  # 3 years
     export-format: JSON
+
+# File Storage Configuration
+app:
+  file-storage:
+    upload-dir: ${FILE_UPLOAD_DIR:./uploads/properties}
+    max-file-size: ${MAX_FILE_SIZE:10485760}  # 10MB in bytes
+    allowed-content-types:
+      - image/jpeg
+      - image/jpg
+      - image/png
+      - image/webp
+      - image/gif
+    allowed-extensions:
+      - jpg
+      - jpeg
+      - png
+      - webp
+      - gif
+    thumbnail:
+      width: 300
+      height: 200
+      maintain-aspect-ratio: true
+      quality: 0.85
+    image-quality:
+      compression-quality: 0.9
+      max-width: 0  # 0 = no resizing
+      max-height: 0  # 0 = no resizing
 
 ---
 spring:
@@ -124,6 +148,10 @@ logging:
   level:
     org.hibernate.SQL: WARN
     com.marklerapp: INFO
+
+app:
+  file-storage:
+    upload-dir: ${FILE_UPLOAD_DIR:/app/uploads/properties}
 
 ---
 spring:
@@ -182,3 +210,8 @@ management:
     web:
       exposure:
         include: health,info,metrics
+
+app:
+  file-storage:
+    upload-dir: ${FILE_UPLOAD_DIR:/app/uploads/properties}
+    max-file-size: ${MAX_FILE_SIZE:10485760}  # 10MB

@@ -178,11 +178,11 @@ import { CallNotesService, CallNoteSummary, CallType, CallOutcome, CallNoteSearc
                     </div>
 
                     <!-- Call Details -->
-                    <div class="ml-4">
+                    <div class="ml-4 flex-1">
                       <div class="flex items-center">
-                        <p class="text-sm font-medium text-gray-900">{{ callNote.subject }}</p>
+                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ callNote.subject }}</p>
                         <span *ngIf="callNote.followUpRequired"
-                              class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
                           {{ 'call-notes.follow-up-required' | translate }}
                         </span>
                         <span *ngIf="callNote.outcome"
@@ -191,11 +191,15 @@ import { CallNotesService, CallNoteSummary, CallType, CallOutcome, CallNoteSearc
                           {{ callNotesService.formatCallOutcome(callNote.outcome) }}
                         </span>
                       </div>
-                      <div class="mt-2 flex items-center text-sm text-gray-500">
+                      <div class="mt-1 flex items-center text-sm text-gray-500 dark:text-gray-400">
                         <p *ngIf="!clientId">{{ callNote.clientName }} • </p>
                         <p>{{ callNotesService.formatCallType(callNote.callType) }}</p>
                         <span class="mx-2">•</span>
                         <time>{{ formatDate(callNote.callDate) }}</time>
+                      </div>
+                      <!-- Notes Summary -->
+                      <div *ngIf="callNote.notesSummary" class="mt-2 text-sm text-gray-600 dark:text-gray-400 italic">
+                        {{ callNote.notesSummary }}
                       </div>
                     </div>
                   </div>

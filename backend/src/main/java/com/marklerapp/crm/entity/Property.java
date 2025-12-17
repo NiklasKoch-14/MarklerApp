@@ -234,8 +234,17 @@ public class Property extends BaseEntity {
     @Size(max = 2000, message = "Notes must not exceed 2000 characters")
     private String notes;
 
+    // GDPR Compliance
+    @Column(name = "data_processing_consent", nullable = false)
+    @Builder.Default
+    private Boolean dataProcessingConsent = false;
+
+    @Column(name = "consent_date")
+    private LocalDate consentDate;
+
     // One-to-many relationship with property images
     @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OrderBy("sortOrder ASC, createdAt ASC")
     private List<PropertyImage> images;
 
     /**
@@ -298,6 +307,49 @@ public class Property extends BaseEntity {
         if (maxRooms != null && rooms != null && rooms.compareTo(maxRooms) > 0) return false;
 
         return true;
+    }
+
+    /**
+     * Check if GDPR consent is valid
+     */
+    public boolean hasValidConsent() {
+        return Boolean.TRUE.equals(dataProcessingConsent) && consentDate != null;
+    }
+
+    /**
+     * Helper method to add an image to the property
+     * Maintains bidirectional relationship
+     */
+    public void addImage(PropertyImage image) {
+        if (images == null) {
+            images = new java.util.ArrayList<>();
+        }
+        images.add(image);
+        image.setProperty(this);
+    }
+
+    /**
+     * Helper method to remove an image from the property
+     * Maintains bidirectional relationship
+     */
+    public void removeImage(PropertyImage image) {
+        if (images != null) {
+            images.remove(image);
+            image.setProperty(null);
+        }
+    }
+
+    /**
+     * Get the primary/main image for the property
+     */
+    public PropertyImage getMainImage() {
+        if (images == null || images.isEmpty()) {
+            return null;
+        }
+        return images.stream()
+                .filter(img -> Boolean.TRUE.equals(img.getIsPrimary()))
+                .findFirst()
+                .orElse(images.get(0));
     }
 
     @Override
