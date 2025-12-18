@@ -282,11 +282,78 @@ export class PropertyImageUploadComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error uploading images:', error);
-        this.errorMessage = 'Error uploading images. Please try again.';
+        this.errorMessage = this.getErrorMessage(error);
         this.isUploading = false;
         this.uploadProgress = 0;
       }
     });
+  }
+
+  /**
+   * Extract user-friendly error message from HTTP error
+   */
+  private getErrorMessage(error: any): string {
+    if (!error) {
+      return 'An unexpected error occurred while uploading images.';
+    }
+
+    // Check for specific error messages from backend
+    if (error.error) {
+      // If backend returns a structured error
+      if (typeof error.error === 'string') {
+        return error.error;
+      }
+
+      // Check for message field
+      if (error.error.message) {
+        return error.error.message;
+      }
+
+      // Check for error field
+      if (error.error.error) {
+        return error.error.error;
+      }
+
+      // Check for fieldErrors (validation errors)
+      if (error.error.fieldErrors) {
+        const fieldErrors = Object.values(error.error.fieldErrors);
+        if (fieldErrors.length > 0) {
+          return `Validation error: ${fieldErrors.join(', ')}`;
+        }
+      }
+    }
+
+    // Check for HTTP status specific messages
+    if (error.status) {
+      switch (error.status) {
+        case 400:
+          return 'Invalid image file or data. Please check the file format and size (max 10MB).';
+        case 401:
+          return 'Authentication error. Please log in again.';
+        case 403:
+          return 'You do not have permission to upload images for this property.';
+        case 404:
+          return 'Property not found. Please refresh the page and try again.';
+        case 413:
+          return 'File size too large. Maximum file size is 10MB per image.';
+        case 415:
+          return 'Unsupported file format. Please use JPEG, PNG, GIF, or WebP images.';
+        case 500:
+          return 'Server error occurred. This might be a database configuration issue. Please contact support if the problem persists.';
+        case 503:
+          return 'Service temporarily unavailable. Please try again later.';
+        default:
+          return `Upload failed with error code ${error.status}. Please try again.`;
+      }
+    }
+
+    // Network error
+    if (error.name === 'HttpErrorResponse' && error.status === 0) {
+      return 'Network error. Please check your internet connection and try again.';
+    }
+
+    // Generic fallback
+    return 'Failed to upload images. Please try again or contact support if the problem persists.';
   }
 
   private loadImages(): void {
@@ -309,10 +376,11 @@ export class PropertyImageUploadComponent implements OnInit {
     this.imageService.setPrimaryImage(this.propertyId, image.id).subscribe({
       next: () => {
         this.loadImages();
+        this.errorMessage = ''; // Clear any previous errors
       },
       error: (error) => {
         console.error('Error setting primary image:', error);
-        this.errorMessage = 'Error setting primary image.';
+        this.errorMessage = this.getErrorMessage(error) || 'Failed to set primary image. Please try again.';
       }
     });
   }

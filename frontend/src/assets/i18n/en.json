@@ -480,7 +480,8 @@
     "start-date": "Start Date",
     "end-date": "End Date",
     "generating-summary": "Generating summary...",
-    "copied-to-clipboard": "Copied to clipboard"
+    "copied-to-clipboard": "Copied to clipboard",
+    "no-clients-tooltip": "Create a client first to add call notes"
   },
   "callNotes": {
     "title": "Call Notes",

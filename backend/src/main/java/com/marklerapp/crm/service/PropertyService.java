@@ -758,11 +758,12 @@ public class PropertyService {
      * @return the property image DTO
      */
     private PropertyImageDto convertImageToDto(PropertyImage image) {
-        return PropertyImageDto.builder()
+        PropertyImageDto dto = PropertyImageDto.builder()
             .id(image.getId())
             .propertyId(image.getProperty().getId())
             .filename(image.getFilename())
             .originalFilename(image.getOriginalFilename())
+            .filePath(image.getFilePath())
             .contentType(image.getContentType())
             .fileSize(image.getFileSize())
             .title(image.getTitle())
@@ -776,6 +777,24 @@ public class PropertyService {
             .createdAt(image.getCreatedAt())
             .updatedAt(image.getUpdatedAt())
             .build();
+
+        // Set computed fields
+        dto.setFileExtension(image.getFileExtension());
+        dto.setFormattedFileSize(image.getFormattedFileSize());
+        dto.setAspectRatio(image.getAspectRatio());
+
+        // Set Base64 data URLs for direct display in browser
+        if (image.getImageData() != null) {
+            String dataUrl = "data:" + image.getContentType() + ";base64," + image.getImageData();
+            dto.setImageUrl(dataUrl);
+        }
+
+        if (image.getThumbnailData() != null) {
+            String thumbnailDataUrl = "data:" + image.getContentType() + ";base64," + image.getThumbnailData();
+            dto.setThumbnailUrl(thumbnailDataUrl);
+        }
+
+        return dto;
     }
 
     // ========================================

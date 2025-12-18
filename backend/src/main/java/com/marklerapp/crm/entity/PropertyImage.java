@@ -38,10 +38,16 @@ public class PropertyImage extends BaseEntity {
     @Size(max = 255, message = "Original filename must not exceed 255 characters")
     private String originalFilename;
 
-    @Column(name = "file_path", nullable = false, length = 500)
-    @NotBlank(message = "File path is required")
-    @Size(min = 1, max = 500, message = "File path must be between 1 and 500 characters")
+    @Column(name = "file_path", length = 500)
+    @Size(max = 500, message = "File path must not exceed 500 characters")
     private String filePath;
+
+    // Base64 Image Data (stored directly in database)
+    @Column(name = "image_data", columnDefinition = "TEXT")
+    private String imageData;
+
+    @Column(name = "thumbnail_data", columnDefinition = "TEXT")
+    private String thumbnailData;
 
     @Column(name = "content_type", nullable = false, length = 100)
     @NotBlank(message = "Content type is required")

@@ -5,7 +5,6 @@ import com.marklerapp.crm.entity.ListingType;
 import com.marklerapp.crm.entity.PropertyStatus;
 import com.marklerapp.crm.entity.PropertyType;
 import com.marklerapp.crm.security.CustomUserDetails;
-import com.marklerapp.crm.service.FileStorageService;
 import com.marklerapp.crm.service.PropertyImageService;
 import com.marklerapp.crm.service.PropertyService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -70,7 +69,6 @@ public class PropertyController {
 
     private final PropertyService propertyService;
     private final PropertyImageService propertyImageService;
-    private final FileStorageService fileStorageService;
 
     // ========================================
     // Core CRUD Operations
@@ -543,6 +541,48 @@ public class PropertyController {
     }
 
     /**
+     * Upload multiple images for a property (bulk upload).
+     */
+    @PostMapping(value = "/{id}/images/bulk", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Bulk upload property images",
+               description = "Upload multiple images for a property at once. Supports JPEG, PNG, WebP, and GIF formats up to 10MB each. Thumbnails are automatically generated.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Images uploaded successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid files or validation errors"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
+        @ApiResponse(responseCode = "404", description = "Property not found or access denied")
+    })
+    public ResponseEntity<List<PropertyImageDto>> uploadPropertyImagesBulk(
+            @Parameter(description = "Property ID", required = true)
+            @PathVariable UUID id,
+            @Parameter(description = "Image files to upload", required = true)
+            @RequestParam("files") MultipartFile[] files,
+            Authentication authentication) throws IOException {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        log.info("Bulk uploading {} images for property: {} by agent: {}", files.length, id, agentId);
+
+        List<PropertyImageDto> uploadedImages = new java.util.ArrayList<>();
+
+        for (MultipartFile file : files) {
+            try {
+                PropertyImageDto metadata = PropertyImageDto.builder()
+                    .isPrimary(false) // Let first image be primary automatically
+                    .build();
+
+                PropertyImageDto uploadedImage = propertyImageService.uploadImage(id, file, metadata, agentId);
+                uploadedImages.add(uploadedImage);
+            } catch (Exception e) {
+                log.error("Error uploading file {} for property: {}", file.getOriginalFilename(), id, e);
+                // Continue with other files even if one fails
+            }
+        }
+
+        log.info("Successfully uploaded {} images for property: {}", uploadedImages.size(), id);
+        return ResponseEntity.status(HttpStatus.CREATED).body(uploadedImages);
+    }
+
+    /**
      * Get all images for a property.
      */
     @GetMapping("/{id}/images")
@@ -632,108 +672,10 @@ public class PropertyController {
     }
 
     /**
-     * Get/download a property image file.
+     * NOTE: Image file endpoints no longer needed - images are now stored as Base64 in database
+     * and returned directly in the image DTO as data URLs (data:image/jpeg;base64,...)
+     * The imageUrl and thumbnailUrl fields in PropertyImageDto now contain these data URLs.
      */
-    @GetMapping("/{id}/images/{imageId}/file")
-    @Operation(summary = "Get property image file",
-               description = "Download or display the full-size property image file. Returns the actual image file with appropriate content type.")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Image file retrieved successfully"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
-        @ApiResponse(responseCode = "404", description = "Property, image, or file not found")
-    })
-    public ResponseEntity<Resource> getPropertyImageFile(
-            @Parameter(description = "Property ID", required = true)
-            @PathVariable UUID id,
-            @Parameter(description = "Image ID", required = true)
-            @PathVariable UUID imageId,
-            @Parameter(description = "Download as attachment (default: false, display inline)")
-            @RequestParam(required = false, defaultValue = "false") boolean download,
-            Authentication authentication) {
-
-        UUID agentId = getAgentIdFromAuth(authentication);
-        log.debug("Getting image file: {} for property: {} by agent: {}", imageId, id, agentId);
-
-        // Get image metadata and validate access
-        PropertyImageDto imageDto = propertyImageService.getImage(imageId, agentId);
-        if (!imageDto.getPropertyId().equals(id)) {
-            throw new IllegalArgumentException("Image does not belong to the specified property");
-        }
-
-        // Load file as resource
-        Resource resource = fileStorageService.loadFileAsResource(imageDto.getFilename(), id);
-
-        // Determine content type
-        String contentType = imageDto.getContentType();
-        if (contentType == null) {
-            contentType = "application/octet-stream";
-        }
-
-        // Build response headers
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType(contentType));
-
-        if (download) {
-            // Force download
-            headers.setContentDispositionFormData("attachment", imageDto.getOriginalFilename());
-        } else {
-            // Display inline (in browser)
-            headers.setContentDispositionFormData("inline", imageDto.getOriginalFilename());
-        }
-
-        return ResponseEntity.ok()
-            .headers(headers)
-            .body(resource);
-    }
-
-    /**
-     * Get property image thumbnail file.
-     */
-    @GetMapping("/{id}/images/{imageId}/thumbnail")
-    @Operation(summary = "Get property image thumbnail",
-               description = "Download or display the thumbnail version of a property image. Thumbnails are optimized for fast loading.")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Thumbnail retrieved successfully"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
-        @ApiResponse(responseCode = "404", description = "Property, image, or thumbnail not found")
-    })
-    public ResponseEntity<Resource> getPropertyImageThumbnail(
-            @Parameter(description = "Property ID", required = true)
-            @PathVariable UUID id,
-            @Parameter(description = "Image ID", required = true)
-            @PathVariable UUID imageId,
-            Authentication authentication) {
-
-        UUID agentId = getAgentIdFromAuth(authentication);
-        log.debug("Getting image thumbnail: {} for property: {} by agent: {}", imageId, id, agentId);
-
-        // Get image metadata and validate access
-        PropertyImageDto imageDto = propertyImageService.getImage(imageId, agentId);
-        if (!imageDto.getPropertyId().equals(id)) {
-            throw new IllegalArgumentException("Image does not belong to the specified property");
-        }
-
-        // Generate thumbnail filename
-        String thumbnailFilename = generateThumbnailFilename(imageDto.getFilename());
-
-        // Load thumbnail as resource
-        Resource resource = fileStorageService.loadFileAsResource(thumbnailFilename, id);
-
-        // Determine content type
-        String contentType = imageDto.getContentType();
-        if (contentType == null) {
-            contentType = "application/octet-stream";
-        }
-
-        // Build response headers
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType(contentType));
-        headers.setContentDispositionFormData("inline", "thumb_" + imageDto.getOriginalFilename());
-
-        return ResponseEntity.ok()
-            .headers(headers)
-            .body(resource);
-    }
 
     // ========================================
     // Statistics and Analytics Operations

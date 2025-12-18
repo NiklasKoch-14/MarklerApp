@@ -12,10 +12,13 @@ import {
   HeatingType
 } from '../../services/property.service';
 
+import { PropertyImageUploadComponent } from '../property-image-upload/property-image-upload.component';
+import { PropertyImageDto } from '../../models/property-image.model';
+
 @Component({
   selector: 'app-property-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, PropertyImageUploadComponent],
   templateUrl: './property-form.component.html',
   styleUrls: ['./property-form.component.scss']
 })
@@ -28,7 +31,7 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
   propertyId: string | null = null;
 
   // Current form section
-  currentSection: 'basic' | 'location' | 'specs' | 'financial' | 'features' = 'basic';
+  currentSection: 'basic' | 'location' | 'specs' | 'financial' | 'features' | 'images' = 'basic';
 
   // Enum values for dropdowns
   propertyTypes = Object.values(PropertyType);
@@ -42,6 +45,9 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
   private readonly SESSION_STORAGE_KEY = 'property-form-session';
   showRestoreDialog = false;
   hasUnsavedChanges = false;
+
+  // Property images
+  propertyImages: any[] = []; // Accept both PropertyImage and PropertyImageDto
 
   constructor(
     private fb: FormBuilder,
@@ -108,10 +114,7 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
       contactPhone: ['', [Validators.pattern('^[+]?[0-9\\s\\-()]*$'), Validators.maxLength(20)]],
       contactEmail: ['', [Validators.email]],
       virtualTourUrl: ['', [Validators.maxLength(500)]],
-      notes: ['', [Validators.maxLength(2000)]],
-
-      // GDPR
-      dataProcessingConsent: [false, [Validators.requiredTrue]]
+      notes: ['', [Validators.maxLength(2000)]]
     });
   }
 
@@ -195,6 +198,12 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
           virtualTourUrl: property.virtualTourUrl,
           notes: property.notes
         });
+
+        // Load property images if they exist
+        if (property.images) {
+          this.propertyImages = property.images;
+        }
+
         this.isLoading = false;
       },
       error: (error) => {
@@ -288,7 +297,6 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
       'addressStreet': 'Street Address',
       'addressCity': 'City',
       'addressPostalCode': 'Postal Code',
-      'dataProcessingConsent': 'Data Processing Consent',
       'price': 'Price',
       'livingAreaSqm': 'Living Area',
       'rooms': 'Number of Rooms'
@@ -311,10 +319,6 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
     } else {
       this.router.navigate(['/properties']);
     }
-  }
-
-  goToSection(section: 'basic' | 'location' | 'specs' | 'financial' | 'features'): void {
-    this.currentSection = section;
   }
 
   isFieldInvalid(fieldName: string): boolean {
@@ -428,5 +432,19 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
     if (this.hasUnsavedChanges && !this.isEditMode) {
       $event.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
     }
+  }
+
+  /**
+   * Handle property images changes from the upload component
+   */
+  onImagesChanged(images: any[]): void {
+    this.propertyImages = images;
+  }
+
+  /**
+   * Navigate to a specific form section
+   */
+  goToSection(section: 'basic' | 'location' | 'specs' | 'financial' | 'features' | 'images'): void {
+    this.currentSection = section;
   }
 }

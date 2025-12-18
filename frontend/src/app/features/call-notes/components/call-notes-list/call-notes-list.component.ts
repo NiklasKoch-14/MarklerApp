@@ -7,6 +7,8 @@ import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 import { CallNotesService, CallNoteSummary, CallType, CallOutcome, CallNoteSearchFilter, PagedResponse } from '../../services/call-notes.service';
+import { ClientService } from '../../../client-management/services/client.service';
+import { TooltipDirective } from '../../../../shared/directives/tooltip.directive';
 
 @Component({
   selector: 'app-call-notes-list',
@@ -15,7 +17,8 @@ import { CallNotesService, CallNoteSummary, CallType, CallOutcome, CallNoteSearc
     CommonModule,
     RouterModule,
     ReactiveFormsModule,
-    TranslateModule
+    TranslateModule,
+    TooltipDirective
   ],
   template: `
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -35,8 +38,11 @@ import { CallNotesService, CallNoteSummary, CallType, CallOutcome, CallNoteSearc
         <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
           <button
             type="button"
-            [routerLink]="clientId ? ['/call-notes/client', clientId, 'new'] : ['/call-notes/new']"
-            class="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto">
+            [routerLink]="hasClients ? (clientId ? ['/call-notes/client', clientId, 'new'] : ['/call-notes/new']) : null"
+            [disabled]="!hasClients"
+            [appTooltip]="!hasClients ? ('call-notes.no-clients-tooltip' | translate) : ''"
+            tooltipPosition="bottom"
+            class="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed">
             {{ 'call-notes.add-call-note' | translate }}
           </button>
         </div>
@@ -151,8 +157,11 @@ import { CallNotesService, CallNoteSummary, CallType, CallOutcome, CallNoteSearc
         <div class="mt-6">
           <button
             type="button"
-            [routerLink]="clientId ? ['/call-notes/client', clientId, 'new'] : ['/call-notes/new']"
-            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+            [routerLink]="hasClients ? (clientId ? ['/call-notes/client', clientId, 'new'] : ['/call-notes/new']) : null"
+            [disabled]="!hasClients"
+            [appTooltip]="!hasClients ? ('call-notes.no-clients-tooltip' | translate) : ''"
+            tooltipPosition="bottom"
+            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
             {{ 'call-notes.add-first-note' | translate }}
           </button>
         </div>
@@ -307,6 +316,9 @@ export class CallNotesListComponent implements OnInit, OnDestroy {
   // Route params
   clientId: string | null = null;
 
+  // Client validation
+  hasClients = true; // Default to true to avoid flickering
+
   private destroy$ = new Subject<void>();
 
   // Math reference for template
@@ -314,6 +326,7 @@ export class CallNotesListComponent implements OnInit, OnDestroy {
 
   constructor(
     public callNotesService: CallNotesService,
+    private clientService: ClientService,
     private route: ActivatedRoute,
     private router: Router,
     private fb: FormBuilder
@@ -327,6 +340,9 @@ export class CallNotesListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Check if clients exist
+    this.checkClientsExist();
+
     // Get client ID from route if available
     this.route.paramMap.subscribe(params => {
       this.clientId = params.get('clientId');
@@ -341,6 +357,23 @@ export class CallNotesListComponent implements OnInit, OnDestroy {
     ).subscribe(() => {
       if (this.hasActiveFilters()) {
         this.applyFilters();
+      }
+    });
+  }
+
+  /**
+   * Check if any clients exist for the current agent
+   */
+  private checkClientsExist(): void {
+    this.clientService.hasClients().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (exists) => {
+        this.hasClients = exists;
+      },
+      error: (error) => {
+        console.error('Error checking if clients exist:', error);
+        this.hasClients = true; // Default to true on error
       }
     });
   }

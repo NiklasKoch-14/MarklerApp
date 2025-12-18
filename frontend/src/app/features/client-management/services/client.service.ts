@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 
 export interface Client {
@@ -137,5 +138,14 @@ export class ClientService {
    */
   exportClientData(id: string): Observable<Client> {
     return this.http.get<Client>(`${this.apiUrl}/${id}/export`);
+  }
+
+  /**
+   * Check if any clients exist for the current agent
+   */
+  hasClients(): Observable<boolean> {
+    return this.getClientStats().pipe(
+      map(stats => stats.totalClients > 0)
+    );
   }
 }

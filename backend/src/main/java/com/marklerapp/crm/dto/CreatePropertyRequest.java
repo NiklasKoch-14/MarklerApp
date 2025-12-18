@@ -196,9 +196,8 @@ public class CreatePropertyRequest {
     // ========================================
 
     /**
-     * Data processing consent (required for GDPR compliance)
-     * Default: false, must be explicitly set to true
+     * Data processing consent (optional for property management)
+     * Default: true (implicit consent for property listing)
      */
-    @NotNull(message = "Data processing consent is required")
-    private Boolean dataProcessingConsent;
+    private Boolean dataProcessingConsent = true;
 }

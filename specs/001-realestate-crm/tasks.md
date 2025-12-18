@@ -233,24 +233,24 @@ description: "Task list for Real Estate CRM System implementation"
 ### Phase 6.2: Call Notes & Property Image Enhancements
 
 #### T105: Call Notes Client Validation
-- [ ] T105.1 [P] Implement client existence check service method in ClientService
-- [ ] T105.2 [P] Create shared tooltip directive for disabled state with custom message
-- [ ] T105.3 [P] Update call-notes component to check client count before enabling add button
-- [ ] T105.4 [P] Add tooltip "Create client first" to disabled add call note button
-- [ ] T105.5 [P] Apply client validation to all add call note buttons across application
-- [ ] T105.6 [P] Test call notes button states with zero clients and with existing clients
+- [X] T105.1 [P] Implement client existence check service method in ClientService
+- [X] T105.2 [P] Create shared tooltip directive for disabled state with custom message
+- [X] T105.3 [P] Update call-notes component to check client count before enabling add button
+- [X] T105.4 [P] Add tooltip "Create client first" to disabled add call note button
+- [X] T105.5 [P] Apply client validation to all add call note buttons across application
+- [X] T105.6 [P] Test call notes button states with zero clients and with existing clients
 
 #### T106: Property Image Management
-- [ ] T106.1 [P] Create property-image-upload component in frontend/src/app/features/property-management/components/
-- [ ] T106.2 [P] Add image upload tab to property form with drag & drop support
-- [ ] T106.3 [P] Implement image preview grid with delete functionality in upload component
-- [ ] T106.4 [P] Add "Set as Primary" image functionality with visual indicator
-- [ ] T106.5 [P] Integrate PropertyImageService with property form component
-- [ ] T106.6 [P] Create property-image-gallery component for property detail view
-- [ ] T106.7 [P] Display property images in detail view with carousel/gallery navigation
-- [ ] T106.8 [P] Show primary image prominently in property detail header
-- [ ] T106.9 [P] Add image loading states and error handling
-- [ ] T106.10 [P] Test image upload, delete, and display functionality
+- [X] T106.1 [P] Create property-image-upload component in frontend/src/app/features/property-management/components/
+- [X] T106.2 [P] Add image upload tab to property form with drag & drop support
+- [X] T106.3 [P] Implement image preview grid with delete functionality in upload component
+- [X] T106.4 [P] Add "Set as Primary" image functionality with visual indicator
+- [X] T106.5 [P] Integrate PropertyImageService with property form component
+- [X] T106.6 [P] Create property-image-gallery component for property detail view
+- [X] T106.7 [P] Display property images in detail view with carousel/gallery navigation
+- [X] T106.8 [P] Show primary image prominently in property detail header
+- [X] T106.9 [P] Add image loading states and error handling
+- [X] T106.10 [P] Test image upload, delete, and display functionality
 
 ---
 

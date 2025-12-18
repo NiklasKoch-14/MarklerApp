@@ -13,7 +13,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -46,7 +51,6 @@ public class PropertyImageService {
 
     private final PropertyImageRepository propertyImageRepository;
     private final PropertyRepository propertyRepository;
-    private final FileStorageService fileStorageService;
 
     /**
      * Upload a new image for a property.
@@ -68,11 +72,19 @@ public class PropertyImageService {
         // Validate property exists and agent has access
         Property property = getPropertyByIdAndValidateOwnership(propertyId, agentId);
 
-        // Store file using FileStorageService
-        FileStorageService.StoredFileInfo storedFile = fileStorageService.storeFile(file, propertyId);
+        // Validate file
+        validateImageFile(file);
 
-        // Generate thumbnail
-        FileStorageService.StoredFileInfo thumbnail = fileStorageService.generateThumbnail(storedFile.getFilePath());
+        // Convert image to Base64
+        String base64Image = convertToBase64(file);
+
+        // Read image to get dimensions
+        BufferedImage originalImage = ImageIO.read(file.getInputStream());
+        int width = originalImage.getWidth();
+        int height = originalImage.getHeight();
+
+        // Generate thumbnail (200x200 max) and convert to Base64
+        String base64Thumbnail = generateThumbnailBase64(originalImage, file.getContentType());
 
         // Determine sort order (next available)
         Integer sortOrder = propertyImageRepository.findNextSortOrder(property);
@@ -91,13 +103,14 @@ public class PropertyImageService {
         // Create property image entity
         PropertyImage propertyImage = PropertyImage.builder()
             .property(property)
-            .filename(storedFile.getFilename())
-            .originalFilename(storedFile.getOriginalFilename())
-            .filePath(storedFile.getFilePath())
-            .contentType(storedFile.getContentType())
-            .fileSize(storedFile.getFileSize())
-            .width(storedFile.getWidth())
-            .height(storedFile.getHeight())
+            .filename(generateUniqueFilename(file.getOriginalFilename()))
+            .originalFilename(file.getOriginalFilename())
+            .imageData(base64Image)
+            .thumbnailData(base64Thumbnail)
+            .contentType(file.getContentType())
+            .fileSize(file.getSize())
+            .width(width)
+            .height(height)
             .isPrimary(isPrimary)
             .sortOrder(sortOrder)
             .imageType(metadata != null && metadata.getImageType() != null ?
@@ -116,6 +129,89 @@ public class PropertyImageService {
         log.info("Uploaded image: {} for property: {}", savedImage.getId(), propertyId);
 
         return convertToDto(savedImage);
+    }
+
+    /**
+     * Convert MultipartFile to Base64 string
+     */
+    private String convertToBase64(MultipartFile file) throws IOException {
+        byte[] bytes = file.getBytes();
+        return Base64.getEncoder().encodeToString(bytes);
+    }
+
+    /**
+     * Generate thumbnail from original image and return as Base64
+     */
+    private String generateThumbnailBase64(BufferedImage originalImage, String contentType) throws IOException {
+        int thumbnailSize = 200;
+        int width = originalImage.getWidth();
+        int height = originalImage.getHeight();
+
+        // Calculate scaling
+        double scale = Math.min((double) thumbnailSize / width, (double) thumbnailSize / height);
+        int scaledWidth = (int) (width * scale);
+        int scaledHeight = (int) (height * scale);
+
+        // Create thumbnail
+        BufferedImage thumbnail = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = thumbnail.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.drawImage(originalImage, 0, 0, scaledWidth, scaledHeight, null);
+        g.dispose();
+
+        // Convert to Base64
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        String formatName = getFormatName(contentType);
+        ImageIO.write(thumbnail, formatName, baos);
+        byte[] thumbnailBytes = baos.toByteArray();
+        return Base64.getEncoder().encodeToString(thumbnailBytes);
+    }
+
+    /**
+     * Get image format name from content type
+     */
+    private String getFormatName(String contentType) {
+        if (contentType.contains("png")) return "png";
+        if (contentType.contains("gif")) return "gif";
+        if (contentType.contains("webp")) return "webp";
+        return "jpg"; // Default to JPEG
+    }
+
+    /**
+     * Generate unique filename
+     */
+    private String generateUniqueFilename(String originalFilename) {
+        String extension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+        return UUID.randomUUID().toString() + extension;
+    }
+
+    /**
+     * Validate image file
+     */
+    private void validateImageFile(MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("File is empty");
+        }
+
+        // Check file size (max 10MB)
+        long maxSize = 10 * 1024 * 1024;
+        if (file.getSize() > maxSize) {
+            throw new IllegalArgumentException("File size exceeds maximum limit of 10MB");
+        }
+
+        // Check content type
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("File must be an image");
+        }
+
+        // Check supported formats
+        if (!contentType.matches("image/(jpeg|jpg|png|gif|webp)")) {
+            throw new IllegalArgumentException("Unsupported image format. Supported: JPEG, PNG, GIF, WebP");
+        }
     }
 
     /**
@@ -188,14 +284,6 @@ public class PropertyImageService {
         // Fetch image and validate ownership
         PropertyImage image = getImageByIdAndValidateOwnership(imageId, agentId);
 
-        // Delete physical files using FileStorageService
-        try {
-            fileStorageService.deleteFile(image.getFilePath());
-        } catch (Exception e) {
-            log.error("Error deleting image files for image: {}", imageId, e);
-            // Continue with database deletion even if file deletion fails
-        }
-
         // If this was the primary image, set another image as primary
         if (image.getIsPrimary()) {
             List<PropertyImage> otherImages = propertyImageRepository
@@ -209,7 +297,7 @@ public class PropertyImageService {
                 });
         }
 
-        // Delete from database
+        // Delete from database (Base64 data will be removed automatically)
         propertyImageRepository.delete(image);
         log.info("Deleted image: {}", imageId);
     }
@@ -417,10 +505,16 @@ public class PropertyImageService {
         dto.setFormattedFileSize(image.getFormattedFileSize());
         dto.setAspectRatio(image.getAspectRatio());
 
-        // Set URLs (would be set by controller or URL generator in real implementation)
-        // For now, just use relative paths
-        dto.setImageUrl("/api/properties/" + image.getProperty().getId() + "/images/" + image.getId() + "/file");
-        dto.setThumbnailUrl("/api/properties/" + image.getProperty().getId() + "/images/" + image.getId() + "/thumbnail");
+        // Set Base64 data URLs for direct display in browser
+        if (image.getImageData() != null) {
+            String dataUrl = "data:" + image.getContentType() + ";base64," + image.getImageData();
+            dto.setImageUrl(dataUrl);
+        }
+
+        if (image.getThumbnailData() != null) {
+            String thumbnailDataUrl = "data:" + image.getContentType() + ";base64," + image.getThumbnailData();
+            dto.setThumbnailUrl(thumbnailDataUrl);
+        }
 
         return dto;
     }

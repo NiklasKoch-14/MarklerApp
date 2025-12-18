@@ -95,6 +95,16 @@
         class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
         Features & Energy
       </button>
+      <button
+        type="button"
+        (click)="goToSection('images')"
+        [class.border-primary-500]="currentSection === 'images'"
+        [class.text-primary-600]="currentSection === 'images'"
+        [class.border-transparent]="currentSection !== 'images'"
+        [class.text-gray-500]="currentSection !== 'images'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
+        Images
+      </button>
     </nav>
   </div>
 
@@ -687,27 +697,28 @@
         </div>
       </div>
 
-      <!-- GDPR Consent -->
-      <div class="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg border border-blue-200 dark:border-blue-800">
-        <div class="flex items-start">
-          <div class="flex items-center h-5">
-            <input
-              id="dataProcessingConsent"
-              formControlName="dataProcessingConsent"
-              type="checkbox"
-              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
-              [class.border-red-500]="isFieldInvalid('dataProcessingConsent')">
-          </div>
-          <div class="ml-3">
-            <label for="dataProcessingConsent" class="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer">
-              I consent to the processing of this property data *
-            </label>
-            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
-              By checking this box, you confirm that you have the right to list this property and consent to the storage and processing of the property information in accordance with GDPR regulations.
+      <!-- Images Section -->
+      <div *ngIf="currentSection === 'images'" class="card animation-fade-in">
+        <div class="card-header">
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Property Images</h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Upload and manage images for this property. The first image will be set as the primary image by default.
+          </p>
+        </div>
+        <div class="card-body">
+          <app-property-image-upload
+            *ngIf="propertyId"
+            [propertyId]="propertyId"
+            [images]="propertyImages"
+            (imagesChanged)="onImagesChanged($event)">
+          </app-property-image-upload>
+          <div *ngIf="!propertyId" class="text-center py-8 text-gray-500 dark:text-gray-400">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <p class="mt-2 text-sm">
+              Please save the property first before uploading images.
             </p>
-            <div *ngIf="isFieldInvalid('dataProcessingConsent')" class="mt-2 text-sm text-red-600 dark:text-red-400">
-              <span class="font-medium">{{ getFieldError('dataProcessingConsent') }}</span>
-            </div>
           </div>
         </div>
       </div>

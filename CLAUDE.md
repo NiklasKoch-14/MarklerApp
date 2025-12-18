@@ -1,7 +1,7 @@
 # MarklerApp Development Guidelines
 
-**Last updated**: 2025-12-08
-**Project Status**: Phase 3.1 & 4.1 Complete - Ready for Phase 5 (Property Management)
+**Last updated**: 2025-12-17
+**Project Status**: Phase 5.1 Complete (Property Management fixes) - Ready for Phase 5.2
 
 ## 🎯 Project Overview
 
@@ -13,7 +13,7 @@
 - **Java 17** with **Spring Boot 3.2.0**
 - **Spring Security** with JWT authentication
 - **Spring Data JPA** with Hibernate
-- **SQLite** (development) / **PostgreSQL** (production)
+- **PostgreSQL 15** (development & production)
 - **Maven** build system
 - **OpenAPI/Swagger** documentation
 - **Flyway** database migrations
@@ -157,6 +157,13 @@ MarklerApp/
 - ✅ Language switcher with flag indicators
 - ✅ Responsive design improvements
 
+#### Phase 5.1: Property Management Bug Fixes (100% Complete)
+- ✅ Fixed endpoint routing (removed double /api prefix in controllers)
+- ✅ Migrated dev environment to PostgreSQL 15
+- ✅ Implemented JacksonConfig for enum coercion (empty string → null)
+- ✅ Enhanced validation with field-specific error messages
+- ✅ Added Phase 6.2 tasks to specs
+
 ### 🚧 **Next Phase Ready**
 
 #### Phase 5: Property Management (0% - Ready to Start)
@@ -276,6 +283,37 @@ For detailed deployment instructions, see [README.md](README.md)
 - Database indexes in place
 - Frontend lazy loading configured
 - Image optimization pending (Phase 5)
+
+## 🔧 Recent Implementation Patterns
+
+### Controller Endpoint Mapping (Dec 2024)
+❌ **Wrong**: `@RequestMapping("/api/properties")`
+✅ **Correct**: `@RequestMapping("/properties")`
+**Why**: Global `context-path: /api/v1` already prefixes all endpoints
+**Files**: PropertyController.java, PropertyMatchingController.java
+
+### Jackson Enum Handling (Dec 2024)
+**File**: `backend/src/main/java/com/marklerapp/crm/config/JacksonConfig.java`
+**Pattern**: Coerce empty strings to null for optional enum fields
+```java
+objectMapper.coercionConfigFor(LogicalType.Enum)
+    .setCoercion(CoercionInputShape.EmptyString, CoercionAction.AsNull);
+```
+**Why**: Frontend sends `""` for optional enums; Jackson needs coercion config
+
+### Validation Error Handling (Dec 2024)
+**Backend**: GlobalExceptionHandler sends `fieldErrors: { fieldName: "message" }`
+**Frontend Pattern** (property-form.component.ts):
+1. Check server errors first: `field.hasError('serverError')`
+2. Then backend errors: `fieldErrors[fieldName]`
+3. Finally frontend validation
+4. Use `getFieldDisplayName()` to map technical names to user-friendly names
+5. Implement `scrollToFirstError()` for UX
+
+### Dev Environment
+**Database**: PostgreSQL 15 (matches production)
+**Docker**: `docker-compose.dev.yml` with health checks
+**Debug Port**: 5005 for backend remote debugging
 
 ## 📈 Future Roadmap
 

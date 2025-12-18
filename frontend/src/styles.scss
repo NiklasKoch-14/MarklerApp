@@ -126,6 +126,63 @@
   .spinner {
     @apply animate-spin rounded-full border-2 border-gray-200 border-t-primary-600;
   }
+
+  /* Tooltip styles */
+  .app-tooltip {
+    @apply fixed z-50 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-lg
+           pointer-events-none opacity-0 transition-opacity duration-200 max-w-xs;
+  }
+
+  .app-tooltip-show {
+    @apply opacity-100;
+  }
+
+  .app-tooltip::before {
+    content: '';
+    @apply absolute w-0 h-0;
+    border: 5px solid transparent;
+  }
+
+  .app-tooltip-top::before {
+    @apply bottom-[-10px] left-1/2 -translate-x-1/2;
+    border-top-color: theme('colors.gray.900');
+  }
+
+  .app-tooltip-bottom::before {
+    @apply top-[-10px] left-1/2 -translate-x-1/2;
+    border-bottom-color: theme('colors.gray.900');
+  }
+
+  .app-tooltip-left::before {
+    @apply right-[-10px] top-1/2 -translate-y-1/2;
+    border-left-color: theme('colors.gray.900');
+  }
+
+  .app-tooltip-right::before {
+    @apply left-[-10px] top-1/2 -translate-y-1/2;
+    border-right-color: theme('colors.gray.900');
+  }
+
+  /* Dark mode tooltip */
+  .dark .app-tooltip {
+    @apply bg-gray-700 text-white;
+  }
+
+  .dark .app-tooltip-top::before {
+    border-top-color: theme('colors.gray.700');
+  }
+
+  .dark .app-tooltip-bottom::before {
+    border-bottom-color: theme('colors.gray.700');
+  }
+
+  .dark .app-tooltip-left::before {
+    border-left-color: theme('colors.gray.700');
+  }
+
+  .dark .app-tooltip-right::before {
+    border-right-color: theme('colors.gray.700');
+  }
 }
 
 /* Utility styles */

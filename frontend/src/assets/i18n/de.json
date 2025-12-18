@@ -480,7 +480,8 @@
     "start-date": "Startdatum",
     "end-date": "Enddatum",
     "generating-summary": "Zusammenfassung wird erstellt...",
-    "copied-to-clipboard": "In Zwischenablage kopiert"
+    "copied-to-clipboard": "In Zwischenablage kopiert",
+    "no-clients-tooltip": "Erstellen Sie zuerst einen Kunden, um Gesprächsnotizen hinzuzufügen"
   },
   "callNotes": {
     "title": "Gesprächsnotizen",
