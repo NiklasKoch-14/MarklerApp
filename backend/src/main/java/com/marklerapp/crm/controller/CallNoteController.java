@@ -238,6 +238,17 @@ public class CallNoteController {
     }
 
     /**
+     * Get agent's properties for call note form dropdown
+     */
+    @GetMapping("/properties")
+    @Operation(summary = "Get agent's properties", description = "Returns a list of properties owned by the agent for call note form dropdown")
+    public ResponseEntity<List<CallNoteService.PropertySummaryDto>> getAgentProperties(Authentication authentication) {
+        UUID agentId = getAgentIdFromAuth(authentication);
+        List<CallNoteService.PropertySummaryDto> properties = callNoteService.getAgentProperties(agentId);
+        return ResponseEntity.ok(properties);
+    }
+
+    /**
      * Helper method to extract agent ID from authentication
      */
     private UUID getAgentIdFromAuth(Authentication authentication) {

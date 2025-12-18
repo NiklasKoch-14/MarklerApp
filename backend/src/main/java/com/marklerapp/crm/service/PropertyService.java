@@ -719,6 +719,9 @@ public class PropertyService {
             .dataProcessingConsent(property.getDataProcessingConsent())
             .consentDate(property.getConsentDate())
             .images(imageDtos)
+            .exposeFileName(property.getExposeFileName())
+            .exposeFileSize(property.getExposeFileSize())
+            .exposeUploadedAt(property.getExposeUploadedAt())
             .createdAt(property.getCreatedAt())
             .updatedAt(property.getUpdatedAt())
             .build();
@@ -911,6 +914,160 @@ public class PropertyService {
                 dto.rentalProperties = this.rentalProperties;
                 return dto;
             }
+        }
+    }
+
+    // ========================================
+    // Property Expose/Brochure Management
+    // ========================================
+
+    /**
+     * Upload property expose (PDF brochure)
+     */
+    @Transactional
+    public PropertyExposeDto uploadExpose(UUID agentId, UUID propertyId, PropertyExposeDto exposeDto) {
+        log.info("Uploading expose for property: {} by agent: {}", propertyId, agentId);
+
+        Property property = propertyRepository.findById(propertyId)
+            .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + propertyId));
+
+        // Verify agent ownership
+        if (!property.getAgent().getId().equals(agentId)) {
+            throw new IllegalArgumentException("Property does not belong to the specified agent");
+        }
+
+        // Validate PDF
+        validatePdfExpose(exposeDto);
+
+        // Set expose data
+        property.setExposeFileName(exposeDto.getFileName());
+        property.setExposeFileData(exposeDto.getFileData());
+        property.setExposeFileSize(exposeDto.getFileSize());
+        property.setExposeUploadedAt(LocalDateTime.now());
+
+        propertyRepository.save(property);
+
+        log.info("Successfully uploaded expose for property: {}", propertyId);
+
+        return PropertyExposeDto.builder()
+            .propertyId(propertyId)
+            .fileName(property.getExposeFileName())
+            .fileSize(property.getExposeFileSize())
+            .uploadedAt(property.getExposeUploadedAt())
+            .build();
+    }
+
+    /**
+     * Download property expose (PDF brochure)
+     */
+    @Transactional(readOnly = true)
+    public PropertyExposeDto downloadExpose(UUID agentId, UUID propertyId) {
+        log.debug("Downloading expose for property: {} by agent: {}", propertyId, agentId);
+
+        Property property = propertyRepository.findById(propertyId)
+            .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + propertyId));
+
+        // Verify agent ownership
+        if (!property.getAgent().getId().equals(agentId)) {
+            throw new IllegalArgumentException("Property does not belong to the specified agent");
+        }
+
+        // Check if expose exists
+        if (property.getExposeFileName() == null || property.getExposeFileData() == null) {
+            throw new ResourceNotFoundException("No expose found for property: " + propertyId);
+        }
+
+        return PropertyExposeDto.builder()
+            .propertyId(propertyId)
+            .fileName(property.getExposeFileName())
+            .fileData(property.getExposeFileData())
+            .fileSize(property.getExposeFileSize())
+            .uploadedAt(property.getExposeUploadedAt())
+            .build();
+    }
+
+    /**
+     * Delete property expose (PDF brochure)
+     */
+    @Transactional
+    public void deleteExpose(UUID agentId, UUID propertyId) {
+        log.info("Deleting expose for property: {} by agent: {}", propertyId, agentId);
+
+        Property property = propertyRepository.findById(propertyId)
+            .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + propertyId));
+
+        // Verify agent ownership
+        if (!property.getAgent().getId().equals(agentId)) {
+            throw new IllegalArgumentException("Property does not belong to the specified agent");
+        }
+
+        // Clear expose data
+        property.setExposeFileName(null);
+        property.setExposeFileData(null);
+        property.setExposeFileSize(null);
+        property.setExposeUploadedAt(null);
+
+        propertyRepository.save(property);
+
+        log.info("Successfully deleted expose for property: {}", propertyId);
+    }
+
+    /**
+     * Check if property has an expose
+     */
+    @Transactional(readOnly = true)
+    public boolean hasExpose(UUID agentId, UUID propertyId) {
+        Property property = propertyRepository.findById(propertyId)
+            .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + propertyId));
+
+        // Verify agent ownership
+        if (!property.getAgent().getId().equals(agentId)) {
+            throw new IllegalArgumentException("Property does not belong to the specified agent");
+        }
+
+        return property.getExposeFileName() != null && property.getExposeFileData() != null;
+    }
+
+    /**
+     * Validate PDF expose
+     */
+    private void validatePdfExpose(PropertyExposeDto exposeDto) {
+        // Validate filename
+        if (exposeDto.getFileName() == null || !exposeDto.getFileName().toLowerCase().endsWith(".pdf")) {
+            throw new IllegalArgumentException("File must be a PDF");
+        }
+
+        // Validate file size (max 50MB)
+        long maxSize = 52428800L; // 50MB in bytes
+        if (exposeDto.getFileSize() == null || exposeDto.getFileSize() > maxSize) {
+            throw new IllegalArgumentException("File size must not exceed 50MB");
+        }
+
+        // Validate file data
+        if (exposeDto.getFileData() == null || exposeDto.getFileData().trim().isEmpty()) {
+            throw new IllegalArgumentException("File data is required");
+        }
+
+        // Validate Base64 format
+        try {
+            // Try to decode to validate Base64 format
+            java.util.Base64.getDecoder().decode(exposeDto.getFileData());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid file data format. Must be Base64 encoded.");
+        }
+
+        // Validate PDF signature (first bytes should be %PDF)
+        try {
+            byte[] decodedBytes = java.util.Base64.getDecoder().decode(exposeDto.getFileData());
+            if (decodedBytes.length < 4) {
+                throw new IllegalArgumentException("Invalid PDF file");
+            }
+            String header = new String(decodedBytes, 0, Math.min(4, decodedBytes.length));
+            if (!header.startsWith("%PDF")) {
+                throw new IllegalArgumentException("Invalid PDF file format");
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid PDF file: " + e.getMessage());
         }
     }
 }

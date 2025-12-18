@@ -162,4 +162,41 @@ export class PropertyListComponent implements OnInit {
 
     return pages;
   }
+
+  previewExpose(event: Event, propertyId: string): void {
+    event.stopPropagation(); // Prevent navigation to detail page
+    this.propertyService.downloadExpose(propertyId).subscribe({
+      next: (expose) => {
+        const pdfWindow = window.open('');
+        if (pdfWindow) {
+          pdfWindow.document.write(
+            `<iframe width='100%' height='100%' src='data:application/pdf;base64,${expose.fileData}'></iframe>`
+          );
+        } else {
+          alert('Failed to open preview window. Please check popup blocker settings.');
+        }
+      },
+      error: (err) => {
+        console.error('Error previewing expose:', err);
+        alert('Failed to preview expose. Please try again.');
+      }
+    });
+  }
+
+  downloadExpose(event: Event, propertyId: string): void {
+    event.stopPropagation(); // Prevent navigation to detail page
+    this.propertyService.downloadExpose(propertyId).subscribe({
+      next: (expose) => {
+        const linkSource = `data:application/pdf;base64,${expose.fileData}`;
+        const downloadLink = document.createElement('a');
+        downloadLink.href = linkSource;
+        downloadLink.download = expose.fileName;
+        downloadLink.click();
+      },
+      error: (err) => {
+        console.error('Error downloading expose:', err);
+        alert('Failed to download expose. Please try again.');
+      }
+    });
+  }
 }

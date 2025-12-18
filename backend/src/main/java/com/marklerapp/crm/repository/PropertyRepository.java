@@ -232,4 +232,9 @@ public interface PropertyRepository extends JpaRepository<Property, UUID> {
     @Query("SELECT p.addressCity, COUNT(p) FROM Property p WHERE p.agent = :agent " +
            "GROUP BY p.addressCity ORDER BY COUNT(p) DESC")
     List<Object[]> findTopCitiesByPropertyCount(@Param("agent") Agent agent, Pageable pageable);
+
+    /**
+     * Find all properties by agent ordered by creation date descending
+     */
+    List<Property> findByAgentOrderByCreatedAtDesc(Agent agent);
 }

@@ -234,6 +234,21 @@ public class Property extends BaseEntity {
     @Size(max = 2000, message = "Notes must not exceed 2000 characters")
     private String notes;
 
+    // Property Expose/Brochure (stored as Base64)
+    @Column(name = "expose_file_name")
+    @Size(max = 255, message = "Expose file name must not exceed 255 characters")
+    private String exposeFileName;
+
+    @Lob
+    @Column(name = "expose_file_data", columnDefinition = "TEXT")
+    private String exposeFileData; // Base64 encoded PDF
+
+    @Column(name = "expose_file_size")
+    private Long exposeFileSize; // Size in bytes
+
+    @Column(name = "expose_uploaded_at")
+    private java.time.LocalDateTime exposeUploadedAt;
+
     // GDPR Compliance
     @Column(name = "data_processing_consent", nullable = false)
     @Builder.Default

@@ -232,6 +232,25 @@ public class PropertyDto {
     private List<PropertyImageDto> images;
 
     // ========================================
+    // Property Expose/Brochure
+    // ========================================
+
+    /**
+     * Original filename of the expose (PDF brochure)
+     */
+    private String exposeFileName;
+
+    /**
+     * File size of the expose in bytes
+     */
+    private Long exposeFileSize;
+
+    /**
+     * Timestamp when the expose was uploaded
+     */
+    private LocalDateTime exposeUploadedAt;
+
+    // ========================================
     // Audit Fields (Read-Only)
     // ========================================
 

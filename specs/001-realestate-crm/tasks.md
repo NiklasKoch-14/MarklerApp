@@ -113,12 +113,12 @@ description: "Task list for Real Estate CRM System implementation"
 
 ### Phase 3.1: User Story 1 Bug Fixes & Missing Features
 
-- [ ] T049.1 [P] [US1] Fix dashboard router links - add RouterModule import to dashboard.component.ts
-- [ ] T049.2 [P] [US1] Fix client editing functionality - ensure update forms are properly connected to backend
-- [ ] T049.3 [P] [US1] Add dark/light mode theme toggle in main header/navigation
-- [ ] T049.4 [P] [US1] Add German/English language toggle switch in main header/navigation
-- [ ] T049.5 [P] [US1] Fix client form validation and error handling
-- [ ] T049.6 [P] [US1] Ensure client update/edit forms save data correctly
+- [X] T049.1 [P] [US1] Fix dashboard router links - add RouterModule import to dashboard.component.ts
+- [X] T049.2 [P] [US1] Fix client editing functionality - ensure update forms are properly connected to backend
+- [X] T049.3 [P] [US1] Add dark/light mode theme toggle in main header/navigation
+- [X] T049.4 [P] [US1] Add German/English language toggle switch in main header/navigation
+- [X] T049.5 [P] [US1] Fix client form validation and error handling
+- [X] T049.6 [P] [US1] Ensure client update/edit forms save data correctly
 
 ---
 
@@ -152,12 +152,12 @@ description: "Task list for Real Estate CRM System implementation"
 
 ### Phase 4.1: User Story 2 Bug Fixes & Missing Features
 
-- [ ] T064.1 [P] [US2] Fix call notes creation form - ensure form submissions work correctly
-- [ ] T064.2 [P] [US2] Debug call notes service integration with backend API
-- [ ] T064.3 [P] [US2] Fix call notes form validation and error handling
-- [ ] T064.4 [P] [US2] Ensure call notes display and formatting works correctly
-- [ ] T064.5 [P] [US2] Fix call notes routing and navigation issues
-- [ ] T064.6 [P] [US2] Test and fix call notes CRUD operations end-to-end
+- [X] T064.1 [P] [US2] Fix call notes creation form - ensure form submissions work correctly
+- [X] T064.2 [P] [US2] Debug call notes service integration with backend API
+- [X] T064.3 [P] [US2] Fix call notes form validation and error handling
+- [X] T064.4 [P] [US2] Ensure call notes display and formatting works correctly
+- [X] T064.5 [P] [US2] Fix call notes routing and navigation issues
+- [X] T064.6 [P] [US2] Test and fix call notes CRUD operations end-to-end
 
 ---
 
@@ -255,25 +255,25 @@ description: "Task list for Real Estate CRM System implementation"
 ### Phase 6.3: Advanced Features - Property References, Expose Management & AI Summarization
 
 #### T107: Call Notes Property References
-- [ ] T107.1 [P] [US2] Add property_id foreign key to CallNote entity in backend/src/main/java/com/marklerapp/crm/entity/CallNote.java
-- [ ] T107.2 [P] [US2] Update CallNoteDto to include propertyId and property summary in backend/src/main/java/com/marklerapp/crm/dto/CallNoteDto.java
-- [ ] T107.3 [P] [US2] Create property reference endpoint in CallNoteController for fetching agent's properties
-- [ ] T107.4 [P] [US2] Add property selection dropdown to call note form component
+- [X] T107.1 [P] [US2] Add property_id foreign key to CallNote entity in backend/src/main/java/com/marklerapp/crm/entity/CallNote.java
+- [X] T107.2 [P] [US2] Update CallNoteDto to include propertyId and property summary in backend/src/main/java/com/marklerapp/crm/dto/CallNoteDto.java
+- [X] T107.3 [P] [US2] Create property reference endpoint in CallNoteController for fetching agent's properties
+- [X] T107.4 [P] [US2] Add property selection dropdown to call note form component
 - [ ] T107.5 [P] [US2] Implement property search/autocomplete in call note form for easy selection
-- [ ] T107.6 [P] [US2] Display linked property information in call note detail view
-- [ ] T107.7 [P] [US2] Update CallNoteService to handle property associations
+- [X] T107.6 [P] [US2] Display linked property information in call note detail view
+- [X] T107.7 [P] [US2] Update CallNoteService to handle property associations
 - [ ] T107.8 [P] [US2] Test property reference functionality in call notes
 
 #### T108: Internationalization for Select Fields & Enums
-- [ ] T108.1 [P] Create translation utility service for enum values in frontend/src/app/shared/services/enum-translation.service.ts
-- [ ] T108.2 [P] Add translation keys for all enum types (PropertyType, PropertyStatus, ListingType, HeatingType, etc.) in de.json and en.json
-- [ ] T108.3 [P] Create translateEnum pipe in frontend/src/app/shared/pipes/translate-enum.pipe.ts
-- [ ] T108.4 [P] Update all select fields to use translateEnum pipe while maintaining enum values
-- [ ] T108.5 [P] Update property form select fields (property type, status, listing type, heating type)
-- [ ] T108.6 [P] Update call note form select fields (call type, outcome, priority)
-- [ ] T108.7 [P] Update client form select fields (client type, preferred contact method)
-- [ ] T108.8 [P] Test enum translations switch correctly between German and English
-- [ ] T108.9 [P] Ensure enum values remain unchanged (only labels translate)
+- [X] T108.1 [P] Create translation utility service for enum values in frontend/src/app/shared/services/enum-translation.service.ts
+- [X] T108.2 [P] Add translation keys for all enum types (PropertyType, PropertyStatus, ListingType, HeatingType, etc.) in de.json and en.json
+- [X] T108.3 [P] Create translateEnum pipe in frontend/src/app/shared/pipes/translate-enum.pipe.ts
+- [X] T108.4 [P] Update all select fields to use translateEnum pipe while maintaining enum values
+- [X] T108.5 [P] Update property form select fields (property type, status, listing type, heating type)
+- [X] T108.6 [P] Update call note form select fields (call type, outcome, priority)
+- [X] T108.7 [P] Update client form select fields (client type, preferred contact method)
+- [X] T108.8 [P] Test enum translations switch correctly between German and English
+- [X] T108.9 [P] Ensure enum values remain unchanged (only labels translate)
 
 #### T109: Property Expose/Brochure Management
 - [ ] T109.1 [P] [US3] Add expose_file_name, expose_file_path, expose_file_size columns to Property entity

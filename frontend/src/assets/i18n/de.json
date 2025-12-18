@@ -25,6 +25,7 @@
     "close": "Schließen",
     "view": "Anzeigen",
     "download": "Herunterladen",
+    "downloading": "Herunterladen...",
     "upload": "Hochladen",
     "export": "Exportieren",
     "characters": "Zeichen",
@@ -174,6 +175,7 @@
     "add": "Immobilie hinzufügen",
     "new": "Neue Immobilie",
     "edit": "Immobilie bearbeiten",
+    "editProperty": "Immobilie bearbeiten",
     "view": "Immobilie anzeigen",
     "delete": "Immobilie löschen",
     "list": "Immobilienliste",
@@ -451,6 +453,21 @@
       "fileTooLarge": "Datei zu groß",
       "invalidFileType": "Ungültiger Dateityp",
       "uploadLimit": "Maximal {{count}} Bilder erlaubt"
+    },
+
+    "expose": {
+      "title": "Immobilien-Exposé",
+      "noExpose": "Kein Exposé hochgeladen",
+      "uploadDescription": "Laden Sie ein PDF-Exposé für diese Immobilie hoch",
+      "selectPdf": "PDF-Datei auswählen",
+      "maxSize": "Maximale Dateigröße: 50MB",
+      "uploaded": "Hochgeladen",
+      "download": "Herunterladen",
+      "preview": "Vorschau",
+      "replace": "PDF ersetzen",
+      "uploading": "PDF wird hochgeladen...",
+      "deleteConfirmTitle": "Exposé löschen",
+      "deleteConfirmMessage": "Sind Sie sicher, dass Sie dieses Immobilien-Exposé löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
     }
   },
   "call-notes": {
@@ -473,6 +490,9 @@
     "delete-confirm-message": "Sind Sie sicher, dass Sie diese Gesprächsnotiz löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
     "client": "Kunde",
     "select-client": "Kunde auswählen",
+    "property": "Zugehörige Immobilie",
+    "select-property": "Immobilie auswählen (optional)",
+    "property-help": "Verknüpfen Sie diesen Anruf mit einer bestimmten Immobilie, falls besprochen",
     "call-type": "Anrufart",
     "select-call-type": "Anrufart auswählen",
     "call-date": "Anrufdatum",

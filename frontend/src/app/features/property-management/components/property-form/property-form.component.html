@@ -105,6 +105,16 @@
         class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
         {{ 'properties.images.title' | translate }}
       </button>
+      <button
+        type="button"
+        (click)="goToSection('expose')"
+        [class.border-primary-500]="currentSection === 'expose'"
+        [class.text-primary-600]="currentSection === 'expose'"
+        [class.border-transparent]="currentSection !== 'expose'"
+        [class.text-gray-500]="currentSection !== 'expose'"
+        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
+        {{ 'properties.expose.title' | translate }}
+      </button>
     </nav>
   </div>
 
@@ -718,6 +728,30 @@
             </svg>
             <p class="mt-2 text-sm">
               Please save the property first before uploading images.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expose/Brochure Section -->
+      <div *ngIf="currentSection === 'expose'" class="card animation-fade-in">
+        <div class="card-header">
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.expose.title' | translate }}</h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Upload a PDF brochure (exposé) for this property. Maximum file size: 50MB.
+          </p>
+        </div>
+        <div class="card-body">
+          <app-property-expose
+            *ngIf="propertyId"
+            [propertyId]="propertyId">
+          </app-property-expose>
+          <div *ngIf="!propertyId" class="text-center py-8 text-gray-500 dark:text-gray-400">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+            </svg>
+            <p class="mt-2 text-sm">
+              Please save the property first before uploading the exposé.
             </p>
           </div>
         </div>

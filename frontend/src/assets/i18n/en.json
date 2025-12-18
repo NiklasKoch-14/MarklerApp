@@ -25,6 +25,7 @@
     "close": "Close",
     "view": "View",
     "download": "Download",
+    "downloading": "Downloading...",
     "upload": "Upload",
     "export": "Export",
     "characters": "characters",
@@ -174,6 +175,7 @@
     "add": "Add Property",
     "new": "New Property",
     "edit": "Edit Property",
+    "editProperty": "Edit Property",
     "view": "View Property",
     "delete": "Delete Property",
     "list": "Property List",
@@ -451,6 +453,21 @@
       "fileTooLarge": "File too large",
       "invalidFileType": "Invalid file type",
       "uploadLimit": "Maximum {{count}} images allowed"
+    },
+
+    "expose": {
+      "title": "Property Brochure (Exposé)",
+      "noExpose": "No brochure uploaded",
+      "uploadDescription": "Upload a PDF brochure for this property",
+      "selectPdf": "Select PDF File",
+      "maxSize": "Maximum file size: 50MB",
+      "uploaded": "Uploaded",
+      "download": "Download",
+      "preview": "Preview",
+      "replace": "Replace PDF",
+      "uploading": "Uploading PDF...",
+      "deleteConfirmTitle": "Delete Brochure",
+      "deleteConfirmMessage": "Are you sure you want to delete this property brochure? This action cannot be undone."
     }
   },
   "call-notes": {
@@ -470,6 +487,9 @@
     "delete-confirm-message": "Are you sure you want to delete this call note? This action cannot be undone.",
     "client": "Client",
     "select-client": "Select a client",
+    "property": "Related Property",
+    "select-property": "Select a property (optional)",
+    "property-help": "Link this call to a specific property if discussed",
     "call-type": "Call Type",
     "select-call-type": "Select call type",
     "call-date": "Call Date",

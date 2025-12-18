@@ -13,6 +13,7 @@ import {
 } from '../../services/property.service';
 
 import { PropertyImageUploadComponent } from '../property-image-upload/property-image-upload.component';
+import { PropertyExposeComponent } from '../property-expose/property-expose.component';
 import { PropertyImageDto } from '../../models/property-image.model';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 import { TranslateModule } from '@ngx-translate/core';
@@ -20,7 +21,7 @@ import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-property-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PropertyImageUploadComponent, TranslateEnumPipe, TranslateModule],
+  imports: [CommonModule, ReactiveFormsModule, PropertyImageUploadComponent, PropertyExposeComponent, TranslateEnumPipe, TranslateModule],
   templateUrl: './property-form.component.html',
   styleUrls: ['./property-form.component.scss']
 })
@@ -33,7 +34,7 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
   propertyId: string | null = null;
 
   // Current form section
-  currentSection: 'basic' | 'location' | 'specs' | 'financial' | 'features' | 'images' = 'basic';
+  currentSection: 'basic' | 'location' | 'specs' | 'financial' | 'features' | 'images' | 'expose' = 'basic';
 
   // Enum values for dropdowns
   propertyTypes = Object.values(PropertyType);
@@ -446,7 +447,7 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
   /**
    * Navigate to a specific form section
    */
-  goToSection(section: 'basic' | 'location' | 'specs' | 'financial' | 'features' | 'images'): void {
+  goToSection(section: 'basic' | 'location' | 'specs' | 'financial' | 'features' | 'images' | 'expose'): void {
     this.currentSection = section;
   }
 }

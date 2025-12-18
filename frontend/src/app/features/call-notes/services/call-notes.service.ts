@@ -10,6 +10,9 @@ export interface CallNote {
   agentName?: string;
   clientId: string;
   clientName?: string;
+  propertyId?: string;
+  propertyTitle?: string;
+  propertyAddress?: string;
   callDate: string;
   durationMinutes?: number;
   callType: CallType;
@@ -27,6 +30,8 @@ export interface CallNoteSummary {
   id?: string;
   clientId: string;
   clientName?: string;
+  propertyId?: string;
+  propertyTitle?: string;
   callDate: string;
   callType: CallType;
   subject: string;
@@ -39,6 +44,7 @@ export interface CallNoteSummary {
 
 export interface CallNoteCreateRequest {
   clientId: string;
+  propertyId?: string;
   callDate: string;
   durationMinutes?: number;
   callType: CallType;
@@ -51,6 +57,7 @@ export interface CallNoteCreateRequest {
 }
 
 export interface CallNoteUpdateRequest {
+  propertyId?: string;
   callDate: string;
   durationMinutes?: number;
   callType: CallType;
@@ -90,6 +97,14 @@ export interface FollowUpReminder {
   followUpDate: string;
   isOverdue: boolean;
   daysUntilDue: number;
+}
+
+export interface PropertySummary {
+  id: string;
+  title: string;
+  address: string;
+  propertyType: string;
+  listingType: string;
 }
 
 export enum CallType {
@@ -207,6 +222,13 @@ export class CallNotesService {
    */
   getClientCallNotesSummary(clientId: string): Observable<BulkSummary> {
     return this.http.get<BulkSummary>(`${this.apiUrl}/client/${clientId}/summary`);
+  }
+
+  /**
+   * Get agent's properties for call note form dropdown
+   */
+  getAgentProperties(): Observable<PropertySummary[]> {
+    return this.http.get<PropertySummary[]>(`${this.apiUrl}/properties`);
   }
 
   // === SUMMARY GENERATION ENDPOINTS ===

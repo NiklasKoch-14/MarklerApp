@@ -28,6 +28,8 @@ public class CallNoteDto {
         @NotNull(message = "Client ID is required")
         private UUID clientId;
 
+        private UUID propertyId;
+
         @NotNull(message = "Call date is required")
         private LocalDateTime callDate;
 
@@ -64,6 +66,8 @@ public class CallNoteDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UpdateRequest {
+        private UUID propertyId;
+
         @NotNull(message = "Call date is required")
         private LocalDateTime callDate;
 
@@ -105,6 +109,9 @@ public class CallNoteDto {
         private String agentName;
         private UUID clientId;
         private String clientName;
+        private UUID propertyId;
+        private String propertyTitle;
+        private String propertyAddress;
         private LocalDateTime callDate;
         private Integer durationMinutes;
         private CallNote.CallType callType;
@@ -129,6 +136,8 @@ public class CallNoteDto {
         private UUID id;
         private UUID clientId;
         private String clientName;
+        private UUID propertyId;
+        private String propertyTitle;
         private LocalDateTime callDate;
         private CallNote.CallType callType;
         private String subject;

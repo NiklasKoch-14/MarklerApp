@@ -5,9 +5,13 @@ import com.marklerapp.crm.dto.CallNoteDto;
 import com.marklerapp.crm.entity.CallNote;
 import com.marklerapp.crm.entity.Client;
 import com.marklerapp.crm.entity.Agent;
+import com.marklerapp.crm.entity.Property;
+import com.marklerapp.crm.entity.PropertyType;
+import com.marklerapp.crm.entity.ListingType;
 import com.marklerapp.crm.repository.CallNoteRepository;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.AgentRepository;
+import com.marklerapp.crm.repository.PropertyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -34,6 +38,7 @@ public class CallNoteService {
     private final CallNoteRepository callNoteRepository;
     private final ClientRepository clientRepository;
     private final AgentRepository agentRepository;
+    private final PropertyRepository propertyRepository;
 
     /**
      * Create a new call note for a client
@@ -53,9 +58,22 @@ public class CallNoteService {
             throw new IllegalArgumentException("Client does not belong to the specified agent");
         }
 
+        // Fetch property if propertyId is provided
+        Property property = null;
+        if (request.getPropertyId() != null) {
+            property = propertyRepository.findById(request.getPropertyId())
+                .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + request.getPropertyId()));
+
+            // Validate that the property belongs to the agent
+            if (!property.getAgent().getId().equals(agentId)) {
+                throw new IllegalArgumentException("Property does not belong to the specified agent");
+            }
+        }
+
         CallNote callNote = CallNote.builder()
             .agent(agent)
             .client(client)
+            .property(property)
             .callDate(request.getCallDate())
             .durationMinutes(request.getDurationMinutes())
             .callType(request.getCallType())
@@ -86,6 +104,20 @@ public class CallNoteService {
         // Validate that the call note belongs to the agent
         if (!existingCallNote.getAgent().getId().equals(agentId)) {
             throw new IllegalArgumentException("Call note does not belong to the specified agent");
+        }
+
+        // Update property if propertyId is provided
+        if (request.getPropertyId() != null) {
+            Property property = propertyRepository.findById(request.getPropertyId())
+                .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + request.getPropertyId()));
+
+            // Validate that the property belongs to the agent
+            if (!property.getAgent().getId().equals(agentId)) {
+                throw new IllegalArgumentException("Property does not belong to the specified agent");
+            }
+            existingCallNote.setProperty(property);
+        } else {
+            existingCallNote.setProperty(null);
         }
 
         existingCallNote.setCallDate(request.getCallDate());
@@ -255,12 +287,25 @@ public class CallNoteService {
      * Convert CallNote entity to Response DTO
      */
     private CallNoteDto.Response convertToResponse(CallNote callNote) {
+        String propertyTitle = null;
+        String propertyAddress = null;
+        UUID propertyId = null;
+
+        if (callNote.getProperty() != null) {
+            propertyId = callNote.getProperty().getId();
+            propertyTitle = callNote.getProperty().getTitle();
+            propertyAddress = callNote.getProperty().getAddressCity() + ", " + callNote.getProperty().getAddressPostalCode();
+        }
+
         return CallNoteDto.Response.builder()
             .id(callNote.getId())
             .agentId(callNote.getAgent().getId())
             .agentName(callNote.getAgent().getFirstName() + " " + callNote.getAgent().getLastName())
             .clientId(callNote.getClient().getId())
             .clientName(callNote.getClient().getFirstName() + " " + callNote.getClient().getLastName())
+            .propertyId(propertyId)
+            .propertyTitle(propertyTitle)
+            .propertyAddress(propertyAddress)
             .callDate(callNote.getCallDate())
             .durationMinutes(callNote.getDurationMinutes())
             .callType(callNote.getCallType())
@@ -287,10 +332,19 @@ public class CallNoteService {
                 : callNote.getNotes();
         }
 
+        UUID propertyId = null;
+        String propertyTitle = null;
+        if (callNote.getProperty() != null) {
+            propertyId = callNote.getProperty().getId();
+            propertyTitle = callNote.getProperty().getTitle();
+        }
+
         return CallNoteDto.Summary.builder()
             .id(callNote.getId())
             .clientId(callNote.getClient().getId())
             .clientName(callNote.getClient().getFirstName() + " " + callNote.getClient().getLastName())
+            .propertyId(propertyId)
+            .propertyTitle(propertyTitle)
             .callDate(callNote.getCallDate())
             .callType(callNote.getCallType())
             .subject(callNote.getSubject())
@@ -320,5 +374,41 @@ public class CallNoteService {
             .isOverdue(isOverdue)
             .daysUntilDue(daysUntilDue)
             .build();
+    }
+
+    /**
+     * Get agent's properties for call note form dropdown
+     */
+    @Transactional(readOnly = true)
+    public List<PropertySummaryDto> getAgentProperties(UUID agentId) {
+        Agent agent = agentRepository.findById(agentId)
+            .orElseThrow(() -> new ResourceNotFoundException("Agent not found with id: " + agentId));
+
+        List<Property> properties = propertyRepository.findByAgentOrderByCreatedAtDesc(agent);
+
+        return properties.stream()
+            .map(p -> PropertySummaryDto.builder()
+                .id(p.getId())
+                .title(p.getTitle())
+                .address(p.getAddressCity() + ", " + p.getAddressPostalCode())
+                .propertyType(p.getPropertyType())
+                .listingType(p.getListingType())
+                .build())
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * DTO for property summary in dropdowns
+     */
+    @lombok.Data
+    @lombok.Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class PropertySummaryDto {
+        private UUID id;
+        private String title;
+        private String address;
+        private PropertyType propertyType;
+        private ListingType listingType;
     }
 }

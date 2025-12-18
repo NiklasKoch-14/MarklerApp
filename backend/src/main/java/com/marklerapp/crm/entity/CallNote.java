@@ -34,6 +34,10 @@ public class CallNote extends BaseEntity {
     @NotNull(message = "Client is required")
     private Client client;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "property_id")
+    private Property property;
+
     @Column(name = "call_date", nullable = false)
     @NotNull(message = "Call date is required")
     private LocalDateTime callDate;

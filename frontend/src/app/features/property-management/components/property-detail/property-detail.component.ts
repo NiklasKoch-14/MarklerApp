@@ -21,6 +21,7 @@ export class PropertyDetailComponent implements OnInit {
   property: Property | null = null;
   isLoading = false;
   isDeleting = false;
+  isLoadingExpose = false;
   selectedImage: PropertyImage | null = null;
   selectedImageIndex = 0;
 
@@ -149,5 +150,50 @@ export class PropertyDetailComponent implements OnInit {
       linkElement.setAttribute('download', exportFileDefaultName);
       linkElement.click();
     }
+  }
+
+  previewExpose(): void {
+    if (!this.property?.id) return;
+
+    this.isLoadingExpose = true;
+    this.propertyService.downloadExpose(this.property.id).subscribe({
+      next: (expose) => {
+        // Open PDF in new tab
+        const pdfWindow = window.open('');
+        if (pdfWindow) {
+          pdfWindow.document.write(
+            `<iframe width='100%' height='100%' src='data:application/pdf;base64,${expose.fileData}'></iframe>`
+          );
+        }
+        this.isLoadingExpose = false;
+      },
+      error: (err) => {
+        console.error('Error previewing expose:', err);
+        alert('Failed to preview expose. Please try again.');
+        this.isLoadingExpose = false;
+      }
+    });
+  }
+
+  downloadExpose(): void {
+    if (!this.property?.id) return;
+
+    this.isLoadingExpose = true;
+    this.propertyService.downloadExpose(this.property.id).subscribe({
+      next: (expose) => {
+        // Create download link
+        const linkSource = `data:application/pdf;base64,${expose.fileData}`;
+        const downloadLink = document.createElement('a');
+        downloadLink.href = linkSource;
+        downloadLink.download = expose.fileName;
+        downloadLink.click();
+        this.isLoadingExpose = false;
+      },
+      error: (err) => {
+        console.error('Error downloading expose:', err);
+        alert('Failed to download expose. Please try again.');
+        this.isLoadingExpose = false;
+      }
+    });
   }
 }

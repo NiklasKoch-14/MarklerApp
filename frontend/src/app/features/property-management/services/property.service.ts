@@ -150,6 +150,11 @@ export interface Property {
   // Images
   images?: PropertyImage[];
 
+  // Expose/Brochure
+  exposeFileName?: string;
+  exposeFileSize?: number;
+  exposeUploadedAt?: string;
+
   // Timestamps
   createdAt?: string;
   updatedAt?: string;
@@ -157,6 +162,15 @@ export interface Property {
   // Computed fields
   formattedAddress?: string;
   calculatedPricePerSqm?: number;
+}
+
+export interface PropertyExpose {
+  propertyId?: string;
+  fileName: string;
+  fileData?: string; // Base64 encoded PDF
+  fileSize: number;
+  uploadedAt?: string;
+  formattedFileSize?: string;
 }
 
 export interface PagedResponse<T> {
@@ -398,5 +412,48 @@ export class PropertyService {
     }).format(price);
 
     return listingType === ListingType.RENT ? `${formatted}/mo` : formatted;
+  }
+
+  // ========================================
+  // Property Expose/Brochure Management
+  // ========================================
+
+  /**
+   * Upload property expose (PDF brochure)
+   */
+  uploadExpose(propertyId: string, expose: PropertyExpose): Observable<PropertyExpose> {
+    return this.http.post<PropertyExpose>(`${this.apiUrl}/${propertyId}/expose`, expose);
+  }
+
+  /**
+   * Download property expose (PDF brochure)
+   */
+  downloadExpose(propertyId: string): Observable<PropertyExpose> {
+    return this.http.get<PropertyExpose>(`${this.apiUrl}/${propertyId}/expose/download`);
+  }
+
+  /**
+   * Delete property expose (PDF brochure)
+   */
+  deleteExpose(propertyId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${propertyId}/expose`);
+  }
+
+  /**
+   * Check if property has an expose
+   */
+  hasExpose(propertyId: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}/${propertyId}/expose/exists`);
+  }
+
+  /**
+   * Format file size for display
+   */
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   }
 }

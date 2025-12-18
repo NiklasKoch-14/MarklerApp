@@ -764,6 +764,75 @@ public class PropertyController {
     }
 
     // ========================================
+    // Property Expose/Brochure Endpoints
+    // ========================================
+
+    /**
+     * Upload property expose (PDF brochure)
+     */
+    @PostMapping("/{id}/expose")
+    @Operation(summary = "Upload property expose", description = "Upload PDF brochure for a property")
+    public ResponseEntity<PropertyExposeDto> uploadExpose(
+            @PathVariable UUID id,
+            @Valid @RequestBody PropertyExposeDto exposeDto,
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        log.info("Uploading expose for property: {} by agent: {}", id, agentId);
+
+        PropertyExposeDto result = propertyService.uploadExpose(agentId, id, exposeDto);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Download property expose (PDF brochure)
+     */
+    @GetMapping("/{id}/expose/download")
+    @Operation(summary = "Download property expose", description = "Download PDF brochure for a property")
+    public ResponseEntity<PropertyExposeDto> downloadExpose(
+            @PathVariable UUID id,
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        log.debug("Downloading expose for property: {} by agent: {}", id, agentId);
+
+        PropertyExposeDto result = propertyService.downloadExpose(agentId, id);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Delete property expose (PDF brochure)
+     */
+    @DeleteMapping("/{id}/expose")
+    @Operation(summary = "Delete property expose", description = "Delete PDF brochure for a property")
+    public ResponseEntity<Void> deleteExpose(
+            @PathVariable UUID id,
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        log.info("Deleting expose for property: {} by agent: {}", id, agentId);
+
+        propertyService.deleteExpose(agentId, id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Check if property has an expose
+     */
+    @GetMapping("/{id}/expose/exists")
+    @Operation(summary = "Check if property has expose", description = "Check if property has an uploaded brochure")
+    public ResponseEntity<Boolean> hasExpose(
+            @PathVariable UUID id,
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        log.debug("Checking if property {} has expose for agent: {}", id, agentId);
+
+        boolean hasExpose = propertyService.hasExpose(agentId, id);
+        return ResponseEntity.ok(hasExpose);
+    }
+
+    // ========================================
     // Helper Methods
     // ========================================
 

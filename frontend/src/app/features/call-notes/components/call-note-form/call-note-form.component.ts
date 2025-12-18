@@ -12,7 +12,8 @@ import {
   CallType,
   CallOutcome,
   CallNoteCreateRequest,
-  CallNoteUpdateRequest
+  CallNoteUpdateRequest,
+  PropertySummary
 } from '../../services/call-notes.service';
 import { ClientService } from '../../../client-management/services/client.service';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
@@ -101,6 +102,41 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
                  class="mt-1 text-sm text-red-600">
                 {{ 'validation.required' | translate }}
               </p>
+            </div>
+
+            <!-- Property Selection (Optional) -->
+            <div class="sm:col-span-2">
+              <label for="property" class="block text-sm font-medium text-gray-700">
+                {{ 'call-notes.property' | translate }}
+              </label>
+              <select
+                id="property"
+                formControlName="propertyId"
+                (change)="onPropertyChange($event)"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                <option value="">{{ 'call-notes.select-property' | translate }}</option>
+                <option *ngFor="let property of properties" [value]="property.id">
+                  {{ property.title }} - {{ property.address }}
+                </option>
+              </select>
+              <p *ngIf="!selectedProperty" class="mt-1 text-sm text-gray-500">
+                {{ 'call-notes.property-help' | translate }}
+              </p>
+              <!-- Selected Property Details -->
+              <div *ngIf="selectedProperty" class="mt-2 p-3 bg-indigo-50 rounded-md border border-indigo-200">
+                <div class="flex items-start">
+                  <svg class="mt-0.5 h-5 w-5 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                  </svg>
+                  <div class="ml-2 flex-1">
+                    <p class="text-sm font-medium text-indigo-900">{{ selectedProperty.title }}</p>
+                    <p class="text-sm text-indigo-700">{{ selectedProperty.address }}</p>
+                    <p class="text-xs text-indigo-600 mt-1">
+                      {{ selectedProperty.propertyType | translateEnum:'propertyTypes' }} • {{ selectedProperty.listingType | translateEnum:'listingType' }}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Call Type -->
@@ -384,6 +420,8 @@ export class CallNoteFormComponent implements OnInit, OnDestroy {
 
   // Data
   clients: any[] = [];
+  properties: PropertySummary[] = [];
+  selectedProperty: PropertySummary | null = null;
   clientName: string | null = null;
   callTypeOptions = this.callNotesService.getCallTypeOptions();
   outcomeOptions = this.callNotesService.getCallOutcomeOptions();
@@ -402,6 +440,7 @@ export class CallNoteFormComponent implements OnInit, OnDestroy {
   ) {
     this.callNoteForm = this.fb.group({
       clientId: ['', Validators.required],
+      propertyId: [''],
       callType: ['', Validators.required],
       callDate: ['', Validators.required],
       durationMinutes: [null],
@@ -415,6 +454,9 @@ export class CallNoteFormComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Load properties for dropdown
+    this.loadProperties();
+
     this.route.paramMap.subscribe(params => {
       this.callNoteId = params.get('id');
       this.clientId = params.get('clientId');
@@ -468,6 +510,7 @@ export class CallNoteFormComponent implements OnInit, OnDestroy {
       next: (callNote: CallNote) => {
         this.callNoteForm.patchValue({
           clientId: callNote.clientId,
+          propertyId: callNote.propertyId || '',
           callType: callNote.callType,
           callDate: new Date(callNote.callDate).toISOString().slice(0, 16),
           durationMinutes: callNote.durationMinutes,
@@ -523,6 +566,29 @@ export class CallNoteFormComponent implements OnInit, OnDestroy {
     });
   }
 
+  loadProperties(): void {
+    this.callNotesService.getAgentProperties().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (properties) => {
+        this.properties = properties;
+        // Update selected property if form already has a propertyId
+        const currentPropertyId = this.callNoteForm.get('propertyId')?.value;
+        if (currentPropertyId) {
+          this.selectedProperty = properties.find(p => p.id === currentPropertyId) || null;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading properties:', error);
+      }
+    });
+  }
+
+  onPropertyChange(event: any): void {
+    const propertyId = event.target.value;
+    this.selectedProperty = this.properties.find(p => p.id === propertyId) || null;
+  }
+
   onSubmit(): void {
     if (this.callNoteForm.invalid || this.saving) return;
 
@@ -546,6 +612,7 @@ export class CallNoteFormComponent implements OnInit, OnDestroy {
   createCallNote(formValue: any): void {
     const request: CallNoteCreateRequest = {
       clientId: formValue.clientId,
+      propertyId: formValue.propertyId || undefined,
       callType: formValue.callType,
       callDate: new Date(formValue.callDate).toISOString(),
       durationMinutes: formValue.durationMinutes || undefined,
@@ -576,6 +643,7 @@ export class CallNoteFormComponent implements OnInit, OnDestroy {
     if (!this.callNoteId) return;
 
     const request: CallNoteUpdateRequest = {
+      propertyId: formValue.propertyId || undefined,
       callType: formValue.callType,
       callDate: new Date(formValue.callDate).toISOString(),
       durationMinutes: formValue.durationMinutes || undefined,
