@@ -39,7 +39,7 @@
   </div>
 
   <h1 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-    {{ isEditMode ? 'Edit Property' : 'Add New Property' }}
+    {{ isEditMode ? ('properties.edit' | translate) : ('properties.new' | translate) }}
   </h1>
 
   <!-- Section Navigation -->
@@ -53,7 +53,7 @@
         [class.border-transparent]="currentSection !== 'basic'"
         [class.text-gray-500]="currentSection !== 'basic'"
         class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
-        Basic Info
+        {{ 'properties.form.basicInfo' | translate }}
       </button>
       <button
         type="button"
@@ -63,7 +63,7 @@
         [class.border-transparent]="currentSection !== 'location'"
         [class.text-gray-500]="currentSection !== 'location'"
         class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
-        Location
+        {{ 'properties.form.location' | translate }}
       </button>
       <button
         type="button"
@@ -73,7 +73,7 @@
         [class.border-transparent]="currentSection !== 'specs'"
         [class.text-gray-500]="currentSection !== 'specs'"
         class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
-        Specifications
+        {{ 'properties.form.specifications' | translate }}
       </button>
       <button
         type="button"
@@ -83,7 +83,7 @@
         [class.border-transparent]="currentSection !== 'financial'"
         [class.text-gray-500]="currentSection !== 'financial'"
         class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
-        Financial
+        {{ 'properties.form.financial' | translate }}
       </button>
       <button
         type="button"
@@ -93,7 +93,7 @@
         [class.border-transparent]="currentSection !== 'features'"
         [class.text-gray-500]="currentSection !== 'features'"
         class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
-        Features & Energy
+        {{ 'properties.form.featuresEnergy' | translate }}
       </button>
       <button
         type="button"
@@ -103,7 +103,7 @@
         [class.border-transparent]="currentSection !== 'images'"
         [class.text-gray-500]="currentSection !== 'images'"
         class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
-        Images
+        {{ 'properties.images.title' | translate }}
       </button>
     </nav>
   </div>
@@ -114,12 +114,12 @@
       <!-- Basic Information Section -->
       <div *ngIf="currentSection === 'basic'" class="card animation-fade-in">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Basic Information</h3>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.form.basicInfo' | translate }}</h3>
         </div>
         <div class="card-body space-y-6">
           <!-- Title -->
           <div>
-            <label for="title" class="form-label">Property Title *</label>
+            <label for="title" class="form-label">{{ 'properties.form.title' | translate }} *</label>
             <input
               type="text"
               id="title"
@@ -133,7 +133,7 @@
 
           <!-- Description -->
           <div>
-            <label for="description" class="form-label">Description</label>
+            <label for="description" class="form-label">{{ 'properties.form.description' | translate }}</label>
             <textarea
               id="description"
               formControlName="description"
@@ -148,11 +148,11 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Property Type -->
             <div>
-              <label for="propertyType" class="form-label">Property Type *</label>
+              <label for="propertyType" class="form-label">{{ 'properties.form.propertyType' | translate }} *</label>
               <select id="propertyType" formControlName="propertyType" class="form-input">
-                <option value="">Select property type</option>
+                <option value="">{{ 'properties.form.propertyType' | translate }}</option>
                 <option *ngFor="let type of propertyTypes" [value]="type">
-                  {{ propertyService.formatPropertyType(type) }}
+                  {{ type | translateEnum:'propertyType' }}
                 </option>
               </select>
               <div *ngIf="isFieldInvalid('propertyType')" class="form-error">
@@ -162,11 +162,11 @@
 
             <!-- Listing Type -->
             <div>
-              <label for="listingType" class="form-label">Listing Type *</label>
+              <label for="listingType" class="form-label">{{ 'properties.form.listingType' | translate }} *</label>
               <select id="listingType" formControlName="listingType" class="form-input">
-                <option value="">Select listing type</option>
+                <option value="">{{ 'properties.form.listingType' | translate }}</option>
                 <option *ngFor="let type of listingTypes" [value]="type">
-                  {{ propertyService.formatListingType(type) }}
+                  {{ type | translateEnum:'listingType' }}
                 </option>
               </select>
               <div *ngIf="isFieldInvalid('listingType')" class="form-error">
@@ -176,17 +176,17 @@
 
             <!-- Status -->
             <div>
-              <label for="status" class="form-label">Status</label>
+              <label for="status" class="form-label">{{ 'properties.form.status' | translate }}</label>
               <select id="status" formControlName="status" class="form-input">
                 <option *ngFor="let status of propertyStatuses" [value]="status">
-                  {{ propertyService.formatPropertyStatus(status) }}
+                  {{ status | translateEnum:'propertyStatus' }}
                 </option>
               </select>
             </div>
 
             <!-- Available From -->
             <div>
-              <label for="availableFrom" class="form-label">Available From</label>
+              <label for="availableFrom" class="form-label">{{ 'properties.form.availableFrom' | translate }}</label>
               <input
                 type="date"
                 id="availableFrom"
@@ -200,13 +200,13 @@
       <!-- Location Section -->
       <div *ngIf="currentSection === 'location'" class="card animation-fade-in">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Location Details</h3>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.form.location' | translate }}</h3>
         </div>
         <div class="card-body space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Street -->
             <div class="md:col-span-2">
-              <label for="addressStreet" class="form-label">Street Address *</label>
+              <label for="addressStreet" class="form-label">{{ 'properties.form.addressStreet' | translate }} *</label>
               <input
                 type="text"
                 id="addressStreet"
@@ -220,7 +220,7 @@
 
             <!-- House Number -->
             <div>
-              <label for="addressHouseNumber" class="form-label">House Number</label>
+              <label for="addressHouseNumber" class="form-label">{{ 'properties.form.addressHouseNumber' | translate }}</label>
               <input
                 type="text"
                 id="addressHouseNumber"
@@ -233,7 +233,7 @@
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- City -->
             <div>
-              <label for="addressCity" class="form-label">City *</label>
+              <label for="addressCity" class="form-label">{{ 'properties.form.addressCity' | translate }} *</label>
               <input
                 type="text"
                 id="addressCity"
@@ -247,7 +247,7 @@
 
             <!-- Postal Code -->
             <div>
-              <label for="addressPostalCode" class="form-label">Postal Code *</label>
+              <label for="addressPostalCode" class="form-label">{{ 'properties.form.addressPostalCode' | translate }} *</label>
               <input
                 type="text"
                 id="addressPostalCode"
@@ -261,7 +261,7 @@
 
             <!-- District -->
             <div>
-              <label for="addressDistrict" class="form-label">District</label>
+              <label for="addressDistrict" class="form-label">{{ 'properties.form.addressDistrict' | translate }}</label>
               <input
                 type="text"
                 id="addressDistrict"
@@ -274,7 +274,7 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- State -->
             <div>
-              <label for="addressState" class="form-label">State</label>
+              <label for="addressState" class="form-label">{{ 'properties.form.addressState' | translate }}</label>
               <input
                 type="text"
                 id="addressState"
@@ -285,7 +285,7 @@
 
             <!-- Country -->
             <div>
-              <label for="addressCountry" class="form-label">Country</label>
+              <label for="addressCountry" class="form-label">{{ 'properties.form.addressCountry' | translate }}</label>
               <input
                 type="text"
                 id="addressCountry"
@@ -299,13 +299,13 @@
       <!-- Specifications Section -->
       <div *ngIf="currentSection === 'specs'" class="card animation-fade-in">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Property Specifications</h3>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.form.specifications' | translate }}</h3>
         </div>
         <div class="card-body space-y-6">
           <!-- Area Fields -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <label for="livingAreaSqm" class="form-label">Living Area (m²)</label>
+              <label for="livingAreaSqm" class="form-label">{{ 'properties.form.livingArea' | translate }}</label>
               <input
                 type="number"
                 id="livingAreaSqm"
@@ -319,7 +319,7 @@
             </div>
 
             <div>
-              <label for="totalAreaSqm" class="form-label">Total Area (m²)</label>
+              <label for="totalAreaSqm" class="form-label">{{ 'properties.form.totalArea' | translate }}</label>
               <input
                 type="number"
                 id="totalAreaSqm"
@@ -333,7 +333,7 @@
             </div>
 
             <div>
-              <label for="plotAreaSqm" class="form-label">Plot Area (m²)</label>
+              <label for="plotAreaSqm" class="form-label">{{ 'properties.form.plotArea' | translate }}</label>
               <input
                 type="number"
                 id="plotAreaSqm"
@@ -350,7 +350,7 @@
           <!-- Room Configuration -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <label for="rooms" class="form-label">Total Rooms</label>
+              <label for="rooms" class="form-label">{{ 'properties.form.rooms' | translate }}</label>
               <input
                 type="number"
                 id="rooms"
@@ -364,7 +364,7 @@
             </div>
 
             <div>
-              <label for="bedrooms" class="form-label">Bedrooms</label>
+              <label for="bedrooms" class="form-label">{{ 'properties.form.bedrooms' | translate }}</label>
               <input
                 type="number"
                 id="bedrooms"
@@ -377,7 +377,7 @@
             </div>
 
             <div>
-              <label for="bathrooms" class="form-label">Bathrooms</label>
+              <label for="bathrooms" class="form-label">{{ 'properties.form.bathrooms' | translate }}</label>
               <input
                 type="number"
                 id="bathrooms"
@@ -393,7 +393,7 @@
           <!-- Floor Information -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label for="floorNumber" class="form-label">Floor Number</label>
+              <label for="floorNumber" class="form-label">{{ 'properties.form.floorNumber' | translate }}</label>
               <input
                 type="number"
                 id="floorNumber"
@@ -406,7 +406,7 @@
             </div>
 
             <div>
-              <label for="floors" class="form-label">Total Floors in Building</label>
+              <label for="floors" class="form-label">{{ 'properties.form.floors' | translate }}</label>
               <input
                 type="number"
                 id="floors"
@@ -422,7 +422,7 @@
           <!-- Construction Details -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label for="constructionYear" class="form-label">Construction Year</label>
+              <label for="constructionYear" class="form-label">{{ 'properties.form.constructionYear' | translate }}</label>
               <input
                 type="number"
                 id="constructionYear"
@@ -435,7 +435,7 @@
             </div>
 
             <div>
-              <label for="lastRenovationYear" class="form-label">Last Renovation Year</label>
+              <label for="lastRenovationYear" class="form-label">{{ 'properties.form.renovationYear' | translate }}</label>
               <input
                 type="number"
                 id="lastRenovationYear"
@@ -453,13 +453,13 @@
       <!-- Financial Section -->
       <div *ngIf="currentSection === 'financial'" class="card animation-fade-in">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Financial Information</h3>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.form.financial' | translate }}</h3>
         </div>
         <div class="card-body space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Price -->
             <div>
-              <label for="price" class="form-label">Price (EUR)</label>
+              <label for="price" class="form-label">{{ 'properties.form.price' | translate }}</label>
               <input
                 type="number"
                 id="price"
@@ -474,7 +474,7 @@
 
             <!-- Price per sqm -->
             <div>
-              <label for="pricePerSqm" class="form-label">Price per m² (EUR)</label>
+              <label for="pricePerSqm" class="form-label">{{ 'properties.form.pricePerSqm' | translate }}</label>
               <input
                 type="number"
                 id="pricePerSqm"
@@ -491,7 +491,7 @@
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Additional Costs -->
             <div>
-              <label for="additionalCosts" class="form-label">Additional Costs (EUR/month)</label>
+              <label for="additionalCosts" class="form-label">{{ 'properties.form.additionalCosts' | translate }}</label>
               <input
                 type="number"
                 id="additionalCosts"
@@ -506,7 +506,7 @@
 
             <!-- Heating Costs -->
             <div>
-              <label for="heatingCosts" class="form-label">Heating Costs (EUR/month)</label>
+              <label for="heatingCosts" class="form-label">{{ 'properties.form.heatingCosts' | translate }}</label>
               <input
                 type="number"
                 id="heatingCosts"
@@ -521,7 +521,7 @@
 
             <!-- Commission -->
             <div>
-              <label for="commission" class="form-label">Commission (EUR)</label>
+              <label for="commission" class="form-label">{{ 'properties.form.commission' | translate }}</label>
               <input
                 type="number"
                 id="commission"
@@ -540,66 +540,66 @@
       <!-- Features & Energy Section -->
       <div *ngIf="currentSection === 'features'" class="card animation-fade-in">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Features, Amenities & Energy</h3>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.form.featuresEnergy' | translate }}</h3>
         </div>
         <div class="card-body space-y-6">
           <!-- Features Checkboxes -->
           <div>
-            <label class="form-label">Features & Amenities</label>
+            <label class="form-label">{{ 'properties.form.featuresEnergy' | translate }}</label>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasElevator" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Elevator</span>
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasElevator' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasBalcony" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Balcony</span>
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasBalcony' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasTerrace" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Terrace</span>
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasTerrace' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasGarden" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Garden</span>
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasGarden' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasGarage" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Garage</span>
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasGarage' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasParking" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Parking</span>
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasParking' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasBasement" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Basement</span>
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasBasement' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasAttic" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Attic</span>
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasAttic' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="isBarrierFree" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Barrier Free</span>
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.isBarrierFree' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="petsAllowed" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Pets Allowed</span>
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.petsAllowed' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="furnished" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Furnished</span>
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.furnished' | translate }}</span>
               </label>
             </div>
           </div>
 
           <!-- Energy Information -->
           <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
-            <label class="form-label">Energy Efficiency</label>
+            <label class="form-label">{{ 'properties.form.energyClass' | translate }}</label>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
               <div>
-                <label for="energyEfficiencyClass" class="form-label text-sm">Energy Class</label>
+                <label for="energyEfficiencyClass" class="form-label text-sm">{{ 'properties.form.energyClass' | translate }}</label>
                 <input
                   type="text"
                   id="energyEfficiencyClass"
@@ -612,7 +612,7 @@
               </div>
 
               <div>
-                <label for="energyConsumptionKwh" class="form-label text-sm">Energy Consumption (kWh/m²a)</label>
+                <label for="energyConsumptionKwh" class="form-label text-sm">{{ 'properties.form.energyConsumption' | translate }}</label>
                 <input
                   type="number"
                   id="energyConsumptionKwh"
@@ -626,11 +626,11 @@
               </div>
 
               <div>
-                <label for="heatingType" class="form-label text-sm">Heating Type</label>
+                <label for="heatingType" class="form-label text-sm">{{ 'properties.form.heatingType' | translate }}</label>
                 <select id="heatingType" formControlName="heatingType" class="form-input">
-                  <option value="">Select heating type</option>
+                  <option value="">{{ 'properties.form.heatingType' | translate }}</option>
                   <option *ngFor="let type of heatingTypes" [value]="type">
-                    {{ propertyService.formatHeatingType(type) }}
+                    {{ type | translateEnum:'heatingType' }}
                   </option>
                 </select>
               </div>
@@ -639,10 +639,10 @@
 
           <!-- Contact Information -->
           <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
-            <label class="form-label">Contact & Additional Information</label>
+            <label class="form-label">{{ 'properties.form.contactPhone' | translate }}</label>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
               <div>
-                <label for="contactPhone" class="form-label text-sm">Contact Phone</label>
+                <label for="contactPhone" class="form-label text-sm">{{ 'properties.form.contactPhone' | translate }}</label>
                 <input
                   type="tel"
                   id="contactPhone"
@@ -655,7 +655,7 @@
               </div>
 
               <div>
-                <label for="contactEmail" class="form-label text-sm">Contact Email</label>
+                <label for="contactEmail" class="form-label text-sm">{{ 'properties.form.contactEmail' | translate }}</label>
                 <input
                   type="email"
                   id="contactEmail"
@@ -669,7 +669,7 @@
             </div>
 
             <div class="mt-6">
-              <label for="virtualTourUrl" class="form-label text-sm">Virtual Tour URL</label>
+              <label for="virtualTourUrl" class="form-label text-sm">{{ 'properties.form.virtualTour' | translate }}</label>
               <input
                 type="url"
                 id="virtualTourUrl"
@@ -682,7 +682,7 @@
             </div>
 
             <div class="mt-6">
-              <label for="notes" class="form-label text-sm">Additional Notes</label>
+              <label for="notes" class="form-label text-sm">{{ 'properties.form.notes' | translate }}</label>
               <textarea
                 id="notes"
                 formControlName="notes"
@@ -700,7 +700,7 @@
       <!-- Images Section -->
       <div *ngIf="currentSection === 'images'" class="card animation-fade-in">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Property Images</h3>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.images.title' | translate }}</h3>
           <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Upload and manage images for this property. The first image will be set as the primary image by default.
           </p>
@@ -733,7 +733,7 @@
           </div>
           <div class="ml-3">
             <h3 class="text-sm font-medium text-red-800 dark:text-red-200">
-              Validation Error
+              {{ 'errors.validationError' | translate }}
             </h3>
             <div class="mt-2 text-sm text-red-700 dark:text-red-300">
               {{ errorMessage }}
@@ -748,7 +748,7 @@
           type="button"
           (click)="cancel()"
           class="btn btn-outline">
-          Cancel
+          {{ 'common.cancel' | translate }}
         </button>
 
         <div class="flex space-x-3">
@@ -756,7 +756,9 @@
             type="submit"
             [disabled]="!propertyForm.valid || isLoading"
             class="btn btn-primary">
-            {{ isLoading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update Property' : 'Create Property') }}
+            <ng-container *ngIf="isLoading">{{ 'common.saving' | translate }}</ng-container>
+            <ng-container *ngIf="!isLoading && isEditMode">{{ 'properties.update' | translate }}</ng-container>
+            <ng-container *ngIf="!isLoading && !isEditMode">{{ 'properties.create' | translate }}</ng-container>
           </button>
         </div>
       </div>

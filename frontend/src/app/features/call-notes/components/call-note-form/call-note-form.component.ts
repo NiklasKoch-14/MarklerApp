@@ -15,6 +15,7 @@ import {
   CallNoteUpdateRequest
 } from '../../services/call-notes.service';
 import { ClientService } from '../../../client-management/services/client.service';
+import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 
 @Component({
   selector: 'app-call-note-form',
@@ -23,7 +24,8 @@ import { ClientService } from '../../../client-management/services/client.servic
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
-    TranslateModule
+    TranslateModule,
+    TranslateEnumPipe
   ],
   template: `
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -112,8 +114,8 @@ import { ClientService } from '../../../client-management/services/client.servic
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 [class.border-red-300]="callNoteForm.get('callType')?.invalid && callNoteForm.get('callType')?.touched">
                 <option value="">{{ 'call-notes.select-call-type' | translate }}</option>
-                <option *ngFor="let option of callTypeOptions" [value]="option.value">
-                  {{ option.label }}
+                <option *ngFor="let option of callTypeOptions" [value]="option">
+                  {{ option | translateEnum:'callType' }}
                 </option>
               </select>
               <p *ngIf="callNoteForm.get('callType')?.invalid && callNoteForm.get('callType')?.touched"
@@ -164,8 +166,8 @@ import { ClientService } from '../../../client-management/services/client.servic
                 formControlName="outcome"
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                 <option value="">{{ 'call-notes.select-outcome' | translate }}</option>
-                <option *ngFor="let option of outcomeOptions" [value]="option.value">
-                  {{ option.label }}
+                <option *ngFor="let option of outcomeOptions" [value]="option">
+                  {{ option | translateEnum:'callOutcome' }}
                 </option>
               </select>
             </div>

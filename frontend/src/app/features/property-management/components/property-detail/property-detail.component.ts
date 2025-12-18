@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
+import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 import {
   PropertyService,
   Property,
@@ -11,7 +13,7 @@ import {
 @Component({
   selector: 'app-property-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule, TranslateEnumPipe],
   templateUrl: './property-detail.component.html',
   styleUrls: ['./property-detail.component.scss']
 })

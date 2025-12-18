@@ -14,11 +14,13 @@ import {
 
 import { PropertyImageUploadComponent } from '../property-image-upload/property-image-upload.component';
 import { PropertyImageDto } from '../../models/property-image.model';
+import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-property-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PropertyImageUploadComponent],
+  imports: [CommonModule, ReactiveFormsModule, PropertyImageUploadComponent, TranslateEnumPipe, TranslateModule],
   templateUrl: './property-form.component.html',
   styleUrls: ['./property-form.component.scss']
 })

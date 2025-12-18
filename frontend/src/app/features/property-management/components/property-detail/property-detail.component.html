@@ -1,7 +1,7 @@
 <div class="p-6">
   <div *ngIf="isLoading" class="text-center py-8">
     <div class="spinner h-8 w-8 mx-auto"></div>
-    <p class="mt-2 text-sm text-gray-500">Loading property details...</p>
+    <p class="mt-2 text-sm text-gray-500">{{ 'properties.loadingProperties' | translate }}</p>
   </div>
 
   <div *ngIf="!isLoading && property">
@@ -12,7 +12,7 @@
           <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ property.title }}</h1>
           <span [ngClass]="getStatusBadgeClass(property.status)"
                 class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium">
-            {{ propertyService.formatPropertyStatus(property.status!) }}
+            {{ property.status | translateEnum:'propertyStatus' }}
           </span>
         </div>
         <p class="mt-2 text-lg text-primary-600 dark:text-primary-400 font-bold">
@@ -102,27 +102,27 @@
         <div class="card-body">
           <dl class="space-y-4">
             <div>
-              <dt class="text-sm font-medium text-gray-500">Property Type</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.propertyType' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                {{ propertyService.formatPropertyType(property.propertyType) }}
+                {{ property.propertyType | translateEnum:'propertyType' }}
               </dd>
             </div>
             <div>
-              <dt class="text-sm font-medium text-gray-500">Listing Type</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.listingType' | translate }}</dt>
               <dd class="mt-1">
                 <span class="badge badge-primary">
-                  {{ propertyService.formatListingType(property.listingType) }}
+                  {{ property.listingType | translateEnum:'listingType' }}
                 </span>
               </dd>
             </div>
             <div *ngIf="property.description">
-              <dt class="text-sm font-medium text-gray-500">Description</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.description' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white whitespace-pre-line">
                 {{ property.description }}
               </dd>
             </div>
             <div *ngIf="property.availableFrom">
-              <dt class="text-sm font-medium text-gray-500">Available From</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.availableFrom' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">
                 {{ property.availableFrom | date:'mediumDate' }}
               </dd>
@@ -366,7 +366,7 @@
             <div *ngIf="property.heatingType">
               <dt class="text-sm font-medium text-gray-500">Heating Type</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                {{ propertyService.formatHeatingType(property.heatingType) }}
+                {{ property.heatingType | translateEnum:'heatingType' }}
               </dd>
             </div>
           </dl>

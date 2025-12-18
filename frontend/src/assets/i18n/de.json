@@ -32,7 +32,8 @@
     "copy": "Kopieren",
     "copying": "Kopiere...",
     "never": "Nie",
-    "none": "Keine"
+    "none": "Keine",
+    "all": "Alle"
   },
   "auth": {
     "login": {
@@ -108,7 +109,22 @@
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Willkommen",
+    "welcomeTitle": "Willkommen bei Immobilien CRM",
+    "welcomeDescription": "Verwalten Sie Ihre Kunden, Immobilien und Kommunikation effizient.",
     "overview": "Übersicht",
+    "clientManagement": "Kundenverwaltung",
+    "addNewClient": "Neuen Kunden hinzufügen",
+    "viewAllClients": "Alle Kunden anzeigen",
+    "propertyManagement": "Immobilienverwaltung",
+    "addNewProperty": "Neue Immobilie hinzufügen",
+    "viewAllProperties": "Alle Immobilien anzeigen",
+    "communication": "Kommunikation",
+    "viewCallNotes": "Gesprächsnotizen anzeigen",
+    "propertyMatching": "Immobilien-Matching",
+    "matchProperties": "Immobilien suchen",
+    "searchProperties": "Immobilien durchsuchen",
+    "statistics": "Statistiken",
+    "statisticsDescription": "Umfassende CRM-Statistiken und Berichte anzeigen.",
     "recentClients": "Aktuelle Kunden",
     "recentProperties": "Aktuelle Immobilien",
     "recentCallNotes": "Aktuelle Gesprächsnotizen",
@@ -121,12 +137,17 @@
   },
   "clients": {
     "title": "Kunden",
+    "listDescription": "Eine Liste aller Ihrer Kunden einschließlich Kontaktinformationen und Präferenzen.",
+    "addClient": "Kunde hinzufügen",
+    "addFirstClient": "Ersten Kunden hinzufügen",
+    "noClientsFound": "Keine Kunden gefunden.",
     "add": "Kunde hinzufügen",
     "edit": "Kunde bearbeiten",
     "view": "Kunde anzeigen",
     "delete": "Kunde löschen",
     "list": "Kundenliste",
     "details": "Kundendetails",
+    "name": "Name",
     "firstName": "Vorname",
     "lastName": "Nachname",
     "email": "E-Mail",
@@ -141,7 +162,9 @@
     "updatedAt": "Aktualisiert am",
     "searchCriteria": "Suchkriterien",
     "preferences": "Präferenzen",
+    "gdpr": "DSGVO",
     "gdprConsent": "DSGVO-Einwilligung",
+    "consent": "Einwilligung",
     "gdprConsentGiven": "DSGVO-Einwilligung erteilt",
     "gdprConsentDate": "DSGVO-Einwilligungsdatum"
   },
@@ -432,6 +455,13 @@
   },
   "call-notes": {
     "title": "Gesprächsnotizen",
+    "all-call-notes": "Alle Gesprächsnotizen",
+    "all-notes-description": "Alle Gesprächsnotizen über alle Kunden hinweg anzeigen und verwalten",
+    "client-call-notes": "Kunden-Gesprächsnotizen",
+    "showing-client-notes": "Gesprächsnotizen für diesen Kunden",
+    "view-summary": "Kommunikationszusammenfassung anzeigen",
+    "search": "Suchen",
+    "search-placeholder": "In Notizen suchen...",
     "communication-summary": "Kommunikationszusammenfassung",
     "new-call-note": "Neue Gesprächsnotiz",
     "add-call-note": "Gesprächsnotiz hinzufügen",
@@ -547,5 +577,107 @@
     "dataAnonymization": "Datenanonymisierung",
     "rightToErasure": "Recht auf Löschung",
     "dataRetention": "Datenspeicherung"
+  },
+  "enums": {
+    "propertyType": {
+      "APARTMENT": "Wohnung",
+      "HOUSE": "Haus",
+      "TOWNHOUSE": "Reihenhaus",
+      "VILLA": "Villa",
+      "PENTHOUSE": "Penthouse",
+      "LOFT": "Loft",
+      "DUPLEX": "Maisonette",
+      "STUDIO": "Studio",
+      "OFFICE": "Büro",
+      "RETAIL": "Einzelhandel",
+      "WAREHOUSE": "Lager",
+      "INDUSTRIAL": "Gewerbe",
+      "RESTAURANT": "Restaurant",
+      "HOTEL": "Hotel",
+      "PARKING_SPACE": "Stellplatz",
+      "GARAGE": "Garage",
+      "LAND": "Grundstück",
+      "FARM": "Bauernhof",
+      "CASTLE": "Schloss",
+      "OTHER": "Sonstiges"
+    },
+    "propertyStatus": {
+      "AVAILABLE": "Verfügbar",
+      "RESERVED": "Reserviert",
+      "SOLD": "Verkauft",
+      "RENTED": "Vermietet",
+      "WITHDRAWN": "Zurückgezogen",
+      "UNDER_CONSTRUCTION": "Im Bau"
+    },
+    "listingType": {
+      "SALE": "Zu verkaufen",
+      "RENT": "Zu vermieten",
+      "LEASE": "Zu verpachten"
+    },
+    "heatingType": {
+      "GAS": "Gas",
+      "OIL": "Öl",
+      "ELECTRIC": "Elektrisch",
+      "DISTRICT_HEATING": "Fernwärme",
+      "HEAT_PUMP": "Wärmepumpe",
+      "SOLAR": "Solar",
+      "WOOD_PELLETS": "Holzpellets",
+      "GEOTHERMAL": "Geothermie",
+      "COAL": "Kohle",
+      "OTHER": "Sonstiges"
+    },
+    "clientType": {
+      "BUYER": "Käufer",
+      "SELLER": "Verkäufer",
+      "TENANT": "Mieter",
+      "LANDLORD": "Vermieter",
+      "INVESTOR": "Investor",
+      "DEVELOPER": "Bauträger",
+      "OTHER": "Sonstiges"
+    },
+    "preferredContactMethod": {
+      "EMAIL": "E-Mail",
+      "PHONE": "Telefon",
+      "SMS": "SMS",
+      "WHATSAPP": "WhatsApp",
+      "ANY": "Beliebig"
+    },
+    "callType": {
+      "PHONE_INBOUND": "Eingehender Anruf",
+      "PHONE_OUTBOUND": "Ausgehender Anruf",
+      "EMAIL": "E-Mail",
+      "MEETING": "Besprechung",
+      "OTHER": "Sonstiges"
+    },
+    "callOutcome": {
+      "INTERESTED": "Interessiert",
+      "NOT_INTERESTED": "Kein Interesse",
+      "SCHEDULED_VIEWING": "Besichtigung vereinbart",
+      "OFFER_MADE": "Angebot gemacht",
+      "DEAL_CLOSED": "Geschäft abgeschlossen"
+    },
+    "priority": {
+      "LOW": "Niedrig",
+      "MEDIUM": "Mittel",
+      "HIGH": "Hoch",
+      "URGENT": "Dringend"
+    },
+    "propertyImageType": {
+      "GENERAL": "Allgemein",
+      "EXTERIOR": "Außenansicht",
+      "INTERIOR": "Innenansicht",
+      "KITCHEN": "Küche",
+      "BATHROOM": "Badezimmer",
+      "BEDROOM": "Schlafzimmer",
+      "LIVING_ROOM": "Wohnzimmer",
+      "BALCONY_TERRACE": "Balkon/Terrasse",
+      "GARDEN": "Garten",
+      "GARAGE_PARKING": "Garage/Stellplatz",
+      "BASEMENT": "Keller",
+      "ATTIC": "Dachgeschoss",
+      "FLOOR_PLAN": "Grundriss",
+      "ENERGY_CERTIFICATE": "Energieausweis",
+      "LOCATION_MAP": "Lagekarte"
+    }
   }
 }

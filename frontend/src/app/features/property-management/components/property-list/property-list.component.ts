@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 import {
   PropertyService,
   Property,
@@ -16,7 +17,7 @@ import {
 @Component({
   selector: 'app-property-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, TranslateModule],
+  imports: [CommonModule, RouterLink, FormsModule, TranslateModule, TranslateEnumPipe],
   templateUrl: './property-list.component.html',
   styleUrls: ['./property-list.component.scss']
 })

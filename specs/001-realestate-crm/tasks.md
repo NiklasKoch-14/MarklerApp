@@ -252,6 +252,65 @@ description: "Task list for Real Estate CRM System implementation"
 - [X] T106.9 [P] Add image loading states and error handling
 - [X] T106.10 [P] Test image upload, delete, and display functionality
 
+### Phase 6.3: Advanced Features - Property References, Expose Management & AI Summarization
+
+#### T107: Call Notes Property References
+- [ ] T107.1 [P] [US2] Add property_id foreign key to CallNote entity in backend/src/main/java/com/marklerapp/crm/entity/CallNote.java
+- [ ] T107.2 [P] [US2] Update CallNoteDto to include propertyId and property summary in backend/src/main/java/com/marklerapp/crm/dto/CallNoteDto.java
+- [ ] T107.3 [P] [US2] Create property reference endpoint in CallNoteController for fetching agent's properties
+- [ ] T107.4 [P] [US2] Add property selection dropdown to call note form component
+- [ ] T107.5 [P] [US2] Implement property search/autocomplete in call note form for easy selection
+- [ ] T107.6 [P] [US2] Display linked property information in call note detail view
+- [ ] T107.7 [P] [US2] Update CallNoteService to handle property associations
+- [ ] T107.8 [P] [US2] Test property reference functionality in call notes
+
+#### T108: Internationalization for Select Fields & Enums
+- [ ] T108.1 [P] Create translation utility service for enum values in frontend/src/app/shared/services/enum-translation.service.ts
+- [ ] T108.2 [P] Add translation keys for all enum types (PropertyType, PropertyStatus, ListingType, HeatingType, etc.) in de.json and en.json
+- [ ] T108.3 [P] Create translateEnum pipe in frontend/src/app/shared/pipes/translate-enum.pipe.ts
+- [ ] T108.4 [P] Update all select fields to use translateEnum pipe while maintaining enum values
+- [ ] T108.5 [P] Update property form select fields (property type, status, listing type, heating type)
+- [ ] T108.6 [P] Update call note form select fields (call type, outcome, priority)
+- [ ] T108.7 [P] Update client form select fields (client type, preferred contact method)
+- [ ] T108.8 [P] Test enum translations switch correctly between German and English
+- [ ] T108.9 [P] Ensure enum values remain unchanged (only labels translate)
+
+#### T109: Property Expose/Brochure Management
+- [ ] T109.1 [P] [US3] Add expose_file_name, expose_file_path, expose_file_size columns to Property entity
+- [ ] T109.2 [P] [US3] Create PropertyExposeDto in backend/src/main/java/com/marklerapp/crm/dto/PropertyExposeDto.java
+- [ ] T109.3 [P] [US3] Implement expose upload endpoint in PropertyController (POST /properties/{id}/expose)
+- [ ] T109.4 [P] [US3] Implement expose download endpoint in PropertyController (GET /properties/{id}/expose/download)
+- [ ] T109.5 [P] [US3] Implement expose delete endpoint in PropertyController (DELETE /properties/{id}/expose)
+- [ ] T109.6 [P] [US3] Add PDF validation service in backend (max size 50MB, PDF format only)
+- [ ] T109.7 [P] [US3] Create "Expose" tab in property form component
+- [ ] T109.8 [P] [US3] Add PDF upload component with drag & drop support in expose tab
+- [ ] T109.9 [P] [US3] Implement PDF preview using browser PDF viewer (embed or modal)
+- [ ] T109.10 [P] [US3] Add download button for expose PDF in property detail view
+- [ ] T109.11 [P] [US3] Show expose status indicator on property list (has expose badge)
+- [ ] T109.12 [P] [US3] Test expose upload, download, preview, and delete functionality
+- [ ] T109.13 [P] [US3] Store expose files as Base64 in database (similar to images) OR in file system
+- [ ] T109.14 [P] [US3] Add expose file info display (filename, size, upload date) in property detail
+
+#### T110: AI-Powered Call Notes Summarization with Ollama
+- [ ] T110.1 [P] [US2] Research Ollama integration options (REST API, Docker container)
+- [ ] T110.2 [P] [US2] Add Ollama service configuration in backend/src/main/resources/application.yml
+- [ ] T110.3 [P] [US2] Create OllamaService in backend/src/main/java/com/marklerapp/crm/service/OllamaService.java
+- [ ] T110.4 [P] [US2] Add Ollama Docker container to docker-compose.yml (on-premise deployment)
+- [ ] T110.5 [P] [US2] Implement prompt engineering for call notes summarization
+- [ ] T110.6 [P] [US2] Create AI summary endpoint in CallNoteController (POST /call-notes/clients/{clientId}/ai-summary)
+- [ ] T110.7 [P] [US2] Add AI summary caching mechanism to avoid redundant API calls
+- [ ] T110.8 [P] [US2] Create AI summary component in frontend for client detail view
+- [ ] T110.9 [P] [US2] Add "Generate AI Summary" button in client communication history
+- [ ] T110.10 [P] [US2] Implement loading state and streaming response for AI summaries
+- [ ] T110.11 [P] [US2] Add AI summary export functionality (PDF or text download)
+- [ ] T110.12 [P] [US2] Create configuration UI for Ollama model selection (llama2, mistral, etc.)
+- [ ] T110.13 [P] [US2] Add error handling for offline/unavailable Ollama service
+- [ ] T110.14 [P] [US2] Test AI summarization with various client call note scenarios
+- [ ] T110.15 [P] [US2] Document Ollama setup and deployment in docs/ollama-setup.md
+- [ ] T110.16 [P] [US2] Add GDPR compliance note for AI processing (data stays on-premise)
+
+**Checkpoint**: Advanced features implemented - Property references in call notes, multilingual enum support, property expose management, and AI-powered summarization
+
 ---
 
 ## Dependencies & Execution Order

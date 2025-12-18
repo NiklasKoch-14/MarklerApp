@@ -1,13 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { ClientService, Client } from '../../services/client.service';
 import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse } from '../../../call-notes/services/call-notes.service';
 
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   template: `
     <div class="p-6">
       <div *ngIf="isLoading" class="text-center py-8">
@@ -52,8 +53,8 @@ import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse } from '.
                   <div>
                     <dt class="text-sm font-medium text-gray-500">GDPR Consent</dt>
                     <dd class="mt-1">
-                      <span *ngIf="client.gdprConsentGiven" class="badge badge-success">✓ Consent Given</span>
-                      <span *ngIf="!client.gdprConsentGiven" class="badge badge-error">✗ No Consent</span>
+                      <span *ngIf="client.gdprConsentGiven" class="badge badge-success">✓ {{ 'clients.gdprConsentGiven' | translate }}</span>
+                      <span *ngIf="!client.gdprConsentGiven" class="badge badge-error">✗ {{ 'common.no' | translate }} {{ 'clients.consent' | translate }}</span>
                     </dd>
                   </div>
                   <div *ngIf="client.gdprConsentDate">

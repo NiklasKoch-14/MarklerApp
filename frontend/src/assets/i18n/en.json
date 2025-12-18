@@ -32,7 +32,8 @@
     "copy": "Copy",
     "copying": "Copying...",
     "never": "Never",
-    "none": "None"
+    "none": "None",
+    "all": "All"
   },
   "auth": {
     "login": {
@@ -108,7 +109,22 @@
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome",
+    "welcomeTitle": "Welcome to Real Estate CRM",
+    "welcomeDescription": "Manage your clients, properties, and communications efficiently.",
     "overview": "Overview",
+    "clientManagement": "Client Management",
+    "addNewClient": "Add New Client",
+    "viewAllClients": "View All Clients",
+    "propertyManagement": "Property Management",
+    "addNewProperty": "Add New Property",
+    "viewAllProperties": "View All Properties",
+    "communication": "Communication",
+    "viewCallNotes": "View Call Notes",
+    "propertyMatching": "Property Matching",
+    "matchProperties": "Match Properties",
+    "searchProperties": "Search Properties",
+    "statistics": "Statistics",
+    "statisticsDescription": "View comprehensive CRM statistics and reports.",
     "recentClients": "Recent Clients",
     "recentProperties": "Recent Properties",
     "recentCallNotes": "Recent Call Notes",
@@ -121,12 +137,17 @@
   },
   "clients": {
     "title": "Clients",
+    "listDescription": "A list of all your clients including their contact information and preferences.",
+    "addClient": "Add Client",
+    "addFirstClient": "Add your first client",
+    "noClientsFound": "No clients found.",
     "add": "Add Client",
     "edit": "Edit Client",
     "view": "View Client",
     "delete": "Delete Client",
     "list": "Client List",
     "details": "Client Details",
+    "name": "Name",
     "firstName": "First Name",
     "lastName": "Last Name",
     "email": "Email",
@@ -141,7 +162,9 @@
     "updatedAt": "Updated At",
     "searchCriteria": "Search Criteria",
     "preferences": "Preferences",
+    "gdpr": "GDPR",
     "gdprConsent": "GDPR Consent",
+    "consent": "Consent",
     "gdprConsentGiven": "GDPR Consent Given",
     "gdprConsentDate": "GDPR Consent Date"
   },
@@ -432,6 +455,13 @@
   },
   "call-notes": {
     "title": "Call Notes",
+    "all-call-notes": "All Call Notes",
+    "all-notes-description": "View and manage all call notes across all clients",
+    "client-call-notes": "Client Call Notes",
+    "showing-client-notes": "Showing call notes for this client",
+    "view-summary": "View Communication Summary",
+    "search": "Search",
+    "search-placeholder": "Search in notes...",
     "new-call-note": "New Call Note",
     "edit-call-note": "Edit Call Note",
     "create-note": "Create Note",
@@ -547,5 +577,107 @@
     "dataAnonymization": "Data Anonymization",
     "rightToErasure": "Right to Erasure",
     "dataRetention": "Data Retention"
+  },
+  "enums": {
+    "propertyType": {
+      "APARTMENT": "Apartment",
+      "HOUSE": "House",
+      "TOWNHOUSE": "Townhouse",
+      "VILLA": "Villa",
+      "PENTHOUSE": "Penthouse",
+      "LOFT": "Loft",
+      "DUPLEX": "Duplex",
+      "STUDIO": "Studio",
+      "OFFICE": "Office",
+      "RETAIL": "Retail",
+      "WAREHOUSE": "Warehouse",
+      "INDUSTRIAL": "Industrial",
+      "RESTAURANT": "Restaurant",
+      "HOTEL": "Hotel",
+      "PARKING_SPACE": "Parking Space",
+      "GARAGE": "Garage",
+      "LAND": "Land",
+      "FARM": "Farm",
+      "CASTLE": "Castle",
+      "OTHER": "Other"
+    },
+    "propertyStatus": {
+      "AVAILABLE": "Available",
+      "RESERVED": "Reserved",
+      "SOLD": "Sold",
+      "RENTED": "Rented",
+      "WITHDRAWN": "Withdrawn",
+      "UNDER_CONSTRUCTION": "Under Construction"
+    },
+    "listingType": {
+      "SALE": "For Sale",
+      "RENT": "For Rent",
+      "LEASE": "For Lease"
+    },
+    "heatingType": {
+      "GAS": "Gas",
+      "OIL": "Oil",
+      "ELECTRIC": "Electric",
+      "DISTRICT_HEATING": "District Heating",
+      "HEAT_PUMP": "Heat Pump",
+      "SOLAR": "Solar",
+      "WOOD_PELLETS": "Wood Pellets",
+      "GEOTHERMAL": "Geothermal",
+      "COAL": "Coal",
+      "OTHER": "Other"
+    },
+    "clientType": {
+      "BUYER": "Buyer",
+      "SELLER": "Seller",
+      "TENANT": "Tenant",
+      "LANDLORD": "Landlord",
+      "INVESTOR": "Investor",
+      "DEVELOPER": "Developer",
+      "OTHER": "Other"
+    },
+    "preferredContactMethod": {
+      "EMAIL": "Email",
+      "PHONE": "Phone",
+      "SMS": "SMS",
+      "WHATSAPP": "WhatsApp",
+      "ANY": "Any"
+    },
+    "callType": {
+      "PHONE_INBOUND": "Incoming Call",
+      "PHONE_OUTBOUND": "Outgoing Call",
+      "EMAIL": "Email",
+      "MEETING": "Meeting",
+      "OTHER": "Other"
+    },
+    "callOutcome": {
+      "INTERESTED": "Interested",
+      "NOT_INTERESTED": "Not Interested",
+      "SCHEDULED_VIEWING": "Viewing Scheduled",
+      "OFFER_MADE": "Offer Made",
+      "DEAL_CLOSED": "Deal Closed"
+    },
+    "priority": {
+      "LOW": "Low",
+      "MEDIUM": "Medium",
+      "HIGH": "High",
+      "URGENT": "Urgent"
+    },
+    "propertyImageType": {
+      "GENERAL": "General",
+      "EXTERIOR": "Exterior",
+      "INTERIOR": "Interior",
+      "KITCHEN": "Kitchen",
+      "BATHROOM": "Bathroom",
+      "BEDROOM": "Bedroom",
+      "LIVING_ROOM": "Living Room",
+      "BALCONY_TERRACE": "Balcony/Terrace",
+      "GARDEN": "Garden",
+      "GARAGE_PARKING": "Garage/Parking",
+      "BASEMENT": "Basement",
+      "ATTIC": "Attic",
+      "FLOOR_PLAN": "Floor Plan",
+      "ENERGY_CERTIFICATE": "Energy Certificate",
+      "LOCATION_MAP": "Location Map"
+    }
   }
 }

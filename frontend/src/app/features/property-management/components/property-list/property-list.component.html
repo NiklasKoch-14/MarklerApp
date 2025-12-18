@@ -30,7 +30,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <!-- Search Query -->
         <div>
-          <label class="form-label">Search</label>
+          <label class="form-label">{{ 'common.search' | translate }}</label>
           <input
             type="text"
             [(ngModel)]="searchFilter.query"
@@ -41,40 +41,40 @@
 
         <!-- Property Type -->
         <div>
-          <label class="form-label">Property Type</label>
+          <label class="form-label">{{ 'properties.filters.propertyType' | translate }}</label>
           <select [(ngModel)]="searchFilter.propertyType" class="form-input">
-            <option [ngValue]="undefined">All Types</option>
+            <option [ngValue]="undefined">{{ 'common.all' | translate }}</option>
             <option *ngFor="let type of propertyTypes" [value]="type">
-              {{ propertyService.formatPropertyType(type) }}
+              {{ type | translateEnum:'propertyType' }}
             </option>
           </select>
         </div>
 
         <!-- Listing Type -->
         <div>
-          <label class="form-label">Listing Type</label>
+          <label class="form-label">{{ 'properties.filters.listingType' | translate }}</label>
           <select [(ngModel)]="searchFilter.listingType" class="form-input">
-            <option [ngValue]="undefined">All Listings</option>
+            <option [ngValue]="undefined">{{ 'common.all' | translate }}</option>
             <option *ngFor="let type of listingTypes" [value]="type">
-              {{ propertyService.formatListingType(type) }}
+              {{ type | translateEnum:'listingType' }}
             </option>
           </select>
         </div>
 
         <!-- Status -->
         <div>
-          <label class="form-label">Status</label>
+          <label class="form-label">{{ 'properties.filters.status' | translate }}</label>
           <select [(ngModel)]="searchFilter.status" class="form-input">
-            <option [ngValue]="undefined">All Status</option>
+            <option [ngValue]="undefined">{{ 'common.all' | translate }}</option>
             <option *ngFor="let status of propertyStatuses" [value]="status">
-              {{ propertyService.formatPropertyStatus(status) }}
+              {{ status | translateEnum:'propertyStatus' }}
             </option>
           </select>
         </div>
 
         <!-- City -->
         <div>
-          <label class="form-label">City</label>
+          <label class="form-label">{{ 'properties.filters.city' | translate }}</label>
           <input
             type="text"
             [(ngModel)]="searchFilter.city"
@@ -84,7 +84,7 @@
 
         <!-- Min Price -->
         <div>
-          <label class="form-label">Min Price (EUR)</label>
+          <label class="form-label">{{ 'properties.filters.minPrice' | translate }}</label>
           <input
             type="number"
             [(ngModel)]="searchFilter.minPrice"
@@ -94,7 +94,7 @@
 
         <!-- Max Price -->
         <div>
-          <label class="form-label">Max Price (EUR)</label>
+          <label class="form-label">{{ 'properties.filters.maxPrice' | translate }}</label>
           <input
             type="number"
             [(ngModel)]="searchFilter.maxPrice"
@@ -104,7 +104,7 @@
 
         <!-- Min Living Area -->
         <div>
-          <label class="form-label">Min Area (sqm)</label>
+          <label class="form-label">{{ 'properties.filters.minArea' | translate }}</label>
           <input
             type="number"
             [(ngModel)]="searchFilter.minLivingArea"
@@ -114,7 +114,7 @@
 
         <!-- Max Living Area -->
         <div>
-          <label class="form-label">Max Area (sqm)</label>
+          <label class="form-label">{{ 'properties.filters.maxArea' | translate }}</label>
           <input
             type="number"
             [(ngModel)]="searchFilter.maxLivingArea"
@@ -124,7 +124,7 @@
 
         <!-- Min Rooms -->
         <div>
-          <label class="form-label">Min Rooms</label>
+          <label class="form-label">{{ 'properties.filters.minRooms' | translate }}</label>
           <input
             type="number"
             [(ngModel)]="searchFilter.minRooms"
@@ -135,7 +135,7 @@
 
         <!-- Max Rooms -->
         <div>
-          <label class="form-label">Max Rooms</label>
+          <label class="form-label">{{ 'properties.filters.maxRooms' | translate }}</label>
           <input
             type="number"
             [(ngModel)]="searchFilter.maxRooms"
@@ -149,23 +149,23 @@
       <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
         <label class="flex items-center">
           <input type="checkbox" [(ngModel)]="searchFilter.hasElevator" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Elevator</span>
+          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasElevator' | translate }}</span>
         </label>
         <label class="flex items-center">
           <input type="checkbox" [(ngModel)]="searchFilter.hasBalcony" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Balcony</span>
+          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasBalcony' | translate }}</span>
         </label>
         <label class="flex items-center">
           <input type="checkbox" [(ngModel)]="searchFilter.hasGarden" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Garden</span>
+          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasGarden' | translate }}</span>
         </label>
         <label class="flex items-center">
           <input type="checkbox" [(ngModel)]="searchFilter.hasParking" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Parking</span>
+          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasParking' | translate }}</span>
         </label>
         <label class="flex items-center">
           <input type="checkbox" [(ngModel)]="searchFilter.petsAllowed" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Pets Allowed</span>
+          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.petsAllowed' | translate }}</span>
         </label>
       </div>
 
@@ -193,7 +193,7 @@
   <div class="mt-6">
     <div *ngIf="isLoading" class="text-center py-12">
       <div class="spinner h-8 w-8 mx-auto"></div>
-      <p class="mt-2 text-sm text-gray-500">Loading properties...</p>
+      <p class="mt-2 text-sm text-gray-500">{{ 'properties.loadingProperties' | translate }}</p>
     </div>
 
     <div *ngIf="!isLoading && properties.length === 0" class="text-center py-12 card">
@@ -201,8 +201,8 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
       </svg>
-      <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No properties found</h3>
-      <p class="mt-1 text-sm text-gray-500">Get started by adding your first property.</p>
+      <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">{{ 'properties.noPropertiesFound' | translate }}</h3>
+      <p class="mt-1 text-sm text-gray-500">{{ 'properties.add' | translate }}</p>
       <div class="mt-6">
         <a routerLink="/properties/new" class="btn btn-primary">
           Add Property
@@ -224,14 +224,14 @@
           <div class="absolute top-2 right-2">
             <span [ngClass]="getStatusBadgeClass(property.status)"
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
-              {{ propertyService.formatPropertyStatus(property.status!) }}
+              {{ property.status | translateEnum:'propertyStatus' }}
             </span>
           </div>
           <!-- Listing Type Badge -->
           <div class="absolute top-2 left-2">
             <span [ngClass]="getListingTypeBadgeClass(property.listingType)"
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
-              {{ propertyService.formatListingType(property.listingType) }}
+              {{ property.listingType | translateEnum:'listingType' }}
             </span>
           </div>
         </div>
@@ -261,7 +261,7 @@
 
           <!-- Property Type -->
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            {{ propertyService.formatPropertyType(property.propertyType) }}
+            {{ property.propertyType | translateEnum:'propertyType' }}
           </p>
 
           <!-- Specifications -->
@@ -329,7 +329,7 @@
         <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
           <button (click)="previousPage()" [disabled]="currentPage === 0"
                   class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-            <span class="sr-only">Previous</span>
+            <span class="sr-only">{{ 'common.previous' | translate }}</span>
             <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"></path>
             </svg>
@@ -345,7 +345,7 @@
 
           <button (click)="nextPage()" [disabled]="currentPage >= totalPages - 1"
                   class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-            <span class="sr-only">Next</span>
+            <span class="sr-only">{{ 'common.next' | translate }}</span>
             <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
             </svg>

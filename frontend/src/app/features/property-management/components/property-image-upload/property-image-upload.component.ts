@@ -2,13 +2,14 @@ import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpEventType } from '@angular/common/http';
+import { TranslateModule } from '@ngx-translate/core';
 import { PropertyImageService } from '../../services/property-image.service';
 import { PropertyImageDto, PropertyImageType, getImageTypeName } from '../../models/property-image.model';
 
 @Component({
   selector: 'app-property-image-upload',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   template: `
     <div class="property-image-upload">
       <!-- Image Gallery -->
@@ -35,7 +36,7 @@ import { PropertyImageDto, PropertyImageType, getImageTypeName } from '../../mod
             <div class="p-2 bg-white dark:bg-gray-800">
               <div class="flex items-center justify-between mb-1">
                 <span class="text-xs font-medium truncate">{{ image.title || 'Untitled' }}</span>
-                <span *ngIf="image.isPrimary" class="badge badge-xs badge-primary">Primary</span>
+                <span *ngIf="image.isPrimary" class="badge badge-xs badge-primary">{{ 'properties.detail.primaryImage' | translate }}</span>
               </div>
               <div class="text-xs text-gray-500 dark:text-gray-400">
                 {{ getImageTypeName(image.imageType || 'GENERAL') }}

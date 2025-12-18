@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
 import { LanguageSwitcherComponent } from '../../shared/components/language-switcher/language-switcher.component';
@@ -8,7 +9,7 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ThemeToggleComponent, LanguageSwitcherComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, TranslateModule, ThemeToggleComponent, LanguageSwitcherComponent],
   template: `
     <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
       <!-- Navigation -->
@@ -24,22 +25,22 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
                    routerLinkActive="border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20"
                    [routerLinkActiveOptions]="{exact: true}"
                    class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-3 pt-1 pb-1 border-b-2 text-sm font-medium transition-colors duration-200">
-                  Dashboard
+                  {{ 'navigation.dashboard' | translate }}
                 </a>
                 <a routerLink="/clients"
                    routerLinkActive="border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20"
                    class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-3 pt-1 pb-1 border-b-2 text-sm font-medium transition-colors duration-200">
-                  Clients
+                  {{ 'navigation.clients' | translate }}
                 </a>
                 <a routerLink="/properties"
                    routerLinkActive="border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20"
                    class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-3 pt-1 pb-1 border-b-2 text-sm font-medium transition-colors duration-200">
-                  Properties
+                  {{ 'navigation.properties' | translate }}
                 </a>
                 <a routerLink="/call-notes"
                    routerLinkActive="border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20"
                    class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-3 pt-1 pb-1 border-b-2 text-sm font-medium transition-colors duration-200">
-                  Call Notes
+                  {{ 'navigation.callNotes' | translate }}
                 </a>
               </div>
             </div>
@@ -54,7 +55,7 @@ import { LanguageSwitcherComponent } from '../../shared/components/language-swit
               <div class="ml-3 relative">
                 <button (click)="logout()"
                         class="bg-white dark:bg-gray-800 rounded-md p-2 text-gray-400 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600">
-                  Logout
+                  {{ 'auth.logout' | translate }}
                 </button>
               </div>
             </div>

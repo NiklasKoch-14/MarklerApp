@@ -2,21 +2,22 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { ClientService } from '../../services/client.service';
 
 @Component({
   selector: 'app-client-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
   template: `
     <div class="p-6">
-      <h1 class="text-xl font-semibold text-gray-900 mb-6">{{ isEditMode ? 'Edit Client' : 'Add New Client' }}</h1>
+      <h1 class="text-xl font-semibold text-gray-900 mb-6">{{ isEditMode ? ('clients.edit' | translate) : ('clients.add' | translate) }}</h1>
 
       <div class="max-w-2xl">
         <form [formGroup]="clientForm" (ngSubmit)="onSubmit()" class="space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label for="firstName" class="form-label">First Name *</label>
+              <label for="firstName" class="form-label">{{ 'clients.firstName' | translate }} *</label>
               <input
                 type="text"
                 id="firstName"
@@ -29,7 +30,7 @@ import { ClientService } from '../../services/client.service';
             </div>
 
             <div>
-              <label for="lastName" class="form-label">Last Name *</label>
+              <label for="lastName" class="form-label">{{ 'clients.lastName' | translate }} *</label>
               <input
                 type="text"
                 id="lastName"
@@ -44,7 +45,7 @@ import { ClientService } from '../../services/client.service';
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label for="email" class="form-label">Email</label>
+              <label for="email" class="form-label">{{ 'clients.email' | translate }}</label>
               <input
                 type="email"
                 id="email"
@@ -57,7 +58,7 @@ import { ClientService } from '../../services/client.service';
             </div>
 
             <div>
-              <label for="phone" class="form-label">Phone</label>
+              <label for="phone" class="form-label">{{ 'clients.phone' | translate }}</label>
               <input
                 type="tel"
                 id="phone"
@@ -79,7 +80,7 @@ import { ClientService } from '../../services/client.service';
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <label for="addressCity" class="form-label">City</label>
+              <label for="addressCity" class="form-label">{{ 'clients.city' | translate }}</label>
               <input
                 type="text"
                 id="addressCity"
@@ -89,7 +90,7 @@ import { ClientService } from '../../services/client.service';
             </div>
 
             <div>
-              <label for="addressPostalCode" class="form-label">Postal Code</label>
+              <label for="addressPostalCode" class="form-label">{{ 'clients.postalCode' | translate }}</label>
               <input
                 type="text"
                 id="addressPostalCode"
@@ -102,7 +103,7 @@ import { ClientService } from '../../services/client.service';
             </div>
 
             <div>
-              <label for="addressCountry" class="form-label">Country</label>
+              <label for="addressCountry" class="form-label">{{ 'clients.country' | translate }}</label>
               <input
                 type="text"
                 id="addressCountry"
@@ -137,7 +138,7 @@ import { ClientService } from '../../services/client.service';
               type="button"
               (click)="cancel()"
               class="btn btn-outline">
-              Cancel
+              {{ 'common.cancel' | translate }}
             </button>
             <button
               type="submit"

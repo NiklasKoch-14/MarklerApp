@@ -9,6 +9,7 @@ import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { CallNotesService, CallNoteSummary, CallType, CallOutcome, CallNoteSearchFilter, PagedResponse } from '../../services/call-notes.service';
 import { ClientService } from '../../../client-management/services/client.service';
 import { TooltipDirective } from '../../../../shared/directives/tooltip.directive';
+import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 
 @Component({
   selector: 'app-call-notes-list',
@@ -18,7 +19,8 @@ import { TooltipDirective } from '../../../../shared/directives/tooltip.directiv
     RouterModule,
     ReactiveFormsModule,
     TranslateModule,
-    TooltipDirective
+    TooltipDirective,
+    TranslateEnumPipe
   ],
   template: `
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -86,8 +88,8 @@ import { TooltipDirective } from '../../../../shared/directives/tooltip.directiv
               formControlName="callType"
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
               <option value="">{{ 'common.all' | translate }}</option>
-              <option *ngFor="let option of callTypeOptions" [value]="option.value">
-                {{ option.label }}
+              <option *ngFor="let option of callTypeOptions" [value]="option">
+                {{ option | translateEnum:'callType' }}
               </option>
             </select>
           </div>
@@ -102,8 +104,8 @@ import { TooltipDirective } from '../../../../shared/directives/tooltip.directiv
               formControlName="outcome"
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
               <option value="">{{ 'common.all' | translate }}</option>
-              <option *ngFor="let option of outcomeOptions" [value]="option.value">
-                {{ option.label }}
+              <option *ngFor="let option of outcomeOptions" [value]="option">
+                {{ option | translateEnum:'callOutcome' }}
               </option>
             </select>
           </div>

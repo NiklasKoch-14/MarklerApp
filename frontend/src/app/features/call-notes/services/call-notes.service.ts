@@ -290,21 +290,17 @@ export class CallNotesService {
 
   /**
    * Get call type options for forms
+   * Returns enum values only - labels should be translated using translateEnum pipe
    */
-  getCallTypeOptions(): { value: CallType, label: string }[] {
-    return Object.values(CallType).map(type => ({
-      value: type,
-      label: this.formatCallType(type)
-    }));
+  getCallTypeOptions(): CallType[] {
+    return Object.values(CallType);
   }
 
   /**
    * Get call outcome options for forms
+   * Returns enum values only - labels should be translated using translateEnum pipe
    */
-  getCallOutcomeOptions(): { value: CallOutcome, label: string }[] {
-    return Object.values(CallOutcome).map(outcome => ({
-      value: outcome,
-      label: this.formatCallOutcome(outcome)
-    }));
+  getCallOutcomeOptions(): CallOutcome[] {
+    return Object.values(CallOutcome);
   }
 }
