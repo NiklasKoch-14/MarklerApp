@@ -2,7 +2,6 @@ package com.marklerapp.crm.controller;
 
 import com.marklerapp.crm.dto.*;
 import com.marklerapp.crm.entity.GdprExportAuditLog;
-import com.marklerapp.crm.security.CustomUserDetails;
 import com.marklerapp.crm.service.GdprAuditService;
 import com.marklerapp.crm.service.GdprPdfService;
 import com.marklerapp.crm.service.GdprService;
@@ -30,10 +29,14 @@ import java.util.UUID;
 
 /**
  * REST controller for GDPR data export operations.
+ * Extends BaseController for common authentication methods.
  * Implements GDPR Article 15 - Right of Access
  *
  * This controller provides endpoints for agents to export all their personal data
  * stored in the system in accordance with GDPR compliance requirements.
+ *
+ * @see BaseController
+ * @since Phase 7.1 - Refactored to use BaseController
  */
 @Slf4j
 @RestController
@@ -41,7 +44,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Tag(name = "GDPR Compliance", description = "APIs for GDPR data export and compliance (Article 15 - Right of Access)")
 @SecurityRequirement(name = "Bearer Authentication")
-public class GdprController {
+public class GdprController extends BaseController {
 
     private final GdprService gdprService;
     private final GdprPdfService gdprPdfService;
@@ -366,14 +369,6 @@ public class GdprController {
                 .build();
 
         return ResponseEntity.ok(summary);
-    }
-
-    /**
-     * Extract agent ID from authentication
-     */
-    private UUID getAgentIdFromAuth(Authentication authentication) {
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        return userDetails.getAgent().getId();
     }
 
     /**

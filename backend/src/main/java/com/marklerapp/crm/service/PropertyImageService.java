@@ -1,6 +1,7 @@
 package com.marklerapp.crm.service;
 
 import com.marklerapp.crm.config.GlobalExceptionHandler.ResourceNotFoundException;
+import com.marklerapp.crm.constants.ValidationConstants;
 import com.marklerapp.crm.dto.PropertyImageDto;
 import com.marklerapp.crm.entity.Property;
 import com.marklerapp.crm.entity.PropertyImage;
@@ -143,7 +144,7 @@ public class PropertyImageService {
      * Generate thumbnail from original image and return as Base64
      */
     private String generateThumbnailBase64(BufferedImage originalImage, String contentType) throws IOException {
-        int thumbnailSize = 200;
+        int thumbnailSize = ValidationConstants.THUMBNAIL_SIZE;
         int width = originalImage.getWidth();
         int height = originalImage.getHeight();
 

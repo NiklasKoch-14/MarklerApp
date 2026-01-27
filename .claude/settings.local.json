@@ -10,7 +10,8 @@
       "Bash(mvn clean compile:*)",
       "Bash(mvn clean package:*)",
       "Bash(docker-compose logs:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(mvn compile:*)"
     ],
     "deny": [],
     "ask": []

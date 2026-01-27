@@ -3,7 +3,6 @@ package com.marklerapp.crm.controller;
 import com.marklerapp.crm.dto.PropertyMatchRequest;
 import com.marklerapp.crm.dto.PropertyMatchResponse;
 import com.marklerapp.crm.dto.PropertySearchCriteriaDto;
-import com.marklerapp.crm.security.CustomUserDetails;
 import com.marklerapp.crm.service.PropertyMatchingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -23,6 +22,7 @@ import java.util.UUID;
 
 /**
  * REST controller for intelligent property-client matching operations.
+ * Extends BaseController for common authentication methods.
  *
  * <p>This controller provides sophisticated matching algorithms that score properties
  * and clients based on how well they match each other's criteria. The matching system
@@ -53,13 +53,15 @@ import java.util.UUID;
  * @see PropertyMatchingService
  * @see PropertyMatchRequest
  * @see PropertyMatchResponse
+ * @see BaseController
+ * @since Phase 7.1 - Refactored to use BaseController
  */
 @Slf4j
 @RestController
 @RequestMapping("/properties/match")
 @RequiredArgsConstructor
 @Tag(name = "Property Matching", description = "APIs for intelligent property-client matching with scoring algorithms")
-public class PropertyMatchingController {
+public class PropertyMatchingController extends BaseController {
 
     private final PropertyMatchingService propertyMatchingService;
 
@@ -363,20 +365,5 @@ public class PropertyMatchingController {
             propertyId, agentId, request);
 
         return ResponseEntity.ok(response);
-    }
-
-    // ========================================
-    // Helper Methods
-    // ========================================
-
-    /**
-     * Extract agent ID from authentication context.
-     *
-     * @param authentication the authentication object from Spring Security
-     * @return the agent's UUID
-     */
-    private UUID getAgentIdFromAuth(Authentication authentication) {
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        return userDetails.getAgent().getId();
     }
 }

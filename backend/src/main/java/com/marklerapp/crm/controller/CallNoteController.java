@@ -1,8 +1,8 @@
 package com.marklerapp.crm.controller;
 
+import com.marklerapp.crm.constants.PaginationConstants;
 import com.marklerapp.crm.dto.AiSummaryDto;
 import com.marklerapp.crm.dto.CallNoteDto;
-import com.marklerapp.crm.security.CustomUserDetails;
 import com.marklerapp.crm.service.CallNoteService;
 import com.marklerapp.crm.service.CallNoteSummaryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,14 +26,18 @@ import java.util.UUID;
 
 /**
  * REST Controller for managing call notes and communication tracking.
+ * Extends BaseController for common authentication methods.
  * Handles CRUD operations and summary generation for client interactions.
+ *
+ * @see BaseController
+ * @since Phase 7.1 - Refactored to use BaseController and @PageableDefault
  */
 @Slf4j
 @RestController
 @RequestMapping("/call-notes")
 @RequiredArgsConstructor
 @Tag(name = "Call Notes", description = "Endpoints for managing call notes and communication tracking")
-public class CallNoteController {
+public class CallNoteController extends BaseController {
 
     private final CallNoteService callNoteService;
     private final CallNoteSummaryService callNoteSummaryService;
@@ -102,7 +107,11 @@ public class CallNoteController {
     public ResponseEntity<Page<CallNoteDto.Summary>> getCallNotesByClient(
             Authentication authentication,
             @Parameter(description = "Client ID") @PathVariable UUID clientId,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @PageableDefault(
+                size = PaginationConstants.DEFAULT_PAGE_SIZE,
+                sort = PaginationConstants.DEFAULT_SORT_FIELD,
+                direction = Sort.Direction.DESC
+            ) Pageable pageable) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
         Page<CallNoteDto.Summary> callNotes = callNoteService.getCallNotesByClient(agentId, clientId, pageable);
@@ -116,7 +125,11 @@ public class CallNoteController {
     @Operation(summary = "Get agent's call notes", description = "Retrieves all call notes for the authenticated agent")
     public ResponseEntity<Page<CallNoteDto.Summary>> getCallNotesByAgent(
             Authentication authentication,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @PageableDefault(
+                size = PaginationConstants.DEFAULT_PAGE_SIZE,
+                sort = PaginationConstants.DEFAULT_SORT_FIELD,
+                direction = Sort.Direction.DESC
+            ) Pageable pageable) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
         Page<CallNoteDto.Summary> callNotes = callNoteService.getCallNotesByAgent(agentId, pageable);
@@ -131,7 +144,11 @@ public class CallNoteController {
     public ResponseEntity<Page<CallNoteDto.Summary>> searchCallNotes(
             Authentication authentication,
             @RequestBody CallNoteDto.SearchFilter filter,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @PageableDefault(
+                size = PaginationConstants.DEFAULT_PAGE_SIZE,
+                sort = PaginationConstants.DEFAULT_SORT_FIELD,
+                direction = Sort.Direction.DESC
+            ) Pageable pageable) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
         Page<CallNoteDto.Summary> callNotes = callNoteService.searchCallNotes(agentId, filter, pageable);
@@ -287,13 +304,5 @@ public class CallNoteController {
                             .summary("Error generating summary: " + e.getMessage())
                             .build());
         }
-    }
-
-    /**
-     * Helper method to extract agent ID from authentication
-     */
-    private UUID getAgentIdFromAuth(Authentication authentication) {
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        return userDetails.getAgent().getId();
     }
 }

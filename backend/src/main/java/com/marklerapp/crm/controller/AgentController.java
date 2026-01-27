@@ -2,7 +2,6 @@ package com.marklerapp.crm.controller;
 
 import com.marklerapp.crm.dto.AgentDto;
 import com.marklerapp.crm.entity.LanguagePreference;
-import com.marklerapp.crm.security.CustomUserDetails;
 import com.marklerapp.crm.service.AgentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -23,13 +22,17 @@ import java.util.UUID;
 
 /**
  * REST controller for agent profile management operations.
+ * Extends BaseController for common authentication methods.
+ *
+ * @see BaseController
+ * @since Phase 7.1 - Refactored to use BaseController
  */
 @Slf4j
 @RestController
 @RequestMapping("/agents")
 @RequiredArgsConstructor
 @Tag(name = "Agent Management", description = "APIs for managing agent profiles and settings")
-public class AgentController {
+public class AgentController extends BaseController {
 
     private final AgentService agentService;
 
@@ -123,14 +126,6 @@ public class AgentController {
                 .build();
 
         return ResponseEntity.ok(stats);
-    }
-
-    /**
-     * Extract agent ID from authentication
-     */
-    private UUID getAgentIdFromAuth(Authentication authentication) {
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        return userDetails.getAgent().getId();
     }
 
     /**

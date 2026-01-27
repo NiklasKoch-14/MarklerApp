@@ -1,10 +1,10 @@
 package com.marklerapp.crm.controller;
 
+import com.marklerapp.crm.constants.PaginationConstants;
 import com.marklerapp.crm.dto.*;
 import com.marklerapp.crm.entity.ListingType;
 import com.marklerapp.crm.entity.PropertyStatus;
 import com.marklerapp.crm.entity.PropertyType;
-import com.marklerapp.crm.security.CustomUserDetails;
 import com.marklerapp.crm.service.PropertyImageService;
 import com.marklerapp.crm.service.PropertyService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,12 +17,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpHeaders;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +36,7 @@ import java.util.UUID;
 
 /**
  * REST controller for comprehensive property management operations.
+ * Extends BaseController for common authentication methods.
  *
  * <p>This controller provides all CRUD operations for properties, including:
  * <ul>
@@ -59,13 +58,15 @@ import java.util.UUID;
  * @see PropertyService
  * @see PropertyImageService
  * @see PropertyDto
+ * @see BaseController
+ * @since Phase 7.1 - Refactored to use BaseController and @PageableDefault
  */
 @Slf4j
 @RestController
 @RequestMapping("/properties")
 @RequiredArgsConstructor
 @Tag(name = "Property Management", description = "APIs for managing real estate property listings")
-public class PropertyController {
+public class PropertyController extends BaseController {
 
     private final PropertyService propertyService;
     private final PropertyImageService propertyImageService;
@@ -205,10 +206,7 @@ public class PropertyController {
     /**
      * Get all properties for the authenticated agent with pagination.
      *
-     * @param page page number (0-based)
-     * @param size page size
-     * @param sortBy field to sort by
-     * @param sortDir sort direction (asc/desc)
+     * @param pageable pagination and sorting parameters
      * @param authentication the authenticated user (agent)
      * @return page of properties
      */
@@ -220,23 +218,16 @@ public class PropertyController {
         @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
     })
     public ResponseEntity<Page<PropertyDto>> getAllProperties(
-            @Parameter(description = "Page number (0-based)", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size", example = "20")
-            @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "Sort field", example = "createdAt")
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "Sort direction (asc/desc)", example = "desc")
-            @RequestParam(defaultValue = "desc") String sortDir,
+            @PageableDefault(
+                size = PaginationConstants.DEFAULT_PAGE_SIZE,
+                sort = PaginationConstants.DEFAULT_SORT_FIELD,
+                direction = Sort.Direction.DESC
+            ) Pageable pageable,
             Authentication authentication) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
-        log.debug("Getting all properties for agent: {} (page: {}, size: {})", agentId, page, size);
-
-        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc")
-            ? Sort.Direction.DESC
-            : Sort.Direction.ASC, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
+        log.debug("Getting all properties for agent: {} (page: {}, size: {})",
+                  agentId, pageable.getPageNumber(), pageable.getPageSize());
 
         Page<PropertyDto> properties = propertyService.getAllProperties(agentId, pageable);
 
@@ -307,14 +298,11 @@ public class PropertyController {
             @RequestParam(required = false) BigDecimal minRooms,
             @Parameter(description = "Maximum number of rooms")
             @RequestParam(required = false) BigDecimal maxRooms,
-            @Parameter(description = "Page number (0-based)")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size")
-            @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "Sort field")
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "Sort direction (asc/desc)")
-            @RequestParam(defaultValue = "desc") String sortDir,
+            @PageableDefault(
+                size = PaginationConstants.DEFAULT_PAGE_SIZE,
+                sort = PaginationConstants.DEFAULT_SORT_FIELD,
+                direction = Sort.Direction.DESC
+            ) Pageable pageable,
             Authentication authentication) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
@@ -334,11 +322,6 @@ public class PropertyController {
         filter.setMinRooms(minRooms);
         filter.setMaxRooms(maxRooms);
 
-        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc")
-            ? Sort.Direction.DESC
-            : Sort.Direction.ASC, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
-
         Page<PropertyDto> properties = propertyService.searchProperties(filter, agentId, pageable);
 
         return ResponseEntity.ok(properties);
@@ -357,23 +340,15 @@ public class PropertyController {
     public ResponseEntity<Page<PropertyDto>> filterProperties(
             @Parameter(description = "Search query", required = true)
             @RequestParam String q,
-            @Parameter(description = "Page number (0-based)")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size")
-            @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "Sort field")
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "Sort direction (asc/desc)")
-            @RequestParam(defaultValue = "desc") String sortDir,
+            @PageableDefault(
+                size = PaginationConstants.DEFAULT_PAGE_SIZE,
+                sort = PaginationConstants.DEFAULT_SORT_FIELD,
+                direction = Sort.Direction.DESC
+            ) Pageable pageable,
             Authentication authentication) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
         log.debug("Text search for agent: {} with query: {}", agentId, q);
-
-        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc")
-            ? Sort.Direction.DESC
-            : Sort.Direction.ASC, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
 
         Page<PropertyDto> properties = propertyService.searchPropertiesByText(agentId, q, pageable);
 
@@ -397,23 +372,15 @@ public class PropertyController {
     public ResponseEntity<Page<PropertyDto>> getPropertiesByStatus(
             @Parameter(description = "Property status", required = true)
             @PathVariable PropertyStatus status,
-            @Parameter(description = "Page number (0-based)")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size")
-            @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "Sort field")
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "Sort direction (asc/desc)")
-            @RequestParam(defaultValue = "desc") String sortDir,
+            @PageableDefault(
+                size = PaginationConstants.DEFAULT_PAGE_SIZE,
+                sort = PaginationConstants.DEFAULT_SORT_FIELD,
+                direction = Sort.Direction.DESC
+            ) Pageable pageable,
             Authentication authentication) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
         log.debug("Getting properties by status: {} for agent: {}", status, agentId);
-
-        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc")
-            ? Sort.Direction.DESC
-            : Sort.Direction.ASC, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
 
         Page<PropertyDto> properties = propertyService.getPropertiesByStatus(status, agentId, pageable);
 
@@ -433,23 +400,15 @@ public class PropertyController {
     public ResponseEntity<Page<PropertyDto>> getPropertiesByType(
             @Parameter(description = "Property type", required = true)
             @PathVariable PropertyType type,
-            @Parameter(description = "Page number (0-based)")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size")
-            @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "Sort field")
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "Sort direction (asc/desc)")
-            @RequestParam(defaultValue = "desc") String sortDir,
+            @PageableDefault(
+                size = PaginationConstants.DEFAULT_PAGE_SIZE,
+                sort = PaginationConstants.DEFAULT_SORT_FIELD,
+                direction = Sort.Direction.DESC
+            ) Pageable pageable,
             Authentication authentication) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
         log.debug("Getting properties by type: {} for agent: {}", type, agentId);
-
-        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc")
-            ? Sort.Direction.DESC
-            : Sort.Direction.ASC, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
 
         Page<PropertyDto> properties = propertyService.getPropertiesByType(type, agentId, pageable);
 
@@ -469,23 +428,15 @@ public class PropertyController {
     public ResponseEntity<Page<PropertyDto>> getPropertiesByCity(
             @Parameter(description = "City name", required = true)
             @PathVariable String city,
-            @Parameter(description = "Page number (0-based)")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size")
-            @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "Sort field")
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "Sort direction (asc/desc)")
-            @RequestParam(defaultValue = "desc") String sortDir,
+            @PageableDefault(
+                size = PaginationConstants.DEFAULT_PAGE_SIZE,
+                sort = PaginationConstants.DEFAULT_SORT_FIELD,
+                direction = Sort.Direction.DESC
+            ) Pageable pageable,
             Authentication authentication) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
         log.debug("Getting properties by city: {} for agent: {}", city, agentId);
-
-        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc")
-            ? Sort.Direction.DESC
-            : Sort.Direction.ASC, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
 
         Page<PropertyDto> properties = propertyService.getPropertiesByCity(city, agentId, pageable);
 
@@ -739,23 +690,15 @@ public class PropertyController {
     public ResponseEntity<Page<PropertyDto>> getAvailableProperties(
             @Parameter(description = "Available from date (YYYY-MM-DD)", example = "2025-01-01")
             @RequestParam(required = false) LocalDate availableFrom,
-            @Parameter(description = "Page number (0-based)")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size")
-            @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "Sort field")
-            @RequestParam(defaultValue = "availableFrom") String sortBy,
-            @Parameter(description = "Sort direction (asc/desc)")
-            @RequestParam(defaultValue = "asc") String sortDir,
+            @PageableDefault(
+                size = PaginationConstants.DEFAULT_PAGE_SIZE,
+                sort = "availableFrom",
+                direction = Sort.Direction.ASC
+            ) Pageable pageable,
             Authentication authentication) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
         log.debug("Getting available properties for agent: {} from: {}", agentId, availableFrom);
-
-        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc")
-            ? Sort.Direction.DESC
-            : Sort.Direction.ASC, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
 
         LocalDate fromDate = availableFrom != null ? availableFrom : LocalDate.now();
         Page<PropertyDto> properties = propertyService.getAvailableProperties(agentId, fromDate, pageable);
@@ -835,17 +778,6 @@ public class PropertyController {
     // ========================================
     // Helper Methods
     // ========================================
-
-    /**
-     * Extract agent ID from authentication context.
-     *
-     * @param authentication the authentication object from Spring Security
-     * @return the agent's UUID
-     */
-    private UUID getAgentIdFromAuth(Authentication authentication) {
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        return userDetails.getAgent().getId();
-    }
 
     /**
      * Generate thumbnail filename from original filename.

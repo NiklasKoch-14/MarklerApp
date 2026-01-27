@@ -1,6 +1,7 @@
 package com.marklerapp.crm.service;
 
 import com.marklerapp.crm.config.GlobalExceptionHandler.ResourceNotFoundException;
+import com.marklerapp.crm.constants.ValidationConstants;
 import com.marklerapp.crm.dto.AiSummaryDto;
 import com.marklerapp.crm.dto.CallNoteDto;
 import com.marklerapp.crm.entity.CallNote;
@@ -337,11 +338,11 @@ public class CallNoteService {
      * Convert CallNote entity to Summary DTO
      */
     private CallNoteDto.Summary convertToSummary(CallNote callNote) {
-        // Create a preview of the notes (first 150 characters)
+        // Create a preview of the notes (first N characters)
         String notesSummary = null;
         if (callNote.getNotes() != null && !callNote.getNotes().isEmpty()) {
-            notesSummary = callNote.getNotes().length() > 150
-                ? callNote.getNotes().substring(0, 150) + "..."
+            notesSummary = callNote.getNotes().length() > ValidationConstants.NOTES_PREVIEW_LENGTH
+                ? callNote.getNotes().substring(0, ValidationConstants.NOTES_PREVIEW_LENGTH) + "..."
                 : callNote.getNotes();
         }
 
