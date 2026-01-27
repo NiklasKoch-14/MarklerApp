@@ -14,15 +14,156 @@ description: "Task list for Real Estate CRM System implementation"
 
 ## 🚨 CURRENT STATUS & PRIORITY FIXES NEEDED
 
-**MVP Status**: ✅ Phases 1-4 marked complete, but several critical bugs discovered:
+**MVP Status**: ✅ Phases 1-4.1 Complete | ⚠️ Code Quality Improvements Needed
 
-### ⚠️ HIGH PRIORITY BUGS TO FIX:
-1. **Dashboard buttons not working** - Missing RouterModule imports
-2. **Client editing not functional** - Form connections need debugging
-3. **Call notes creation failing** - Form submission issues
-4. **Missing UI features** - Dark/light mode toggle, language switcher
+### ✅ COMPLETED:
+- Phases 1-4.1: Foundation, Client Management, Call Notes, Bug Fixes
+- Phase 5: Property Management with images and expose PDFs
+- Phase 6.1-6.3: UI/UX enhancements, theme system, AI summarization
 
-**Recommendation**: Complete Phase 3.1 and 4.1 bug fixes before proceeding to new features.
+### 🔍 CODE QUALITY ANALYSIS (January 2026):
+**Critical Issues Identified:**
+1. **Test Coverage: 1.2%** - Virtually no backend tests, 0% frontend tests
+2. **Code Duplication: 300+ lines** - Manual DTO mapping in services
+3. **Security Patterns: Inconsistent** - Auth extraction duplicated across controllers
+4. **Performance: N+1 queries** - Missing JOIN FETCH in repositories
+
+**Next Priority**: Phase 7 - Code Quality & Refactoring (Quick Wins + Critical Fixes)
+
+---
+
+## 📊 Phase 7: Code Quality & Refactoring (NEW - Priority: CRITICAL)
+
+**Purpose**: Systematic improvement of code quality, maintainability, and performance based on comprehensive codebase analysis. These improvements will make future development faster and safer.
+
+**Estimated Effort**: 3-4 weeks
+**Impact**: Reduced technical debt, improved maintainability, better performance, test coverage for safety
+
+### Phase 7.1: Quick Wins (Week 1 - Estimated: 11 hours)
+
+**Goal**: Low-hanging fruit that immediately improves code quality with minimal risk
+
+- [ ] T200 [P] Create BaseController for shared authentication logic in backend/src/main/java/com/marklerapp/crm/controller/BaseController.java
+- [ ] T201 [P] Refactor all controllers to extend BaseController and remove duplicated getAgentIdFromAuth() methods
+- [ ] T202 [P] Standardize pagination using @PageableDefault across all controllers (ClientController, PropertyController, CallNoteController)
+- [ ] T203 [P] Create ValidationConstants class in backend/src/main/java/com/marklerapp/crm/constants/ValidationConstants.java
+- [ ] T204 [P] Create PaginationConstants class in backend/src/main/java/com/marklerapp/crm/constants/PaginationConstants.java
+- [ ] T205 [P] Extract magic numbers and strings to constants across all services
+- [ ] T206 [P] Replace manual name concatenation with entity helper methods (use getFullName() consistently)
+- [ ] T207 [P] Add missing @Transactional(readOnly = true) annotations to read-only service methods
+- [ ] T208 [P] Update CLAUDE.md with refactoring patterns and conventions
+
+**Checkpoint**: Code is cleaner, more consistent, easier to navigate
+
+### Phase 7.2: DTO Mapping Automation with MapStruct (Week 2 - Estimated: 16 hours) 🎯 CRITICAL
+
+**Goal**: Eliminate 300+ lines of repetitive DTO mapping code, reduce bugs, improve maintainability
+
+- [ ] T210 Add MapStruct dependencies to backend/pom.xml (version 1.5.5.Final)
+- [ ] T211 [P] Create ClientMapper interface in backend/src/main/java/com/marklerapp/crm/mapper/ClientMapper.java
+- [ ] T212 [P] Create CallNoteMapper interface in backend/src/main/java/com/marklerapp/crm/mapper/CallNoteMapper.java
+- [ ] T213 [P] Create PropertyMapper interface in backend/src/main/java/com/marklerapp/crm/mapper/PropertyMapper.java
+- [ ] T214 [P] Create AgentMapper interface in backend/src/main/java/com/marklerapp/crm/mapper/AgentMapper.java
+- [ ] T215 Refactor ClientService to use ClientMapper (inject mapper, replace manual conversion methods)
+- [ ] T216 Refactor CallNoteService to use CallNoteMapper (inject mapper, replace manual conversion methods)
+- [ ] T217 Refactor PropertyService to use PropertyMapper (inject mapper, replace manual conversion methods)
+- [ ] T218 Remove manual conversion methods from all services (convertToDto, convertToResponse, etc.)
+- [ ] T219 Test all CRUD operations to ensure MapStruct mappings work correctly
+- [ ] T220 Document MapStruct patterns in CLAUDE.md
+
+**Checkpoint**: DTO mapping is automated, ~300 lines removed, future entity changes are easier
+
+### Phase 7.3: Service Layer Improvements (Week 2 - Estimated: 6 hours)
+
+**Goal**: Centralize ownership validation, improve consistency
+
+- [ ] T225 [P] Create OwnershipValidator component in backend/src/main/java/com/marklerapp/crm/service/OwnershipValidator.java
+- [ ] T226 Refactor ClientService to use OwnershipValidator for all ownership checks
+- [ ] T227 Refactor PropertyService to use OwnershipValidator for all ownership checks
+- [ ] T228 Refactor CallNoteService to use OwnershipValidator for all ownership checks
+- [ ] T229 Remove inline ownership validation code from all services
+- [ ] T230 Standardize AccessDeniedException across all ownership violations
+
+**Checkpoint**: Ownership validation is centralized, consistent, easier to audit
+
+### Phase 7.4: Frontend Code Quality (Week 3 - Estimated: 14 hours)
+
+**Goal**: Remove duplication, improve consistency, better error handling
+
+- [ ] T235 [P] Remove formatPropertyType(), formatListingType() methods from property.service.ts (lines 325-399)
+- [ ] T236 [P] Remove formatCallType(), formatCallOutcome() methods from call-notes.service.ts (lines 290-325)
+- [ ] T237 [P] Update all components to use translateEnum pipe instead of service methods
+- [ ] T238 [P] Create ErrorHandlerService in frontend/src/app/core/services/error-handler.service.ts
+- [ ] T239 Add consistent error handling with catchError to all HTTP services
+- [ ] T240 [P] Implement trackBy functions in all *ngFor loops for performance
+- [ ] T241 [P] Add ChangeDetectionStrategy.OnPush to list components where appropriate
+- [ ] T242 Test error handling and translation consistency across all pages
+
+**Checkpoint**: Frontend is cleaner, better error handling, improved performance
+
+### Phase 7.5: Performance Optimization (Week 3 - Estimated: 12 hours)
+
+**Goal**: Fix N+1 queries, add database indexes, optimize API responses
+
+- [ ] T245 [P] Add JOIN FETCH to CallNoteRepository queries (agent, client, property)
+- [ ] T246 [P] Add JOIN FETCH to ClientRepository queries (agent, properties)
+- [ ] T247 [P] Add JOIN FETCH to PropertyRepository queries (agent, images)
+- [ ] T248 [P] Create Flyway migration V13__add_performance_indexes.sql with strategic indexes
+- [ ] T249 [P] Configure Hibernate batch fetching in application.yml (batch_size: 20)
+- [ ] T250 [P] Enable HTTP compression in application.yml
+- [ ] T251 [P] Add ETag support to frequently accessed endpoints (GET /clients/{id}, GET /properties/{id})
+- [ ] T252 Profile application with sample data to verify N+1 queries are resolved
+- [ ] T253 Document performance patterns in CLAUDE.md
+
+**Checkpoint**: Database queries are optimized, API responses are faster, better scalability
+
+### Phase 7.6: Test Coverage - Service Layer (Week 4 - Estimated: 24 hours) 🎯 CRITICAL
+
+**Goal**: Add comprehensive test coverage for service layer (target: 80%+)
+
+**Backend Service Tests:**
+- [ ] T260 [P] Create ClientServiceTest in backend/src/test/java/com/marklerapp/crm/service/ClientServiceTest.java
+- [ ] T261 [P] Create CallNoteServiceTest in backend/src/test/java/com/marklerapp/crm/service/CallNoteServiceTest.java
+- [ ] T262 [P] Create PropertyServiceTest in backend/src/test/java/com/marklerapp/crm/service/PropertyServiceTest.java
+- [ ] T263 [P] Create OwnershipValidatorTest for ownership validation logic
+- [ ] T264 [P] Add test coverage for happy paths (create, read, update, delete)
+- [ ] T265 [P] Add test coverage for edge cases (not found, access denied, validation errors)
+- [ ] T266 [P] Add test coverage for GDPR compliance features
+- [ ] T267 Generate JaCoCo coverage report and verify 80%+ service layer coverage
+
+**Frontend Service Tests:**
+- [ ] T270 [P] Create client.service.spec.ts in frontend/src/app/features/client-management/services/
+- [ ] T271 [P] Create call-notes.service.spec.ts in frontend/src/app/features/call-notes/services/
+- [ ] T272 [P] Create property.service.spec.ts in frontend/src/app/features/property-management/services/
+- [ ] T273 [P] Create auth.service.spec.ts in frontend/src/app/core/auth/
+- [ ] T274 [P] Add HTTP mocking with HttpClientTestingModule for all service tests
+- [ ] T275 Generate Karma coverage report and verify 70%+ service layer coverage
+
+**Checkpoint**: Service layer has comprehensive test coverage, safer to refactor and extend
+
+---
+
+## 📋 Phase 7 Summary
+
+| Sub-Phase | Tasks | Estimated Effort | Priority | Impact |
+|-----------|-------|-----------------|----------|--------|
+| 7.1 Quick Wins | T200-T208 | 11 hours | HIGH | Immediate code quality improvement |
+| 7.2 MapStruct | T210-T220 | 16 hours | CRITICAL | Eliminate 300+ lines of duplication |
+| 7.3 Service Layer | T225-T230 | 6 hours | HIGH | Centralize ownership validation |
+| 7.4 Frontend | T235-T242 | 14 hours | MEDIUM | Remove duplication, better errors |
+| 7.5 Performance | T245-T253 | 12 hours | HIGH | Fix N+1 queries, add indexes |
+| 7.6 Tests | T260-T275 | 24 hours | CRITICAL | Safety net for future changes |
+| **TOTAL** | **76 tasks** | **~83 hours** | - | **Significantly improved codebase** |
+
+**Expected Outcomes:**
+- ✅ Test coverage: 1.2% → 80%+ (backend services), 0% → 70%+ (frontend services)
+- ✅ Code duplication: -300+ lines of DTO mapping code
+- ✅ Consistency: Standardized pagination, auth, validation, error handling
+- ✅ Performance: N+1 queries resolved, database indexes added
+- ✅ Maintainability: Easier to add features, safer to refactor
+- ✅ Documentation: Patterns documented in CLAUDE.md
+
+---
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -276,7 +417,112 @@ description: "Task list for Real Estate CRM System implementation"
 - [X] T108.9 [P] Ensure enum values remain unchanged (only labels translate)
 
 #### T109: Property Expose/Brochure Management
-- [ ] T109.1 [P] [US3] Add expose_file_name, expose_file_path, expose_file_size columns to Property entity
+
+**Overview**: Enable agents to upload, preview, and manage property expose PDFs (brochures) for each property listing.
+
+**Implementation Approach**:
+
+**Storage Strategy**: Use Base64 encoding in database (consistent with existing image storage pattern)
+- Simplifies deployment (no file system permissions needed)
+- Enables easy backup/restore
+- Works seamlessly with Docker containers
+- Max size: 50MB per PDF
+
+**Backend Implementation**:
+
+1. **Entity Changes** (Property.java):
+   ```java
+   @Column(name = "expose_file_name")
+   private String exposeFileName;
+
+   @Column(name = "expose_file_data", columnDefinition = "TEXT")
+   private String exposeFileData; // Base64 encoded PDF
+
+   @Column(name = "expose_file_size")
+   private Long exposeFileSize;
+
+   @Column(name = "expose_upload_date")
+   private LocalDateTime exposeUploadDate;
+   ```
+
+2. **DTO Structure** (PropertyExposeDto.java):
+   ```java
+   public class PropertyExposeDto {
+       private String fileName;
+       private String fileData; // Base64
+       private Long fileSize;
+       private LocalDateTime uploadDate;
+   }
+   ```
+
+3. **Validation Logic**:
+   - Check file extension: `.pdf` only
+   - Validate MIME type: `application/pdf`
+   - Size limit: 50MB (52,428,800 bytes)
+   - Sanitize filename (remove special chars, max 255 chars)
+
+4. **REST Endpoints**:
+   - `POST /api/v1/properties/{id}/expose` - Upload expose
+   - `GET /api/v1/properties/{id}/expose` - Get expose metadata
+   - `GET /api/v1/properties/{id}/expose/download` - Download expose PDF
+   - `DELETE /api/v1/properties/{id}/expose` - Delete expose
+
+**Frontend Implementation**:
+
+1. **Property Form - Expose Tab**:
+   - Add 4th tab: "Basic Info | Address | Images | **Expose**"
+   - Drag & drop zone for PDF upload
+   - File picker button as alternative
+   - Upload progress indicator
+   - Current expose preview card (if exists)
+
+2. **Expose Preview Component**:
+   ```typescript
+   // Display current expose with:
+   - PDF icon with filename
+   - File size display (formatted: "2.5 MB")
+   - Upload date
+   - Preview button → Opens PDF in browser
+   - Download button → Saves PDF locally
+   - Delete button → Removes expose
+   ```
+
+3. **Property List Indicators**:
+   ```html
+   <!-- Badge on property card if expose exists -->
+   <span class="text-xs text-red-600 dark:text-red-400">
+     <svg>📄</svg> Expose
+   </span>
+   ```
+
+4. **Property Detail View**:
+   - Prominent "View Expose" button in header
+   - Opens PDF in new browser tab or modal
+   - Download option available
+
+**PDF Preview Options**:
+- **Option A**: Open in new tab using `data:application/pdf;base64,{data}`
+- **Option B**: Embed in modal using `<iframe>` or `<embed>`
+- **Recommendation**: Option A (simpler, native browser PDF viewer)
+
+**Error Handling**:
+- Invalid file type → Show error toast
+- File too large → Show size limit message
+- Upload failed → Allow retry
+- PDF corrupted → Validation error with details
+
+**Testing Scenarios**:
+- Upload valid PDF (< 50MB)
+- Upload invalid file type (should reject)
+- Upload oversized PDF (> 50MB, should reject)
+- Preview uploaded PDF
+- Download PDF
+- Delete expose
+- Upload new expose (replaces old one)
+- Check expose indicator appears in property list
+
+**Tasks**:
+- [ ] T109.1 [P] [US3] Add expose_file_name, expose_file_data, expose_file_size, expose_upload_date columns to Property entity
 - [ ] T109.2 [P] [US3] Create PropertyExposeDto in backend/src/main/java/com/marklerapp/crm/dto/PropertyExposeDto.java
 - [ ] T109.3 [P] [US3] Implement expose upload endpoint in PropertyController (POST /properties/{id}/expose)
 - [ ] T109.4 [P] [US3] Implement expose download endpoint in PropertyController (GET /properties/{id}/expose/download)
@@ -284,30 +530,165 @@ description: "Task list for Real Estate CRM System implementation"
 - [ ] T109.6 [P] [US3] Add PDF validation service in backend (max size 50MB, PDF format only)
 - [ ] T109.7 [P] [US3] Create "Expose" tab in property form component
 - [ ] T109.8 [P] [US3] Add PDF upload component with drag & drop support in expose tab
-- [ ] T109.9 [P] [US3] Implement PDF preview using browser PDF viewer (embed or modal)
+- [ ] T109.9 [P] [US3] Implement PDF preview using browser PDF viewer (open in new tab)
 - [ ] T109.10 [P] [US3] Add download button for expose PDF in property detail view
 - [ ] T109.11 [P] [US3] Show expose status indicator on property list (has expose badge)
 - [ ] T109.12 [P] [US3] Test expose upload, download, preview, and delete functionality
-- [ ] T109.13 [P] [US3] Store expose files as Base64 in database (similar to images) OR in file system
-- [ ] T109.14 [P] [US3] Add expose file info display (filename, size, upload date) in property detail
+- [ ] T109.13 [P] [US3] Add expose file info display (filename, size, upload date) in property detail
+- [ ] T109.14 [P] [US3] Add Flyway migration script for expose columns
 
 #### T110: AI-Powered Call Notes Summarization with Ollama
-- [ ] T110.1 [P] [US2] Research Ollama integration options (REST API, Docker container)
-- [ ] T110.2 [P] [US2] Add Ollama service configuration in backend/src/main/resources/application.yml
-- [ ] T110.3 [P] [US2] Create OllamaService in backend/src/main/java/com/marklerapp/crm/service/OllamaService.java
-- [ ] T110.4 [P] [US2] Add Ollama Docker container to docker-compose.yml (on-premise deployment)
-- [ ] T110.5 [P] [US2] Implement prompt engineering for call notes summarization
+
+**Overview**: Enable AI-powered summarization of client communication history using a lightweight local LLM (Ollama).
+
+**Implementation Approach**:
+
+**Model Selection**: Use **Phi-3 Mini (3.8B)** or **TinyLlama (1.1B)**
+- **Phi-3 Mini**: 2.3GB, excellent quality, fast inference
+- **TinyLlama**: 637MB, ultra-fast, good for basic summaries
+- **Recommendation**: Phi-3 Mini (best balance of speed/quality)
+- CPU-friendly, no GPU required
+- On-premise deployment (GDPR compliant)
+
+**Architecture**:
+```
+Frontend → Backend API → OllamaService → Ollama Container → Phi-3 Model
+           (Spring)                     (Docker)
+```
+
+**Backend Implementation**:
+
+1. **Configuration** (application.yml):
+   ```yaml
+   ollama:
+     base-url: http://localhost:11434
+     model: phi3:mini
+     timeout: 30000
+     enabled: true
+   ```
+
+2. **OllamaService.java**:
+   ```java
+   @Service
+   public class OllamaService {
+       private final RestTemplate restTemplate;
+       private final String ollamaBaseUrl;
+       private final String model;
+
+       public String generateSummary(String prompt) {
+           // POST to http://localhost:11434/api/generate
+           // Body: { "model": "phi3:mini", "prompt": "...", "stream": false }
+       }
+   }
+   ```
+
+3. **Prompt Engineering**:
+   ```
+   "Analyze these call notes for client communication and provide:
+   1. Overall sentiment (Positive/Neutral/Negative)
+   2. Key interests and requirements
+   3. Follow-up actions needed
+   4. Timeline and urgency
+
+   Call Notes:
+   {concatenated_call_notes}
+
+   Provide a concise professional summary in German."
+   ```
+
+4. **REST Endpoint**:
+   - `POST /api/v1/call-notes/clients/{clientId}/ai-summary`
+   - Returns: `{ summary: string, generated: timestamp }`
+
+**Docker Setup** (docker-compose.dev.yml):
+```yaml
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: marklerapp-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    environment:
+      - OLLAMA_MODELS=phi3:mini
+    networks:
+      - marklerapp-network
+
+volumes:
+  ollama-data:
+```
+
+**Frontend Implementation**:
+
+1. **Call Summary Component** (client detail page):
+   ```html
+   <button (click)="generateAISummary()"
+           class="btn btn-primary"
+           [disabled]="loading">
+     <svg>✨</svg> Generate AI Summary
+   </button>
+
+   <div *ngIf="aiSummary" class="mt-4 p-4 bg-blue-50 rounded">
+     <h3>AI Summary</h3>
+     <p>{{ aiSummary }}</p>
+     <small>Generated: {{ summaryDate | date }}</small>
+   </div>
+   ```
+
+2. **Loading State**:
+   - Show spinner during generation
+   - Display "Analyzing call notes..."
+   - Estimated time: 2-5 seconds
+
+3. **Error Handling**:
+   - Ollama offline → "AI service unavailable"
+   - No call notes → "No call notes to summarize"
+   - Timeout → "Generation took too long, please try again"
+
+**Initial Setup Steps**:
+```bash
+# 1. Start Ollama container
+docker-compose -f docker-compose.dev.yml up ollama -d
+
+# 2. Pull Phi-3 Mini model (one-time)
+docker exec marklerapp-ollama ollama pull phi3:mini
+
+# 3. Test model
+curl http://localhost:11434/api/generate -d '{
+  "model": "phi3:mini",
+  "prompt": "Say hello",
+  "stream": false
+}'
+```
+
+**GDPR Compliance**:
+- All processing happens on-premise
+- No data sent to external APIs
+- Model runs locally in Docker
+- Data never leaves the infrastructure
+
+**Performance**:
+- Cold start: ~500ms
+- Warm inference: ~1-3 seconds
+- Memory: ~4GB RAM recommended
+- No GPU required
+
+**Tasks**:
+- [ ] T110.1 [P] [US2] Add Ollama Docker container to docker-compose.dev.yml
+- [ ] T110.2 [P] [US2] Create Ollama pull script to download phi3:mini model
+- [ ] T110.3 [P] [US2] Add Ollama service configuration in backend/src/main/resources/application.yml
+- [ ] T110.4 [P] [US2] Create OllamaService in backend/src/main/java/com/marklerapp/crm/service/OllamaService.java
+- [ ] T110.5 [P] [US2] Implement prompt engineering for call notes summarization (German output)
 - [ ] T110.6 [P] [US2] Create AI summary endpoint in CallNoteController (POST /call-notes/clients/{clientId}/ai-summary)
-- [ ] T110.7 [P] [US2] Add AI summary caching mechanism to avoid redundant API calls
-- [ ] T110.8 [P] [US2] Create AI summary component in frontend for client detail view
-- [ ] T110.9 [P] [US2] Add "Generate AI Summary" button in client communication history
-- [ ] T110.10 [P] [US2] Implement loading state and streaming response for AI summaries
-- [ ] T110.11 [P] [US2] Add AI summary export functionality (PDF or text download)
-- [ ] T110.12 [P] [US2] Create configuration UI for Ollama model selection (llama2, mistral, etc.)
-- [ ] T110.13 [P] [US2] Add error handling for offline/unavailable Ollama service
-- [ ] T110.14 [P] [US2] Test AI summarization with various client call note scenarios
-- [ ] T110.15 [P] [US2] Document Ollama setup and deployment in docs/ollama-setup.md
-- [ ] T110.16 [P] [US2] Add GDPR compliance note for AI processing (data stays on-premise)
+- [ ] T110.7 [P] [US2] Add error handling for offline/unavailable Ollama service
+- [ ] T110.8 [P] [US2] Create AI summary component in frontend call-summary.component.ts
+- [ ] T110.9 [P] [US2] Add "Generate AI Summary" button in client detail view
+- [ ] T110.10 [P] [US2] Implement loading state during AI generation
+- [ ] T110.11 [P] [US2] Add translation keys for AI summary feature (de.json, en.json)
+- [ ] T110.12 [P] [US2] Test AI summarization with various client call note scenarios
+- [ ] T110.13 [P] [US2] Document Ollama setup in CLAUDE.md
+- [ ] T110.14 [P] [US2] Add graceful degradation when Ollama is unavailable (hide button)
 
 **Checkpoint**: Advanced features implemented - Property references in call notes, multilingual enum support, property expose management, and AI-powered summarization
 

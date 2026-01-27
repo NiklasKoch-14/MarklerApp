@@ -1,7 +1,7 @@
 # MarklerApp Development Guidelines
 
-**Last updated**: 2025-12-17
-**Project Status**: Phase 5.1 Complete (Property Management fixes) - Ready for Phase 5.2
+**Last updated**: 2025-12-19
+**Project Status**: Phase 5.1 & T110 Complete - AI Summarization Active
 
 ## 🎯 Project Overview
 
@@ -14,6 +14,7 @@
 - **Spring Security** with JWT authentication
 - **Spring Data JPA** with Hibernate
 - **PostgreSQL 15** (development & production)
+- **Ollama** with Phi-3 Mini for AI summarization
 - **Maven** build system
 - **OpenAPI/Swagger** documentation
 - **Flyway** database migrations
@@ -164,6 +165,16 @@ MarklerApp/
 - ✅ Enhanced validation with field-specific error messages
 - ✅ Added Phase 6.2 tasks to specs
 
+#### T110: AI-Powered Call Notes Summarization (100% Complete)
+- ✅ Integrated Ollama with Phi-3 Mini (3.8B, 2.3GB) model
+- ✅ Automatic model download on Docker startup
+- ✅ OllamaService with German-language prompt engineering
+- ✅ AI summary endpoint in CallNoteController
+- ✅ Beautiful gradient UI card for displaying summaries
+- ✅ Complete German/English translations
+- ✅ GDPR-compliant on-premise AI processing
+- ✅ Graceful degradation when service unavailable
+
 ### 🚧 **Next Phase Ready**
 
 #### Phase 5: Property Management (0% - Ready to Start)
@@ -177,13 +188,17 @@ MarklerApp/
 
 ### Docker Development (Recommended)
 ```bash
-# Start full stack with hot reload
+# Start full stack with hot reload (includes automatic Ollama model download)
 docker compose -f docker-compose.dev.yml up --build
 
 # Access points:
 # Frontend: http://localhost:4200
 # Backend API: http://localhost:8085
 # API Docs: http://localhost:8085/swagger-ui.html
+# Ollama AI: http://localhost:11434
+
+# Note: On first startup, Ollama will automatically download the phi3:mini model (~2.3GB)
+# This may take a few minutes. The model is cached in a volume for subsequent startups.
 ```
 
 ### Manual Development
@@ -206,6 +221,41 @@ cd backend && mvn test
 # E2E tests
 cd frontend && npm run e2e
 ```
+
+## 🔀 Git Workflow
+
+### Branch Strategy
+When working on features or phases from the task list, follow this git workflow:
+
+**Starting a Major Feature/Phase:**
+1. **Checkout from main**: `git checkout main && git pull`
+2. **Create feature branch**: `git checkout -b feature/description`
+   - Branch naming: `feature/description` (e.g., `feature/property-management`, `feature/ai-summary-ui`)
+   - Always branch from `main`
+3. **Work on implementation**: Make commits as you progress
+
+**Completing the Feature/Phase:**
+1. **Quality Gate - Verify no errors**:
+   - Test that both frontend and backend services start without errors
+   - Run the application and verify functionality works as expected
+   - ⚠️ **CRITICAL**: Only proceed if services run without errors
+2. **Final commit**: Stage and commit all changes with descriptive message
+3. **Push to remote**: `git push -u origin feature/description`
+4. **Mark task complete**: Update task status to completed
+
+**Important Notes:**
+- ✅ **DO**: Create branches for major features, phases, or significant functionality
+- ✅ **DO**: Test thoroughly before pushing - no errors allowed
+- ✅ **DO**: Write clear, descriptive commit messages
+- ❌ **DON'T**: Create pull requests - just push the branch
+- ❌ **DON'T**: Push code with runtime errors or failing services
+- ❌ **DON'T**: Create branches for minor fixes (commit directly to feature branch if already on one)
+
+**Workflow Triggers:**
+- Each major phase from specs/tasks.md
+- Significant features that add new functionality
+- Major refactoring or architectural changes
+- Use judgment to determine if a feature is "major enough" for its own branch
 
 ## 🚀 Deployment
 
@@ -255,6 +305,43 @@ For detailed deployment instructions, see [README.md](README.md)
 - **Backend**: Localized error messages and validation
 - **Database**: Support for multilingual data where needed
 - **UI**: Complete translation including form labels, buttons, messages
+
+### ⚠️ CRITICAL RULE: All UI Text Must Be Translated
+**EVERY piece of text displayed in the user interface MUST use translation keys.**
+
+❌ **NEVER do this:**
+```html
+<button>Add Property</button>
+<p>Showing 1 of 10 properties</p>
+<span>Interested</span>
+```
+
+✅ **ALWAYS do this:**
+```html
+<button>{{ 'properties.add' | translate }}</button>
+<p>{{ 'common.showing' | translate }} 1 {{ 'common.of' | translate }} 10 {{ 'properties.title' | translate }}</p>
+<span>{{ outcome | translateEnum:'callOutcome' }}</span>
+```
+
+**Implementation Guidelines:**
+1. **Text in Templates**: Use `{{ 'translation.key' | translate }}` pipe
+2. **Enum Values**: Use `{{ value | translateEnum:'enumType' }}` custom pipe
+3. **Dynamic Text**: Store translation keys in component, then translate in template
+4. **Placeholders**: Use translation keys with interpolation `{{ 'message' | translate: {count: value} }}`
+5. **Alt Text & Titles**: Use translation keys for accessibility attributes
+6. **Alert/Confirm Messages**: Use TranslateService in TypeScript for programmatic dialogs
+7. **Error Messages**: Backend should send error codes; frontend translates to localized messages
+
+**Translation File Organization:**
+- `frontend/src/assets/i18n/de.json` - German translations
+- `frontend/src/assets/i18n/en.json` - English translations
+- Use hierarchical keys: `"section.subsection.key": "Translation"`
+- Enum translations: `"enums.enumType.VALUE": "Translation"`
+
+**Before Committing:**
+- ✅ Run the application and switch languages to verify all text translates
+- ✅ Check that no hardcoded English/German text appears in templates
+- ✅ Ensure new translation keys exist in BOTH de.json and en.json
 
 ## 🔒 Security & Compliance
 
@@ -314,6 +401,22 @@ objectMapper.coercionConfigFor(LogicalType.Enum)
 **Database**: PostgreSQL 15 (matches production)
 **Docker**: `docker-compose.dev.yml` with health checks
 **Debug Port**: 5005 for backend remote debugging
+
+### Ollama AI Integration (Dec 2024)
+**Model**: Phi-3 Mini (3.8B parameters, 2.3GB download)
+**Auto-Setup**: Model automatically downloads on first `docker compose up`
+**Configuration**: `application.yml` with environment variable overrides
+**Pattern**:
+```yaml
+ollama:
+  enabled: ${OLLAMA_ENABLED:-false}
+  base-url: ${OLLAMA_BASE_URL:-http://localhost:11434}
+  model: ${OLLAMA_MODEL:-phi3:mini}
+```
+**Service Layer**: OllamaService with German prompt engineering
+**Endpoint**: `POST /call-notes/client/{clientId}/ai-summary`
+**Docker**: Custom entrypoint script pulls model if not present, uses volume for caching
+**Why**: On-premise AI ensures GDPR compliance, no data leaves the server
 
 ## 📈 Future Roadmap
 
