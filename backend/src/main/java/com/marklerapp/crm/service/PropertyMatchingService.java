@@ -2,6 +2,8 @@ package com.marklerapp.crm.service;
 
 import com.marklerapp.crm.dto.*;
 import com.marklerapp.crm.entity.*;
+import com.marklerapp.crm.mapper.ClientMapper;
+import com.marklerapp.crm.mapper.PropertyMapper;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.PropertyRepository;
 import lombok.RequiredArgsConstructor;
@@ -52,8 +54,8 @@ public class PropertyMatchingService {
 
     private final PropertyRepository propertyRepository;
     private final ClientRepository clientRepository;
-    private final PropertyService propertyService;
-    private final ClientService clientService;
+    private final PropertyMapper propertyMapper;
+    private final ClientMapper clientMapper;
 
     // Default tolerance values
     private static final BigDecimal BUDGET_FLEXIBILITY_MULTIPLIER = new BigDecimal("1.10"); // 10% over budget
@@ -275,7 +277,7 @@ public class PropertyMatchingService {
                 .build();
 
         // Convert property entity to DTO
-        PropertyDto propertyDto = propertyService.convertToDto(property);
+        PropertyDto propertyDto = propertyMapper.toDto(property);
 
         return PropertyMatchResponse.PropertyMatchResult.builder()
                 .property(propertyDto)
@@ -336,7 +338,7 @@ public class PropertyMatchingService {
                 .build();
 
         // Convert client entity to DTO
-        ClientDto clientDto = clientService.convertToDto(client);
+        ClientDto clientDto = clientMapper.toDto(client);
 
         return PropertyMatchResponse.ClientMatchResult.builder()
                 .client(clientDto)

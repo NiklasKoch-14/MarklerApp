@@ -1,7 +1,6 @@
 package com.marklerapp.crm.service;
 
 import com.marklerapp.crm.config.GlobalExceptionHandler.ResourceNotFoundException;
-import com.marklerapp.crm.constants.ValidationConstants;
 import com.marklerapp.crm.dto.AiSummaryDto;
 import com.marklerapp.crm.dto.CallNoteDto;
 import com.marklerapp.crm.entity.CallNote;
@@ -10,6 +9,7 @@ import com.marklerapp.crm.entity.Agent;
 import com.marklerapp.crm.entity.Property;
 import com.marklerapp.crm.entity.PropertyType;
 import com.marklerapp.crm.entity.ListingType;
+import com.marklerapp.crm.mapper.CallNoteMapper;
 import com.marklerapp.crm.repository.CallNoteRepository;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.AgentRepository;
@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -43,6 +42,7 @@ public class CallNoteService {
     private final PropertyRepository propertyRepository;
     private final OllamaService ollamaService;
     private final AsyncSummaryService asyncSummaryService;
+    private final CallNoteMapper callNoteMapper;
 
     /**
      * Create a new call note for a client
@@ -95,7 +95,7 @@ public class CallNoteService {
         // Trigger async AI summary generation
         asyncSummaryService.generateAndPersistSummary(client.getId());
 
-        return convertToResponse(savedCallNote);
+        return callNoteMapper.toResponse(savedCallNote);
     }
 
     /**
@@ -143,7 +143,7 @@ public class CallNoteService {
         // Trigger async AI summary generation
         asyncSummaryService.generateAndPersistSummary(updatedCallNote.getClient().getId());
 
-        return convertToResponse(updatedCallNote);
+        return callNoteMapper.toResponse(updatedCallNote);
     }
 
     /**
@@ -159,7 +159,7 @@ public class CallNoteService {
             throw new IllegalArgumentException("Call note does not belong to the specified agent");
         }
 
-        return convertToResponse(callNote);
+        return callNoteMapper.toResponse(callNote);
     }
 
     /**
@@ -199,7 +199,7 @@ public class CallNoteService {
         }
 
         Page<CallNote> callNotes = callNoteRepository.findByClientOrderByCallDateDesc(client, pageable);
-        return callNotes.map(this::convertToSummary);
+        return callNotes.map(callNoteMapper::toSummary);
     }
 
     /**
@@ -211,7 +211,7 @@ public class CallNoteService {
             .orElseThrow(() -> new ResourceNotFoundException("Agent not found with id: " + agentId));
 
         Page<CallNote> callNotes = callNoteRepository.findByAgentOrderByCallDateDesc(agent, pageable);
-        return callNotes.map(this::convertToSummary);
+        return callNotes.map(callNoteMapper::toSummary);
     }
 
     /**
@@ -224,7 +224,7 @@ public class CallNoteService {
 
         if (filter.getSearchTerm() != null && !filter.getSearchTerm().trim().isEmpty()) {
             Page<CallNote> callNotes = callNoteRepository.findByAgentAndSearchTerm(agent, filter.getSearchTerm().trim(), pageable);
-            return callNotes.map(this::convertToSummary);
+            return callNotes.map(callNoteMapper::toSummary);
         }
 
         // For more complex filtering, we would implement additional repository methods
@@ -246,7 +246,7 @@ public class CallNoteService {
             .collect(Collectors.toList());
 
         return followUpCallNotes.stream()
-            .map(this::convertToFollowUpReminder)
+            .map(callNoteMapper::toFollowUpReminder)
             .collect(Collectors.toList());
     }
 
@@ -261,7 +261,7 @@ public class CallNoteService {
             .collect(Collectors.toList());
 
         return overdueCallNotes.stream()
-            .map(this::convertToFollowUpReminder)
+            .map(callNoteMapper::toFollowUpReminder)
             .collect(Collectors.toList());
     }
 
@@ -294,99 +294,6 @@ public class CallNoteService {
             .pendingFollowUps(pendingFollowUps)
             .mostRecentSubject(mostRecentCallNote != null ? mostRecentCallNote.getSubject() : null)
             .lastOutcome(mostRecentCallNote != null ? mostRecentCallNote.getOutcome() : null)
-            .build();
-    }
-
-    /**
-     * Convert CallNote entity to Response DTO
-     */
-    private CallNoteDto.Response convertToResponse(CallNote callNote) {
-        String propertyTitle = null;
-        String propertyAddress = null;
-        UUID propertyId = null;
-
-        if (callNote.getProperty() != null) {
-            propertyId = callNote.getProperty().getId();
-            propertyTitle = callNote.getProperty().getTitle();
-            propertyAddress = callNote.getProperty().getAddressCity() + ", " + callNote.getProperty().getAddressPostalCode();
-        }
-
-        return CallNoteDto.Response.builder()
-            .id(callNote.getId())
-            .agentId(callNote.getAgent().getId())
-            .agentName(callNote.getAgent().getFirstName() + " " + callNote.getAgent().getLastName())
-            .clientId(callNote.getClient().getId())
-            .clientName(callNote.getClient().getFirstName() + " " + callNote.getClient().getLastName())
-            .propertyId(propertyId)
-            .propertyTitle(propertyTitle)
-            .propertyAddress(propertyAddress)
-            .callDate(callNote.getCallDate())
-            .durationMinutes(callNote.getDurationMinutes())
-            .callType(callNote.getCallType())
-            .subject(callNote.getSubject())
-            .notes(callNote.getNotes())
-            .followUpRequired(callNote.getFollowUpRequired())
-            .followUpDate(callNote.getFollowUpDate())
-            .propertiesDiscussed(callNote.getPropertiesDiscussed())
-            .outcome(callNote.getOutcome())
-            .createdAt(callNote.getCreatedAt())
-            .updatedAt(callNote.getUpdatedAt())
-            .build();
-    }
-
-    /**
-     * Convert CallNote entity to Summary DTO
-     */
-    private CallNoteDto.Summary convertToSummary(CallNote callNote) {
-        // Create a preview of the notes (first N characters)
-        String notesSummary = null;
-        if (callNote.getNotes() != null && !callNote.getNotes().isEmpty()) {
-            notesSummary = callNote.getNotes().length() > ValidationConstants.NOTES_PREVIEW_LENGTH
-                ? callNote.getNotes().substring(0, ValidationConstants.NOTES_PREVIEW_LENGTH) + "..."
-                : callNote.getNotes();
-        }
-
-        UUID propertyId = null;
-        String propertyTitle = null;
-        if (callNote.getProperty() != null) {
-            propertyId = callNote.getProperty().getId();
-            propertyTitle = callNote.getProperty().getTitle();
-        }
-
-        return CallNoteDto.Summary.builder()
-            .id(callNote.getId())
-            .clientId(callNote.getClient().getId())
-            .clientName(callNote.getClient().getFirstName() + " " + callNote.getClient().getLastName())
-            .propertyId(propertyId)
-            .propertyTitle(propertyTitle)
-            .callDate(callNote.getCallDate())
-            .callType(callNote.getCallType())
-            .subject(callNote.getSubject())
-            .notesSummary(notesSummary)
-            .followUpRequired(callNote.getFollowUpRequired())
-            .followUpDate(callNote.getFollowUpDate())
-            .outcome(callNote.getOutcome())
-            .createdAt(callNote.getCreatedAt())
-            .build();
-    }
-
-    /**
-     * Convert CallNote entity to FollowUpReminder DTO
-     */
-    private CallNoteDto.FollowUpReminder convertToFollowUpReminder(CallNote callNote) {
-        LocalDate today = LocalDate.now();
-        LocalDate followUpDate = callNote.getFollowUpDate();
-        boolean isOverdue = followUpDate != null && followUpDate.isBefore(today);
-        long daysUntilDue = followUpDate != null ? ChronoUnit.DAYS.between(today, followUpDate) : 0;
-
-        return CallNoteDto.FollowUpReminder.builder()
-            .id(callNote.getId())
-            .clientId(callNote.getClient().getId())
-            .clientName(callNote.getClient().getFirstName() + " " + callNote.getClient().getLastName())
-            .subject(callNote.getSubject())
-            .followUpDate(followUpDate)
-            .isOverdue(isOverdue)
-            .daysUntilDue(daysUntilDue)
             .build();
     }
 

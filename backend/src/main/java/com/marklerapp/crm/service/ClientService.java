@@ -6,6 +6,8 @@ import com.marklerapp.crm.dto.PropertySearchCriteriaDto;
 import com.marklerapp.crm.entity.Agent;
 import com.marklerapp.crm.entity.Client;
 import com.marklerapp.crm.entity.PropertySearchCriteria;
+import com.marklerapp.crm.mapper.ClientMapper;
+import com.marklerapp.crm.mapper.PropertySearchCriteriaMapper;
 import com.marklerapp.crm.repository.AgentRepository;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.PropertySearchCriteriaRepository;
@@ -32,6 +34,8 @@ public class ClientService {
     private final ClientRepository clientRepository;
     private final AgentRepository agentRepository;
     private final PropertySearchCriteriaRepository searchCriteriaRepository;
+    private final ClientMapper clientMapper;
+    private final PropertySearchCriteriaMapper searchCriteriaMapper;
 
     /**
      * Get all clients for an agent with pagination
@@ -43,7 +47,7 @@ public class ClientService {
         Agent agent = getAgentById(agentId);
         Page<Client> clients = clientRepository.findByAgent(agent, pageable);
 
-        return clients.map(this::convertToDto);
+        return clients.map(clientMapper::toDto);
     }
 
     /**
@@ -56,7 +60,7 @@ public class ClientService {
         Agent agent = getAgentById(agentId);
         Page<Client> clients = clientRepository.findByAgentAndSearchTerm(agent, searchTerm, pageable);
 
-        return clients.map(this::convertToDto);
+        return clients.map(clientMapper::toDto);
     }
 
     /**
@@ -74,7 +78,7 @@ public class ClientService {
             throw new ResourceNotFoundException("Client", "id", clientId);
         }
 
-        return convertToDto(client);
+        return clientMapper.toDto(client);
     }
 
     /**
@@ -120,7 +124,7 @@ public class ClientService {
         }
 
         log.info("Client created with ID: {} for agent: {}", savedClient.getId(), agentId);
-        return convertToDto(savedClient);
+        return clientMapper.toDto(savedClient);
     }
 
     /**
@@ -172,7 +176,7 @@ public class ClientService {
         }
 
         log.info("Client updated: {} for agent: {}", clientId, agentId);
-        return convertToDto(savedClient);
+        return clientMapper.toDto(savedClient);
     }
 
     /**
@@ -213,7 +217,7 @@ public class ClientService {
         List<Client> recentClients = clientRepository.findRecentClientsByAgent(agent, cutoffDate);
 
         return recentClients.stream()
-                .map(this::convertToDto)
+                .map(clientMapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -240,14 +244,14 @@ public class ClientService {
             throw new ResourceNotFoundException("Client", "id", clientId);
         }
 
-        return convertToDto(client);
+        return clientMapper.toDto(client);
     }
 
     /**
      * Create search criteria for a client
      */
     private void createSearchCriteria(Client client, PropertySearchCriteriaDto criteriaDto) {
-        PropertySearchCriteria criteria = convertSearchCriteriaToEntity(criteriaDto);
+        PropertySearchCriteria criteria = searchCriteriaMapper.toEntity(criteriaDto);
         criteria.setClient(client);
         searchCriteriaRepository.save(criteria);
     }
@@ -257,25 +261,28 @@ public class ClientService {
      */
     private void updateSearchCriteria(Client client, PropertySearchCriteriaDto criteriaDto) {
         PropertySearchCriteria existingCriteria = searchCriteriaRepository.findByClient(client)
-                .orElse(new PropertySearchCriteria());
+                .orElse(searchCriteriaMapper.toEntity(criteriaDto));
+
+        if (existingCriteria.getId() != null) {
+            // Update existing criteria
+            existingCriteria.setMinSquareMeters(criteriaDto.getMinSquareMeters());
+            existingCriteria.setMaxSquareMeters(criteriaDto.getMaxSquareMeters());
+            existingCriteria.setMinRooms(criteriaDto.getMinRooms());
+            existingCriteria.setMaxRooms(criteriaDto.getMaxRooms());
+            existingCriteria.setMinBudget(criteriaDto.getMinBudget());
+            existingCriteria.setMaxBudget(criteriaDto.getMaxBudget());
+            existingCriteria.setAdditionalRequirements(criteriaDto.getAdditionalRequirements());
+
+            if (criteriaDto.getPreferredLocations() != null) {
+                existingCriteria.setPreferredLocationsArray(criteriaDto.getPreferredLocations().toArray(new String[0]));
+            }
+
+            if (criteriaDto.getPropertyTypes() != null) {
+                existingCriteria.setPropertyTypesArray(criteriaDto.getPropertyTypes().toArray(new String[0]));
+            }
+        }
 
         existingCriteria.setClient(client);
-        existingCriteria.setMinSquareMeters(criteriaDto.getMinSquareMeters());
-        existingCriteria.setMaxSquareMeters(criteriaDto.getMaxSquareMeters());
-        existingCriteria.setMinRooms(criteriaDto.getMinRooms());
-        existingCriteria.setMaxRooms(criteriaDto.getMaxRooms());
-        existingCriteria.setMinBudget(criteriaDto.getMinBudget());
-        existingCriteria.setMaxBudget(criteriaDto.getMaxBudget());
-        existingCriteria.setAdditionalRequirements(criteriaDto.getAdditionalRequirements());
-
-        if (criteriaDto.getPreferredLocations() != null) {
-            existingCriteria.setPreferredLocationsArray(criteriaDto.getPreferredLocations().toArray(new String[0]));
-        }
-
-        if (criteriaDto.getPropertyTypes() != null) {
-            existingCriteria.setPropertyTypesArray(criteriaDto.getPropertyTypes().toArray(new String[0]));
-        }
-
         searchCriteriaRepository.save(existingCriteria);
     }
 
@@ -288,103 +295,9 @@ public class ClientService {
     }
 
     /**
-     * Convert Client entity to DTO
-     */
-    public ClientDto convertToDto(Client client) {
-        ClientDto dto = ClientDto.builder()
-                .id(client.getId())
-                .agentId(client.getAgent().getId())
-                .firstName(client.getFirstName())
-                .lastName(client.getLastName())
-                .email(client.getEmail())
-                .phone(client.getPhone())
-                .addressStreet(client.getAddressStreet())
-                .addressCity(client.getAddressCity())
-                .addressPostalCode(client.getAddressPostalCode())
-                .addressCountry(client.getAddressCountry())
-                .gdprConsentGiven(client.isGdprConsentGiven())
-                .gdprConsentDate(client.getGdprConsentDate())
-                .createdAt(client.getCreatedAt())
-                .updatedAt(client.getUpdatedAt())
-                .build();
-
-        // Include search criteria if present
-        if (client.getSearchCriteria() != null) {
-            dto.setSearchCriteria(convertSearchCriteriaToDto(client.getSearchCriteria()));
-        }
-
-        return dto;
-    }
-
-    /**
      * Convert ClientDto to Client entity
      */
     private Client convertToEntity(ClientDto dto) {
-        return Client.builder()
-                .firstName(dto.getFirstName())
-                .lastName(dto.getLastName())
-                .email(dto.getEmail())
-                .phone(dto.getPhone())
-                .addressStreet(dto.getAddressStreet())
-                .addressCity(dto.getAddressCity())
-                .addressPostalCode(dto.getAddressPostalCode())
-                .addressCountry(dto.getAddressCountry())
-                .gdprConsentGiven(dto.isGdprConsentGiven())
-                .gdprConsentDate(dto.getGdprConsentDate())
-                .build();
-    }
-
-    /**
-     * Convert PropertySearchCriteria entity to DTO
-     */
-    private PropertySearchCriteriaDto convertSearchCriteriaToDto(PropertySearchCriteria criteria) {
-        PropertySearchCriteriaDto dto = PropertySearchCriteriaDto.builder()
-                .id(criteria.getId())
-                .clientId(criteria.getClient().getId())
-                .minSquareMeters(criteria.getMinSquareMeters())
-                .maxSquareMeters(criteria.getMaxSquareMeters())
-                .minRooms(criteria.getMinRooms())
-                .maxRooms(criteria.getMaxRooms())
-                .minBudget(criteria.getMinBudget())
-                .maxBudget(criteria.getMaxBudget())
-                .additionalRequirements(criteria.getAdditionalRequirements())
-                .createdAt(criteria.getCreatedAt())
-                .updatedAt(criteria.getUpdatedAt())
-                .build();
-
-        if (criteria.getPreferredLocationsArray().length > 0) {
-            dto.setPreferredLocations(List.of(criteria.getPreferredLocationsArray()));
-        }
-
-        if (criteria.getPropertyTypesArray().length > 0) {
-            dto.setPropertyTypes(List.of(criteria.getPropertyTypesArray()));
-        }
-
-        return dto;
-    }
-
-    /**
-     * Convert PropertySearchCriteriaDto to entity
-     */
-    private PropertySearchCriteria convertSearchCriteriaToEntity(PropertySearchCriteriaDto dto) {
-        PropertySearchCriteria criteria = PropertySearchCriteria.builder()
-                .minSquareMeters(dto.getMinSquareMeters())
-                .maxSquareMeters(dto.getMaxSquareMeters())
-                .minRooms(dto.getMinRooms())
-                .maxRooms(dto.getMaxRooms())
-                .minBudget(dto.getMinBudget())
-                .maxBudget(dto.getMaxBudget())
-                .additionalRequirements(dto.getAdditionalRequirements())
-                .build();
-
-        if (dto.getPreferredLocations() != null) {
-            criteria.setPreferredLocationsArray(dto.getPreferredLocations().toArray(new String[0]));
-        }
-
-        if (dto.getPropertyTypes() != null) {
-            criteria.setPropertyTypesArray(dto.getPropertyTypes().toArray(new String[0]));
-        }
-
-        return criteria;
+        return clientMapper.toEntity(dto);
     }
 }
