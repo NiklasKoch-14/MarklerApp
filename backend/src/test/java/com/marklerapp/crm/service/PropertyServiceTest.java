@@ -69,14 +69,13 @@ class PropertyServiceTest {
         propertyId = UUID.randomUUID();
 
         testAgent = Agent.builder()
-            .id(agentId)
             .firstName("Max")
             .lastName("Mustermann")
             .email("max@example.com")
             .build();
+        testAgent.setId(agentId);
 
         testProperty = Property.builder()
-            .id(propertyId)
             .agent(testAgent)
             .title("Beautiful Apartment in Berlin")
             .description("Modern apartment with great view")
@@ -101,6 +100,7 @@ class PropertyServiceTest {
             .consentDate(LocalDate.now())
             .availableFrom(LocalDate.now().plusMonths(1))
             .build();
+        testProperty.setId(propertyId);
 
         testPropertyDto = PropertyDto.builder()
             .id(propertyId)

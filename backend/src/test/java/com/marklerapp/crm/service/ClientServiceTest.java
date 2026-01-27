@@ -68,14 +68,13 @@ class ClientServiceTest {
         clientId = UUID.randomUUID();
 
         testAgent = Agent.builder()
-            .id(agentId)
             .firstName("Max")
             .lastName("Mustermann")
             .email("max@example.com")
             .build();
+        testAgent.setId(agentId);
 
         testClient = Client.builder()
-            .id(clientId)
             .agent(testAgent)
             .firstName("John")
             .lastName("Doe")
@@ -87,6 +86,7 @@ class ClientServiceTest {
             .gdprConsentGiven(true)
             .gdprConsentDate(LocalDateTime.now())
             .build();
+        testClient.setId(clientId);
 
         testClientDto = ClientDto.builder()
             .id(clientId)
@@ -235,7 +235,6 @@ class ClientServiceTest {
             .build();
 
         Client savedClient = Client.builder()
-            .id(UUID.randomUUID())
             .agent(testAgent)
             .firstName("Jane")
             .lastName("Smith")
@@ -244,6 +243,7 @@ class ClientServiceTest {
             .gdprConsentGiven(true)
             .gdprConsentDate(LocalDateTime.now())
             .build();
+        savedClient.setId(UUID.randomUUID());
 
         ClientDto savedClientDto = ClientDto.builder()
             .id(savedClient.getId())

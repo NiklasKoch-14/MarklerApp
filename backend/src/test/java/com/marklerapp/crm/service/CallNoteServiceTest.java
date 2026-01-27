@@ -84,28 +84,27 @@ class CallNoteServiceTest {
         callNoteId = UUID.randomUUID();
 
         testAgent = Agent.builder()
-            .id(agentId)
             .firstName("Max")
             .lastName("Mustermann")
             .email("max@example.com")
             .build();
+        testAgent.setId(agentId);
 
         testClient = Client.builder()
-            .id(clientId)
             .agent(testAgent)
             .firstName("John")
             .lastName("Doe")
             .email("john.doe@example.com")
             .build();
+        testClient.setId(clientId);
 
         testProperty = Property.builder()
-            .id(propertyId)
             .agent(testAgent)
             .title("Test Property")
             .build();
+        testProperty.setId(propertyId);
 
         testCallNote = CallNote.builder()
-            .id(callNoteId)
             .agent(testAgent)
             .client(testClient)
             .property(testProperty)
@@ -118,6 +117,7 @@ class CallNoteServiceTest {
             .followUpDate(LocalDate.now().plusDays(7))
             .outcome(CallOutcome.INTERESTED)
             .build();
+        testCallNote.setId(callNoteId);
 
         testCallNoteResponse = CallNoteDto.Response.builder()
             .id(callNoteId)
@@ -244,15 +244,15 @@ class CallNoteServiceTest {
     void createCallNote_WithClientBelongingToDifferentAgent_ShouldThrowException() {
         // Given
         Agent differentAgent = Agent.builder()
-            .id(UUID.randomUUID())
             .firstName("Different")
             .lastName("Agent")
             .build();
+        differentAgent.setId(UUID.randomUUID());
 
         Client clientWithDifferentAgent = Client.builder()
-            .id(clientId)
             .agent(differentAgent)
             .build();
+        clientWithDifferentAgent.setId(clientId);
 
         CallNoteDto.CreateRequest request = CallNoteDto.CreateRequest.builder()
             .clientId(clientId)
@@ -478,13 +478,13 @@ class CallNoteServiceTest {
     void getCallNotesByClient_WithClientFromDifferentAgent_ShouldThrowException() {
         // Given
         Agent differentAgent = Agent.builder()
-            .id(UUID.randomUUID())
             .build();
+        differentAgent.setId(UUID.randomUUID());
 
         Client clientWithDifferentAgent = Client.builder()
-            .id(clientId)
             .agent(differentAgent)
             .build();
+        clientWithDifferentAgent.setId(clientId);
 
         Pageable pageable = PageRequest.of(0, 20);
 
