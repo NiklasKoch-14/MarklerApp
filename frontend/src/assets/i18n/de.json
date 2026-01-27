@@ -294,7 +294,7 @@
       "PENTHOUSE": "Penthouse",
       "LOFT": "Loft",
       "DUPLEX": "Maisonette",
-      "STUDIO": "Apartment",
+      "STUDIO": "Studio",
       "OFFICE": "Büro",
       "RETAIL": "Einzelhandel",
       "WAREHOUSE": "Lager",
@@ -625,6 +625,29 @@
     "dataAnonymization": "Datenanonymisierung",
     "rightToErasure": "Recht auf Löschung",
     "dataRetention": "Datenspeicherung"
+  },
+  "formDraft": {
+    "restoreTitle": "Entwurf wiederherstellen?",
+    "restoreMessage": "Wir haben einen vorherigen Entwurf dieses Formulars gefunden. Möchten Sie ihn wiederherstellen und dort weitermachen, wo Sie aufgehört haben?",
+    "restoreYes": "Ja, Entwurf wiederherstellen",
+    "restoreNo": "Nein, neu beginnen"
+  },
+  "placeholders": {
+    "propertyTitle": "z.B., Moderne 3-Zimmer-Wohnung im Stadtzentrum",
+    "propertyDescription": "Detaillierte Beschreibung der Immobilie...",
+    "additionalInfo": "Zusätzliche Informationen zur Immobilie...",
+    "imagesUploadInfo": "Laden Sie Bilder für diese Immobilie hoch und verwalten Sie sie. Das erste Bild wird standardmäßig als Hauptbild festgelegt.",
+    "imagesSaveFirst": "Bitte speichern Sie zuerst die Immobilie, bevor Sie Bilder hochladen.",
+    "exposeSaveFirst": "Bitte speichern Sie zuerst die Immobilie, bevor Sie das Exposé hochladen.",
+    "exposeUploadInfo": "Laden Sie eine PDF-Broschüre (Exposé) für diese Immobilie hoch. Maximale Dateigröße: 50MB."
+  },
+  "messages": {
+    "propertyNotFound": "Immobilie nicht gefunden.",
+    "backToProperties": "Zurück zu Immobilien",
+    "backToPropertiesArrow": "← Zurück zu Immobilien",
+    "viewVirtualTour": "Virtuellen Rundgang ansehen",
+    "deletingProperty": "Wird gelöscht...",
+    "deletePropertyButton": "Immobilie löschen"
   },
   "enums": {
     "propertyType": {

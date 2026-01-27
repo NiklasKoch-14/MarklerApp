@@ -626,6 +626,29 @@
     "rightToErasure": "Right to Erasure",
     "dataRetention": "Data Retention"
   },
+  "formDraft": {
+    "restoreTitle": "Restore Draft?",
+    "restoreMessage": "We found a previous draft of this form. Would you like to restore it and continue where you left off?",
+    "restoreYes": "Yes, restore draft",
+    "restoreNo": "No, start fresh"
+  },
+  "placeholders": {
+    "propertyTitle": "e.g., Modern 3-bedroom apartment in city center",
+    "propertyDescription": "Detailed description of the property...",
+    "additionalInfo": "Any additional information about the property...",
+    "imagesUploadInfo": "Upload and manage images for this property. The first image will be set as the primary image by default.",
+    "imagesSaveFirst": "Please save the property first before uploading images.",
+    "exposeSaveFirst": "Please save the property first before uploading the exposé.",
+    "exposeUploadInfo": "Upload a PDF brochure (exposé) for this property. Maximum file size: 50MB."
+  },
+  "messages": {
+    "propertyNotFound": "Property not found.",
+    "backToProperties": "Back to Properties",
+    "backToPropertiesArrow": "← Back to Properties",
+    "viewVirtualTour": "View Virtual Tour",
+    "deletingProperty": "Deleting...",
+    "deletePropertyButton": "Delete Property"
+  },
   "enums": {
     "propertyType": {
       "APARTMENT": "Apartment",
