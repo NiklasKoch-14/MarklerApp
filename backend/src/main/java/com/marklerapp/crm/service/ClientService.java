@@ -36,6 +36,7 @@ public class ClientService {
     private final PropertySearchCriteriaRepository searchCriteriaRepository;
     private final ClientMapper clientMapper;
     private final PropertySearchCriteriaMapper searchCriteriaMapper;
+    private final OwnershipValidator ownershipValidator;
 
     /**
      * Get all clients for an agent with pagination
@@ -74,9 +75,7 @@ public class ClientService {
                 .orElseThrow(() -> new ResourceNotFoundException("Client", "id", clientId));
 
         // Verify client belongs to the agent
-        if (!client.getAgent().getId().equals(agentId)) {
-            throw new ResourceNotFoundException("Client", "id", clientId);
-        }
+        ownershipValidator.validateClientOwnership(client, agentId);
 
         return clientMapper.toDto(client);
     }
@@ -138,9 +137,7 @@ public class ClientService {
                 .orElseThrow(() -> new ResourceNotFoundException("Client", "id", clientId));
 
         // Verify client belongs to the agent
-        if (!existingClient.getAgent().getId().equals(agentId)) {
-            throw new ResourceNotFoundException("Client", "id", clientId);
-        }
+        ownershipValidator.validateClientOwnership(existingClient, agentId);
 
         // Check email uniqueness if email is being changed
         if (clientDto.getEmail() != null && !clientDto.getEmail().equals(existingClient.getEmail())) {
@@ -190,9 +187,7 @@ public class ClientService {
                 .orElseThrow(() -> new ResourceNotFoundException("Client", "id", clientId));
 
         // Verify client belongs to the agent
-        if (!client.getAgent().getId().equals(agentId)) {
-            throw new ResourceNotFoundException("Client", "id", clientId);
-        }
+        ownershipValidator.validateClientOwnership(client, agentId);
 
         // Delete associated search criteria
         if (client.getSearchCriteria() != null) {
@@ -240,9 +235,7 @@ public class ClientService {
                 .orElseThrow(() -> new ResourceNotFoundException("Client", "id", clientId));
 
         // Verify client belongs to the agent
-        if (!client.getAgent().getId().equals(agentId)) {
-            throw new ResourceNotFoundException("Client", "id", clientId);
-        }
+        ownershipValidator.validateClientOwnership(client, agentId);
 
         return clientMapper.toDto(client);
     }

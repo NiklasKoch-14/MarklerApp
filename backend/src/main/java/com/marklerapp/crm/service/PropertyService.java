@@ -56,6 +56,7 @@ public class PropertyService {
     private final AgentRepository agentRepository;
     private final PropertyMapper propertyMapper;
     private final PropertyImageMapper propertyImageMapper;
+    private final OwnershipValidator ownershipValidator;
 
     /**
      * Create a new property with GDPR validation.
@@ -113,7 +114,10 @@ public class PropertyService {
         log.debug("Updating property: {} for agent: {}", propertyId, agentId);
 
         // Fetch and validate property
-        Property property = getPropertyByIdAndValidateOwnership(propertyId, agentId);
+        Property property = propertyRepository.findById(propertyId)
+            .orElseThrow(() -> new ResourceNotFoundException("Property", "id", propertyId));
+
+        ownershipValidator.validatePropertyOwnership(property, agentId);
 
         // Update fields from request (only non-null values)
         updatePropertyFields(property, request);
@@ -146,7 +150,10 @@ public class PropertyService {
     public PropertyDto getProperty(UUID propertyId, UUID agentId) {
         log.debug("Getting property: {} for agent: {}", propertyId, agentId);
 
-        Property property = getPropertyByIdAndValidateOwnership(propertyId, agentId);
+        Property property = propertyRepository.findById(propertyId)
+            .orElseThrow(() -> new ResourceNotFoundException("Property", "id", propertyId));
+
+        ownershipValidator.validatePropertyOwnership(property, agentId);
 
         return propertyMapper.toDto(property);
     }
@@ -181,7 +188,10 @@ public class PropertyService {
     public void deleteProperty(UUID propertyId, UUID agentId) {
         log.debug("Deleting property: {} for agent: {}", propertyId, agentId);
 
-        Property property = getPropertyByIdAndValidateOwnership(propertyId, agentId);
+        Property property = propertyRepository.findById(propertyId)
+            .orElseThrow(() -> new ResourceNotFoundException("Property", "id", propertyId));
+
+        ownershipValidator.validatePropertyOwnership(property, agentId);
 
         // Delete associated images (cascade will handle this, but explicit for clarity)
         propertyImageRepository.deleteByProperty(property);
@@ -507,27 +517,6 @@ public class PropertyService {
             .orElseThrow(() -> new ResourceNotFoundException("Agent", "id", agentId));
     }
 
-    /**
-     * Get property by ID and validate agent ownership.
-     *
-     * @param propertyId the property ID
-     * @param agentId the agent ID
-     * @return the property entity
-     * @throws ResourceNotFoundException if property is not found or access denied
-     */
-    private Property getPropertyByIdAndValidateOwnership(UUID propertyId, UUID agentId) {
-        Property property = propertyRepository.findById(propertyId)
-            .orElseThrow(() -> new ResourceNotFoundException("Property", "id", propertyId));
-
-        // Validate ownership
-        if (!property.getAgent().getId().equals(agentId)) {
-            log.warn("Agent {} attempted to access property {} owned by agent {}",
-                agentId, propertyId, property.getAgent().getId());
-            throw new ResourceNotFoundException("Property not found or access denied");
-        }
-
-        return property;
-    }
 
     /**
      * Convert CreatePropertyRequest to Property entity.
@@ -789,9 +778,7 @@ public class PropertyService {
             .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + propertyId));
 
         // Verify agent ownership
-        if (!property.getAgent().getId().equals(agentId)) {
-            throw new IllegalArgumentException("Property does not belong to the specified agent");
-        }
+        ownershipValidator.validatePropertyOwnership(property, agentId);
 
         // Validate PDF
         validatePdfExpose(exposeDto);
@@ -825,9 +812,7 @@ public class PropertyService {
             .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + propertyId));
 
         // Verify agent ownership
-        if (!property.getAgent().getId().equals(agentId)) {
-            throw new IllegalArgumentException("Property does not belong to the specified agent");
-        }
+        ownershipValidator.validatePropertyOwnership(property, agentId);
 
         // Check if expose exists
         if (property.getExposeFileName() == null || property.getExposeFileData() == null) {
@@ -854,9 +839,7 @@ public class PropertyService {
             .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + propertyId));
 
         // Verify agent ownership
-        if (!property.getAgent().getId().equals(agentId)) {
-            throw new IllegalArgumentException("Property does not belong to the specified agent");
-        }
+        ownershipValidator.validatePropertyOwnership(property, agentId);
 
         // Clear expose data
         property.setExposeFileName(null);
@@ -878,9 +861,7 @@ public class PropertyService {
             .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + propertyId));
 
         // Verify agent ownership
-        if (!property.getAgent().getId().equals(agentId)) {
-            throw new IllegalArgumentException("Property does not belong to the specified agent");
-        }
+        ownershipValidator.validatePropertyOwnership(property, agentId);
 
         return property.getExposeFileName() != null && property.getExposeFileData() != null;
     }
