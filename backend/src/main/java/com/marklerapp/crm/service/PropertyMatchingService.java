@@ -56,6 +56,8 @@ public class PropertyMatchingService {
     private final ClientRepository clientRepository;
     private final PropertyMapper propertyMapper;
     private final ClientMapper clientMapper;
+    private final ClientService clientService;
+    private final PropertyService propertyService;
 
     // Default tolerance values
     private static final BigDecimal BUDGET_FLEXIBILITY_MULTIPLIER = new BigDecimal("1.10"); // 10% over budget

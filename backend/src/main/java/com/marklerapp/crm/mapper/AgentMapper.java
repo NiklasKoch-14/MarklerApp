@@ -2,6 +2,8 @@ package com.marklerapp.crm.mapper;
 
 import com.marklerapp.crm.dto.AgentDto;
 import com.marklerapp.crm.entity.Agent;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -38,7 +40,8 @@ public interface AgentMapper {
      * @param agent the agent entity
      * @return the agent DTO
      */
-    @Mapping(target = "fullName", expression = "java(agent.getFullName())")
+    @Mapping(target = "fullName", ignore = true)
+    @BeanMapping(builder = @Builder(disableBuilder = true))
     AgentDto toDto(Agent agent);
 
     /**
@@ -52,6 +55,7 @@ public interface AgentMapper {
     @Mapping(target = "passwordHash", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @BeanMapping(builder = @Builder(disableBuilder = true))
     Agent toEntity(AgentDto dto);
 
     /**

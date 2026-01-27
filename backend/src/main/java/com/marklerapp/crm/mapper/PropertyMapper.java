@@ -2,6 +2,8 @@ package com.marklerapp.crm.mapper;
 
 import com.marklerapp.crm.dto.PropertyDto;
 import com.marklerapp.crm.entity.Property;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -58,9 +60,10 @@ public interface PropertyMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "agent", ignore = true)
     @Mapping(target = "images", ignore = true)
-    @Mapping(target = "exposeData", ignore = true)
+    @Mapping(target = "exposeFileData", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @BeanMapping(builder = @Builder(disableBuilder = true))
     Property toEntity(PropertyDto dto);
 
     /**

@@ -2,6 +2,8 @@ package com.marklerapp.crm.mapper;
 
 import com.marklerapp.crm.dto.PropertySearchCriteriaDto;
 import com.marklerapp.crm.entity.PropertySearchCriteria;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -61,6 +63,9 @@ public interface PropertySearchCriteriaMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "preferredLocations", expression = "java(listToString(dto.getPreferredLocations()))")
     @Mapping(target = "propertyTypes", expression = "java(listToString(dto.getPropertyTypes()))")
+    @Mapping(target = "preferredLocationsArray", ignore = true)
+    @Mapping(target = "propertyTypesArray", ignore = true)
+    @BeanMapping(builder = @Builder(disableBuilder = true))
     PropertySearchCriteria toEntity(PropertySearchCriteriaDto dto);
 
     /**

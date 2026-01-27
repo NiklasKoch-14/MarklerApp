@@ -2,6 +2,8 @@ package com.marklerapp.crm.mapper;
 
 import com.marklerapp.crm.dto.ClientDto;
 import com.marklerapp.crm.entity.Client;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -57,7 +59,9 @@ public interface ClientMapper {
     @Mapping(target = "agent", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "callNotes", ignore = true)
+    @Mapping(target = "aiSummary", ignore = true)
+    @Mapping(target = "aiSummaryUpdatedAt", ignore = true)
+    @BeanMapping(builder = @Builder(disableBuilder = true))
     Client toEntity(ClientDto dto);
 
     /**

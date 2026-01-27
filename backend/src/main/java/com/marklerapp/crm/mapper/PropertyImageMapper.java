@@ -2,6 +2,8 @@ package com.marklerapp.crm.mapper;
 
 import com.marklerapp.crm.dto.PropertyImageDto;
 import com.marklerapp.crm.entity.PropertyImage;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -60,6 +62,11 @@ public interface PropertyImageMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "imageData", ignore = true)
     @Mapping(target = "thumbnailData", ignore = true)
+    @Mapping(target = "isMainImage", ignore = true)
+    @Mapping(target = "displayOrder", ignore = true)
+    @Mapping(target = "mimeType", ignore = true)
+    @Mapping(target = "fileName", ignore = true)
+    @BeanMapping(builder = @Builder(disableBuilder = true))
     PropertyImage toEntity(PropertyImageDto dto);
 
     /**
