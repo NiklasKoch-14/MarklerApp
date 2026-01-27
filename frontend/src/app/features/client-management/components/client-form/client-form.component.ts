@@ -23,9 +23,9 @@ import { ClientService } from '../../services/client.service';
                 id="firstName"
                 formControlName="firstName"
                 class="form-input"
-                placeholder="Enter first name">
+                [placeholder]="'clients.firstNamePlaceholder' | translate">
               <div *ngIf="clientForm.get('firstName')?.invalid && clientForm.get('firstName')?.touched" class="form-error">
-                First name is required
+                {{ 'clients.firstNameRequired' | translate }}
               </div>
             </div>
 
@@ -36,9 +36,9 @@ import { ClientService } from '../../services/client.service';
                 id="lastName"
                 formControlName="lastName"
                 class="form-input"
-                placeholder="Enter last name">
+                [placeholder]="'clients.lastNamePlaceholder' | translate">
               <div *ngIf="clientForm.get('lastName')?.invalid && clientForm.get('lastName')?.touched" class="form-error">
-                Last name is required
+                {{ 'clients.lastNameRequired' | translate }}
               </div>
             </div>
           </div>
@@ -51,9 +51,9 @@ import { ClientService } from '../../services/client.service';
                 id="email"
                 formControlName="email"
                 class="form-input"
-                placeholder="Enter email address">
+                [placeholder]="'clients.emailPlaceholder' | translate">
               <div *ngIf="clientForm.get('email')?.invalid && clientForm.get('email')?.touched" class="form-error">
-                Please enter a valid email address
+                {{ 'clients.emailInvalid' | translate }}
               </div>
             </div>
 
@@ -64,18 +64,18 @@ import { ClientService } from '../../services/client.service';
                 id="phone"
                 formControlName="phone"
                 class="form-input"
-                placeholder="Enter phone number">
+                [placeholder]="'clients.phonePlaceholder' | translate">
             </div>
           </div>
 
           <div>
-            <label for="addressStreet" class="form-label">Street Address</label>
+            <label for="addressStreet" class="form-label">{{ 'clients.street' | translate }}</label>
             <input
               type="text"
               id="addressStreet"
               formControlName="addressStreet"
               class="form-input"
-              placeholder="Enter street address">
+              [placeholder]="'clients.streetPlaceholder' | translate">
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -86,7 +86,7 @@ import { ClientService } from '../../services/client.service';
                 id="addressCity"
                 formControlName="addressCity"
                 class="form-input"
-                placeholder="Enter city">
+                [placeholder]="'clients.cityPlaceholder' | translate">
             </div>
 
             <div>
@@ -96,9 +96,9 @@ import { ClientService } from '../../services/client.service';
                 id="addressPostalCode"
                 formControlName="addressPostalCode"
                 class="form-input"
-                placeholder="12345">
+                [placeholder]="'clients.postalCodePlaceholder' | translate">
               <div *ngIf="clientForm.get('addressPostalCode')?.invalid && clientForm.get('addressPostalCode')?.touched" class="form-error">
-                Postal code must be 5 digits
+                {{ 'clients.postalCodeInvalid' | translate }}
               </div>
             </div>
 
@@ -109,7 +109,7 @@ import { ClientService } from '../../services/client.service';
                 id="addressCountry"
                 formControlName="addressCountry"
                 class="form-input"
-                value="Germany">
+                [value]="'clients.countryDefault' | translate">
             </div>
           </div>
 
@@ -120,12 +120,12 @@ import { ClientService } from '../../services/client.service';
                 type="checkbox"
                 formControlName="gdprConsentGiven"
                 class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-              <label for="gdprConsent" class="ml-2 block text-sm text-gray-900">
-                I consent to the processing of personal data in accordance with GDPR *
+              <label for="gdprConsent" class="ml-2 block text-sm text-gray-900 dark:text-gray-100">
+                {{ 'clients.gdprConsentText' | translate }}
               </label>
             </div>
             <div *ngIf="clientForm.get('gdprConsentGiven')?.invalid && clientForm.get('gdprConsentGiven')?.touched" class="form-error">
-              GDPR consent is required
+              {{ 'clients.gdprConsentRequired' | translate }}
             </div>
           </div>
 
@@ -144,7 +144,7 @@ import { ClientService } from '../../services/client.service';
               type="submit"
               [disabled]="!clientForm.valid || isLoading"
               class="btn btn-primary">
-              {{ isLoading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update Client' : 'Create Client') }}
+              {{ isLoading ? (isEditMode ? ('clients.updating' | translate) : ('clients.creating' | translate)) : (isEditMode ? ('clients.updateClient' | translate) : ('clients.createClient' | translate)) }}
             </button>
           </div>
         </form>
