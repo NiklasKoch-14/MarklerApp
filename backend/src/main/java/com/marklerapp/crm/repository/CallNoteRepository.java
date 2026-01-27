@@ -24,40 +24,84 @@ public interface CallNoteRepository extends JpaRepository<CallNote, UUID> {
 
     /**
      * Find all call notes for a specific client, ordered by call date descending
+     * Uses JOIN FETCH to prevent N+1 query problem
      */
-    Page<CallNote> findByClientOrderByCallDateDesc(Client client, Pageable pageable);
+    @Query("SELECT cn FROM CallNote cn " +
+           "LEFT JOIN FETCH cn.agent " +
+           "LEFT JOIN FETCH cn.client " +
+           "LEFT JOIN FETCH cn.property " +
+           "WHERE cn.client = :client " +
+           "ORDER BY cn.callDate DESC")
+    Page<CallNote> findByClientOrderByCallDateDesc(@Param("client") Client client, Pageable pageable);
 
     /**
      * Find all call notes for a specific client
+     * Uses JOIN FETCH to prevent N+1 query problem
      */
-    List<CallNote> findByClientOrderByCallDateDesc(Client client);
+    @Query("SELECT cn FROM CallNote cn " +
+           "LEFT JOIN FETCH cn.agent " +
+           "LEFT JOIN FETCH cn.client " +
+           "LEFT JOIN FETCH cn.property " +
+           "WHERE cn.client = :client " +
+           "ORDER BY cn.callDate DESC")
+    List<CallNote> findByClientOrderByCallDateDesc(@Param("client") Client client);
 
     /**
      * Find all call notes created by a specific agent
+     * Uses JOIN FETCH to prevent N+1 query problem
      */
-    Page<CallNote> findByAgentOrderByCallDateDesc(Agent agent, Pageable pageable);
+    @Query("SELECT cn FROM CallNote cn " +
+           "LEFT JOIN FETCH cn.agent " +
+           "LEFT JOIN FETCH cn.client " +
+           "LEFT JOIN FETCH cn.property " +
+           "WHERE cn.agent = :agent " +
+           "ORDER BY cn.callDate DESC")
+    Page<CallNote> findByAgentOrderByCallDateDesc(@Param("agent") Agent agent, Pageable pageable);
 
     /**
      * Find all call notes for a specific agent and client combination
+     * Uses JOIN FETCH to prevent N+1 query problem
      */
-    List<CallNote> findByAgentAndClientOrderByCallDateDesc(Agent agent, Client client);
+    @Query("SELECT cn FROM CallNote cn " +
+           "LEFT JOIN FETCH cn.agent " +
+           "LEFT JOIN FETCH cn.client " +
+           "LEFT JOIN FETCH cn.property " +
+           "WHERE cn.agent = :agent AND cn.client = :client " +
+           "ORDER BY cn.callDate DESC")
+    List<CallNote> findByAgentAndClientOrderByCallDateDesc(@Param("agent") Agent agent, @Param("client") Client client);
 
     /**
      * Find call notes that require follow-up
+     * Uses JOIN FETCH to prevent N+1 query problem
      */
-    @Query("SELECT cn FROM CallNote cn WHERE cn.followUpRequired = true AND cn.followUpDate IS NOT NULL")
+    @Query("SELECT cn FROM CallNote cn " +
+           "LEFT JOIN FETCH cn.agent " +
+           "LEFT JOIN FETCH cn.client " +
+           "LEFT JOIN FETCH cn.property " +
+           "WHERE cn.followUpRequired = true AND cn.followUpDate IS NOT NULL")
     List<CallNote> findCallNotesRequiringFollowUp();
 
     /**
      * Find call notes with follow-up date before or equal to a specific date
+     * Uses JOIN FETCH to prevent N+1 query problem
      */
-    @Query("SELECT cn FROM CallNote cn WHERE cn.followUpRequired = true AND cn.followUpDate <= :date")
+    @Query("SELECT cn FROM CallNote cn " +
+           "LEFT JOIN FETCH cn.agent " +
+           "LEFT JOIN FETCH cn.client " +
+           "LEFT JOIN FETCH cn.property " +
+           "WHERE cn.followUpRequired = true AND cn.followUpDate <= :date")
     List<CallNote> findOverdueFollowUps(@Param("date") LocalDate date);
 
     /**
      * Find call notes within a date range for a specific client
+     * Uses JOIN FETCH to prevent N+1 query problem
      */
-    @Query("SELECT cn FROM CallNote cn WHERE cn.client = :client AND cn.callDate BETWEEN :startDate AND :endDate ORDER BY cn.callDate DESC")
+    @Query("SELECT cn FROM CallNote cn " +
+           "LEFT JOIN FETCH cn.agent " +
+           "LEFT JOIN FETCH cn.client " +
+           "LEFT JOIN FETCH cn.property " +
+           "WHERE cn.client = :client AND cn.callDate BETWEEN :startDate AND :endDate " +
+           "ORDER BY cn.callDate DESC")
     List<CallNote> findByClientAndCallDateBetween(
         @Param("client") Client client,
         @Param("startDate") LocalDateTime startDate,
@@ -66,13 +110,27 @@ public interface CallNoteRepository extends JpaRepository<CallNote, UUID> {
 
     /**
      * Find call notes by call type for a specific agent
+     * Uses JOIN FETCH to prevent N+1 query problem
      */
-    List<CallNote> findByAgentAndCallTypeOrderByCallDateDesc(Agent agent, CallNote.CallType callType);
+    @Query("SELECT cn FROM CallNote cn " +
+           "LEFT JOIN FETCH cn.agent " +
+           "LEFT JOIN FETCH cn.client " +
+           "LEFT JOIN FETCH cn.property " +
+           "WHERE cn.agent = :agent AND cn.callType = :callType " +
+           "ORDER BY cn.callDate DESC")
+    List<CallNote> findByAgentAndCallTypeOrderByCallDateDesc(@Param("agent") Agent agent, @Param("callType") CallNote.CallType callType);
 
     /**
      * Find call notes containing specific text in subject or notes
+     * Uses JOIN FETCH to prevent N+1 query problem
      */
-    @Query("SELECT cn FROM CallNote cn WHERE cn.agent = :agent AND (LOWER(cn.subject) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR LOWER(cn.notes) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
+    @Query("SELECT cn FROM CallNote cn " +
+           "LEFT JOIN FETCH cn.agent " +
+           "LEFT JOIN FETCH cn.client " +
+           "LEFT JOIN FETCH cn.property " +
+           "WHERE cn.agent = :agent AND " +
+           "(LOWER(cn.subject) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(cn.notes) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
     Page<CallNote> findByAgentAndSearchTerm(
         @Param("agent") Agent agent,
         @Param("searchTerm") String searchTerm,
@@ -91,8 +149,14 @@ public interface CallNoteRepository extends JpaRepository<CallNote, UUID> {
 
     /**
      * Find recent call notes for a specific agent (last N days)
+     * Uses JOIN FETCH to prevent N+1 query problem
      */
-    @Query("SELECT cn FROM CallNote cn WHERE cn.agent = :agent AND cn.callDate >= :sinceDate ORDER BY cn.callDate DESC")
+    @Query("SELECT cn FROM CallNote cn " +
+           "LEFT JOIN FETCH cn.agent " +
+           "LEFT JOIN FETCH cn.client " +
+           "LEFT JOIN FETCH cn.property " +
+           "WHERE cn.agent = :agent AND cn.callDate >= :sinceDate " +
+           "ORDER BY cn.callDate DESC")
     List<CallNote> findRecentCallNotesByAgent(
         @Param("agent") Agent agent,
         @Param("sinceDate") LocalDateTime sinceDate

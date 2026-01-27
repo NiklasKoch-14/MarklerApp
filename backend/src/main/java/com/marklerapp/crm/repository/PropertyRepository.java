@@ -22,34 +22,66 @@ import java.util.UUID;
 public interface PropertyRepository extends JpaRepository<Property, UUID> {
 
     /**
+     * Find properties by agent with eager loading of relationships
+     */
+    @Query("SELECT DISTINCT p FROM Property p " +
+           "LEFT JOIN FETCH p.agent " +
+           "LEFT JOIN FETCH p.images " +
+           "WHERE p.agent = :agent")
+    List<Property> findByAgentWithRelations(@Param("agent") Agent agent);
+
+    /**
      * Find properties by agent
      */
-    Page<Property> findByAgent(Agent agent, Pageable pageable);
+    @Query("SELECT p FROM Property p " +
+           "LEFT JOIN FETCH p.agent " +
+           "WHERE p.agent = :agent")
+    Page<Property> findByAgent(@Param("agent") Agent agent, Pageable pageable);
 
     /**
      * Find properties by agent ID
      */
-    Page<Property> findByAgentId(UUID agentId, Pageable pageable);
+    @Query("SELECT p FROM Property p " +
+           "LEFT JOIN FETCH p.agent " +
+           "WHERE p.agent.id = :agentId")
+    Page<Property> findByAgentId(@Param("agentId") UUID agentId, Pageable pageable);
 
     /**
      * Find properties by agent and status
      */
-    Page<Property> findByAgentAndStatus(Agent agent, PropertyStatus status, Pageable pageable);
+    @Query("SELECT p FROM Property p " +
+           "LEFT JOIN FETCH p.agent " +
+           "WHERE p.agent = :agent AND p.status = :status")
+    Page<Property> findByAgentAndStatus(@Param("agent") Agent agent,
+                                       @Param("status") PropertyStatus status,
+                                       Pageable pageable);
 
     /**
      * Find properties by agent and property type
      */
-    Page<Property> findByAgentAndPropertyType(Agent agent, PropertyType propertyType, Pageable pageable);
+    @Query("SELECT p FROM Property p " +
+           "LEFT JOIN FETCH p.agent " +
+           "WHERE p.agent = :agent AND p.propertyType = :propertyType")
+    Page<Property> findByAgentAndPropertyType(@Param("agent") Agent agent,
+                                             @Param("propertyType") PropertyType propertyType,
+                                             Pageable pageable);
 
     /**
      * Find properties by agent and listing type
      */
-    Page<Property> findByAgentAndListingType(Agent agent, ListingType listingType, Pageable pageable);
+    @Query("SELECT p FROM Property p " +
+           "LEFT JOIN FETCH p.agent " +
+           "WHERE p.agent = :agent AND p.listingType = :listingType")
+    Page<Property> findByAgentAndListingType(@Param("agent") Agent agent,
+                                            @Param("listingType") ListingType listingType,
+                                            Pageable pageable);
 
     /**
      * Search properties by text (title, description, address)
      */
-    @Query("SELECT p FROM Property p WHERE p.agent = :agent AND " +
+    @Query("SELECT p FROM Property p " +
+           "LEFT JOIN FETCH p.agent " +
+           "WHERE p.agent = :agent AND " +
            "(LOWER(p.title) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
            "LOWER(p.description) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
            "LOWER(p.addressStreet) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
@@ -61,12 +93,19 @@ public interface PropertyRepository extends JpaRepository<Property, UUID> {
     /**
      * Find properties by city
      */
-    Page<Property> findByAgentAndAddressCity(Agent agent, String city, Pageable pageable);
+    @Query("SELECT p FROM Property p " +
+           "LEFT JOIN FETCH p.agent " +
+           "WHERE p.agent = :agent AND p.addressCity = :city")
+    Page<Property> findByAgentAndAddressCity(@Param("agent") Agent agent,
+                                            @Param("city") String city,
+                                            Pageable pageable);
 
     /**
      * Find properties by postal code pattern
      */
-    @Query("SELECT p FROM Property p WHERE p.agent = :agent AND p.addressPostalCode LIKE :postalCodePattern")
+    @Query("SELECT p FROM Property p " +
+           "LEFT JOIN FETCH p.agent " +
+           "WHERE p.agent = :agent AND p.addressPostalCode LIKE :postalCodePattern")
     Page<Property> findByAgentAndPostalCodePattern(@Param("agent") Agent agent,
                                                    @Param("postalCodePattern") String postalCodePattern,
                                                    Pageable pageable);
@@ -74,7 +113,9 @@ public interface PropertyRepository extends JpaRepository<Property, UUID> {
     /**
      * Find properties by price range
      */
-    @Query("SELECT p FROM Property p WHERE p.agent = :agent AND " +
+    @Query("SELECT p FROM Property p " +
+           "LEFT JOIN FETCH p.agent " +
+           "WHERE p.agent = :agent AND " +
            "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
            "(:maxPrice IS NULL OR p.price <= :maxPrice)")
     Page<Property> findByAgentAndPriceRange(@Param("agent") Agent agent,
@@ -85,7 +126,9 @@ public interface PropertyRepository extends JpaRepository<Property, UUID> {
     /**
      * Find properties by living area range
      */
-    @Query("SELECT p FROM Property p WHERE p.agent = :agent AND " +
+    @Query("SELECT p FROM Property p " +
+           "LEFT JOIN FETCH p.agent " +
+           "WHERE p.agent = :agent AND " +
            "(:minArea IS NULL OR p.livingAreaSqm >= :minArea) AND " +
            "(:maxArea IS NULL OR p.livingAreaSqm <= :maxArea)")
     Page<Property> findByAgentAndLivingAreaRange(@Param("agent") Agent agent,
@@ -96,7 +139,9 @@ public interface PropertyRepository extends JpaRepository<Property, UUID> {
     /**
      * Find properties by room range
      */
-    @Query("SELECT p FROM Property p WHERE p.agent = :agent AND " +
+    @Query("SELECT p FROM Property p " +
+           "LEFT JOIN FETCH p.agent " +
+           "WHERE p.agent = :agent AND " +
            "(:minRooms IS NULL OR p.rooms >= :minRooms) AND " +
            "(:maxRooms IS NULL OR p.rooms <= :maxRooms)")
     Page<Property> findByAgentAndRoomRange(@Param("agent") Agent agent,
@@ -107,7 +152,9 @@ public interface PropertyRepository extends JpaRepository<Property, UUID> {
     /**
      * Advanced property search with multiple criteria
      */
-    @Query("SELECT p FROM Property p WHERE p.agent = :agent AND " +
+    @Query("SELECT p FROM Property p " +
+           "LEFT JOIN FETCH p.agent " +
+           "WHERE p.agent = :agent AND " +
            "(:status IS NULL OR p.status = :status) AND " +
            "(:propertyType IS NULL OR p.propertyType = :propertyType) AND " +
            "(:listingType IS NULL OR p.listingType = :listingType) AND " +
@@ -134,7 +181,9 @@ public interface PropertyRepository extends JpaRepository<Property, UUID> {
     /**
      * Find properties matching client search criteria
      */
-    @Query("SELECT p FROM Property p WHERE p.agent = :agent AND " +
+    @Query("SELECT p FROM Property p " +
+           "LEFT JOIN FETCH p.agent " +
+           "WHERE p.agent = :agent AND " +
            "p.status = 'AVAILABLE' AND " +
            "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
            "(:maxPrice IS NULL OR p.price <= :maxPrice) AND " +
@@ -162,14 +211,19 @@ public interface PropertyRepository extends JpaRepository<Property, UUID> {
     /**
      * Find recently added properties
      */
-    @Query("SELECT p FROM Property p WHERE p.agent = :agent AND p.createdAt >= :since ORDER BY p.createdAt DESC")
+    @Query("SELECT p FROM Property p " +
+           "LEFT JOIN FETCH p.agent " +
+           "WHERE p.agent = :agent AND p.createdAt >= :since " +
+           "ORDER BY p.createdAt DESC")
     List<Property> findRecentPropertiesByAgent(@Param("agent") Agent agent,
                                               @Param("since") LocalDateTime since);
 
     /**
      * Find properties available from a specific date
      */
-    @Query("SELECT p FROM Property p WHERE p.agent = :agent AND " +
+    @Query("SELECT p FROM Property p " +
+           "LEFT JOIN FETCH p.agent " +
+           "WHERE p.agent = :agent AND " +
            "p.status = 'AVAILABLE' AND " +
            "(:availableFrom IS NULL OR p.availableFrom IS NULL OR p.availableFrom <= :availableFrom)")
     Page<Property> findAvailableProperties(@Param("agent") Agent agent,
@@ -199,7 +253,9 @@ public interface PropertyRepository extends JpaRepository<Property, UUID> {
     /**
      * Find properties by construction year range
      */
-    @Query("SELECT p FROM Property p WHERE p.agent = :agent AND " +
+    @Query("SELECT p FROM Property p " +
+           "LEFT JOIN FETCH p.agent " +
+           "WHERE p.agent = :agent AND " +
            "(:minYear IS NULL OR p.constructionYear >= :minYear) AND " +
            "(:maxYear IS NULL OR p.constructionYear <= :maxYear)")
     Page<Property> findByConstructionYearRange(@Param("agent") Agent agent,
@@ -210,7 +266,9 @@ public interface PropertyRepository extends JpaRepository<Property, UUID> {
     /**
      * Find properties with specific features
      */
-    @Query("SELECT p FROM Property p WHERE p.agent = :agent AND " +
+    @Query("SELECT p FROM Property p " +
+           "LEFT JOIN FETCH p.agent " +
+           "WHERE p.agent = :agent AND " +
            "(:hasElevator IS NULL OR p.hasElevator = :hasElevator) AND " +
            "(:hasBalcony IS NULL OR p.hasBalcony = :hasBalcony) AND " +
            "(:hasGarden IS NULL OR p.hasGarden = :hasGarden) AND " +
@@ -236,5 +294,9 @@ public interface PropertyRepository extends JpaRepository<Property, UUID> {
     /**
      * Find all properties by agent ordered by creation date descending
      */
-    List<Property> findByAgentOrderByCreatedAtDesc(Agent agent);
+    @Query("SELECT p FROM Property p " +
+           "LEFT JOIN FETCH p.agent " +
+           "WHERE p.agent = :agent " +
+           "ORDER BY p.createdAt DESC")
+    List<Property> findByAgentOrderByCreatedAtDesc(@Param("agent") Agent agent);
 }

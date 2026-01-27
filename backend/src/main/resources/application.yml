@@ -18,6 +18,13 @@ spring:
       hibernate:
         dialect: org.hibernate.community.dialect.SQLiteDialect
         format_sql: true
+        default_batch_fetch_size: 20
+        jdbc:
+          batch_size: 20
+          order_inserts: true
+          order_updates: true
+        query:
+          in_clause_parameter_padding: true
     defer-datasource-initialization: true
 
   sql:
@@ -46,6 +53,16 @@ server:
   port: 8085
   servlet:
     context-path: /api/v1
+  compression:
+    enabled: true
+    mime-types:
+      - application/json
+      - application/xml
+      - text/html
+      - text/plain
+      - text/css
+      - application/javascript
+    min-response-size: 1024
 
 management:
   endpoints:
@@ -136,6 +153,13 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_batch_fetch_size: 20
+        jdbc:
+          batch_size: 20
+          order_inserts: true
+          order_updates: true
+        query:
+          in_clause_parameter_padding: true
     defer-datasource-initialization: true
 
   sql:
@@ -150,6 +174,16 @@ spring:
 
 server:
   port: 8085
+  compression:
+    enabled: true
+    mime-types:
+      - application/json
+      - application/xml
+      - text/html
+      - text/plain
+      - text/css
+      - application/javascript
+    min-response-size: 1024
 
 logging:
   level:
@@ -184,10 +218,13 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_batch_fetch_size: 20
         jdbc:
           batch_size: 50
-        order_inserts: true
-        order_updates: true
+          order_inserts: true
+          order_updates: true
+        query:
+          in_clause_parameter_padding: true
 
   flyway:
     enabled: true
