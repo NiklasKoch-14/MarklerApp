@@ -600,7 +600,7 @@ class CallNoteServiceTest {
     void getFollowUpReminders_WithPendingFollowUps_ShouldReturnReminders() {
         // Given
         CallNoteDto.FollowUpReminder reminder = CallNoteDto.FollowUpReminder.builder()
-            .callNoteId(callNoteId)
+            .id(callNoteId)
             .build();
 
         when(agentRepository.findById(agentId)).thenReturn(Optional.of(testAgent));
@@ -639,7 +639,7 @@ class CallNoteServiceTest {
     void getOverdueFollowUps_WithOverdueFollowUps_ShouldReturnReminders() {
         // Given
         CallNoteDto.FollowUpReminder reminder = CallNoteDto.FollowUpReminder.builder()
-            .callNoteId(callNoteId)
+            .id(callNoteId)
             .build();
 
         when(callNoteRepository.findOverdueFollowUps(any(LocalDate.class)))
