@@ -1,5 +1,6 @@
 package com.marklerapp.crm.controller;
 
+import com.marklerapp.crm.dto.AiSummaryDto;
 import com.marklerapp.crm.dto.CallNoteDto;
 import com.marklerapp.crm.security.CustomUserDetails;
 import com.marklerapp.crm.service.CallNoteService;
@@ -246,6 +247,46 @@ public class CallNoteController {
         UUID agentId = getAgentIdFromAuth(authentication);
         List<CallNoteService.PropertySummaryDto> properties = callNoteService.getAgentProperties(agentId);
         return ResponseEntity.ok(properties);
+    }
+
+    /**
+     * Generate AI summary for client's call notes using Ollama
+     */
+    @PostMapping("/client/{clientId}/ai-summary")
+    @Operation(summary = "Generate AI Summary", description = "Generates an AI-powered summary of all call notes for a client using Ollama")
+    public ResponseEntity<AiSummaryDto> generateAiSummary(
+            @PathVariable UUID clientId,
+            Authentication authentication) {
+        UUID agentId = getAgentIdFromAuth(authentication);
+
+        log.info("Generating AI summary for client {} by agent {}", clientId, agentId);
+
+        try {
+            AiSummaryDto summary = callNoteService.generateAiSummary(clientId, agentId);
+            return ResponseEntity.ok(summary);
+        } catch (IllegalStateException e) {
+            // Ollama not enabled or not available
+            log.warn("Ollama service not available: {}", e.getMessage());
+            return ResponseEntity.ok(AiSummaryDto.builder()
+                    .available(false)
+                    .summary("AI service is currently unavailable")
+                    .build());
+        } catch (IllegalArgumentException e) {
+            // No call notes found
+            log.info("No call notes to summarize for client {}", clientId);
+            return ResponseEntity.ok(AiSummaryDto.builder()
+                    .available(true)
+                    .callNotesCount(0)
+                    .summary("No call notes found for this client")
+                    .build());
+        } catch (Exception e) {
+            log.error("Error generating AI summary for client {}", clientId, e);
+            return ResponseEntity.internalServerError()
+                    .body(AiSummaryDto.builder()
+                            .available(false)
+                            .summary("Error generating summary: " + e.getMessage())
+                            .build());
+        }
     }
 
     /**

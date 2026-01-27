@@ -96,6 +96,9 @@ docker compose -f docker-compose.dev.yml up --build
 # Backend API: http://localhost:8085
 # API Docs: http://localhost:8085/swagger-ui.html
 # PostgreSQL: localhost:5432
+
+#Ollama model 
+docker exec realestate-ollama-dev ollama pull phi3:mini
 ```
 
 ### 3. Manual Local Development

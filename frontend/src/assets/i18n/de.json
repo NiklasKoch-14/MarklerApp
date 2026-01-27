@@ -9,6 +9,7 @@
     "add": "Hinzufügen",
     "search": "Suchen",
     "filter": "Filtern",
+    "filters": "Filter",
     "clear": "Löschen",
     "back": "Zurück",
     "next": "Weiter",
@@ -34,7 +35,14 @@
     "copying": "Kopiere...",
     "never": "Nie",
     "none": "Keine",
-    "all": "Alle"
+    "all": "Alle",
+    "showing": "Zeige",
+    "to": "bis",
+    "of": "von",
+    "results": "Ergebnisse",
+    "page": "Seite",
+    "rooms": "Zimmer",
+    "bed": "Schlafzimmer"
   },
   "auth": {
     "login": {
@@ -185,10 +193,14 @@
     "print": "Drucken",
     "export": "Immobilie exportieren",
     "searchPlaceholder": "Immobilien suchen...",
+    "quickSearchPlaceholder": "Suche nach Titel, Adresse, Stadt...",
     "advancedFilters": "Erweiterte Filter",
     "showFilters": "Filter anzeigen",
     "hideFilters": "Filter ausblenden",
     "clearFilters": "Filter löschen",
+    "applyFilters": "Filter anwenden",
+    "showingProperties": "Zeige {{count}} von {{total}} Immobilien",
+    "showingPage": "Zeige Seite {{current}} von {{total}}",
     "noPropertiesFound": "Keine Immobilien gefunden",
     "loadingProperties": "Immobilien werden geladen...",
     "propertyCreatedSuccess": "Immobilie erfolgreich erstellt",
@@ -479,6 +491,9 @@
     "view-summary": "Kommunikationszusammenfassung anzeigen",
     "search": "Suchen",
     "search-placeholder": "In Notizen suchen...",
+    "quickSearchPlaceholder": "Suche in Gesprächsnotizen...",
+    "showFilters": "Erweiterte Filter anzeigen",
+    "hideFilters": "Erweiterte Filter ausblenden",
     "communication-summary": "Kommunikationszusammenfassung",
     "new-call-note": "Neue Gesprächsnotiz",
     "add-call-note": "Gesprächsnotiz hinzufügen",
@@ -531,7 +546,20 @@
     "end-date": "Enddatum",
     "generating-summary": "Zusammenfassung wird erstellt...",
     "copied-to-clipboard": "In Zwischenablage kopiert",
-    "no-clients-tooltip": "Erstellen Sie zuerst einen Kunden, um Gesprächsnotizen hinzuzufügen"
+    "no-clients-tooltip": "Erstellen Sie zuerst einen Kunden, um Gesprächsnotizen hinzuzufügen",
+    "no-call-notes": "Keine Gesprächsnotizen",
+    "get-started": "Beginnen Sie mit dem Hinzufügen Ihrer ersten Gesprächsnotiz",
+    "add-first-note": "Erste Gesprächsnotiz hinzufügen",
+    "follow-up-by": "Nachfassen bis",
+    "no-follow-up": "Kein Nachfassen",
+    "ai-summary": {
+      "generate": "KI-Zusammenfassung generieren",
+      "generating": "Analysiere Gesprächsnotizen...",
+      "title": "KI-Zusammenfassung",
+      "based-on": "Basierend auf",
+      "unavailable": "KI-Service ist nicht verfügbar",
+      "no-notes": "Keine Gesprächsnotizen zum Zusammenfassen"
+    }
   },
   "callNotes": {
     "title": "Gesprächsnotizen",

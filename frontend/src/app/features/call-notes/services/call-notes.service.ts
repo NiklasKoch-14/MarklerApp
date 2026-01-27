@@ -107,6 +107,13 @@ export interface PropertySummary {
   listingType: string;
 }
 
+export interface AiSummary {
+  summary: string;
+  generatedAt?: string;
+  callNotesCount: number;
+  available: boolean;
+}
+
 export enum CallType {
   PHONE_INBOUND = 'PHONE_INBOUND',
   PHONE_OUTBOUND = 'PHONE_OUTBOUND',
@@ -266,6 +273,13 @@ export class CallNotesService {
       params,
       responseType: 'text'
     });
+  }
+
+  /**
+   * Generate AI-powered summary for a client using Ollama
+   */
+  generateAiSummary(clientId: string): Observable<AiSummary> {
+    return this.http.post<AiSummary>(`${this.apiUrl}/client/${clientId}/ai-summary`, {});
   }
 
   // === UTILITY METHODS ===

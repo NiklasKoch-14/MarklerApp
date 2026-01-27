@@ -67,6 +67,12 @@ public class Client extends BaseEntity {
     @Column(name = "gdpr_consent_date")
     private LocalDateTime gdprConsentDate;
 
+    @Column(name = "ai_summary", columnDefinition = "TEXT")
+    private String aiSummary;
+
+    @Column(name = "ai_summary_updated_at")
+    private LocalDateTime aiSummaryUpdatedAt;
+
     @OneToOne(mappedBy = "client", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private PropertySearchCriteria searchCriteria;
 

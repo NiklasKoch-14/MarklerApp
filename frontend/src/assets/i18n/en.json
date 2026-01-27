@@ -9,6 +9,7 @@
     "add": "Add",
     "search": "Search",
     "filter": "Filter",
+    "filters": "Filters",
     "clear": "Clear",
     "back": "Back",
     "next": "Next",
@@ -34,7 +35,14 @@
     "copying": "Copying...",
     "never": "Never",
     "none": "None",
-    "all": "All"
+    "all": "All",
+    "showing": "Showing",
+    "to": "to",
+    "of": "of",
+    "results": "results",
+    "page": "page",
+    "rooms": "rooms",
+    "bed": "bed"
   },
   "auth": {
     "login": {
@@ -185,10 +193,14 @@
     "print": "Print",
     "export": "Export Property",
     "searchPlaceholder": "Search properties...",
+    "quickSearchPlaceholder": "Search by title, address, city...",
     "advancedFilters": "Advanced Filters",
     "showFilters": "Show Filters",
     "hideFilters": "Hide Filters",
     "clearFilters": "Clear Filters",
+    "applyFilters": "Apply Filters",
+    "showingProperties": "Showing {{count}} of {{total}} properties",
+    "showingPage": "Showing page {{current}} of {{total}}",
     "noPropertiesFound": "No properties found",
     "loadingProperties": "Loading properties...",
     "propertyCreatedSuccess": "Property created successfully",
@@ -479,6 +491,9 @@
     "view-summary": "View Communication Summary",
     "search": "Search",
     "search-placeholder": "Search in notes...",
+    "quickSearchPlaceholder": "Search in call notes...",
+    "showFilters": "Show Advanced Filters",
+    "hideFilters": "Hide Advanced Filters",
     "new-call-note": "New Call Note",
     "edit-call-note": "Edit Call Note",
     "create-note": "Create Note",
@@ -531,7 +546,20 @@
     "end-date": "End Date",
     "generating-summary": "Generating summary...",
     "copied-to-clipboard": "Copied to clipboard",
-    "no-clients-tooltip": "Create a client first to add call notes"
+    "no-clients-tooltip": "Create a client first to add call notes",
+    "no-call-notes": "No call notes",
+    "get-started": "Get started by adding your first call note",
+    "add-first-note": "Add first call note",
+    "follow-up-by": "Follow up by",
+    "no-follow-up": "No follow-up",
+    "ai-summary": {
+      "generate": "Generate AI Summary",
+      "generating": "Analyzing call notes...",
+      "title": "AI Summary",
+      "based-on": "Based on",
+      "unavailable": "AI service is currently unavailable",
+      "no-notes": "No call notes to summarize"
+    }
   },
   "callNotes": {
     "title": "Call Notes",

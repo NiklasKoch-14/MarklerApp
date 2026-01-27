@@ -3,9 +3,12 @@ package com.marklerapp.crm.config;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.time.Instant;
 import java.util.Properties;
+import java.util.concurrent.Executor;
 
 /**
  * Application configuration for general beans and utilities.
@@ -14,6 +17,7 @@ import java.util.Properties;
  * fit into more specific configuration classes.</p>
  */
 @Configuration
+@EnableAsync
 public class AppConfig {
 
     /**
@@ -56,5 +60,20 @@ public class AppConfig {
         properties.put("time", Instant.now().toString());
 
         return new BuildProperties(properties);
+    }
+
+    /**
+     * Task executor for async operations.
+     * Used for background AI summary generation.
+     */
+    @Bean(name = "taskExecutor")
+    public Executor taskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(5);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("async-");
+        executor.initialize();
+        return executor;
     }
 }

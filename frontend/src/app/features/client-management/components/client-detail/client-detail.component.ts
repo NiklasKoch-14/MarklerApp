@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { ClientService, Client } from '../../services/client.service';
-import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse } from '../../../call-notes/services/call-notes.service';
+import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse, AiSummary } from '../../../call-notes/services/call-notes.service';
 
 @Component({
   selector: 'app-client-detail',
@@ -156,6 +156,16 @@ import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse } from '.
             <div class="card-header flex items-center justify-between">
               <h3 class="text-lg font-medium text-gray-900">Recent Call Notes</h3>
               <div class="flex items-center space-x-2">
+                <button *ngIf="!aiSummary && callNotesSummary && callNotesSummary.totalCallNotes > 0"
+                        (click)="generateAiSummary()"
+                        [disabled]="isLoadingAi"
+                        class="btn btn-outline btn-sm">
+                  <svg *ngIf="!isLoadingAi" class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                  </svg>
+                  <span *ngIf="isLoadingAi" class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-1"></span>
+                  {{ isLoadingAi ? ('call-notes.ai-summary.generating' | translate) : ('call-notes.ai-summary.generate' | translate) }}
+                </button>
                 <a [routerLink]="['/call-notes/client', client.id, 'summary']"
                    class="btn btn-outline btn-sm">
                   View Summary
@@ -167,6 +177,44 @@ import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse } from '.
               </div>
             </div>
             <div class="card-body">
+              <!-- AI Summary Section -->
+              <div *ngIf="aiSummary && aiSummary.available" class="mb-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                <div class="flex items-start justify-between mb-2">
+                  <div class="flex items-center">
+                    <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ 'call-notes.ai-summary.title' | translate }}</h4>
+                  </div>
+                  <button (click)="aiSummary = null" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                  </button>
+                </div>
+                <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ aiSummary.summary }}</p>
+                <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  {{ 'call-notes.ai-summary.based-on' | translate }} {{ aiSummary.callNotesCount }} {{ 'call-notes.title' | translate }}
+                  <span *ngIf="aiSummary.generatedAt"> • {{ aiSummary.generatedAt | date:'short' }}</span>
+                </div>
+              </div>
+
+              <!-- AI Error -->
+              <div *ngIf="aiError" class="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <div class="flex items-start">
+                  <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                  </svg>
+                  <div class="flex-1">
+                    <p class="text-sm text-yellow-800 dark:text-yellow-200">{{ aiError }}</p>
+                  </div>
+                  <button (click)="aiError = null" class="text-yellow-400 hover:text-yellow-600 dark:hover:text-yellow-300">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
               <!-- Call Notes Summary Stats -->
               <div *ngIf="callNotesSummary" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
                 <div class="text-center">
@@ -282,6 +330,11 @@ export class ClientDetailComponent implements OnInit {
   callNotesSummary: BulkSummary | null = null;
   isLoadingCallNotes = false;
 
+  // AI Summary
+  aiSummary: AiSummary | null = null;
+  isLoadingAi = false;
+  aiError: string | null = null;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -373,5 +426,27 @@ export class ClientDetailComponent implements OnInit {
         }
       });
     }
+  }
+
+  generateAiSummary(): void {
+    if (!this.client?.id) return;
+
+    this.isLoadingAi = true;
+    this.aiError = null;
+
+    this.callNotesService.generateAiSummary(this.client.id).subscribe({
+      next: (summary: AiSummary) => {
+        this.aiSummary = summary;
+        this.isLoadingAi = false;
+        if (!summary.available) {
+          this.aiError = summary.summary;
+        }
+      },
+      error: (error) => {
+        console.error('Error generating AI summary:', error);
+        this.isLoadingAi = false;
+        this.aiError = 'Failed to generate AI summary. Please try again.';
+      }
+    });
   }
 }

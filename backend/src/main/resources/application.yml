@@ -111,6 +111,13 @@ app:
       compression-quality: 0.9
       max-width: 0  # 0 = no resizing
       max-height: 0  # 0 = no resizing
+  # Ollama AI Configuration
+  ollama:
+    enabled: ${OLLAMA_ENABLED:false}  # Disabled by default (requires Ollama container)
+    base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+    model: ${OLLAMA_MODEL:phi3:mini}
+    timeout: ${OLLAMA_TIMEOUT:120000}  # 2 minutes (120 seconds) for AI inference
+    max-tokens: 500  # Max tokens for summary generation
 
 ---
 spring:
