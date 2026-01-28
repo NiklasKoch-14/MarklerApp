@@ -4,11 +4,12 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { ClientService, Client } from '../../services/client.service';
 import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse, AiSummary } from '../../../call-notes/services/call-notes.service';
+import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule],
+  imports: [CommonModule, RouterLink, TranslateModule, TranslateEnumPipe],
   template: `
     <div class="p-6">
       <div *ngIf="isLoading" class="text-center py-8">
@@ -250,11 +251,11 @@ import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse, AiSummar
                           <span *ngIf="note.outcome"
                                 [ngClass]="getOutcomeClass(note.outcome)"
                                 class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium">
-                            {{ callNotesService.formatCallOutcome(note.outcome) }}
+                            {{ note.outcome | translateEnum:'callOutcome' }}
                           </span>
                         </div>
                         <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                          {{ callNotesService.formatCallType(note.callType) }} •
+                          {{ note.callType | translateEnum:'callType' }} •
                           {{ note.callDate | date:'short' }}
                           <span *ngIf="note.followUpDate"> • {{ 'clients.followUpBy' | translate }} {{ note.followUpDate | date:'short' }}</span>
                         </div>

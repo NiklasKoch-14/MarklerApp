@@ -8,6 +8,7 @@ import { takeUntil } from 'rxjs/operators';
 
 import { CallNotesService, BulkSummary } from '../../services/call-notes.service';
 import { ClientService } from '../../../client-management/services/client.service';
+import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 
 @Component({
   selector: 'app-call-summary',
@@ -16,7 +17,8 @@ import { ClientService } from '../../../client-management/services/client.servic
     CommonModule,
     RouterModule,
     ReactiveFormsModule,
-    TranslateModule
+    TranslateModule,
+    TranslateEnumPipe
   ],
   template: `
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -120,7 +122,7 @@ import { ClientService } from '../../../client-management/services/client.servic
                 <dl>
                   <dt class="text-sm font-medium text-gray-500 truncate">{{ 'call-notes.last-outcome' | translate }}</dt>
                   <dd class="text-lg font-medium text-gray-900">
-                    {{ bulkSummary.lastOutcome ? callNotesService.formatCallOutcome(bulkSummary.lastOutcome) : ('common.none' | translate) }}
+                    {{ bulkSummary.lastOutcome ? (bulkSummary.lastOutcome | translateEnum:'callOutcome') : ('common.none' | translate) }}
                   </dd>
                 </dl>
               </div>

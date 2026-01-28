@@ -4,11 +4,12 @@ import { RouterLink, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { PropertyService, Property, PagedResponse, PropertySearchFilter, PropertyType, ListingType, PropertyStatus } from '../../services/property.service';
+import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 
 @Component({
   selector: 'app-property-search',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, TranslateModule],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, TranslateModule, TranslateEnumPipe],
   template: `
     <div class="p-6 max-w-7xl mx-auto">
       <div class="mb-6">
@@ -43,7 +44,7 @@ import { PropertyService, Property, PagedResponse, PropertySearchFilter, Propert
               <select formControlName="propertyType" class="select select-bordered w-full">
                 <option [ngValue]="null">All Types</option>
                 <option *ngFor="let type of propertyTypes" [value]="type">
-                  {{ propertyService.formatPropertyType(type, currentLanguage) }}
+                  {{ type | translateEnum:'propertyType' }}
                 </option>
               </select>
             </div>
@@ -55,7 +56,7 @@ import { PropertyService, Property, PagedResponse, PropertySearchFilter, Propert
               <select formControlName="listingType" class="select select-bordered w-full">
                 <option [ngValue]="null">All Listing Types</option>
                 <option *ngFor="let type of listingTypes" [value]="type">
-                  {{ propertyService.formatListingType(type, currentLanguage) }}
+                  {{ type | translateEnum:'listingType' }}
                 </option>
               </select>
             </div>
@@ -70,7 +71,7 @@ import { PropertyService, Property, PagedResponse, PropertySearchFilter, Propert
               <select formControlName="status" class="select select-bordered w-full">
                 <option [ngValue]="null">All Statuses</option>
                 <option *ngFor="let status of propertyStatuses" [value]="status">
-                  {{ propertyService.formatPropertyStatus(status, currentLanguage) }}
+                  {{ status | translateEnum:'propertyStatus' }}
                 </option>
               </select>
             </div>
@@ -234,10 +235,10 @@ import { PropertyService, Property, PagedResponse, PropertySearchFilter, Propert
               <p class="text-sm text-gray-600 dark:text-gray-400">{{ property.addressCity }}</p>
               <div class="flex gap-2 my-2">
                 <span class="badge badge-sm" [ngClass]="getListingTypeBadgeClass(property.listingType)">
-                  {{ propertyService.formatListingType(property.listingType, currentLanguage) }}
+                  {{ property.listingType | translateEnum:'listingType' }}
                 </span>
                 <span class="badge badge-sm" [ngClass]="getStatusBadgeClass(property.status)">
-                  {{ propertyService.formatPropertyStatus(property.status || propertyStatuses[0], currentLanguage) }}
+                  {{ (property.status || propertyStatuses[0]) | translateEnum:'propertyStatus' }}
                 </span>
               </div>
               <div class="flex justify-between items-center text-sm">

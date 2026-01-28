@@ -523,6 +523,63 @@ ollama:
 **Docker**: Custom entrypoint script pulls model if not present, uses volume for caching
 **Why**: On-premise AI ensures GDPR compliance, no data leaves the server
 
+### Enum Translation Pattern (Jan 2026)
+**Issue Found**: Service methods returning hardcoded English strings instead of using translation system
+❌ **Wrong Pattern**:
+```typescript
+// In service
+formatCallType(type: CallType): string {
+  switch (type) {
+    case CallType.PHONE_INBOUND: return 'Incoming Call';
+    case CallType.PHONE_OUTBOUND: return 'Outgoing Call';
+    // ...
+  }
+}
+
+// In template
+{{ callNotesService.formatCallType(note.callType) }}
+```
+
+✅ **Correct Pattern**:
+```typescript
+// In template - use translateEnum pipe
+{{ note.callType | translateEnum:'callType' }}
+{{ note.outcome | translateEnum:'callOutcome' }}
+{{ property.status | translateEnum:'propertyStatus' }}
+```
+
+**Why**:
+- Hardcoded service methods bypass the entire i18n translation system
+- Language switching doesn't affect these strings
+- Creates maintenance burden with duplicate translations
+- **Always use `translateEnum` pipe for enum values**
+
+**Translation Keys Structure**:
+```json
+{
+  "enums": {
+    "callType": {
+      "PHONE_INBOUND": "Eingehender Anruf",
+      "PHONE_OUTBOUND": "Ausgehender Anruf"
+    },
+    "callOutcome": {
+      "INTERESTED": "Interessiert",
+      "OFFER_MADE": "Angebot gemacht"
+    }
+  }
+}
+```
+
+**Files Fixed** (Jan 2026):
+- `client-detail.component.ts`: Replaced `formatCallType()` and `formatCallOutcome()` with `translateEnum` pipe
+- `call-summary.component.ts`: Replaced `formatCallOutcome()` with `translateEnum` pipe
+- `property-search.component.ts`: Replaced `formatPropertyType()`, `formatListingType()`, and `formatPropertyStatus()` with `translateEnum` pipe
+- `property-matching.component.ts`: Replaced `formatListingType()` and `formatPropertyType()` with `translateEnum` pipe
+- **REMOVED** all deprecated formatting methods from both `CallNotesService` and `PropertyService` (~115 lines removed)
+- All enum values now properly translate when switching languages
+
+**Impact**: Removed 115 lines of duplicate translation code, improved consistency, eliminated maintenance burden
+
 ## 📈 Future Roadmap
 
 ### Phase 5: Property Management

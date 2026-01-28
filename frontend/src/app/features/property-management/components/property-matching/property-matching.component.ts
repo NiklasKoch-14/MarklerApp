@@ -6,11 +6,12 @@ import { TranslateModule } from '@ngx-translate/core';
 import { PropertyMatchingService } from '../../services/property-matching.service';
 import { PropertyService } from '../../services/property.service';
 import { PropertyMatchRequest, PropertyMatchResponse, PropertyMatchResult } from '../../models/property-match.model';
+import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 
 @Component({
   selector: 'app-property-matching',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, FormsModule, TranslateModule],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, FormsModule, TranslateModule, TranslateEnumPipe],
   template: `
     <div class="p-6 max-w-7xl mx-auto">
       <div class="mb-6">
@@ -254,10 +255,10 @@ import { PropertyMatchRequest, PropertyMatchResponse, PropertyMatchResult } from
 
                 <div class="flex gap-2 mb-3">
                   <span class="badge badge-sm">
-                    {{ propertyService.formatListingType(match.property.listingType, currentLanguage) }}
+                    {{ match.property.listingType | translateEnum:'listingType' }}
                   </span>
                   <span class="badge badge-sm">
-                    {{ propertyService.formatPropertyType(match.property.propertyType, currentLanguage) }}
+                    {{ match.property.propertyType | translateEnum:'propertyType' }}
                   </span>
                 </div>
 

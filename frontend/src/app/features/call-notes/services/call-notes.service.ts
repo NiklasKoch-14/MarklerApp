@@ -285,46 +285,6 @@ export class CallNotesService {
   // === UTILITY METHODS ===
 
   /**
-   * Format call type for display
-   */
-  formatCallType(type: CallType): string {
-    switch (type) {
-      case CallType.PHONE_INBOUND:
-        return 'Incoming Call';
-      case CallType.PHONE_OUTBOUND:
-        return 'Outgoing Call';
-      case CallType.EMAIL:
-        return 'Email';
-      case CallType.MEETING:
-        return 'Meeting';
-      case CallType.OTHER:
-        return 'Other';
-      default:
-        return type;
-    }
-  }
-
-  /**
-   * Format call outcome for display
-   */
-  formatCallOutcome(outcome: CallOutcome): string {
-    switch (outcome) {
-      case CallOutcome.INTERESTED:
-        return 'Interested';
-      case CallOutcome.NOT_INTERESTED:
-        return 'Not Interested';
-      case CallOutcome.SCHEDULED_VIEWING:
-        return 'Viewing Scheduled';
-      case CallOutcome.OFFER_MADE:
-        return 'Offer Made';
-      case CallOutcome.DEAL_CLOSED:
-        return 'Deal Closed';
-      default:
-        return outcome;
-    }
-  }
-
-  /**
    * Get call type options for forms
    * Returns enum values only - labels should be translated using translateEnum pipe
    */
