@@ -800,6 +800,39 @@
       "FLOOR_PLAN": "Floor Plan",
       "ENERGY_CERTIFICATE": "Energy Certificate",
       "LOCATION_MAP": "Location Map"
+    },
+    "fileAttachmentType": {
+      "CONTRACT": "Contract",
+      "FLOOR_PLAN": "Floor Plan",
+      "ID_DOCUMENT": "ID Document",
+      "CERTIFICATE": "Certificate",
+      "FINANCIAL": "Financial Document",
+      "INSPECTION_REPORT": "Inspection Report",
+      "OTHER": "Other"
+    }
+  },
+  "attachments": {
+    "sectionTitle": "Documents & Attachments",
+    "uploadTitle": "Upload Document",
+    "listTitle": "Documents",
+    "fileType": "Document Type",
+    "description": "Description",
+    "optional": "optional",
+    "descriptionPlaceholder": "Add a description for this document...",
+    "clickToUpload": "Click to upload",
+    "orDragAndDrop": "or drag and drop",
+    "supportedFormats": "Supported formats",
+    "maxFileSize": "Max file size",
+    "selectFiles": "Select Files",
+    "noDocuments": "No documents uploaded yet",
+    "uploadSuccess": "File uploaded successfully",
+    "confirmDelete": "Are you sure you want to delete '{{fileName}}'?",
+    "errors": {
+      "uploadFailed": "Failed to upload file. Please try again.",
+      "downloadFailed": "Failed to download file. Please try again.",
+      "deleteFailed": "Failed to delete file. Please try again.",
+      "invalidFileType": "Invalid file type. Only PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, and GIF are allowed.",
+      "fileTooLarge": "File size exceeds the maximum limit of 10MB."
     }
   }
 }

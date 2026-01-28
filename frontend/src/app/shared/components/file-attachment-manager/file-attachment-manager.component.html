@@ -1,0 +1,211 @@
+<div class="file-attachment-manager">
+  <!-- Upload Section -->
+  <div class="mb-6">
+    <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
+      {{ 'attachments.uploadTitle' | translate }}
+    </h3>
+
+    <!-- File Type Selector -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        {{ 'attachments.fileType' | translate }}
+      </label>
+      <select
+        [(ngModel)]="selectedFileType"
+        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+      >
+        <option *ngFor="let type of fileTypes" [value]="type">
+          {{ 'enums.fileAttachmentType.' + type | translate }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Description Field -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        {{ 'attachments.description' | translate }} ({{ 'attachments.optional' | translate }})
+      </label>
+      <textarea
+        [(ngModel)]="fileDescription"
+        rows="2"
+        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+        [placeholder]="'attachments.descriptionPlaceholder' | translate"
+      ></textarea>
+    </div>
+
+    <!-- Drag & Drop Zone -->
+    <div
+      class="border-2 border-dashed rounded-lg p-8 text-center transition-colors"
+      [class.border-blue-500]="isDragOver"
+      [class.bg-blue-50]="isDragOver"
+      [class.dark:bg-blue-900]="isDragOver"
+      [class.border-gray-300]="!isDragOver"
+      [class.dark:border-gray-600]="!isDragOver"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)"
+    >
+      <div class="flex flex-col items-center justify-center">
+        <svg
+          class="w-12 h-12 text-gray-400 dark:text-gray-500 mb-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+          />
+        </svg>
+        <p class="mb-2 text-sm text-gray-700 dark:text-gray-300">
+          <span class="font-semibold">{{ 'attachments.clickToUpload' | translate }}</span>
+          {{ 'attachments.orDragAndDrop' | translate }}
+        </p>
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          {{ 'attachments.supportedFormats' | translate }}: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, GIF
+        </p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          {{ 'attachments.maxFileSize' | translate }}: 10 MB
+        </p>
+        <input
+          type="file"
+          class="hidden"
+          #fileInput
+          (change)="onFileSelected($event)"
+          multiple
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
+        />
+        <button
+          type="button"
+          (click)="fileInput.click()"
+          class="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          [disabled]="hasActiveUploads()"
+        >
+          {{ 'attachments.selectFiles' | translate }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Upload Progress -->
+    <div *ngIf="uploadStates.length > 0" class="mt-4 space-y-2">
+      <div *ngFor="let state of uploadStates" class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ state.file.name }}</span>
+          <span class="text-sm text-gray-500 dark:text-gray-400">
+            {{ fileAttachmentService.formatFileSize(state.file.size) }}
+          </span>
+        </div>
+        <div *ngIf="state.uploading" class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div
+            class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+            [style.width.%]="state.progress"
+          ></div>
+        </div>
+        <div *ngIf="state.error" class="text-sm text-red-600 dark:text-red-400 mt-1">
+          {{ state.error }}
+        </div>
+        <div *ngIf="!state.uploading && !state.error" class="text-sm text-green-600 dark:text-green-400 mt-1">
+          {{ 'attachments.uploadSuccess' | translate }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attachments List -->
+  <div>
+    <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
+      {{ 'attachments.listTitle' | translate }}
+      <span class="text-sm font-normal text-gray-500 dark:text-gray-400">({{ attachments.length }})</span>
+    </h3>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center py-8">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ 'common.loading' | translate }}</p>
+    </div>
+
+    <!-- Empty State -->
+    <div
+      *ngIf="!isLoading && attachments.length === 0"
+      class="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg"
+    >
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        />
+      </svg>
+      <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">{{ 'attachments.noDocuments' | translate }}</p>
+    </div>
+
+    <!-- Attachments Grid -->
+    <div *ngIf="!isLoading && attachments.length > 0" class="grid grid-cols-1 gap-4">
+      <div
+        *ngFor="let attachment of attachments"
+        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow"
+      >
+        <div class="flex items-start">
+          <!-- File Icon -->
+          <div class="flex-shrink-0 mr-4">
+            <div
+              class="w-12 h-12 rounded-lg flex items-center justify-center"
+              [ngClass]="{
+                'bg-red-100 dark:bg-red-900': attachment.isPdf,
+                'bg-blue-100 dark:bg-blue-900': attachment.isImage,
+                'bg-indigo-100 dark:bg-indigo-900': attachment.isDocument,
+                'bg-gray-100 dark:bg-gray-700': !attachment.isPdf && !attachment.isImage && !attachment.isDocument
+              }"
+            >
+              <span class="material-icons text-2xl" [ngClass]="getFileColorClass(attachment)">
+                {{ getFileIcon(attachment) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- File Info -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-start justify-between">
+              <div class="flex-1 min-w-0">
+                <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                  {{ attachment.originalFileName }}
+                </h4>
+                <div class="mt-1 flex items-center space-x-3 text-xs text-gray-500 dark:text-gray-400">
+                  <span class="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700">
+                    {{ 'enums.fileAttachmentType.' + attachment.fileType | translate }}
+                  </span>
+                  <span>{{ attachment.formattedFileSize || fileAttachmentService.formatFileSize(attachment.fileSize) }}</span>
+                  <span>{{ formatDate(attachment.uploadDate) }}</span>
+                </div>
+                <p *ngIf="attachment.description" class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                  {{ attachment.description }}
+                </p>
+              </div>
+
+              <!-- Actions -->
+              <div class="ml-4 flex items-center space-x-2">
+                <button
+                  (click)="downloadAttachment(attachment)"
+                  class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg transition-colors"
+                  [title]="'common.download' | translate"
+                >
+                  <span class="material-icons text-xl">download</span>
+                </button>
+                <button
+                  (click)="deleteAttachment(attachment)"
+                  class="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors"
+                  [title]="'common.delete' | translate"
+                >
+                  <span class="material-icons text-xl">delete</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

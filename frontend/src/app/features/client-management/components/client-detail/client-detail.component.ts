@@ -5,11 +5,12 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ClientService, Client } from '../../services/client.service';
 import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse, AiSummary } from '../../../call-notes/services/call-notes.service';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
+import { FileAttachmentManagerComponent } from '../../../../shared/components/file-attachment-manager/file-attachment-manager.component';
 
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule, TranslateEnumPipe],
+  imports: [CommonModule, RouterLink, TranslateModule, TranslateEnumPipe, FileAttachmentManagerComponent],
   template: `
     <div class="p-6">
       <div *ngIf="isLoading" class="text-center py-8">
@@ -297,6 +298,21 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
                 <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
                 <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ 'clients.loadingCallNotes' | translate }}</p>
               </div>
+            </div>
+          </div>
+
+          <!-- File Attachments Section -->
+          <div class="card mt-8">
+            <div class="card-header">
+              <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+                {{ 'attachments.sectionTitle' | translate }}
+              </h3>
+            </div>
+            <div class="card-body">
+              <app-file-attachment-manager
+                entityType="client"
+                [entityId]="client.id!"
+              ></app-file-attachment-manager>
             </div>
           </div>
 

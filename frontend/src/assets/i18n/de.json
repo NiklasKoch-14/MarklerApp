@@ -800,6 +800,39 @@
       "FLOOR_PLAN": "Grundriss",
       "ENERGY_CERTIFICATE": "Energieausweis",
       "LOCATION_MAP": "Lagekarte"
+    },
+    "fileAttachmentType": {
+      "CONTRACT": "Vertrag",
+      "FLOOR_PLAN": "Grundriss",
+      "ID_DOCUMENT": "Ausweisdokument",
+      "CERTIFICATE": "Zertifikat",
+      "FINANCIAL": "Finanzdokument",
+      "INSPECTION_REPORT": "Gutachten",
+      "OTHER": "Sonstiges"
+    }
+  },
+  "attachments": {
+    "sectionTitle": "Dokumente & Anhänge",
+    "uploadTitle": "Dokument hochladen",
+    "listTitle": "Dokumente",
+    "fileType": "Dokumenttyp",
+    "description": "Beschreibung",
+    "optional": "optional",
+    "descriptionPlaceholder": "Fügen Sie eine Beschreibung für dieses Dokument hinzu...",
+    "clickToUpload": "Zum Hochladen klicken",
+    "orDragAndDrop": "oder per Drag & Drop",
+    "supportedFormats": "Unterstützte Formate",
+    "maxFileSize": "Max. Dateigröße",
+    "selectFiles": "Dateien auswählen",
+    "noDocuments": "Noch keine Dokumente hochgeladen",
+    "uploadSuccess": "Datei erfolgreich hochgeladen",
+    "confirmDelete": "Möchten Sie '{{fileName}}' wirklich löschen?",
+    "errors": {
+      "uploadFailed": "Upload fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "downloadFailed": "Download fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "deleteFailed": "Löschen fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "invalidFileType": "Ungültiger Dateityp. Nur PDF, DOC, DOCX, XLS, XLSX, JPG, PNG und GIF sind erlaubt.",
+      "fileTooLarge": "Dateigröße überschreitet die maximale Grenze von 10MB."
     }
   }
 }

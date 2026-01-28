@@ -9,11 +9,12 @@ import {
   PropertyImage,
   PropertyStatus
 } from '../../services/property.service';
+import { FileAttachmentManagerComponent } from '../../../../shared/components/file-attachment-manager/file-attachment-manager.component';
 
 @Component({
   selector: 'app-property-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule, TranslateEnumPipe],
+  imports: [CommonModule, RouterLink, TranslateModule, TranslateEnumPipe, FileAttachmentManagerComponent],
   templateUrl: './property-detail.component.html',
   styleUrls: ['./property-detail.component.scss']
 })
