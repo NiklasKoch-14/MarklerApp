@@ -16,6 +16,7 @@ public final class ValidationConstants {
     // File upload limits
     public static final long MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
     public static final long MAX_EXPOSE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
+    public static final long MAX_ATTACHMENT_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
     // Text limits
     public static final int NOTES_PREVIEW_LENGTH = 150;
@@ -47,5 +48,20 @@ public final class ValidationConstants {
         "image/png",
         "image/gif",
         "image/webp"
+    };
+
+    // Document attachment validation
+    public static final String[] ALLOWED_ATTACHMENT_EXTENSIONS = {
+        ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".jpg", ".jpeg", ".png", ".gif"
+    };
+    public static final String[] ALLOWED_ATTACHMENT_MIME_TYPES = {
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "image/jpeg",
+        "image/png",
+        "image/gif"
     };
 }
