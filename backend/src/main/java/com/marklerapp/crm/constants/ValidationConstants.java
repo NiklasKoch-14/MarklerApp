@@ -260,6 +260,74 @@ public final class ValidationConstants {
     public static final String IMAGE_SIZE_LIMIT_MESSAGE = "File size exceeds maximum limit of 10MB";
 
     // ========================================
+    // Password Reset Constants
+    // ========================================
+
+    /**
+     * Length of password reset token in characters (hex string from 32 bytes)
+     */
+    public static final int PASSWORD_RESET_TOKEN_LENGTH = 64;
+
+    /**
+     * Password reset token expiration time in minutes
+     */
+    public static final int PASSWORD_RESET_EXPIRATION_MINUTES = 15;
+
+    /**
+     * Maximum password reset requests per email per hour (rate limiting)
+     */
+    public static final int PASSWORD_RESET_MAX_REQUESTS_PER_HOUR = 3;
+
+    /**
+     * Error message when password reset rate limit is exceeded
+     */
+    public static final String PASSWORD_RESET_RATE_LIMIT_MESSAGE =
+        "Too many password reset requests. Please try again later.";
+
+    /**
+     * Success message for password reset email (always same to prevent email enumeration)
+     */
+    public static final String PASSWORD_RESET_EMAIL_SENT_MESSAGE =
+        "If your email is registered, you'll receive a reset link shortly.";
+
+    /**
+     * Error message for invalid reset token
+     */
+    public static final String PASSWORD_RESET_INVALID_TOKEN_MESSAGE =
+        "This reset link is invalid or has expired.";
+
+    /**
+     * Error message for expired reset token
+     */
+    public static final String PASSWORD_RESET_EXPIRED_TOKEN_MESSAGE =
+        "This reset link has expired. Please request a new password reset.";
+
+    /**
+     * Error message for already used reset token
+     */
+    public static final String PASSWORD_RESET_TOKEN_USED_MESSAGE =
+        "This reset link has already been used.";
+
+    /**
+     * Success message for password reset completion
+     */
+    public static final String PASSWORD_RESET_SUCCESS_MESSAGE =
+        "Password successfully reset. You can now log in.";
+
+    /**
+     * Regex pattern for password strength validation
+     * Requires: min 8 chars, at least one uppercase, one lowercase, one digit
+     */
+    public static final String PASSWORD_STRENGTH_REGEX =
+        "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$";
+
+    /**
+     * Validation message for password strength
+     */
+    public static final String PASSWORD_STRENGTH_MESSAGE =
+        "Password must be at least 8 characters with uppercase, lowercase, and number";
+
+    // ========================================
     // Dashboard Analytics Constants
     // ========================================
 

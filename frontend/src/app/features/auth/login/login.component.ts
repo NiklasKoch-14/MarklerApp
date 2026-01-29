@@ -63,7 +63,7 @@ import { TranslateModule } from '@ngx-translate/core';
             </div>
 
             <div class="text-sm">
-              <a href="#" class="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400">
+              <a routerLink="/auth/forgot-password" class="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400">
                 {{ 'auth.login.forgotPassword' | translate }}
               </a>
             </div>

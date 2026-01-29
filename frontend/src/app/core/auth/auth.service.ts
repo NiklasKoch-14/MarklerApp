@@ -147,6 +147,36 @@ export class AuthService {
   }
 
   /**
+   * Request password reset email
+   */
+  forgotPassword(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${this.apiUrl}/forgot-password`,
+      { email }
+    );
+  }
+
+  /**
+   * Reset password using token
+   */
+  resetPassword(token: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${this.apiUrl}/reset-password`,
+      { token, newPassword }
+    );
+  }
+
+  /**
+   * Verify reset token validity
+   */
+  verifyResetToken(token: string): Observable<{ valid: boolean; maskedEmail: string }> {
+    return this.http.get<{ valid: boolean; maskedEmail: string }>(
+      `${this.apiUrl}/verify-reset-token`,
+      { params: { token } }
+    );
+  }
+
+  /**
    * Set authentication state
    */
   private setAuthState(token: string, user: Agent): void {

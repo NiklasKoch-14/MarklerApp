@@ -1,6 +1,9 @@
 package com.marklerapp.crm.config;
 
+import com.marklerapp.crm.exception.ExpiredTokenException;
 import com.marklerapp.crm.exception.FileStorageException;
+import com.marklerapp.crm.exception.InvalidTokenException;
+import com.marklerapp.crm.exception.RateLimitExceededException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -335,6 +338,66 @@ public class GlobalExceptionHandler {
         log.error("Null pointer exception", ex);
 
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    /**
+     * Handle rate limit exceeded exceptions (password reset)
+     */
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleRateLimitExceeded(
+            RateLimitExceededException ex,
+            WebRequest request) {
+
+        Map<String, Object> response = createErrorResponse(
+                HttpStatus.TOO_MANY_REQUESTS,
+                ex.getMessage(),
+                request
+        );
+        response.put("errorCode", "RATE_LIMIT_EXCEEDED");
+
+        log.warn("Rate limit exceeded: {}", ex.getMessage());
+
+        return new ResponseEntity<>(response, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    /**
+     * Handle invalid token exceptions (password reset)
+     */
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidToken(
+            InvalidTokenException ex,
+            WebRequest request) {
+
+        Map<String, Object> response = createErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                request
+        );
+        response.put("errorCode", "INVALID_TOKEN");
+
+        log.warn("Invalid token: {}", ex.getMessage());
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Handle expired token exceptions (password reset)
+     */
+    @ExceptionHandler(ExpiredTokenException.class)
+    public ResponseEntity<Map<String, Object>> handleExpiredToken(
+            ExpiredTokenException ex,
+            WebRequest request) {
+
+        Map<String, Object> response = createErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                request
+        );
+        response.put("errorCode", "EXPIRED_TOKEN");
+
+        log.warn("Expired token: {}", ex.getMessage());
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     /**

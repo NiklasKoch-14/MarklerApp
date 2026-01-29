@@ -43,6 +43,24 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
+  # Mail Configuration
+  # For production: use environment variables SPRING_MAIL_USERNAME and SPRING_MAIL_PASSWORD
+  # For development: add your Gmail credentials below
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: your-email@gmail.com  # TODO: Replace with your Gmail
+    password: your-app-password      # TODO: Replace with Gmail App Password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
   security:
     oauth2:
       resourceserver:
@@ -101,6 +119,11 @@ application:
   gdpr:
     data-retention-days: 1095  # 3 years
     export-format: JSON
+  mail:
+    from: your-email@gmail.com  # TODO: Replace with your Gmail (same as spring.mail.username)
+    from-name: MarklerApp CRM
+    reset-token-expiration-minutes: 15
+    base-url: http://localhost:4200
 
 # File Storage Configuration
 app:

@@ -101,8 +101,11 @@ import { FileAttachmentManagerComponent } from '../../../../shared/components/fi
 
             <!-- Search Criteria -->
             <div class="card lg:col-span-2" *ngIf="client.searchCriteria">
-              <div class="card-header">
+              <div class="card-header flex items-center justify-between">
                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ 'clients.propertySearchCriteria' | translate }}</h3>
+                <a [routerLink]="['/clients', client.id, 'edit']" class="btn btn-outline btn-sm">
+                  {{ 'clients.editSearchCriteria' | translate }}
+                </a>
               </div>
               <div class="card-body">
                 <dl class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
