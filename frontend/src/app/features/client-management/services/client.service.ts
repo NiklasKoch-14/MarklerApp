@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
 export interface Client {
   id?: string;
@@ -61,7 +62,10 @@ export interface ClientStats {
 export class ClientService {
   private readonly apiUrl = `${environment.apiUrl}/clients`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private errorHandler: ErrorHandlerService
+  ) {}
 
   /**
    * Get all clients with pagination
@@ -73,7 +77,9 @@ export class ClientService {
       .set('sortBy', sortBy)
       .set('sortDir', sortDir);
 
-    return this.http.get<PagedResponse<Client>>(this.apiUrl, { params });
+    return this.http.get<PagedResponse<Client>>(this.apiUrl, { params }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
@@ -87,35 +93,45 @@ export class ClientService {
       .set('sortBy', sortBy)
       .set('sortDir', sortDir);
 
-    return this.http.get<PagedResponse<Client>>(`${this.apiUrl}/search`, { params });
+    return this.http.get<PagedResponse<Client>>(`${this.apiUrl}/search`, { params }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Get client by ID
    */
   getClient(id: string): Observable<Client> {
-    return this.http.get<Client>(`${this.apiUrl}/${id}`);
+    return this.http.get<Client>(`${this.apiUrl}/${id}`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Create new client
    */
   createClient(client: Client): Observable<Client> {
-    return this.http.post<Client>(this.apiUrl, client);
+    return this.http.post<Client>(this.apiUrl, client).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Update client
    */
   updateClient(id: string, client: Client): Observable<Client> {
-    return this.http.put<Client>(`${this.apiUrl}/${id}`, client);
+    return this.http.put<Client>(`${this.apiUrl}/${id}`, client).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Delete client
    */
   deleteClient(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
@@ -123,21 +139,27 @@ export class ClientService {
    */
   getRecentClients(days: number = 30): Observable<Client[]> {
     const params = new HttpParams().set('days', days.toString());
-    return this.http.get<Client[]>(`${this.apiUrl}/recent`, { params });
+    return this.http.get<Client[]>(`${this.apiUrl}/recent`, { params }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Get client statistics
    */
   getClientStats(): Observable<ClientStats> {
-    return this.http.get<ClientStats>(`${this.apiUrl}/stats`);
+    return this.http.get<ClientStats>(`${this.apiUrl}/stats`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Export client data (GDPR)
    */
   exportClientData(id: string): Observable<Client> {
-    return this.http.get<Client>(`${this.apiUrl}/${id}/export`);
+    return this.http.get<Client>(`${this.apiUrl}/${id}/export`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
@@ -145,7 +167,8 @@ export class ClientService {
    */
   hasClients(): Observable<boolean> {
     return this.getClientStats().pipe(
-      map(stats => stats.totalClients > 0)
+      map(stats => stats.totalClients > 0),
+      catchError(err => this.errorHandler.handleError(err))
     );
   }
 }

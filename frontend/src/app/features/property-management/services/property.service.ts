@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
 // Property Enums matching backend Java enums
 export enum PropertyType {
@@ -218,7 +220,10 @@ export interface PropertyStats {
 export class PropertyService {
   private readonly apiUrl = `${environment.apiUrl}/properties`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private errorHandler: ErrorHandlerService
+  ) {}
 
   /**
    * Get all properties with pagination
@@ -230,7 +235,9 @@ export class PropertyService {
       .set('sortBy', sortBy)
       .set('sortDir', sortDir);
 
-    return this.http.get<PagedResponse<Property>>(this.apiUrl, { params });
+    return this.http.get<PagedResponse<Property>>(this.apiUrl, { params }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
@@ -261,35 +268,45 @@ export class PropertyService {
     if (filter.hasParking !== undefined) params = params.set('hasParking', filter.hasParking.toString());
     if (filter.petsAllowed !== undefined) params = params.set('petsAllowed', filter.petsAllowed.toString());
 
-    return this.http.get<PagedResponse<Property>>(`${this.apiUrl}/search`, { params });
+    return this.http.get<PagedResponse<Property>>(`${this.apiUrl}/search`, { params }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Get property by ID
    */
   getProperty(id: string): Observable<Property> {
-    return this.http.get<Property>(`${this.apiUrl}/${id}`);
+    return this.http.get<Property>(`${this.apiUrl}/${id}`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Create new property
    */
   createProperty(property: Property): Observable<Property> {
-    return this.http.post<Property>(this.apiUrl, property);
+    return this.http.post<Property>(this.apiUrl, property).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Update property
    */
   updateProperty(id: string, property: Property): Observable<Property> {
-    return this.http.put<Property>(`${this.apiUrl}/${id}`, property);
+    return this.http.put<Property>(`${this.apiUrl}/${id}`, property).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Delete property
    */
   deleteProperty(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
@@ -297,14 +314,18 @@ export class PropertyService {
    */
   getRecentProperties(days: number = 30): Observable<Property[]> {
     const params = new HttpParams().set('days', days.toString());
-    return this.http.get<Property[]>(`${this.apiUrl}/recent`, { params });
+    return this.http.get<Property[]>(`${this.apiUrl}/recent`, { params }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Get property statistics
    */
   getPropertyStats(): Observable<PropertyStats> {
-    return this.http.get<PropertyStats>(`${this.apiUrl}/stats`);
+    return this.http.get<PropertyStats>(`${this.apiUrl}/stats`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
@@ -316,7 +337,9 @@ export class PropertyService {
       .set('page', page.toString())
       .set('size', size.toString());
 
-    return this.http.get<PagedResponse<Property>>(`${this.apiUrl}/by-status`, { params });
+    return this.http.get<PagedResponse<Property>>(`${this.apiUrl}/by-status`, { params }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
@@ -343,28 +366,36 @@ export class PropertyService {
    * Upload property expose (PDF brochure)
    */
   uploadExpose(propertyId: string, expose: PropertyExpose): Observable<PropertyExpose> {
-    return this.http.post<PropertyExpose>(`${this.apiUrl}/${propertyId}/expose`, expose);
+    return this.http.post<PropertyExpose>(`${this.apiUrl}/${propertyId}/expose`, expose).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Download property expose (PDF brochure)
    */
   downloadExpose(propertyId: string): Observable<PropertyExpose> {
-    return this.http.get<PropertyExpose>(`${this.apiUrl}/${propertyId}/expose/download`);
+    return this.http.get<PropertyExpose>(`${this.apiUrl}/${propertyId}/expose/download`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Delete property expose (PDF brochure)
    */
   deleteExpose(propertyId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${propertyId}/expose`);
+    return this.http.delete<void>(`${this.apiUrl}/${propertyId}/expose`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Check if property has an expose
    */
   hasExpose(propertyId: string): Observable<boolean> {
-    return this.http.get<boolean>(`${this.apiUrl}/${propertyId}/expose/exists`);
+    return this.http.get<boolean>(`${this.apiUrl}/${propertyId}/expose/exists`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**

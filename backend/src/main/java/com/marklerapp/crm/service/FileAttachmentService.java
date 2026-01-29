@@ -314,13 +314,13 @@ public class FileAttachmentService {
      */
     private void validateAttachmentFile(MultipartFile file) {
         if (file.isEmpty()) {
-            throw new IllegalArgumentException("File is empty");
+            throw new IllegalArgumentException(ValidationConstants.FILE_EMPTY_MESSAGE);
         }
 
         // Check file size (max 10MB)
         if (file.getSize() > ValidationConstants.MAX_ATTACHMENT_SIZE_BYTES) {
             throw new IllegalArgumentException(
-                String.format("File size exceeds maximum limit of %d MB",
+                String.format(ValidationConstants.FILE_SIZE_EXCEEDED_MESSAGE_TEMPLATE,
                     ValidationConstants.MAX_ATTACHMENT_SIZE_BYTES / (1024 * 1024))
             );
         }
@@ -328,7 +328,7 @@ public class FileAttachmentService {
         // Check content type
         String contentType = file.getContentType();
         if (contentType == null) {
-            throw new IllegalArgumentException("File content type is missing");
+            throw new IllegalArgumentException(ValidationConstants.MISSING_CONTENT_TYPE_MESSAGE);
         }
 
         // Check supported formats
@@ -336,9 +336,7 @@ public class FileAttachmentService {
             .anyMatch(contentType::equals);
 
         if (!isValidMimeType) {
-            throw new IllegalArgumentException(
-                "Unsupported file format. Supported: PDF, Word, Excel, JPEG, PNG, GIF"
-            );
+            throw new IllegalArgumentException(ValidationConstants.UNSUPPORTED_ATTACHMENT_FORMAT_MESSAGE);
         }
     }
 

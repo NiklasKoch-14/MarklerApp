@@ -656,6 +656,7 @@
   },
   "errors": {
     "generalError": "An unexpected error occurred",
+    "unknownError": "An unexpected error occurred",
     "networkError": "Network error. Please check your internet connection",
     "serverError": "Server error. Please try again later",
     "notFound": "The requested resource was not found",

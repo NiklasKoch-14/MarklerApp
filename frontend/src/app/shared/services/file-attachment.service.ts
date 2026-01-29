@@ -1,12 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpEvent, HttpRequest, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
   FileAttachmentDto,
   FileAttachmentUploadDto,
   FileAttachmentEntityType
 } from '../models/file-attachment.model';
+import { ErrorHandlerService } from '../../core/services/error-handler.service';
 
 /**
  * Service for managing file attachments for properties and clients
@@ -17,7 +19,10 @@ import {
 export class FileAttachmentService {
   private readonly apiUrl = `${environment.apiUrl}/attachments`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private errorHandler: ErrorHandlerService
+  ) {}
 
   // ========================================
   // Property Attachments
@@ -59,7 +64,9 @@ export class FileAttachmentService {
    * Get all attachments for property
    */
   getPropertyAttachments(propertyId: string): Observable<FileAttachmentDto[]> {
-    return this.http.get<FileAttachmentDto[]>(`${this.apiUrl}/properties/${propertyId}`);
+    return this.http.get<FileAttachmentDto[]>(`${this.apiUrl}/properties/${propertyId}`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   // ========================================
@@ -102,7 +109,9 @@ export class FileAttachmentService {
    * Get all attachments for client
    */
   getClientAttachments(clientId: string): Observable<FileAttachmentDto[]> {
-    return this.http.get<FileAttachmentDto[]>(`${this.apiUrl}/clients/${clientId}`);
+    return this.http.get<FileAttachmentDto[]>(`${this.apiUrl}/clients/${clientId}`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   // ========================================
@@ -114,14 +123,18 @@ export class FileAttachmentService {
    * Returns the attachment with Base64 data in dataUrl field
    */
   downloadAttachment(attachmentId: string): Observable<FileAttachmentDto> {
-    return this.http.get<FileAttachmentDto>(`${this.apiUrl}/${attachmentId}/download`);
+    return this.http.get<FileAttachmentDto>(`${this.apiUrl}/${attachmentId}/download`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Delete file attachment
    */
   deleteAttachment(attachmentId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${attachmentId}`);
+    return this.http.delete<void>(`${this.apiUrl}/${attachmentId}`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
@@ -134,6 +147,8 @@ export class FileAttachmentService {
     return this.http.put<FileAttachmentDto>(
       `${this.apiUrl}/${attachmentId}/metadata`,
       uploadDto
+    ).pipe(
+      catchError(err => this.errorHandler.handleError(err))
     );
   }
 

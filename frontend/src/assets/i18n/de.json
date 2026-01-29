@@ -656,6 +656,7 @@
   },
   "errors": {
     "generalError": "Ein unerwarteter Fehler ist aufgetreten",
+    "unknownError": "Ein unerwarteter Fehler ist aufgetreten",
     "networkError": "Netzwerkfehler. Bitte prüfen Sie Ihre Internetverbindung",
     "serverError": "Serverfehler. Bitte versuchen Sie es später erneut",
     "notFound": "Die angeforderte Ressource wurde nicht gefunden",

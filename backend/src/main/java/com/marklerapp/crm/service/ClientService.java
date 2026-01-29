@@ -1,6 +1,7 @@
 package com.marklerapp.crm.service;
 
 import com.marklerapp.crm.config.GlobalExceptionHandler.ResourceNotFoundException;
+import com.marklerapp.crm.constants.ValidationConstants;
 import com.marklerapp.crm.dto.ClientDto;
 import com.marklerapp.crm.dto.PropertySearchCriteriaDto;
 import com.marklerapp.crm.entity.Agent;
@@ -92,14 +93,14 @@ public class ClientService {
             agent = getAgentById(agentId);
         } catch (ResourceNotFoundException e) {
             log.error("Agent not found when creating client. AgentId: {}, Error: {}", agentId, e.getMessage());
-            throw new IllegalArgumentException("Unable to create client: Invalid agent session. Please log out and log in again.");
+            throw new IllegalArgumentException(ValidationConstants.INVALID_AGENT_SESSION_MESSAGE);
         }
 
         // Check if client with email already exists for this agent
         if (clientDto.getEmail() != null && !clientDto.getEmail().trim().isEmpty()) {
             if (clientRepository.existsByAgentAndEmail(agent, clientDto.getEmail())) {
                 log.warn("Attempted to create client with duplicate email: {} for agent: {}", clientDto.getEmail(), agentId);
-                throw new IllegalArgumentException("A client with this email already exists for your account");
+                throw new IllegalArgumentException(ValidationConstants.DUPLICATE_EMAIL_MESSAGE);
             }
         }
 
@@ -112,7 +113,7 @@ public class ClientService {
         client.setAgent(agent);
 
         if (clientDto.getAddressCountry() == null || clientDto.getAddressCountry().trim().isEmpty()) {
-            client.setAddressCountry("Germany");
+            client.setAddressCountry(ValidationConstants.DEFAULT_ADDRESS_COUNTRY);
         }
 
         Client savedClient = clientRepository.save(client);
@@ -142,7 +143,7 @@ public class ClientService {
         // Check email uniqueness if email is being changed
         if (clientDto.getEmail() != null && !clientDto.getEmail().equals(existingClient.getEmail())) {
             if (clientRepository.existsByAgentAndEmail(existingClient.getAgent(), clientDto.getEmail())) {
-                throw new IllegalArgumentException("A client with this email already exists");
+                throw new IllegalArgumentException(ValidationConstants.DUPLICATE_EMAIL_MESSAGE);
             }
         }
 

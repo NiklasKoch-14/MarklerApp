@@ -41,7 +41,7 @@ import { ClientService, Client, PagedResponse } from '../../services/client.serv
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 bg-white dark:bg-gray-800">
-                  <tr *ngFor="let client of clients" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <tr *ngFor="let client of clients; trackBy: trackById" class="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">
                       {{ client.firstName }} {{ client.lastName }}
                     </td>
@@ -97,5 +97,12 @@ export class ClientListComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  /**
+   * TrackBy function for *ngFor performance optimization
+   */
+  trackById(index: number, item: Client): string | undefined {
+    return item.id;
   }
 }

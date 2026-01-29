@@ -3,6 +3,7 @@ package com.marklerapp.crm.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marklerapp.crm.config.OllamaConfig;
+import com.marklerapp.crm.constants.ValidationConstants;
 import com.marklerapp.crm.entity.CallNote;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -156,7 +157,8 @@ public class OllamaService {
             prompt.append("\n---\n\n");
         }
 
-        prompt.append("Erstelle eine prägnante, objektive Zusammenfassung auf Deutsch (maximal 300 Wörter). ");
+        prompt.append(String.format("Erstelle eine prägnante, objektive Zusammenfassung auf Deutsch (maximal %d Wörter). ",
+            ValidationConstants.MAX_AI_SUMMARY_WORDS));
         prompt.append("Nutze nur die dokumentierten Fakten ohne Interpretation.");
 
         return prompt.toString();

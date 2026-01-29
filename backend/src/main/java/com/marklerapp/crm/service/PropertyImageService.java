@@ -194,24 +194,23 @@ public class PropertyImageService {
      */
     private void validateImageFile(MultipartFile file) {
         if (file.isEmpty()) {
-            throw new IllegalArgumentException("File is empty");
+            throw new IllegalArgumentException(ValidationConstants.FILE_EMPTY_MESSAGE);
         }
 
         // Check file size (max 10MB)
-        long maxSize = 10 * 1024 * 1024;
-        if (file.getSize() > maxSize) {
-            throw new IllegalArgumentException("File size exceeds maximum limit of 10MB");
+        if (file.getSize() > ValidationConstants.MAX_ATTACHMENT_SIZE_BYTES) {
+            throw new IllegalArgumentException(ValidationConstants.IMAGE_SIZE_LIMIT_MESSAGE);
         }
 
         // Check content type
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
-            throw new IllegalArgumentException("File must be an image");
+            throw new IllegalArgumentException(ValidationConstants.FILE_MUST_BE_IMAGE_MESSAGE);
         }
 
         // Check supported formats
-        if (!contentType.matches("image/(jpeg|jpg|png|gif|webp)")) {
-            throw new IllegalArgumentException("Unsupported image format. Supported: JPEG, PNG, GIF, WebP");
+        if (!contentType.matches(ValidationConstants.SUPPORTED_IMAGE_FORMAT_REGEX)) {
+            throw new IllegalArgumentException(ValidationConstants.UNSUPPORTED_IMAGE_FORMAT_MESSAGE);
         }
     }
 

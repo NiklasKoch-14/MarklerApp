@@ -1,6 +1,7 @@
 package com.marklerapp.crm.service;
 
 import com.marklerapp.crm.config.GlobalExceptionHandler.ResourceNotFoundException;
+import com.marklerapp.crm.constants.ValidationConstants;
 import com.marklerapp.crm.dto.*;
 import com.marklerapp.crm.entity.*;
 import com.marklerapp.crm.mapper.PropertyMapper;
@@ -76,7 +77,7 @@ public class PropertyService {
 
         // Validate GDPR consent
         if (!Boolean.TRUE.equals(request.getDataProcessingConsent())) {
-            throw new IllegalArgumentException("Data processing consent is required to create a property");
+            throw new IllegalArgumentException(ValidationConstants.GDPR_CONSENT_REQUIRED_MESSAGE);
         }
 
         // Convert request to entity
@@ -535,7 +536,7 @@ public class PropertyService {
             .addressCity(request.getAddressCity())
             .addressPostalCode(request.getAddressPostalCode())
             .addressState(request.getAddressState())
-            .addressCountry("Germany")
+            .addressCountry(ValidationConstants.DEFAULT_ADDRESS_COUNTRY)
             .addressDistrict(request.getAddressDistrict())
             .livingAreaSqm(request.getLivingAreaSqm())
             .totalAreaSqm(request.getTotalAreaSqm())
@@ -871,19 +872,18 @@ public class PropertyService {
      */
     private void validatePdfExpose(PropertyExposeDto exposeDto) {
         // Validate filename
-        if (exposeDto.getFileName() == null || !exposeDto.getFileName().toLowerCase().endsWith(".pdf")) {
-            throw new IllegalArgumentException("File must be a PDF");
+        if (exposeDto.getFileName() == null || !exposeDto.getFileName().toLowerCase().endsWith(ValidationConstants.PDF_EXTENSION)) {
+            throw new IllegalArgumentException(ValidationConstants.INVALID_PDF_MESSAGE);
         }
 
         // Validate file size (max 50MB)
-        long maxSize = 52428800L; // 50MB in bytes
-        if (exposeDto.getFileSize() == null || exposeDto.getFileSize() > maxSize) {
-            throw new IllegalArgumentException("File size must not exceed 50MB");
+        if (exposeDto.getFileSize() == null || exposeDto.getFileSize() > ValidationConstants.MAX_EXPOSE_SIZE_BYTES) {
+            throw new IllegalArgumentException(ValidationConstants.PDF_SIZE_LIMIT_MESSAGE);
         }
 
         // Validate file data
         if (exposeDto.getFileData() == null || exposeDto.getFileData().trim().isEmpty()) {
-            throw new IllegalArgumentException("File data is required");
+            throw new IllegalArgumentException(ValidationConstants.FILE_DATA_REQUIRED_MESSAGE);
         }
 
         // Validate Base64 format
@@ -891,21 +891,21 @@ public class PropertyService {
             // Try to decode to validate Base64 format
             java.util.Base64.getDecoder().decode(exposeDto.getFileData());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid file data format. Must be Base64 encoded.");
+            throw new IllegalArgumentException(ValidationConstants.INVALID_BASE64_FORMAT_MESSAGE);
         }
 
         // Validate PDF signature (first bytes should be %PDF)
         try {
             byte[] decodedBytes = java.util.Base64.getDecoder().decode(exposeDto.getFileData());
             if (decodedBytes.length < 4) {
-                throw new IllegalArgumentException("Invalid PDF file");
+                throw new IllegalArgumentException(ValidationConstants.INVALID_PDF_FILE_MESSAGE);
             }
             String header = new String(decodedBytes, 0, Math.min(4, decodedBytes.length));
             if (!header.startsWith("%PDF")) {
-                throw new IllegalArgumentException("Invalid PDF file format");
+                throw new IllegalArgumentException(ValidationConstants.INVALID_PDF_FORMAT_MESSAGE);
             }
         } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid PDF file: " + e.getMessage());
+            throw new IllegalArgumentException(ValidationConstants.INVALID_PDF_FILE_MESSAGE + ": " + e.getMessage());
         }
     }
 }
