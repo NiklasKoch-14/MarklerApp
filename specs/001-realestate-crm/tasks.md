@@ -43,11 +43,11 @@ description: "Task list for Real Estate CRM System implementation"
 
 **Goal**: Low-hanging fruit that immediately improves code quality with minimal risk
 
-- [ ] T200 [P] Create BaseController for shared authentication logic in backend/src/main/java/com/marklerapp/crm/controller/BaseController.java
-- [ ] T201 [P] Refactor all controllers to extend BaseController and remove duplicated getAgentIdFromAuth() methods
-- [ ] T202 [P] Standardize pagination using @PageableDefault across all controllers (ClientController, PropertyController, CallNoteController)
-- [ ] T203 [P] Create ValidationConstants class in backend/src/main/java/com/marklerapp/crm/constants/ValidationConstants.java
-- [ ] T204 [P] Create PaginationConstants class in backend/src/main/java/com/marklerapp/crm/constants/PaginationConstants.java
+- [x] T200 [P] Create BaseController for shared authentication logic in backend/src/main/java/com/marklerapp/crm/controller/BaseController.java ✅ COMPLETED
+- [x] T201 [P] Refactor all controllers to extend BaseController and remove duplicated getAgentIdFromAuth() methods ✅ COMPLETED
+- [x] T202 [P] Standardize pagination using @PageableDefault across all controllers (ClientController, PropertyController, CallNoteController) ✅ COMPLETED
+- [x] T203 [P] Create ValidationConstants class in backend/src/main/java/com/marklerapp/crm/constants/ValidationConstants.java ✅ COMPLETED
+- [x] T204 [P] Create PaginationConstants class in backend/src/main/java/com/marklerapp/crm/constants/PaginationConstants.java ✅ COMPLETED
 - [ ] T205 [P] Extract magic numbers and strings to constants across all services
 - [ ] T206 [P] Replace manual name concatenation with entity helper methods (use getFullName() consistently)
 - [ ] T207 [P] Add missing @Transactional(readOnly = true) annotations to read-only service methods

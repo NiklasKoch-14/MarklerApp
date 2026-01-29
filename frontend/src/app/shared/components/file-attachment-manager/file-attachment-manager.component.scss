@@ -2,3 +2,39 @@
   // Component-specific styles can go here
   // Most styling is done with Tailwind utility classes in the template
 }
+
+/* Custom scrollbar for horizontal gallery */
+.overflow-x-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 4px;
+
+    &:hover {
+      background-color: rgba(156, 163, 175, 0.7);
+    }
+  }
+}
+
+/* Dark mode scrollbar */
+:host-context(.dark) .overflow-x-auto {
+  scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(75, 85, 99, 0.5);
+
+    &:hover {
+      background-color: rgba(75, 85, 99, 0.7);
+    }
+  }
+}

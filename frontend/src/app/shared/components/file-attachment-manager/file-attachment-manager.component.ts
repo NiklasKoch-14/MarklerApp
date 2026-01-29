@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -35,12 +35,13 @@ export class FileAttachmentManagerComponent implements OnInit, OnDestroy {
   uploadStates: FileUploadState[] = [];
   isDragOver = false;
 
-  // Upload form
-  selectedFileType: FileAttachmentType = FileAttachmentType.OTHER;
-  fileDescription = '';
+  // Context menu state
+  contextMenuVisible = false;
+  contextMenuX = 0;
+  contextMenuY = 0;
+  contextMenuAttachment: FileAttachmentDto | null = null;
 
-  // File type options
-  fileTypes = Object.values(FileAttachmentType);
+  // File type metadata
   fileTypeMetadata = FILE_TYPE_METADATA;
 
   private destroy$ = new Subject<void>();
@@ -147,10 +148,13 @@ export class FileAttachmentManagerComponent implements OnInit, OnDestroy {
     };
     this.uploadStates.push(uploadState);
 
+    // Auto-detect file type based on extension
+    const fileType = this.detectFileType(file.name);
+
     // Prepare upload DTO
     const uploadDto: FileAttachmentUploadDto = {
-      fileType: this.selectedFileType,
-      description: this.fileDescription || undefined
+      fileType: fileType,
+      description: undefined
     };
 
     // Upload based on entity type
@@ -172,8 +176,6 @@ export class FileAttachmentManagerComponent implements OnInit, OnDestroy {
           setTimeout(() => {
             this.uploadStates = this.uploadStates.filter((s) => s !== uploadState);
           }, 2000);
-          // Reset form
-          this.fileDescription = '';
         }
       },
       error: (error) => {
@@ -265,11 +267,71 @@ export class FileAttachmentManagerComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Detect file type based on file extension
+   */
+  detectFileType(fileName: string): FileAttachmentType {
+    const extension = fileName.split('.').pop()?.toLowerCase() || '';
+
+    // Map extensions to file types
+    if (extension === 'pdf') {
+      return FileAttachmentType.CONTRACT;
+    } else if (['doc', 'docx'].includes(extension)) {
+      return FileAttachmentType.ID_DOCUMENT;
+    } else if (['xls', 'xlsx'].includes(extension)) {
+      return FileAttachmentType.FINANCIAL;
+    } else if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
+      return FileAttachmentType.FLOOR_PLAN;
+    } else {
+      return FileAttachmentType.OTHER;
+    }
+  }
+
+  /**
    * Format date for display
    */
   formatDate(dateString?: string): string {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  /**
+   * Handle right-click context menu
+   */
+  onContextMenu(event: MouseEvent, attachment: FileAttachmentDto): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.contextMenuX = event.clientX;
+    this.contextMenuY = event.clientY;
+    this.contextMenuAttachment = attachment;
+    this.contextMenuVisible = true;
+  }
+
+  /**
+   * Close context menu
+   */
+  closeContextMenu(): void {
+    this.contextMenuVisible = false;
+    this.contextMenuAttachment = null;
+  }
+
+  /**
+   * Close context menu when clicking anywhere
+   */
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.closeContextMenu();
+  }
+
+  /**
+   * Prevent context menu from closing when clicking inside it
+   */
+  @HostListener('contextmenu', ['$event'])
+  onComponentContextMenu(event: MouseEvent): void {
+    // Only prevent default if context menu is visible
+    if (this.contextMenuVisible) {
+      event.stopPropagation();
+    }
   }
 }
