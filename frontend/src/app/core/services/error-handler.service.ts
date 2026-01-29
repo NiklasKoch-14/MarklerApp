@@ -191,16 +191,18 @@ export class ErrorHandlerService {
    * Use this method in components to show errors to users
    */
   getUserMessage(error: any): string {
-    if (error?.message) {
-      return error.message;
-    }
-
-    if (error instanceof ProcessedError) {
+    // Check if it's already a ProcessedError (has type property)
+    if (error?.type && error?.message && error?.statusCode !== undefined) {
       return error.message;
     }
 
     if (error instanceof HttpErrorResponse) {
       return this.processError(error).message;
+    }
+
+    // Fallback to error.message if it exists
+    if (error?.message) {
+      return error.message;
     }
 
     return this.translate.instant('errors.unknownError');
