@@ -13,9 +13,9 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
   template: `
     <div class="p-6 max-w-7xl mx-auto">
       <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Advanced Property Search</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ 'properties.search.title' | translate }}</h1>
         <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Search properties with advanced filtering options
+          {{ 'properties.search.description' | translate }}
         </p>
       </div>
 
@@ -25,13 +25,13 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
           <!-- Text Search -->
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Search Query
+              {{ 'properties.search.query' | translate }}
             </label>
             <input
               type="text"
               formControlName="query"
               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Search by title, description, or address..."
+              [placeholder]="'properties.search.queryPlaceholder' | translate"
             />
           </div>
 
@@ -39,10 +39,10 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Property Type
+                {{ 'properties.form.propertyType' | translate }}
               </label>
               <select formControlName="propertyType" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                <option [ngValue]="null">All Types</option>
+                <option [ngValue]="null">{{ 'properties.search.allTypes' | translate }}</option>
                 <option *ngFor="let type of propertyTypes" [value]="type">
                   {{ type | translateEnum:'propertyType' }}
                 </option>
@@ -51,10 +51,10 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
 
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Listing Type
+                {{ 'properties.form.listingType' | translate }}
               </label>
               <select formControlName="listingType" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                <option [ngValue]="null">All Listing Types</option>
+                <option [ngValue]="null">{{ 'properties.search.allListingTypes' | translate }}</option>
                 <option *ngFor="let type of listingTypes" [value]="type">
                   {{ type | translateEnum:'listingType' }}
                 </option>
@@ -66,10 +66,10 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Status
+                {{ 'properties.form.status' | translate }}
               </label>
               <select formControlName="status" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                <option [ngValue]="null">All Statuses</option>
+                <option [ngValue]="null">{{ 'properties.search.allStatuses' | translate }}</option>
                 <option *ngFor="let status of propertyStatuses" [value]="status">
                   {{ status | translateEnum:'propertyStatus' }}
                 </option>
@@ -78,13 +78,13 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
 
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                City
+                {{ 'properties.search.city' | translate }}
               </label>
               <input
                 type="text"
                 formControlName="city"
                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Enter city name..."
+                [placeholder]="'properties.search.cityPlaceholder' | translate"
               />
             </div>
           </div>
@@ -92,21 +92,21 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
           <!-- Price Range -->
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Price Range
+              {{ 'properties.search.priceRange' | translate }}
             </label>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
                 type="number"
                 formControlName="minPrice"
                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Min Price"
+                [placeholder]="'properties.search.minPrice' | translate"
                 min="0"
               />
               <input
                 type="number"
                 formControlName="maxPrice"
                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Max Price"
+                [placeholder]="'properties.search.maxPrice' | translate"
                 min="0"
               />
             </div>
@@ -115,21 +115,21 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
           <!-- Living Area Range -->
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Living Area (sqm)
+              {{ 'properties.search.livingArea' | translate }}
             </label>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
                 type="number"
                 formControlName="minLivingArea"
                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Min Area"
+                [placeholder]="'properties.search.minArea' | translate"
                 min="0"
               />
               <input
                 type="number"
                 formControlName="maxLivingArea"
                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Max Area"
+                [placeholder]="'properties.search.maxArea' | translate"
                 min="0"
               />
             </div>
@@ -138,14 +138,14 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
           <!-- Room Range -->
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Number of Rooms
+              {{ 'properties.search.numberOfRooms' | translate }}
             </label>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
                 type="number"
                 formControlName="minRooms"
                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Min Rooms"
+                [placeholder]="'properties.search.minRooms' | translate"
                 min="0"
                 step="0.5"
               />
@@ -153,7 +153,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
                 type="number"
                 formControlName="maxRooms"
                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Max Rooms"
+                [placeholder]="'properties.search.maxRooms' | translate"
                 min="0"
                 step="0.5"
               />
@@ -163,28 +163,28 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
           <!-- Features -->
           <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Features
+              {{ 'properties.search.features' | translate }}
             </label>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasElevator" class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 mr-2" />
-                <span class="text-sm">Elevator</span>
+                <span class="text-sm">{{ 'properties.search.elevator' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasBalcony" class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 mr-2" />
-                <span class="text-sm">Balcony</span>
+                <span class="text-sm">{{ 'properties.search.balcony' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasGarden" class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 mr-2" />
-                <span class="text-sm">Garden</span>
+                <span class="text-sm">{{ 'properties.search.garden' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasParking" class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 mr-2" />
-                <span class="text-sm">Parking</span>
+                <span class="text-sm">{{ 'properties.search.parking' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="petsAllowed" class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 mr-2" />
-                <span class="text-sm">Pets Allowed</span>
+                <span class="text-sm">{{ 'properties.search.petsAllowed' | translate }}</span>
               </label>
             </div>
           </div>
@@ -209,19 +209,19 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
       <div *ngIf="searchPerformed" class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-            Search Results ({{ totalElements }} properties)
+            {{ 'properties.search.results' | translate }} ({{ totalElements }} {{ 'properties.title' | translate | lowercase }})
           </h2>
         </div>
 
         <!-- Loading State -->
         <div *ngIf="isLoading" class="text-center py-12">
-          <div class="loading loading-spinner loading-lg"></div>
-          <p class="mt-4 text-gray-600 dark:text-gray-400">Searching properties...</p>
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <p class="mt-4 text-gray-600 dark:text-gray-400">{{ 'properties.search.searching' | translate }}</p>
         </div>
 
         <!-- No Results -->
         <div *ngIf="!isLoading && properties.length === 0" class="text-center py-12">
-          <p class="text-gray-600 dark:text-gray-400">No properties found matching your criteria.</p>
+          <p class="text-gray-600 dark:text-gray-400">{{ 'properties.search.noResults' | translate }}</p>
         </div>
 
         <!-- Results Grid -->
