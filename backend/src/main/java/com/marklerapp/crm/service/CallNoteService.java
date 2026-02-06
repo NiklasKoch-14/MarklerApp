@@ -1,6 +1,7 @@
 package com.marklerapp.crm.service;
 
 import com.marklerapp.crm.config.GlobalExceptionHandler.ResourceNotFoundException;
+import com.marklerapp.crm.dto.AiSummaryDto;
 import com.marklerapp.crm.dto.CallNoteDto;
 import com.marklerapp.crm.entity.CallNote;
 import com.marklerapp.crm.entity.Client;
@@ -8,6 +9,7 @@ import com.marklerapp.crm.entity.Agent;
 import com.marklerapp.crm.entity.Property;
 import com.marklerapp.crm.entity.PropertyType;
 import com.marklerapp.crm.entity.ListingType;
+import com.marklerapp.crm.mapper.CallNoteMapper;
 import com.marklerapp.crm.repository.CallNoteRepository;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.AgentRepository;
@@ -21,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -39,6 +40,10 @@ public class CallNoteService {
     private final ClientRepository clientRepository;
     private final AgentRepository agentRepository;
     private final PropertyRepository propertyRepository;
+    private final OllamaService ollamaService;
+    private final AsyncSummaryService asyncSummaryService;
+    private final CallNoteMapper callNoteMapper;
+    private final OwnershipValidator ownershipValidator;
 
     /**
      * Create a new call note for a client
@@ -54,9 +59,7 @@ public class CallNoteService {
             .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + request.getClientId()));
 
         // Validate that the client belongs to the agent
-        if (!client.getAgent().getId().equals(agentId)) {
-            throw new IllegalArgumentException("Client does not belong to the specified agent");
-        }
+        ownershipValidator.validateClientOwnership(client, agentId);
 
         // Fetch property if propertyId is provided
         Property property = null;
@@ -65,9 +68,7 @@ public class CallNoteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + request.getPropertyId()));
 
             // Validate that the property belongs to the agent
-            if (!property.getAgent().getId().equals(agentId)) {
-                throw new IllegalArgumentException("Property does not belong to the specified agent");
-            }
+            ownershipValidator.validatePropertyOwnership(property, agentId);
         }
 
         CallNote callNote = CallNote.builder()
@@ -88,7 +89,10 @@ public class CallNoteService {
         CallNote savedCallNote = callNoteRepository.save(callNote);
         log.info("Successfully created call note with id: {}", savedCallNote.getId());
 
-        return convertToResponse(savedCallNote);
+        // Trigger async AI summary generation
+        asyncSummaryService.generateAndPersistSummary(client.getId());
+
+        return callNoteMapper.toResponse(savedCallNote);
     }
 
     /**
@@ -102,9 +106,7 @@ public class CallNoteService {
             .orElseThrow(() -> new ResourceNotFoundException("Call note not found with id: " + callNoteId));
 
         // Validate that the call note belongs to the agent
-        if (!existingCallNote.getAgent().getId().equals(agentId)) {
-            throw new IllegalArgumentException("Call note does not belong to the specified agent");
-        }
+        ownershipValidator.validateCallNoteOwnership(existingCallNote, agentId);
 
         // Update property if propertyId is provided
         if (request.getPropertyId() != null) {
@@ -112,9 +114,7 @@ public class CallNoteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + request.getPropertyId()));
 
             // Validate that the property belongs to the agent
-            if (!property.getAgent().getId().equals(agentId)) {
-                throw new IllegalArgumentException("Property does not belong to the specified agent");
-            }
+            ownershipValidator.validatePropertyOwnership(property, agentId);
             existingCallNote.setProperty(property);
         } else {
             existingCallNote.setProperty(null);
@@ -133,7 +133,10 @@ public class CallNoteService {
         CallNote updatedCallNote = callNoteRepository.save(existingCallNote);
         log.info("Successfully updated call note with id: {}", updatedCallNote.getId());
 
-        return convertToResponse(updatedCallNote);
+        // Trigger async AI summary generation
+        asyncSummaryService.generateAndPersistSummary(updatedCallNote.getClient().getId());
+
+        return callNoteMapper.toResponse(updatedCallNote);
     }
 
     /**
@@ -145,11 +148,9 @@ public class CallNoteService {
             .orElseThrow(() -> new ResourceNotFoundException("Call note not found with id: " + callNoteId));
 
         // Validate that the call note belongs to the agent
-        if (!callNote.getAgent().getId().equals(agentId)) {
-            throw new IllegalArgumentException("Call note does not belong to the specified agent");
-        }
+        ownershipValidator.validateCallNoteOwnership(callNote, agentId);
 
-        return convertToResponse(callNote);
+        return callNoteMapper.toResponse(callNote);
     }
 
     /**
@@ -163,12 +164,14 @@ public class CallNoteService {
             .orElseThrow(() -> new ResourceNotFoundException("Call note not found with id: " + callNoteId));
 
         // Validate that the call note belongs to the agent
-        if (!callNote.getAgent().getId().equals(agentId)) {
-            throw new IllegalArgumentException("Call note does not belong to the specified agent");
-        }
+        ownershipValidator.validateCallNoteOwnership(callNote, agentId);
 
+        UUID clientId = callNote.getClient().getId();
         callNoteRepository.delete(callNote);
         log.info("Successfully deleted call note with id: {}", callNoteId);
+
+        // Trigger async AI summary generation
+        asyncSummaryService.generateAndPersistSummary(clientId);
     }
 
     /**
@@ -180,12 +183,10 @@ public class CallNoteService {
             .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + clientId));
 
         // Validate that the client belongs to the agent
-        if (!client.getAgent().getId().equals(agentId)) {
-            throw new IllegalArgumentException("Client does not belong to the specified agent");
-        }
+        ownershipValidator.validateClientOwnership(client, agentId);
 
         Page<CallNote> callNotes = callNoteRepository.findByClientOrderByCallDateDesc(client, pageable);
-        return callNotes.map(this::convertToSummary);
+        return callNotes.map(callNoteMapper::toSummary);
     }
 
     /**
@@ -197,7 +198,7 @@ public class CallNoteService {
             .orElseThrow(() -> new ResourceNotFoundException("Agent not found with id: " + agentId));
 
         Page<CallNote> callNotes = callNoteRepository.findByAgentOrderByCallDateDesc(agent, pageable);
-        return callNotes.map(this::convertToSummary);
+        return callNotes.map(callNoteMapper::toSummary);
     }
 
     /**
@@ -210,7 +211,7 @@ public class CallNoteService {
 
         if (filter.getSearchTerm() != null && !filter.getSearchTerm().trim().isEmpty()) {
             Page<CallNote> callNotes = callNoteRepository.findByAgentAndSearchTerm(agent, filter.getSearchTerm().trim(), pageable);
-            return callNotes.map(this::convertToSummary);
+            return callNotes.map(callNoteMapper::toSummary);
         }
 
         // For more complex filtering, we would implement additional repository methods
@@ -232,7 +233,7 @@ public class CallNoteService {
             .collect(Collectors.toList());
 
         return followUpCallNotes.stream()
-            .map(this::convertToFollowUpReminder)
+            .map(callNoteMapper::toFollowUpReminder)
             .collect(Collectors.toList());
     }
 
@@ -247,7 +248,7 @@ public class CallNoteService {
             .collect(Collectors.toList());
 
         return overdueCallNotes.stream()
-            .map(this::convertToFollowUpReminder)
+            .map(callNoteMapper::toFollowUpReminder)
             .collect(Collectors.toList());
     }
 
@@ -260,9 +261,7 @@ public class CallNoteService {
             .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + clientId));
 
         // Validate that the client belongs to the agent
-        if (!client.getAgent().getId().equals(agentId)) {
-            throw new IllegalArgumentException("Client does not belong to the specified agent");
-        }
+        ownershipValidator.validateClientOwnership(client, agentId);
 
         List<CallNote> allCallNotes = callNoteRepository.findByClientOrderByCallDateDesc(client);
         long totalCallNotes = allCallNotes.size();
@@ -280,99 +279,6 @@ public class CallNoteService {
             .pendingFollowUps(pendingFollowUps)
             .mostRecentSubject(mostRecentCallNote != null ? mostRecentCallNote.getSubject() : null)
             .lastOutcome(mostRecentCallNote != null ? mostRecentCallNote.getOutcome() : null)
-            .build();
-    }
-
-    /**
-     * Convert CallNote entity to Response DTO
-     */
-    private CallNoteDto.Response convertToResponse(CallNote callNote) {
-        String propertyTitle = null;
-        String propertyAddress = null;
-        UUID propertyId = null;
-
-        if (callNote.getProperty() != null) {
-            propertyId = callNote.getProperty().getId();
-            propertyTitle = callNote.getProperty().getTitle();
-            propertyAddress = callNote.getProperty().getAddressCity() + ", " + callNote.getProperty().getAddressPostalCode();
-        }
-
-        return CallNoteDto.Response.builder()
-            .id(callNote.getId())
-            .agentId(callNote.getAgent().getId())
-            .agentName(callNote.getAgent().getFirstName() + " " + callNote.getAgent().getLastName())
-            .clientId(callNote.getClient().getId())
-            .clientName(callNote.getClient().getFirstName() + " " + callNote.getClient().getLastName())
-            .propertyId(propertyId)
-            .propertyTitle(propertyTitle)
-            .propertyAddress(propertyAddress)
-            .callDate(callNote.getCallDate())
-            .durationMinutes(callNote.getDurationMinutes())
-            .callType(callNote.getCallType())
-            .subject(callNote.getSubject())
-            .notes(callNote.getNotes())
-            .followUpRequired(callNote.getFollowUpRequired())
-            .followUpDate(callNote.getFollowUpDate())
-            .propertiesDiscussed(callNote.getPropertiesDiscussed())
-            .outcome(callNote.getOutcome())
-            .createdAt(callNote.getCreatedAt())
-            .updatedAt(callNote.getUpdatedAt())
-            .build();
-    }
-
-    /**
-     * Convert CallNote entity to Summary DTO
-     */
-    private CallNoteDto.Summary convertToSummary(CallNote callNote) {
-        // Create a preview of the notes (first 150 characters)
-        String notesSummary = null;
-        if (callNote.getNotes() != null && !callNote.getNotes().isEmpty()) {
-            notesSummary = callNote.getNotes().length() > 150
-                ? callNote.getNotes().substring(0, 150) + "..."
-                : callNote.getNotes();
-        }
-
-        UUID propertyId = null;
-        String propertyTitle = null;
-        if (callNote.getProperty() != null) {
-            propertyId = callNote.getProperty().getId();
-            propertyTitle = callNote.getProperty().getTitle();
-        }
-
-        return CallNoteDto.Summary.builder()
-            .id(callNote.getId())
-            .clientId(callNote.getClient().getId())
-            .clientName(callNote.getClient().getFirstName() + " " + callNote.getClient().getLastName())
-            .propertyId(propertyId)
-            .propertyTitle(propertyTitle)
-            .callDate(callNote.getCallDate())
-            .callType(callNote.getCallType())
-            .subject(callNote.getSubject())
-            .notesSummary(notesSummary)
-            .followUpRequired(callNote.getFollowUpRequired())
-            .followUpDate(callNote.getFollowUpDate())
-            .outcome(callNote.getOutcome())
-            .createdAt(callNote.getCreatedAt())
-            .build();
-    }
-
-    /**
-     * Convert CallNote entity to FollowUpReminder DTO
-     */
-    private CallNoteDto.FollowUpReminder convertToFollowUpReminder(CallNote callNote) {
-        LocalDate today = LocalDate.now();
-        LocalDate followUpDate = callNote.getFollowUpDate();
-        boolean isOverdue = followUpDate != null && followUpDate.isBefore(today);
-        long daysUntilDue = followUpDate != null ? ChronoUnit.DAYS.between(today, followUpDate) : 0;
-
-        return CallNoteDto.FollowUpReminder.builder()
-            .id(callNote.getId())
-            .clientId(callNote.getClient().getId())
-            .clientName(callNote.getClient().getFirstName() + " " + callNote.getClient().getLastName())
-            .subject(callNote.getSubject())
-            .followUpDate(followUpDate)
-            .isOverdue(isOverdue)
-            .daysUntilDue(daysUntilDue)
             .build();
     }
 
@@ -395,6 +301,46 @@ public class CallNoteService {
                 .listingType(p.getListingType())
                 .build())
             .collect(Collectors.toList());
+    }
+
+    /**
+     * Get AI summary for client's call notes from database.
+     * Summary is automatically generated in background when call notes are created/updated/deleted.
+     */
+    @Transactional(readOnly = true)
+    public AiSummaryDto generateAiSummary(UUID clientId, UUID agentId) {
+        // Verify client belongs to agent
+        Client client = clientRepository.findById(clientId)
+            .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + clientId));
+
+        ownershipValidator.validateClientOwnership(client, agentId);
+
+        // Get all call notes for the client (for count)
+        List<CallNote> callNotes = callNoteRepository.findByClientOrderByCallDateDesc(client);
+
+        if (callNotes.isEmpty()) {
+            throw new IllegalArgumentException("No call notes found for this client");
+        }
+
+        // Return stored summary from database
+        if (client.getAiSummary() != null && client.getAiSummaryUpdatedAt() != null) {
+            return AiSummaryDto.builder()
+                    .summary(client.getAiSummary())
+                    .generatedAt(client.getAiSummaryUpdatedAt())
+                    .callNotesCount(callNotes.size())
+                    .available(true)
+                    .build();
+        }
+
+        // If no summary exists yet, trigger async generation and return pending message
+        asyncSummaryService.generateAndPersistSummary(clientId);
+
+        return AiSummaryDto.builder()
+                .summary("AI-Zusammenfassung wird gerade generiert. Bitte aktualisieren Sie die Seite in wenigen Sekunden.")
+                .generatedAt(LocalDateTime.now())
+                .callNotesCount(callNotes.size())
+                .available(false)
+                .build();
     }
 
     /**

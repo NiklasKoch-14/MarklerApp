@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
 // Call Note interfaces based on backend DTOs
 export interface CallNote {
@@ -107,6 +109,13 @@ export interface PropertySummary {
   listingType: string;
 }
 
+export interface AiSummary {
+  summary: string;
+  generatedAt?: string;
+  callNotesCount: number;
+  available: boolean;
+}
+
 export enum CallType {
   PHONE_INBOUND = 'PHONE_INBOUND',
   PHONE_OUTBOUND = 'PHONE_OUTBOUND',
@@ -140,34 +149,45 @@ export interface PagedResponse<T> {
 export class CallNotesService {
   private readonly apiUrl = `${environment.apiUrl}/call-notes`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private errorHandler: ErrorHandlerService
+  ) {}
 
   /**
    * Create a new call note
    */
   createCallNote(callNote: CallNoteCreateRequest): Observable<CallNote> {
-    return this.http.post<CallNote>(this.apiUrl, callNote);
+    return this.http.post<CallNote>(this.apiUrl, callNote).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Update an existing call note
    */
   updateCallNote(id: string, callNote: CallNoteUpdateRequest): Observable<CallNote> {
-    return this.http.put<CallNote>(`${this.apiUrl}/${id}`, callNote);
+    return this.http.put<CallNote>(`${this.apiUrl}/${id}`, callNote).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Get a specific call note by ID
    */
   getCallNote(id: string): Observable<CallNote> {
-    return this.http.get<CallNote>(`${this.apiUrl}/${id}`);
+    return this.http.get<CallNote>(`${this.apiUrl}/${id}`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Delete a call note
    */
   deleteCallNote(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
@@ -178,7 +198,9 @@ export class CallNotesService {
       .set('page', page.toString())
       .set('size', size.toString());
 
-    return this.http.get<PagedResponse<CallNoteSummary>>(`${this.apiUrl}/client/${clientId}`, { params });
+    return this.http.get<PagedResponse<CallNoteSummary>>(`${this.apiUrl}/client/${clientId}`, { params }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
@@ -189,7 +211,9 @@ export class CallNotesService {
       .set('page', page.toString())
       .set('size', size.toString());
 
-    return this.http.get<PagedResponse<CallNoteSummary>>(this.apiUrl, { params });
+    return this.http.get<PagedResponse<CallNoteSummary>>(this.apiUrl, { params }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
@@ -200,35 +224,45 @@ export class CallNotesService {
       .set('page', page.toString())
       .set('size', size.toString());
 
-    return this.http.post<PagedResponse<CallNoteSummary>>(`${this.apiUrl}/search`, filter, { params });
+    return this.http.post<PagedResponse<CallNoteSummary>>(`${this.apiUrl}/search`, filter, { params }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Get follow-up reminders
    */
   getFollowUpReminders(): Observable<FollowUpReminder[]> {
-    return this.http.get<FollowUpReminder[]>(`${this.apiUrl}/follow-ups`);
+    return this.http.get<FollowUpReminder[]>(`${this.apiUrl}/follow-ups`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Get overdue follow-ups
    */
   getOverdueFollowUps(): Observable<FollowUpReminder[]> {
-    return this.http.get<FollowUpReminder[]>(`${this.apiUrl}/follow-ups/overdue`);
+    return this.http.get<FollowUpReminder[]>(`${this.apiUrl}/follow-ups/overdue`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Get call notes summary for a specific client
    */
   getClientCallNotesSummary(clientId: string): Observable<BulkSummary> {
-    return this.http.get<BulkSummary>(`${this.apiUrl}/client/${clientId}/summary`);
+    return this.http.get<BulkSummary>(`${this.apiUrl}/client/${clientId}/summary`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Get agent's properties for call note form dropdown
    */
   getAgentProperties(): Observable<PropertySummary[]> {
-    return this.http.get<PropertySummary[]>(`${this.apiUrl}/properties`);
+    return this.http.get<PropertySummary[]>(`${this.apiUrl}/properties`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   // === SUMMARY GENERATION ENDPOINTS ===
@@ -237,21 +271,27 @@ export class CallNotesService {
    * Generate comprehensive communication summary for a client
    */
   generateClientSummary(clientId: string): Observable<string> {
-    return this.http.get(`${this.apiUrl}/client/${clientId}/summary/detailed`, { responseType: 'text' });
+    return this.http.get(`${this.apiUrl}/client/${clientId}/summary/detailed`, { responseType: 'text' }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Generate quick summary for a client
    */
   generateQuickSummary(clientId: string): Observable<string> {
-    return this.http.get(`${this.apiUrl}/client/${clientId}/summary/quick`, { responseType: 'text' });
+    return this.http.get(`${this.apiUrl}/client/${clientId}/summary/quick`, { responseType: 'text' }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Generate timeline summary for a client
    */
   generateTimelineSummary(clientId: string): Observable<string> {
-    return this.http.get(`${this.apiUrl}/client/${clientId}/summary/timeline`, { responseType: 'text' });
+    return this.http.get(`${this.apiUrl}/client/${clientId}/summary/timeline`, { responseType: 'text' }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
@@ -265,50 +305,21 @@ export class CallNotesService {
     return this.http.get(`${this.apiUrl}/client/${clientId}/summary/period`, {
       params,
       responseType: 'text'
-    });
+    }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
+
+  /**
+   * Generate AI-powered summary for a client using Ollama
+   */
+  generateAiSummary(clientId: string): Observable<AiSummary> {
+    return this.http.post<AiSummary>(`${this.apiUrl}/client/${clientId}/ai-summary`, {}).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   // === UTILITY METHODS ===
-
-  /**
-   * Format call type for display
-   */
-  formatCallType(type: CallType): string {
-    switch (type) {
-      case CallType.PHONE_INBOUND:
-        return 'Incoming Call';
-      case CallType.PHONE_OUTBOUND:
-        return 'Outgoing Call';
-      case CallType.EMAIL:
-        return 'Email';
-      case CallType.MEETING:
-        return 'Meeting';
-      case CallType.OTHER:
-        return 'Other';
-      default:
-        return type;
-    }
-  }
-
-  /**
-   * Format call outcome for display
-   */
-  formatCallOutcome(outcome: CallOutcome): string {
-    switch (outcome) {
-      case CallOutcome.INTERESTED:
-        return 'Interested';
-      case CallOutcome.NOT_INTERESTED:
-        return 'Not Interested';
-      case CallOutcome.SCHEDULED_VIEWING:
-        return 'Viewing Scheduled';
-      case CallOutcome.OFFER_MADE:
-        return 'Offer Made';
-      case CallOutcome.DEAL_CLOSED:
-        return 'Deal Closed';
-      default:
-        return outcome;
-    }
-  }
 
   /**
    * Get call type options for forms

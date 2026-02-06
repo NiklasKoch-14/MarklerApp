@@ -1,7 +1,7 @@
 package com.marklerapp.crm.controller;
 
+import com.marklerapp.crm.constants.PaginationConstants;
 import com.marklerapp.crm.dto.ClientDto;
-import com.marklerapp.crm.security.CustomUserDetails;
 import com.marklerapp.crm.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -10,9 +10,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -23,13 +23,16 @@ import java.util.UUID;
 
 /**
  * REST controller for client management operations.
+ * Extends BaseController for common authentication methods.
+ *
+ * @since Phase 7.1 - Refactored to use BaseController and @PageableDefault
  */
 @Slf4j
 @RestController
 @RequestMapping("/clients")
 @RequiredArgsConstructor
 @Tag(name = "Client Management", description = "APIs for managing real estate clients")
-public class ClientController {
+public class ClientController extends BaseController {
 
     private final ClientService clientService;
 
@@ -39,20 +42,15 @@ public class ClientController {
     @GetMapping
     @Operation(summary = "Get all clients", description = "Retrieve all clients for the authenticated agent with pagination")
     public ResponseEntity<Page<ClientDto>> getAllClients(
-            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "Sort field") @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir,
+            @PageableDefault(
+                size = PaginationConstants.DEFAULT_PAGE_SIZE,
+                sort = PaginationConstants.DEFAULT_SORT_FIELD,
+                direction = Sort.Direction.DESC
+            ) Pageable pageable,
             Authentication authentication) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
-
-        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc") ?
-                Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
-
         Page<ClientDto> clients = clientService.getClientsByAgent(agentId, pageable);
-
         return ResponseEntity.ok(clients);
     }
 
@@ -63,20 +61,15 @@ public class ClientController {
     @Operation(summary = "Search clients", description = "Search clients by name or email")
     public ResponseEntity<Page<ClientDto>> searchClients(
             @Parameter(description = "Search term") @RequestParam String q,
-            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "Sort field") @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir,
+            @PageableDefault(
+                size = PaginationConstants.DEFAULT_PAGE_SIZE,
+                sort = PaginationConstants.DEFAULT_SORT_FIELD,
+                direction = Sort.Direction.DESC
+            ) Pageable pageable,
             Authentication authentication) {
 
         UUID agentId = getAgentIdFromAuth(authentication);
-
-        Sort sort = Sort.by(sortDir.equalsIgnoreCase("desc") ?
-                Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
-
         Page<ClientDto> clients = clientService.searchClients(agentId, q, pageable);
-
         return ResponseEntity.ok(clients);
     }
 
@@ -186,14 +179,6 @@ public class ClientController {
         ClientDto clientData = clientService.exportClientData(clientId, agentId);
 
         return ResponseEntity.ok(clientData);
-    }
-
-    /**
-     * Extract agent ID from authentication
-     */
-    private UUID getAgentIdFromAuth(Authentication authentication) {
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        return userDetails.getAgent().getId();
     }
 
     /**

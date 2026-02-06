@@ -22,13 +22,23 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
 
     /**
      * Find clients by agent
+     * Uses JOIN FETCH to prevent N+1 query problem
      */
-    Page<Client> findByAgent(Agent agent, Pageable pageable);
+    @Query("SELECT c FROM Client c " +
+           "LEFT JOIN FETCH c.agent " +
+           "LEFT JOIN FETCH c.searchCriteria " +
+           "WHERE c.agent = :agent")
+    Page<Client> findByAgent(@Param("agent") Agent agent, Pageable pageable);
 
     /**
      * Find all clients by agent (no pagination)
+     * Uses JOIN FETCH to prevent N+1 query problem
      */
-    List<Client> findByAgent(Agent agent);
+    @Query("SELECT c FROM Client c " +
+           "LEFT JOIN FETCH c.agent " +
+           "LEFT JOIN FETCH c.searchCriteria " +
+           "WHERE c.agent = :agent")
+    List<Client> findByAgent(@Param("agent") Agent agent);
 
     /**
      * Find clients by agent ID
@@ -37,8 +47,12 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
 
     /**
      * Find clients by agent and search term (name or email)
+     * Uses JOIN FETCH to prevent N+1 query problem
      */
-    @Query("SELECT c FROM Client c WHERE c.agent = :agent AND " +
+    @Query("SELECT c FROM Client c " +
+           "LEFT JOIN FETCH c.agent " +
+           "LEFT JOIN FETCH c.searchCriteria " +
+           "WHERE c.agent = :agent AND " +
            "(LOWER(c.firstName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
            "LOWER(c.lastName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
            "LOWER(c.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
@@ -58,14 +72,22 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
 
     /**
      * Find clients with GDPR consent
+     * Uses JOIN FETCH to prevent N+1 query problem
      */
-    @Query("SELECT c FROM Client c WHERE c.agent = :agent AND c.gdprConsentGiven = true")
+    @Query("SELECT c FROM Client c " +
+           "LEFT JOIN FETCH c.agent " +
+           "LEFT JOIN FETCH c.searchCriteria " +
+           "WHERE c.agent = :agent AND c.gdprConsentGiven = true")
     List<Client> findByAgentWithGdprConsent(@Param("agent") Agent agent);
 
     /**
      * Find clients without GDPR consent
+     * Uses JOIN FETCH to prevent N+1 query problem
      */
-    @Query("SELECT c FROM Client c WHERE c.agent = :agent AND c.gdprConsentGiven = false")
+    @Query("SELECT c FROM Client c " +
+           "LEFT JOIN FETCH c.agent " +
+           "LEFT JOIN FETCH c.searchCriteria " +
+           "WHERE c.agent = :agent AND c.gdprConsentGiven = false")
     List<Client> findByAgentWithoutGdprConsent(@Param("agent") Agent agent);
 
     /**
@@ -96,15 +118,24 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
 
     /**
      * Find recent clients (last 30 days)
+     * Uses JOIN FETCH to prevent N+1 query problem
      */
-    @Query("SELECT c FROM Client c WHERE c.agent = :agent AND c.createdAt >= :thirtyDaysAgo ORDER BY c.createdAt DESC")
+    @Query("SELECT c FROM Client c " +
+           "LEFT JOIN FETCH c.agent " +
+           "LEFT JOIN FETCH c.searchCriteria " +
+           "WHERE c.agent = :agent AND c.createdAt >= :thirtyDaysAgo " +
+           "ORDER BY c.createdAt DESC")
     List<Client> findRecentClientsByAgent(@Param("agent") Agent agent,
                                          @Param("thirtyDaysAgo") LocalDateTime thirtyDaysAgo);
 
     /**
      * Find clients by postal code pattern
+     * Uses JOIN FETCH to prevent N+1 query problem
      */
-    @Query("SELECT c FROM Client c WHERE c.agent = :agent AND c.addressPostalCode LIKE :postalCodePattern")
+    @Query("SELECT c FROM Client c " +
+           "LEFT JOIN FETCH c.agent " +
+           "LEFT JOIN FETCH c.searchCriteria " +
+           "WHERE c.agent = :agent AND c.addressPostalCode LIKE :postalCodePattern")
     List<Client> findByAgentAndPostalCodePattern(@Param("agent") Agent agent,
                                                 @Param("postalCodePattern") String postalCodePattern);
 }

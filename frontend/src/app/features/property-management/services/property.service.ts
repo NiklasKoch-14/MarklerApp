@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
 // Property Enums matching backend Java enums
 export enum PropertyType {
@@ -218,7 +220,10 @@ export interface PropertyStats {
 export class PropertyService {
   private readonly apiUrl = `${environment.apiUrl}/properties`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private errorHandler: ErrorHandlerService
+  ) {}
 
   /**
    * Get all properties with pagination
@@ -230,7 +235,9 @@ export class PropertyService {
       .set('sortBy', sortBy)
       .set('sortDir', sortDir);
 
-    return this.http.get<PagedResponse<Property>>(this.apiUrl, { params });
+    return this.http.get<PagedResponse<Property>>(this.apiUrl, { params }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
@@ -261,35 +268,45 @@ export class PropertyService {
     if (filter.hasParking !== undefined) params = params.set('hasParking', filter.hasParking.toString());
     if (filter.petsAllowed !== undefined) params = params.set('petsAllowed', filter.petsAllowed.toString());
 
-    return this.http.get<PagedResponse<Property>>(`${this.apiUrl}/search`, { params });
+    return this.http.get<PagedResponse<Property>>(`${this.apiUrl}/search`, { params }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Get property by ID
    */
   getProperty(id: string): Observable<Property> {
-    return this.http.get<Property>(`${this.apiUrl}/${id}`);
+    return this.http.get<Property>(`${this.apiUrl}/${id}`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Create new property
    */
   createProperty(property: Property): Observable<Property> {
-    return this.http.post<Property>(this.apiUrl, property);
+    return this.http.post<Property>(this.apiUrl, property).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Update property
    */
   updateProperty(id: string, property: Property): Observable<Property> {
-    return this.http.put<Property>(`${this.apiUrl}/${id}`, property);
+    return this.http.put<Property>(`${this.apiUrl}/${id}`, property).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Delete property
    */
   deleteProperty(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
@@ -297,14 +314,18 @@ export class PropertyService {
    */
   getRecentProperties(days: number = 30): Observable<Property[]> {
     const params = new HttpParams().set('days', days.toString());
-    return this.http.get<Property[]>(`${this.apiUrl}/recent`, { params });
+    return this.http.get<Property[]>(`${this.apiUrl}/recent`, { params }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Get property statistics
    */
   getPropertyStats(): Observable<PropertyStats> {
-    return this.http.get<PropertyStats>(`${this.apiUrl}/stats`);
+    return this.http.get<PropertyStats>(`${this.apiUrl}/stats`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
@@ -316,86 +337,9 @@ export class PropertyService {
       .set('page', page.toString())
       .set('size', size.toString());
 
-    return this.http.get<PagedResponse<Property>>(`${this.apiUrl}/by-status`, { params });
-  }
-
-  /**
-   * Helper method to format property type for display
-   */
-  formatPropertyType(type: PropertyType, language: string = 'en'): string {
-    const translations: Record<PropertyType, { de: string; en: string }> = {
-      [PropertyType.APARTMENT]: { de: 'Wohnung', en: 'Apartment' },
-      [PropertyType.HOUSE]: { de: 'Haus', en: 'House' },
-      [PropertyType.TOWNHOUSE]: { de: 'Reihenhaus', en: 'Townhouse' },
-      [PropertyType.VILLA]: { de: 'Villa', en: 'Villa' },
-      [PropertyType.PENTHOUSE]: { de: 'Penthouse', en: 'Penthouse' },
-      [PropertyType.LOFT]: { de: 'Loft', en: 'Loft' },
-      [PropertyType.DUPLEX]: { de: 'Maisonette', en: 'Duplex' },
-      [PropertyType.STUDIO]: { de: 'Apartment', en: 'Studio' },
-      [PropertyType.OFFICE]: { de: 'Büro', en: 'Office' },
-      [PropertyType.RETAIL]: { de: 'Einzelhandel', en: 'Retail' },
-      [PropertyType.WAREHOUSE]: { de: 'Lager', en: 'Warehouse' },
-      [PropertyType.INDUSTRIAL]: { de: 'Industrie', en: 'Industrial' },
-      [PropertyType.RESTAURANT]: { de: 'Restaurant', en: 'Restaurant' },
-      [PropertyType.HOTEL]: { de: 'Hotel', en: 'Hotel' },
-      [PropertyType.PARKING_SPACE]: { de: 'Stellplatz', en: 'Parking Space' },
-      [PropertyType.GARAGE]: { de: 'Garage', en: 'Garage' },
-      [PropertyType.LAND]: { de: 'Grundstück', en: 'Land' },
-      [PropertyType.FARM]: { de: 'Bauernhof', en: 'Farm' },
-      [PropertyType.CASTLE]: { de: 'Schloss', en: 'Castle' },
-      [PropertyType.OTHER]: { de: 'Sonstiges', en: 'Other' }
-    };
-
-    return language === 'de' ? translations[type].de : translations[type].en;
-  }
-
-  /**
-   * Helper method to format listing type for display
-   */
-  formatListingType(type: ListingType, language: string = 'en'): string {
-    const translations: Record<ListingType, { de: string; en: string }> = {
-      [ListingType.SALE]: { de: 'Kauf', en: 'For Sale' },
-      [ListingType.RENT]: { de: 'Miete', en: 'For Rent' },
-      [ListingType.LEASE]: { de: 'Pacht', en: 'For Lease' }
-    };
-
-    return language === 'de' ? translations[type].de : translations[type].en;
-  }
-
-  /**
-   * Helper method to format property status for display
-   */
-  formatPropertyStatus(status: PropertyStatus, language: string = 'en'): string {
-    const translations: Record<PropertyStatus, { de: string; en: string }> = {
-      [PropertyStatus.AVAILABLE]: { de: 'Verfügbar', en: 'Available' },
-      [PropertyStatus.RESERVED]: { de: 'Reserviert', en: 'Reserved' },
-      [PropertyStatus.SOLD]: { de: 'Verkauft', en: 'Sold' },
-      [PropertyStatus.RENTED]: { de: 'Vermietet', en: 'Rented' },
-      [PropertyStatus.WITHDRAWN]: { de: 'Zurückgezogen', en: 'Withdrawn' },
-      [PropertyStatus.UNDER_CONSTRUCTION]: { de: 'Im Bau', en: 'Under Construction' }
-    };
-
-    return language === 'de' ? translations[status].de : translations[status].en;
-  }
-
-  /**
-   * Helper method to format heating type for display
-   */
-  formatHeatingType(type: HeatingType, language: string = 'en'): string {
-    const translations: Record<HeatingType, { de: string; en: string }> = {
-      [HeatingType.GAS]: { de: 'Gas', en: 'Gas Heating' },
-      [HeatingType.OIL]: { de: 'Öl', en: 'Oil Heating' },
-      [HeatingType.ELECTRIC]: { de: 'Elektro', en: 'Electric Heating' },
-      [HeatingType.DISTRICT_HEATING]: { de: 'Fernwärme', en: 'District Heating' },
-      [HeatingType.HEAT_PUMP]: { de: 'Wärmepumpe', en: 'Heat Pump' },
-      [HeatingType.SOLAR]: { de: 'Solar', en: 'Solar Heating' },
-      [HeatingType.WOOD_PELLETS]: { de: 'Holzpellets', en: 'Wood Pellets' },
-      [HeatingType.GEOTHERMAL]: { de: 'Erdwärme', en: 'Geothermal' },
-      [HeatingType.COAL]: { de: 'Kohle', en: 'Coal Heating' },
-      [HeatingType.OTHER]: { de: 'Sonstiges', en: 'Other' }
-    };
-
-    return language === 'de' ? translations[type].de : translations[type].en;
+    return this.http.get<PagedResponse<Property>>(`${this.apiUrl}/by-status`, { params }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
@@ -422,28 +366,36 @@ export class PropertyService {
    * Upload property expose (PDF brochure)
    */
   uploadExpose(propertyId: string, expose: PropertyExpose): Observable<PropertyExpose> {
-    return this.http.post<PropertyExpose>(`${this.apiUrl}/${propertyId}/expose`, expose);
+    return this.http.post<PropertyExpose>(`${this.apiUrl}/${propertyId}/expose`, expose).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Download property expose (PDF brochure)
    */
   downloadExpose(propertyId: string): Observable<PropertyExpose> {
-    return this.http.get<PropertyExpose>(`${this.apiUrl}/${propertyId}/expose/download`);
+    return this.http.get<PropertyExpose>(`${this.apiUrl}/${propertyId}/expose/download`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Delete property expose (PDF brochure)
    */
   deleteExpose(propertyId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${propertyId}/expose`);
+    return this.http.delete<void>(`${this.apiUrl}/${propertyId}/expose`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**
    * Check if property has an expose
    */
   hasExpose(propertyId: string): Observable<boolean> {
-    return this.http.get<boolean>(`${this.apiUrl}/${propertyId}/expose/exists`);
+    return this.http.get<boolean>(`${this.apiUrl}/${propertyId}/expose/exists`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
   }
 
   /**

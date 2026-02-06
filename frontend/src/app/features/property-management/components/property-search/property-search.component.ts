@@ -4,17 +4,18 @@ import { RouterLink, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { PropertyService, Property, PagedResponse, PropertySearchFilter, PropertyType, ListingType, PropertyStatus } from '../../services/property.service';
+import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 
 @Component({
   selector: 'app-property-search',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, TranslateModule],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, TranslateModule, TranslateEnumPipe],
   template: `
     <div class="p-6 max-w-7xl mx-auto">
       <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Advanced Property Search</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ 'properties.search.title' | translate }}</h1>
         <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Search properties with advanced filtering options
+          {{ 'properties.search.description' | translate }}
         </p>
       </div>
 
@@ -24,13 +25,13 @@ import { PropertyService, Property, PagedResponse, PropertySearchFilter, Propert
           <!-- Text Search -->
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Search Query
+              {{ 'properties.search.query' | translate }}
             </label>
             <input
               type="text"
               formControlName="query"
-              class="input input-bordered w-full"
-              placeholder="Search by title, description, or address..."
+              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              [placeholder]="'properties.search.queryPlaceholder' | translate"
             />
           </div>
 
@@ -38,24 +39,24 @@ import { PropertyService, Property, PagedResponse, PropertySearchFilter, Propert
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Property Type
+                {{ 'properties.form.propertyType' | translate }}
               </label>
-              <select formControlName="propertyType" class="select select-bordered w-full">
-                <option [ngValue]="null">All Types</option>
+              <select formControlName="propertyType" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                <option [ngValue]="null">{{ 'properties.search.allTypes' | translate }}</option>
                 <option *ngFor="let type of propertyTypes" [value]="type">
-                  {{ propertyService.formatPropertyType(type, currentLanguage) }}
+                  {{ type | translateEnum:'propertyType' }}
                 </option>
               </select>
             </div>
 
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Listing Type
+                {{ 'properties.form.listingType' | translate }}
               </label>
-              <select formControlName="listingType" class="select select-bordered w-full">
-                <option [ngValue]="null">All Listing Types</option>
+              <select formControlName="listingType" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                <option [ngValue]="null">{{ 'properties.search.allListingTypes' | translate }}</option>
                 <option *ngFor="let type of listingTypes" [value]="type">
-                  {{ propertyService.formatListingType(type, currentLanguage) }}
+                  {{ type | translateEnum:'listingType' }}
                 </option>
               </select>
             </div>
@@ -65,25 +66,25 @@ import { PropertyService, Property, PagedResponse, PropertySearchFilter, Propert
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Status
+                {{ 'properties.form.status' | translate }}
               </label>
-              <select formControlName="status" class="select select-bordered w-full">
-                <option [ngValue]="null">All Statuses</option>
+              <select formControlName="status" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                <option [ngValue]="null">{{ 'properties.search.allStatuses' | translate }}</option>
                 <option *ngFor="let status of propertyStatuses" [value]="status">
-                  {{ propertyService.formatPropertyStatus(status, currentLanguage) }}
+                  {{ status | translateEnum:'propertyStatus' }}
                 </option>
               </select>
             </div>
 
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                City
+                {{ 'properties.search.city' | translate }}
               </label>
               <input
                 type="text"
                 formControlName="city"
-                class="input input-bordered w-full"
-                placeholder="Enter city name..."
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                [placeholder]="'properties.search.cityPlaceholder' | translate"
               />
             </div>
           </div>
@@ -91,21 +92,21 @@ import { PropertyService, Property, PagedResponse, PropertySearchFilter, Propert
           <!-- Price Range -->
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Price Range
+              {{ 'properties.search.priceRange' | translate }}
             </label>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
                 type="number"
                 formControlName="minPrice"
-                class="input input-bordered w-full"
-                placeholder="Min Price"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                [placeholder]="'properties.search.minPrice' | translate"
                 min="0"
               />
               <input
                 type="number"
                 formControlName="maxPrice"
-                class="input input-bordered w-full"
-                placeholder="Max Price"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                [placeholder]="'properties.search.maxPrice' | translate"
                 min="0"
               />
             </div>
@@ -114,21 +115,21 @@ import { PropertyService, Property, PagedResponse, PropertySearchFilter, Propert
           <!-- Living Area Range -->
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Living Area (sqm)
+              {{ 'properties.search.livingArea' | translate }}
             </label>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
                 type="number"
                 formControlName="minLivingArea"
-                class="input input-bordered w-full"
-                placeholder="Min Area"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                [placeholder]="'properties.search.minArea' | translate"
                 min="0"
               />
               <input
                 type="number"
                 formControlName="maxLivingArea"
-                class="input input-bordered w-full"
-                placeholder="Max Area"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                [placeholder]="'properties.search.maxArea' | translate"
                 min="0"
               />
             </div>
@@ -137,22 +138,22 @@ import { PropertyService, Property, PagedResponse, PropertySearchFilter, Propert
           <!-- Room Range -->
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Number of Rooms
+              {{ 'properties.search.numberOfRooms' | translate }}
             </label>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
                 type="number"
                 formControlName="minRooms"
-                class="input input-bordered w-full"
-                placeholder="Min Rooms"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                [placeholder]="'properties.search.minRooms' | translate"
                 min="0"
                 step="0.5"
               />
               <input
                 type="number"
                 formControlName="maxRooms"
-                class="input input-bordered w-full"
-                placeholder="Max Rooms"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                [placeholder]="'properties.search.maxRooms' | translate"
                 min="0"
                 step="0.5"
               />
@@ -162,43 +163,43 @@ import { PropertyService, Property, PagedResponse, PropertySearchFilter, Propert
           <!-- Features -->
           <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Features
+              {{ 'properties.search.features' | translate }}
             </label>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
               <label class="flex items-center">
-                <input type="checkbox" formControlName="hasElevator" class="checkbox checkbox-primary mr-2" />
-                <span class="text-sm">Elevator</span>
+                <input type="checkbox" formControlName="hasElevator" class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 mr-2" />
+                <span class="text-sm">{{ 'properties.search.elevator' | translate }}</span>
               </label>
               <label class="flex items-center">
-                <input type="checkbox" formControlName="hasBalcony" class="checkbox checkbox-primary mr-2" />
-                <span class="text-sm">Balcony</span>
+                <input type="checkbox" formControlName="hasBalcony" class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 mr-2" />
+                <span class="text-sm">{{ 'properties.search.balcony' | translate }}</span>
               </label>
               <label class="flex items-center">
-                <input type="checkbox" formControlName="hasGarden" class="checkbox checkbox-primary mr-2" />
-                <span class="text-sm">Garden</span>
+                <input type="checkbox" formControlName="hasGarden" class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 mr-2" />
+                <span class="text-sm">{{ 'properties.search.garden' | translate }}</span>
               </label>
               <label class="flex items-center">
-                <input type="checkbox" formControlName="hasParking" class="checkbox checkbox-primary mr-2" />
-                <span class="text-sm">Parking</span>
+                <input type="checkbox" formControlName="hasParking" class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 mr-2" />
+                <span class="text-sm">{{ 'properties.search.parking' | translate }}</span>
               </label>
               <label class="flex items-center">
-                <input type="checkbox" formControlName="petsAllowed" class="checkbox checkbox-primary mr-2" />
-                <span class="text-sm">Pets Allowed</span>
+                <input type="checkbox" formControlName="petsAllowed" class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 mr-2" />
+                <span class="text-sm">{{ 'properties.search.petsAllowed' | translate }}</span>
               </label>
             </div>
           </div>
 
           <!-- Actions -->
           <div class="flex gap-4">
-            <button type="submit" class="btn btn-primary" [disabled]="isLoading">
-              <span *ngIf="isLoading" class="loading loading-spinner"></span>
-              Search Properties
+            <button type="submit" class="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" [disabled]="isLoading">
+              <span *ngIf="isLoading" class="inline-block animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
+              {{ 'properties.search.searchButton' | translate }}
             </button>
-            <button type="button" (click)="onReset()" class="btn btn-ghost">
-              Reset Filters
+            <button type="button" (click)="onReset()" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-medium rounded-lg transition-colors">
+              {{ 'common.reset' | translate }}
             </button>
-            <a routerLink="/properties" class="btn btn-ghost">
-              Back to List
+            <a routerLink="/properties" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-medium rounded-lg transition-colors">
+              {{ 'common.backToList' | translate }}
             </a>
           </div>
         </form>
@@ -208,49 +209,59 @@ import { PropertyService, Property, PagedResponse, PropertySearchFilter, Propert
       <div *ngIf="searchPerformed" class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-            Search Results ({{ totalElements }} properties)
+            {{ 'properties.search.results' | translate }} ({{ totalElements }} {{ 'properties.title' | translate | lowercase }})
           </h2>
         </div>
 
         <!-- Loading State -->
         <div *ngIf="isLoading" class="text-center py-12">
-          <div class="loading loading-spinner loading-lg"></div>
-          <p class="mt-4 text-gray-600 dark:text-gray-400">Searching properties...</p>
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <p class="mt-4 text-gray-600 dark:text-gray-400">{{ 'properties.search.searching' | translate }}</p>
         </div>
 
         <!-- No Results -->
         <div *ngIf="!isLoading && properties.length === 0" class="text-center py-12">
-          <p class="text-gray-600 dark:text-gray-400">No properties found matching your criteria.</p>
+          <p class="text-gray-600 dark:text-gray-400">{{ 'properties.search.noResults' | translate }}</p>
         </div>
 
         <!-- Results Grid -->
         <div *ngIf="!isLoading && properties.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div *ngFor="let property of properties" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
-            <figure class="h-48">
-              <img [src]="getPrimaryImage(property)" [alt]="property.title" class="w-full h-full object-cover" />
-            </figure>
-            <div class="card-body">
-              <h3 class="card-title text-lg">{{ property.title }}</h3>
-              <p class="text-sm text-gray-600 dark:text-gray-400">{{ property.addressCity }}</p>
-              <div class="flex gap-2 my-2">
-                <span class="badge badge-sm" [ngClass]="getListingTypeBadgeClass(property.listingType)">
-                  {{ propertyService.formatListingType(property.listingType, currentLanguage) }}
+          <div *ngFor="let property of properties; trackBy: trackById" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-shadow overflow-hidden cursor-pointer" [routerLink]="['/properties', property.id]">
+            <div class="h-48 bg-gray-200 dark:bg-gray-700 relative">
+              <img *ngIf="getPrimaryImage(property)" [src]="getPrimaryImage(property)" [alt]="property.title" class="w-full h-full object-cover" />
+              <!-- Default House Icon when no image -->
+              <div *ngIf="!getPrimaryImage(property)" class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800">
+                <svg class="w-20 h-20 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="p-4">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">{{ property.title }}</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                {{ property.addressCity }}, {{ property.addressPostalCode }}
+              </p>
+              <div class="flex gap-2 mb-3">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [ngClass]="getListingTypeBadgeClass(property.listingType)">
+                  {{ property.listingType | translateEnum:'listingType' }}
                 </span>
-                <span class="badge badge-sm" [ngClass]="getStatusBadgeClass(property.status)">
-                  {{ propertyService.formatPropertyStatus(property.status || propertyStatuses[0], currentLanguage) }}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [ngClass]="getStatusBadgeClass(property.status)">
+                  {{ (property.status || propertyStatuses[0]) | translateEnum:'propertyStatus' }}
                 </span>
               </div>
-              <div class="flex justify-between items-center text-sm">
-                <span>{{ property.rooms }} rooms</span>
-                <span>{{ property.livingAreaSqm }} m²</span>
+              <div class="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400 mb-3">
+                <span *ngIf="property.rooms">{{ property.rooms }} {{ 'common.rooms' | translate }}</span>
+                <span *ngIf="property.livingAreaSqm">{{ property.livingAreaSqm }} m²</span>
               </div>
-              <div class="card-actions justify-between items-center mt-4">
-                <span class="text-xl font-bold text-primary">
+              <div class="flex justify-between items-center pt-3 border-t border-gray-200 dark:border-gray-700">
+                <span class="text-xl font-bold text-primary-600 dark:text-primary-400">
                   {{ propertyService.formatPrice(property.price, property.listingType) }}
                 </span>
-                <a [routerLink]="['/properties', property.id]" class="btn btn-primary btn-sm">
-                  View Details
-                </a>
               </div>
             </div>
           </div>
@@ -258,18 +269,37 @@ import { PropertyService, Property, PagedResponse, PropertySearchFilter, Propert
 
         <!-- Pagination -->
         <div *ngIf="!isLoading && totalPages > 1" class="flex justify-center mt-6">
-          <div class="join">
-            <button class="join-item btn" (click)="previousPage()" [disabled]="currentPage === 0">«</button>
+          <nav class="inline-flex rounded-md shadow-sm -space-x-px">
+            <button
+              (click)="previousPage()"
+              [disabled]="currentPage === 0"
+              class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+              <span class="sr-only">{{ 'common.previous' | translate }}</span>
+              <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+              </svg>
+            </button>
             <button
               *ngFor="let page of getPageNumbers()"
-              class="join-item btn"
-              [class.btn-active]="page === currentPage"
               (click)="goToPage(page)"
-            >
+              [class.bg-primary-50]="page === currentPage"
+              [class.border-primary-500]="page === currentPage"
+              [class.text-primary-600]="page === currentPage"
+              [class.dark:bg-primary-900]="page === currentPage"
+              [class.dark:text-primary-300]="page === currentPage"
+              class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
               {{ page + 1 }}
             </button>
-            <button class="join-item btn" (click)="nextPage()" [disabled]="currentPage >= totalPages - 1">»</button>
-          </div>
+            <button
+              (click)="nextPage()"
+              [disabled]="currentPage >= totalPages - 1"
+              class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+              <span class="sr-only">{{ 'common.next' | translate }}</span>
+              <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+              </svg>
+            </button>
+          </nav>
         </div>
       </div>
     </div>
@@ -386,12 +416,12 @@ export class PropertySearchComponent implements OnInit {
     });
   }
 
-  getPrimaryImage(property: Property): string {
+  getPrimaryImage(property: Property): string | null {
     if (property.images && property.images.length > 0) {
       const primaryImage = property.images.find(img => img.isPrimary);
-      return primaryImage?.imageUrl || property.images[0]?.imageUrl || '/assets/placeholder-property.jpg';
+      return primaryImage?.imageUrl || property.images[0]?.imageUrl || null;
     }
-    return '/assets/placeholder-property.jpg';
+    return null;
   }
 
   getStatusBadgeClass(status?: PropertyStatus): string {
@@ -451,5 +481,12 @@ export class PropertySearchComponent implements OnInit {
     }
 
     return pages;
+  }
+
+  /**
+   * TrackBy function for *ngFor performance optimization
+   */
+  trackById(index: number, item: Property): string | undefined {
+    return item.id;
   }
 }

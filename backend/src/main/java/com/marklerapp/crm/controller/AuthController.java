@@ -2,13 +2,18 @@ package com.marklerapp.crm.controller;
 
 import com.marklerapp.crm.dto.AuthRequest;
 import com.marklerapp.crm.dto.AuthResponse;
+import com.marklerapp.crm.dto.ForgotPasswordRequest;
 import com.marklerapp.crm.dto.RegisterRequest;
+import com.marklerapp.crm.dto.ResetPasswordRequest;
+import com.marklerapp.crm.dto.VerifyResetTokenResponse;
 import com.marklerapp.crm.security.CustomUserDetails;
 import com.marklerapp.crm.service.AuthService;
+import com.marklerapp.crm.service.PasswordResetService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +33,7 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final PasswordResetService passwordResetService;
 
     /**
      * User login
@@ -121,6 +127,65 @@ public class AuthController {
         Map<String, String> response = Map.of(
                 "message", "Logged out successfully. Please remove the token from client storage."
         );
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Request password reset
+     */
+    @PostMapping("/forgot-password")
+    @Operation(
+        summary = "Request password reset",
+        description = "Send password reset email to agent. Always returns success to prevent email enumeration."
+    )
+    public ResponseEntity<Map<String, String>> forgotPassword(
+            @Parameter(description = "Email address for password reset")
+            @Valid @RequestBody ForgotPasswordRequest request,
+            HttpServletRequest httpRequest) {
+
+        String ipAddress = httpRequest.getRemoteAddr();
+        log.info("Password reset requested for email: {} from IP: {}", request.getEmail(), ipAddress);
+
+        String message = passwordResetService.requestPasswordReset(request.getEmail(), ipAddress);
+
+        return ResponseEntity.ok(Map.of("message", message));
+    }
+
+    /**
+     * Reset password with token
+     */
+    @PostMapping("/reset-password")
+    @Operation(
+        summary = "Reset password",
+        description = "Reset agent password using valid reset token"
+    )
+    public ResponseEntity<Map<String, String>> resetPassword(
+            @Parameter(description = "Reset token and new password")
+            @Valid @RequestBody ResetPasswordRequest request) {
+
+        log.info("Password reset attempt with token");
+
+        String message = passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
+
+        return ResponseEntity.ok(Map.of("message", message));
+    }
+
+    /**
+     * Verify reset token validity
+     */
+    @GetMapping("/verify-reset-token")
+    @Operation(
+        summary = "Verify reset token",
+        description = "Check if password reset token is valid and not expired"
+    )
+    public ResponseEntity<VerifyResetTokenResponse> verifyResetToken(
+            @Parameter(description = "Reset token to verify")
+            @RequestParam String token) {
+
+        log.debug("Verifying reset token");
+
+        VerifyResetTokenResponse response = passwordResetService.validateResetToken(token);
 
         return ResponseEntity.ok(response);
     }

@@ -1,8 +1,11 @@
 package com.marklerapp.crm.service;
 
 import com.marklerapp.crm.config.GlobalExceptionHandler.ResourceNotFoundException;
+import com.marklerapp.crm.constants.ValidationConstants;
 import com.marklerapp.crm.dto.*;
 import com.marklerapp.crm.entity.*;
+import com.marklerapp.crm.mapper.PropertyMapper;
+import com.marklerapp.crm.mapper.PropertyImageMapper;
 import com.marklerapp.crm.repository.AgentRepository;
 import com.marklerapp.crm.repository.PropertyRepository;
 import com.marklerapp.crm.repository.PropertyImageRepository;
@@ -52,6 +55,9 @@ public class PropertyService {
     private final PropertyRepository propertyRepository;
     private final PropertyImageRepository propertyImageRepository;
     private final AgentRepository agentRepository;
+    private final PropertyMapper propertyMapper;
+    private final PropertyImageMapper propertyImageMapper;
+    private final OwnershipValidator ownershipValidator;
 
     /**
      * Create a new property with GDPR validation.
@@ -71,7 +77,7 @@ public class PropertyService {
 
         // Validate GDPR consent
         if (!Boolean.TRUE.equals(request.getDataProcessingConsent())) {
-            throw new IllegalArgumentException("Data processing consent is required to create a property");
+            throw new IllegalArgumentException(ValidationConstants.GDPR_CONSENT_REQUIRED_MESSAGE);
         }
 
         // Convert request to entity
@@ -92,7 +98,7 @@ public class PropertyService {
         Property savedProperty = propertyRepository.save(property);
         log.info("Created property: {} for agent: {}", savedProperty.getId(), agentId);
 
-        return convertToDto(savedProperty);
+        return propertyMapper.toDto(savedProperty);
     }
 
     /**
@@ -109,7 +115,10 @@ public class PropertyService {
         log.debug("Updating property: {} for agent: {}", propertyId, agentId);
 
         // Fetch and validate property
-        Property property = getPropertyByIdAndValidateOwnership(propertyId, agentId);
+        Property property = propertyRepository.findById(propertyId)
+            .orElseThrow(() -> new ResourceNotFoundException("Property", "id", propertyId));
+
+        ownershipValidator.validatePropertyOwnership(property, agentId);
 
         // Update fields from request (only non-null values)
         updatePropertyFields(property, request);
@@ -127,7 +136,7 @@ public class PropertyService {
         Property updatedProperty = propertyRepository.save(property);
         log.info("Updated property: {} for agent: {}", propertyId, agentId);
 
-        return convertToDto(updatedProperty);
+        return propertyMapper.toDto(updatedProperty);
     }
 
     /**
@@ -142,9 +151,12 @@ public class PropertyService {
     public PropertyDto getProperty(UUID propertyId, UUID agentId) {
         log.debug("Getting property: {} for agent: {}", propertyId, agentId);
 
-        Property property = getPropertyByIdAndValidateOwnership(propertyId, agentId);
+        Property property = propertyRepository.findById(propertyId)
+            .orElseThrow(() -> new ResourceNotFoundException("Property", "id", propertyId));
 
-        return convertToDtoWithImages(property);
+        ownershipValidator.validatePropertyOwnership(property, agentId);
+
+        return propertyMapper.toDto(property);
     }
 
     /**
@@ -162,7 +174,7 @@ public class PropertyService {
         Agent agent = getAgentById(agentId);
         Page<Property> properties = propertyRepository.findByAgent(agent, pageable);
 
-        return properties.map(this::convertToDto);
+        return properties.map(propertyMapper::toDto);
     }
 
     /**
@@ -177,7 +189,10 @@ public class PropertyService {
     public void deleteProperty(UUID propertyId, UUID agentId) {
         log.debug("Deleting property: {} for agent: {}", propertyId, agentId);
 
-        Property property = getPropertyByIdAndValidateOwnership(propertyId, agentId);
+        Property property = propertyRepository.findById(propertyId)
+            .orElseThrow(() -> new ResourceNotFoundException("Property", "id", propertyId));
+
+        ownershipValidator.validatePropertyOwnership(property, agentId);
 
         // Delete associated images (cascade will handle this, but explicit for clarity)
         propertyImageRepository.deleteByProperty(property);
@@ -217,7 +232,7 @@ public class PropertyService {
             pageable
         );
 
-        return properties.map(this::convertToDto);
+        return properties.map(propertyMapper::toDto);
     }
 
     /**
@@ -236,7 +251,7 @@ public class PropertyService {
         Agent agent = getAgentById(agentId);
         Page<Property> properties = propertyRepository.findByAgentAndStatus(agent, status, pageable);
 
-        return properties.map(this::convertToDto);
+        return properties.map(propertyMapper::toDto);
     }
 
     /**
@@ -255,7 +270,7 @@ public class PropertyService {
         Agent agent = getAgentById(agentId);
         Page<Property> properties = propertyRepository.findByAgentAndPropertyType(agent, propertyType, pageable);
 
-        return properties.map(this::convertToDto);
+        return properties.map(propertyMapper::toDto);
     }
 
     /**
@@ -274,7 +289,7 @@ public class PropertyService {
         Agent agent = getAgentById(agentId);
         Page<Property> properties = propertyRepository.findByAgentAndAddressCity(agent, city, pageable);
 
-        return properties.map(this::convertToDto);
+        return properties.map(propertyMapper::toDto);
     }
 
     /**
@@ -295,7 +310,7 @@ public class PropertyService {
         Agent agent = getAgentById(agentId);
         Page<Property> properties = propertyRepository.findByAgentAndPriceRange(agent, minPrice, maxPrice, pageable);
 
-        return properties.map(this::convertToDto);
+        return properties.map(propertyMapper::toDto);
     }
 
     /**
@@ -314,7 +329,7 @@ public class PropertyService {
         Agent agent = getAgentById(agentId);
         Page<Property> properties = propertyRepository.findByAgentAndListingType(agent, listingType, pageable);
 
-        return properties.map(this::convertToDto);
+        return properties.map(propertyMapper::toDto);
     }
 
     /**
@@ -366,7 +381,7 @@ public class PropertyService {
             pageable
         );
 
-        return properties.map(this::convertToDto);
+        return properties.map(propertyMapper::toDto);
     }
 
     /**
@@ -387,7 +402,7 @@ public class PropertyService {
         List<Property> properties = propertyRepository.findRecentPropertiesByAgent(agent, since);
 
         return properties.stream()
-            .map(this::convertToDto)
+            .map(propertyMapper::toDto)
             .collect(Collectors.toList());
     }
 
@@ -407,7 +422,7 @@ public class PropertyService {
         Agent agent = getAgentById(agentId);
         Page<Property> properties = propertyRepository.findAvailableProperties(agent, availableFrom, pageable);
 
-        return properties.map(this::convertToDto);
+        return properties.map(propertyMapper::toDto);
     }
 
     /**
@@ -484,7 +499,7 @@ public class PropertyService {
         Agent agent = getAgentById(agentId);
         Page<Property> properties = propertyRepository.findByAgentAndSearchTerm(agent, searchTerm, pageable);
 
-        return properties.map(this::convertToDto);
+        return properties.map(propertyMapper::toDto);
     }
 
     // ========================================
@@ -503,27 +518,6 @@ public class PropertyService {
             .orElseThrow(() -> new ResourceNotFoundException("Agent", "id", agentId));
     }
 
-    /**
-     * Get property by ID and validate agent ownership.
-     *
-     * @param propertyId the property ID
-     * @param agentId the agent ID
-     * @return the property entity
-     * @throws ResourceNotFoundException if property is not found or access denied
-     */
-    private Property getPropertyByIdAndValidateOwnership(UUID propertyId, UUID agentId) {
-        Property property = propertyRepository.findById(propertyId)
-            .orElseThrow(() -> new ResourceNotFoundException("Property", "id", propertyId));
-
-        // Validate ownership
-        if (!property.getAgent().getId().equals(agentId)) {
-            log.warn("Agent {} attempted to access property {} owned by agent {}",
-                agentId, propertyId, property.getAgent().getId());
-            throw new ResourceNotFoundException("Property not found or access denied");
-        }
-
-        return property;
-    }
 
     /**
      * Convert CreatePropertyRequest to Property entity.
@@ -542,7 +536,7 @@ public class PropertyService {
             .addressCity(request.getAddressCity())
             .addressPostalCode(request.getAddressPostalCode())
             .addressState(request.getAddressState())
-            .addressCountry("Germany")
+            .addressCountry(ValidationConstants.DEFAULT_ADDRESS_COUNTRY)
             .addressDistrict(request.getAddressDistrict())
             .livingAreaSqm(request.getLivingAreaSqm())
             .totalAreaSqm(request.getTotalAreaSqm())
@@ -651,153 +645,6 @@ public class PropertyService {
         if (request.getContactEmail() != null) property.setContactEmail(request.getContactEmail());
         if (request.getVirtualTourUrl() != null) property.setVirtualTourUrl(request.getVirtualTourUrl());
         if (request.getNotes() != null) property.setNotes(request.getNotes());
-    }
-
-    /**
-     * Convert Property entity to DTO.
-     *
-     * @param property the property entity
-     * @return the property DTO
-     */
-    public PropertyDto convertToDto(Property property) {
-        List<PropertyImageDto> imageDtos = null;
-        if (property.getImages() != null) {
-            imageDtos = property.getImages().stream()
-                .map(this::convertImageToDto)
-                .collect(Collectors.toList());
-        }
-
-        PropertyDto dto = PropertyDto.builder()
-            .id(property.getId())
-            .agentId(property.getAgent().getId())
-            .title(property.getTitle())
-            .description(property.getDescription())
-            .propertyType(property.getPropertyType())
-            .listingType(property.getListingType())
-            .status(property.getStatus())
-            .addressStreet(property.getAddressStreet())
-            .addressHouseNumber(property.getAddressHouseNumber())
-            .addressCity(property.getAddressCity())
-            .addressPostalCode(property.getAddressPostalCode())
-            .addressState(property.getAddressState())
-            .addressCountry(property.getAddressCountry())
-            .addressDistrict(property.getAddressDistrict())
-            .livingAreaSqm(property.getLivingAreaSqm())
-            .totalAreaSqm(property.getTotalAreaSqm())
-            .plotAreaSqm(property.getPlotAreaSqm())
-            .rooms(property.getRooms())
-            .bedrooms(property.getBedrooms())
-            .bathrooms(property.getBathrooms())
-            .floors(property.getFloors())
-            .floorNumber(property.getFloorNumber())
-            .constructionYear(property.getConstructionYear())
-            .lastRenovationYear(property.getLastRenovationYear())
-            .price(property.getPrice())
-            .pricePerSqm(property.getPricePerSqm())
-            .additionalCosts(property.getAdditionalCosts())
-            .heatingCosts(property.getHeatingCosts())
-            .commission(property.getCommission())
-            .hasElevator(property.getHasElevator())
-            .hasBalcony(property.getHasBalcony())
-            .hasTerrace(property.getHasTerrace())
-            .hasGarden(property.getHasGarden())
-            .hasGarage(property.getHasGarage())
-            .hasParking(property.getHasParking())
-            .hasBasement(property.getHasBasement())
-            .hasAttic(property.getHasAttic())
-            .isBarrierFree(property.getIsBarrierFree())
-            .petsAllowed(property.getPetsAllowed())
-            .furnished(property.getFurnished())
-            .energyEfficiencyClass(property.getEnergyEfficiencyClass())
-            .energyConsumptionKwh(property.getEnergyConsumptionKwh())
-            .heatingType(property.getHeatingType())
-            .availableFrom(property.getAvailableFrom())
-            .contactPhone(property.getContactPhone())
-            .contactEmail(property.getContactEmail())
-            .virtualTourUrl(property.getVirtualTourUrl())
-            .notes(property.getNotes())
-            .dataProcessingConsent(property.getDataProcessingConsent())
-            .consentDate(property.getConsentDate())
-            .images(imageDtos)
-            .exposeFileName(property.getExposeFileName())
-            .exposeFileSize(property.getExposeFileSize())
-            .exposeUploadedAt(property.getExposeUploadedAt())
-            .createdAt(property.getCreatedAt())
-            .updatedAt(property.getUpdatedAt())
-            .build();
-
-        // Set computed fields
-        dto.setFormattedAddress(property.getFormattedAddress());
-        dto.setCalculatedPricePerSqm(property.calculatePricePerSqm());
-
-        return dto;
-    }
-
-    /**
-     * Convert Property entity to DTO with images explicitly loaded.
-     *
-     * @param property the property entity
-     * @return the property DTO with images
-     */
-    private PropertyDto convertToDtoWithImages(Property property) {
-        PropertyDto dto = convertToDto(property);
-
-        // Load images explicitly if not already loaded
-        if (dto.getImages() == null || dto.getImages().isEmpty()) {
-            List<PropertyImage> images = propertyImageRepository.findByPropertyOrderBySortOrderAsc(property);
-            List<PropertyImageDto> imageDtos = images.stream()
-                .map(this::convertImageToDto)
-                .collect(Collectors.toList());
-            dto.setImages(imageDtos);
-        }
-
-        return dto;
-    }
-
-    /**
-     * Convert PropertyImage entity to DTO.
-     *
-     * @param image the property image entity
-     * @return the property image DTO
-     */
-    private PropertyImageDto convertImageToDto(PropertyImage image) {
-        PropertyImageDto dto = PropertyImageDto.builder()
-            .id(image.getId())
-            .propertyId(image.getProperty().getId())
-            .filename(image.getFilename())
-            .originalFilename(image.getOriginalFilename())
-            .filePath(image.getFilePath())
-            .contentType(image.getContentType())
-            .fileSize(image.getFileSize())
-            .title(image.getTitle())
-            .description(image.getDescription())
-            .altText(image.getAltText())
-            .width(image.getWidth())
-            .height(image.getHeight())
-            .isPrimary(image.getIsPrimary())
-            .sortOrder(image.getSortOrder())
-            .imageType(image.getImageType())
-            .createdAt(image.getCreatedAt())
-            .updatedAt(image.getUpdatedAt())
-            .build();
-
-        // Set computed fields
-        dto.setFileExtension(image.getFileExtension());
-        dto.setFormattedFileSize(image.getFormattedFileSize());
-        dto.setAspectRatio(image.getAspectRatio());
-
-        // Set Base64 data URLs for direct display in browser
-        if (image.getImageData() != null) {
-            String dataUrl = "data:" + image.getContentType() + ";base64," + image.getImageData();
-            dto.setImageUrl(dataUrl);
-        }
-
-        if (image.getThumbnailData() != null) {
-            String thumbnailDataUrl = "data:" + image.getContentType() + ";base64," + image.getThumbnailData();
-            dto.setThumbnailUrl(thumbnailDataUrl);
-        }
-
-        return dto;
     }
 
     // ========================================
@@ -932,9 +779,7 @@ public class PropertyService {
             .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + propertyId));
 
         // Verify agent ownership
-        if (!property.getAgent().getId().equals(agentId)) {
-            throw new IllegalArgumentException("Property does not belong to the specified agent");
-        }
+        ownershipValidator.validatePropertyOwnership(property, agentId);
 
         // Validate PDF
         validatePdfExpose(exposeDto);
@@ -968,9 +813,7 @@ public class PropertyService {
             .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + propertyId));
 
         // Verify agent ownership
-        if (!property.getAgent().getId().equals(agentId)) {
-            throw new IllegalArgumentException("Property does not belong to the specified agent");
-        }
+        ownershipValidator.validatePropertyOwnership(property, agentId);
 
         // Check if expose exists
         if (property.getExposeFileName() == null || property.getExposeFileData() == null) {
@@ -997,9 +840,7 @@ public class PropertyService {
             .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + propertyId));
 
         // Verify agent ownership
-        if (!property.getAgent().getId().equals(agentId)) {
-            throw new IllegalArgumentException("Property does not belong to the specified agent");
-        }
+        ownershipValidator.validatePropertyOwnership(property, agentId);
 
         // Clear expose data
         property.setExposeFileName(null);
@@ -1021,9 +862,7 @@ public class PropertyService {
             .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + propertyId));
 
         // Verify agent ownership
-        if (!property.getAgent().getId().equals(agentId)) {
-            throw new IllegalArgumentException("Property does not belong to the specified agent");
-        }
+        ownershipValidator.validatePropertyOwnership(property, agentId);
 
         return property.getExposeFileName() != null && property.getExposeFileData() != null;
     }
@@ -1033,19 +872,18 @@ public class PropertyService {
      */
     private void validatePdfExpose(PropertyExposeDto exposeDto) {
         // Validate filename
-        if (exposeDto.getFileName() == null || !exposeDto.getFileName().toLowerCase().endsWith(".pdf")) {
-            throw new IllegalArgumentException("File must be a PDF");
+        if (exposeDto.getFileName() == null || !exposeDto.getFileName().toLowerCase().endsWith(ValidationConstants.PDF_EXTENSION)) {
+            throw new IllegalArgumentException(ValidationConstants.INVALID_PDF_MESSAGE);
         }
 
         // Validate file size (max 50MB)
-        long maxSize = 52428800L; // 50MB in bytes
-        if (exposeDto.getFileSize() == null || exposeDto.getFileSize() > maxSize) {
-            throw new IllegalArgumentException("File size must not exceed 50MB");
+        if (exposeDto.getFileSize() == null || exposeDto.getFileSize() > ValidationConstants.MAX_EXPOSE_SIZE_BYTES) {
+            throw new IllegalArgumentException(ValidationConstants.PDF_SIZE_LIMIT_MESSAGE);
         }
 
         // Validate file data
         if (exposeDto.getFileData() == null || exposeDto.getFileData().trim().isEmpty()) {
-            throw new IllegalArgumentException("File data is required");
+            throw new IllegalArgumentException(ValidationConstants.FILE_DATA_REQUIRED_MESSAGE);
         }
 
         // Validate Base64 format
@@ -1053,21 +891,21 @@ public class PropertyService {
             // Try to decode to validate Base64 format
             java.util.Base64.getDecoder().decode(exposeDto.getFileData());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid file data format. Must be Base64 encoded.");
+            throw new IllegalArgumentException(ValidationConstants.INVALID_BASE64_FORMAT_MESSAGE);
         }
 
         // Validate PDF signature (first bytes should be %PDF)
         try {
             byte[] decodedBytes = java.util.Base64.getDecoder().decode(exposeDto.getFileData());
             if (decodedBytes.length < 4) {
-                throw new IllegalArgumentException("Invalid PDF file");
+                throw new IllegalArgumentException(ValidationConstants.INVALID_PDF_FILE_MESSAGE);
             }
             String header = new String(decodedBytes, 0, Math.min(4, decodedBytes.length));
             if (!header.startsWith("%PDF")) {
-                throw new IllegalArgumentException("Invalid PDF file format");
+                throw new IllegalArgumentException(ValidationConstants.INVALID_PDF_FORMAT_MESSAGE);
             }
         } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid PDF file: " + e.getMessage());
+            throw new IllegalArgumentException(ValidationConstants.INVALID_PDF_FILE_MESSAGE + ": " + e.getMessage());
         }
     }
 }

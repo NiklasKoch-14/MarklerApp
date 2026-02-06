@@ -137,12 +137,12 @@ export class PropertyListComponent implements OnInit {
     }
   }
 
-  getPrimaryImage(property: Property): string {
+  getPrimaryImage(property: Property): string | null {
     if (property.images && property.images.length > 0) {
       const primaryImage = property.images.find(img => img.isPrimary);
-      return primaryImage?.imageUrl || property.images[0]?.imageUrl || '/assets/placeholder-property.jpg';
+      return primaryImage?.imageUrl || property.images[0]?.imageUrl || null;
     }
-    return '/assets/placeholder-property.jpg';
+    return null;
   }
 
   getPageNumbers(): number[] {
@@ -198,5 +198,12 @@ export class PropertyListComponent implements OnInit {
         alert('Failed to download expose. Please try again.');
       }
     });
+  }
+
+  /**
+   * TrackBy function for *ngFor performance optimization
+   */
+  trackById(index: number, item: Property): string | undefined {
+    return item.id;
   }
 }

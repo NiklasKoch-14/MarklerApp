@@ -18,6 +18,13 @@ spring:
       hibernate:
         dialect: org.hibernate.community.dialect.SQLiteDialect
         format_sql: true
+        default_batch_fetch_size: 20
+        jdbc:
+          batch_size: 20
+          order_inserts: true
+          order_updates: true
+        query:
+          in_clause_parameter_padding: true
     defer-datasource-initialization: true
 
   sql:
@@ -36,6 +43,24 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
+  # Mail Configuration
+  # For production: use environment variables SPRING_MAIL_USERNAME and SPRING_MAIL_PASSWORD
+  # For development: add your Gmail credentials below
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: your-email@gmail.com  # TODO: Replace with your Gmail
+    password: your-app-password      # TODO: Replace with Gmail App Password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
   security:
     oauth2:
       resourceserver:
@@ -46,6 +71,16 @@ server:
   port: 8085
   servlet:
     context-path: /api/v1
+  compression:
+    enabled: true
+    mime-types:
+      - application/json
+      - application/xml
+      - text/html
+      - text/plain
+      - text/css
+      - application/javascript
+    min-response-size: 1024
 
 management:
   endpoints:
@@ -84,6 +119,11 @@ application:
   gdpr:
     data-retention-days: 1095  # 3 years
     export-format: JSON
+  mail:
+    from: your-email@gmail.com  # TODO: Replace with your Gmail (same as spring.mail.username)
+    from-name: MarklerApp CRM
+    reset-token-expiration-minutes: 15
+    base-url: http://localhost:4200
 
 # File Storage Configuration
 app:
@@ -111,6 +151,13 @@ app:
       compression-quality: 0.9
       max-width: 0  # 0 = no resizing
       max-height: 0  # 0 = no resizing
+  # Ollama AI Configuration
+  ollama:
+    enabled: ${OLLAMA_ENABLED:false}  # Disabled by default (requires Ollama container)
+    base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+    model: ${OLLAMA_MODEL:phi3:mini}
+    timeout: ${OLLAMA_TIMEOUT:120000}  # 2 minutes (120 seconds) for AI inference
+    max-tokens: 500  # Max tokens for summary generation
 
 ---
 spring:
@@ -129,6 +176,13 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_batch_fetch_size: 20
+        jdbc:
+          batch_size: 20
+          order_inserts: true
+          order_updates: true
+        query:
+          in_clause_parameter_padding: true
     defer-datasource-initialization: true
 
   sql:
@@ -143,6 +197,16 @@ spring:
 
 server:
   port: 8085
+  compression:
+    enabled: true
+    mime-types:
+      - application/json
+      - application/xml
+      - text/html
+      - text/plain
+      - text/css
+      - application/javascript
+    min-response-size: 1024
 
 logging:
   level:
@@ -177,10 +241,13 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_batch_fetch_size: 20
         jdbc:
           batch_size: 50
-        order_inserts: true
-        order_updates: true
+          order_inserts: true
+          order_updates: true
+        query:
+          in_clause_parameter_padding: true
 
   flyway:
     enabled: true

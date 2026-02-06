@@ -44,7 +44,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
             [disabled]="!hasClients"
             [appTooltip]="!hasClients ? ('call-notes.no-clients-tooltip' | translate) : ''"
             tooltipPosition="bottom"
-            class="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed">
+            class="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed">
             {{ 'call-notes.add-call-note' | translate }}
           </button>
         </div>
@@ -54,7 +54,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
       <div class="mt-4" *ngIf="clientId">
         <a
           [routerLink]="['/call-notes/client', clientId, 'summary']"
-          class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-900">
+          class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-900">
           {{ 'call-notes.view-summary' | translate }}
           <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -62,89 +62,9 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
         </a>
       </div>
 
-      <!-- Search and Filters -->
-      <div class="mt-6 bg-white shadow rounded-lg p-6" [formGroup]="searchForm">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <!-- Search Term -->
-          <div>
-            <label for="searchTerm" class="block text-sm font-medium text-gray-700">
-              {{ 'call-notes.search' | translate }}
-            </label>
-            <input
-              type="text"
-              id="searchTerm"
-              formControlName="searchTerm"
-              [placeholder]="'call-notes.search-placeholder' | translate"
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-          </div>
-
-          <!-- Call Type Filter -->
-          <div>
-            <label for="callType" class="block text-sm font-medium text-gray-700">
-              {{ 'call-notes.call-type' | translate }}
-            </label>
-            <select
-              id="callType"
-              formControlName="callType"
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-              <option value="">{{ 'common.all' | translate }}</option>
-              <option *ngFor="let option of callTypeOptions" [value]="option">
-                {{ option | translateEnum:'callType' }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Outcome Filter -->
-          <div>
-            <label for="outcome" class="block text-sm font-medium text-gray-700">
-              {{ 'call-notes.outcome' | translate }}
-            </label>
-            <select
-              id="outcome"
-              formControlName="outcome"
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-              <option value="">{{ 'common.all' | translate }}</option>
-              <option *ngFor="let option of outcomeOptions" [value]="option">
-                {{ option | translateEnum:'callOutcome' }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Follow-up Filter -->
-          <div>
-            <label for="followUpRequired" class="block text-sm font-medium text-gray-700">
-              {{ 'call-notes.follow-up' | translate }}
-            </label>
-            <select
-              id="followUpRequired"
-              formControlName="followUpRequired"
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-              <option value="">{{ 'common.all' | translate }}</option>
-              <option value="true">{{ 'call-notes.follow-up-required' | translate }}</option>
-              <option value="false">{{ 'call-notes.no-follow-up' | translate }}</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="mt-4 flex justify-end space-x-3">
-          <button
-            type="button"
-            (click)="clearFilters()"
-            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            {{ 'common.clear' | translate }}
-          </button>
-          <button
-            type="button"
-            (click)="applyFilters()"
-            class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            {{ 'common.search' | translate }}
-          </button>
-        </div>
-      </div>
-
       <!-- Loading State -->
       <div *ngIf="loading" class="mt-8 text-center">
-        <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+        <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
         <p class="mt-2 text-sm text-gray-500">{{ 'common.loading' | translate }}</p>
       </div>
 
@@ -163,7 +83,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
             [disabled]="!hasClients"
             [appTooltip]="!hasClients ? ('call-notes.no-clients-tooltip' | translate) : ''"
             tooltipPosition="bottom"
-            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
+            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
             {{ 'call-notes.add-first-note' | translate }}
           </button>
         </div>
@@ -173,7 +93,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
       <div *ngIf="!loading && callNotes.length > 0" class="mt-8">
         <div class="bg-white shadow overflow-hidden sm:rounded-md">
           <ul role="list" class="divide-y divide-gray-200">
-            <li *ngFor="let callNote of callNotes">
+            <li *ngFor="let callNote of callNotes; trackBy: trackById">
               <div class="px-4 py-4 sm:px-6 hover:bg-gray-50 cursor-pointer"
                    [routerLink]="['/call-notes', callNote.id]">
                 <div class="flex items-center justify-between">
@@ -199,17 +119,17 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
                         <span *ngIf="callNote.outcome"
                               [ngClass]="getOutcomeClass(callNote.outcome)"
                               class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium">
-                          {{ callNotesService.formatCallOutcome(callNote.outcome) }}
+                          {{ callNote.outcome | translateEnum:'callOutcome' }}
                         </span>
                       </div>
                       <div class="mt-1 flex items-center text-sm text-gray-500 dark:text-gray-400">
                         <p *ngIf="!clientId">{{ callNote.clientName }} • </p>
-                        <p>{{ callNotesService.formatCallType(callNote.callType) }}</p>
+                        <p>{{ callNote.callType | translateEnum:'callType' }}</p>
                         <span class="mx-2">•</span>
                         <time>{{ formatDate(callNote.callDate) }}</time>
                       </div>
                       <!-- Property Information -->
-                      <div *ngIf="callNote.propertyTitle" class="mt-1 flex items-center text-sm text-indigo-600 dark:text-indigo-400">
+                      <div *ngIf="callNote.propertyTitle" class="mt-1 flex items-center text-sm text-blue-600 dark:text-blue-400">
                         <svg class="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                         </svg>
@@ -280,7 +200,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
                   [disabled]="page === '...'"
                   (click)="page !== '...' && goToPage(+page - 1)"
                   [ngClass]="{
-                    'bg-indigo-50 border-indigo-500 text-indigo-600': +page - 1 === currentPage,
+                    'bg-blue-50 border-blue-500 text-blue-600': +page - 1 === currentPage,
                     'bg-white border-gray-300 text-gray-500 hover:bg-gray-50': +page - 1 !== currentPage && page !== '...',
                     'bg-white border-gray-300 text-gray-400 cursor-not-allowed': page === '...'
                   }"
@@ -580,5 +500,12 @@ export class CallNotesListComponent implements OnInit, OnDestroy {
       default:
         return 'bg-gray-100 text-gray-800';
     }
+  }
+
+  /**
+   * TrackBy function for *ngFor performance optimization
+   */
+  trackById(index: number, item: CallNoteSummary): string | undefined {
+    return item.id;
   }
 }

@@ -113,7 +113,7 @@
       <!-- Basic Information -->
       <div class="card">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Basic Information</h3>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.detail.basicInformation' | translate }}</h3>
         </div>
         <div class="card-body">
           <dl class="space-y-4">
@@ -150,12 +150,12 @@
       <!-- Location -->
       <div class="card">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Location</h3>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.detail.locationInfo' | translate }}</h3>
         </div>
         <div class="card-body">
           <dl class="space-y-4">
             <div>
-              <dt class="text-sm font-medium text-gray-500">Street Address</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.addressStreet' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">
                 {{ property.addressStreet }}
                 <span *ngIf="property.addressHouseNumber">{{ property.addressHouseNumber }}</span>
@@ -163,26 +163,26 @@
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <dt class="text-sm font-medium text-gray-500">City</dt>
+                <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.addressCity' | translate }}</dt>
                 <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.addressCity }}</dd>
               </div>
               <div>
-                <dt class="text-sm font-medium text-gray-500">Postal Code</dt>
+                <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.addressPostalCode' | translate }}</dt>
                 <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.addressPostalCode }}</dd>
               </div>
             </div>
             <div *ngIf="property.addressState" class="grid grid-cols-2 gap-4">
               <div>
-                <dt class="text-sm font-medium text-gray-500">State</dt>
+                <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.addressState' | translate }}</dt>
                 <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.addressState }}</dd>
               </div>
               <div>
-                <dt class="text-sm font-medium text-gray-500">Country</dt>
+                <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.addressCountry' | translate }}</dt>
                 <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.addressCountry }}</dd>
               </div>
             </div>
             <div *ngIf="property.addressDistrict">
-              <dt class="text-sm font-medium text-gray-500">District</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.addressDistrict' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.addressDistrict }}</dd>
             </div>
           </dl>
@@ -192,48 +192,48 @@
       <!-- Specifications -->
       <div class="card">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Specifications</h3>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.detail.specifications' | translate }}</h3>
         </div>
         <div class="card-body">
           <dl class="grid grid-cols-2 gap-4">
             <div *ngIf="property.livingAreaSqm">
-              <dt class="text-sm font-medium text-gray-500">Living Area</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.livingArea' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.livingAreaSqm }} m²</dd>
             </div>
             <div *ngIf="property.totalAreaSqm">
-              <dt class="text-sm font-medium text-gray-500">Total Area</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.totalArea' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.totalAreaSqm }} m²</dd>
             </div>
             <div *ngIf="property.plotAreaSqm">
-              <dt class="text-sm font-medium text-gray-500">Plot Area</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.plotArea' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.plotAreaSqm }} m²</dd>
             </div>
             <div *ngIf="property.rooms">
-              <dt class="text-sm font-medium text-gray-500">Rooms</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.rooms' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.rooms }}</dd>
             </div>
             <div *ngIf="property.bedrooms">
-              <dt class="text-sm font-medium text-gray-500">Bedrooms</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.bedrooms' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.bedrooms }}</dd>
             </div>
             <div *ngIf="property.bathrooms">
-              <dt class="text-sm font-medium text-gray-500">Bathrooms</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.bathrooms' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.bathrooms }}</dd>
             </div>
             <div *ngIf="property.floors">
-              <dt class="text-sm font-medium text-gray-500">Total Floors</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.floors' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.floors }}</dd>
             </div>
             <div *ngIf="property.floorNumber !== undefined">
-              <dt class="text-sm font-medium text-gray-500">Floor Number</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.floorNumber' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.floorNumber }}</dd>
             </div>
             <div *ngIf="property.constructionYear">
-              <dt class="text-sm font-medium text-gray-500">Construction Year</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.constructionYear' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.constructionYear }}</dd>
             </div>
             <div *ngIf="property.lastRenovationYear">
-              <dt class="text-sm font-medium text-gray-500">Last Renovation</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.renovationYear' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.lastRenovationYear }}</dd>
             </div>
           </dl>
@@ -243,36 +243,36 @@
       <!-- Financial Information -->
       <div class="card">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Financial Details</h3>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.detail.financialDetails' | translate }}</h3>
         </div>
         <div class="card-body">
           <dl class="space-y-4">
             <div *ngIf="property.price">
-              <dt class="text-sm font-medium text-gray-500">Price</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.price' | translate }}</dt>
               <dd class="mt-1 text-lg font-bold text-primary-600 dark:text-primary-400">
                 {{ propertyService.formatPrice(property.price, property.listingType) }}
               </dd>
             </div>
             <div *ngIf="property.pricePerSqm || property.calculatedPricePerSqm">
-              <dt class="text-sm font-medium text-gray-500">Price per m²</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.pricePerSqm' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">
                 {{ (property.pricePerSqm || property.calculatedPricePerSqm) | number:'1.2-2' }} EUR/m²
               </dd>
             </div>
             <div *ngIf="property.additionalCosts">
-              <dt class="text-sm font-medium text-gray-500">Additional Costs</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.additionalCosts' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">
                 {{ property.additionalCosts | number:'1.2-2' }} EUR/month
               </dd>
             </div>
             <div *ngIf="property.heatingCosts">
-              <dt class="text-sm font-medium text-gray-500">Heating Costs</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.heatingCosts' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">
                 {{ property.heatingCosts | number:'1.2-2' }} EUR/month
               </dd>
             </div>
             <div *ngIf="property.commission">
-              <dt class="text-sm font-medium text-gray-500">Commission</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.commission' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">
                 {{ property.commission | number:'1.2-2' }} EUR
               </dd>
@@ -284,7 +284,7 @@
       <!-- Features & Amenities -->
       <div class="card lg:col-span-2" *ngIf="hasFeatures()">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Features & Amenities</h3>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.detail.featuresAmenities' | translate }}</h3>
         </div>
         <div class="card-body">
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -292,67 +292,67 @@
               <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
               </svg>
-              <span class="text-sm text-gray-900 dark:text-white">Elevator</span>
+              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.hasElevator' | translate }}</span>
             </div>
             <div *ngIf="property.hasBalcony" class="flex items-center">
               <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
               </svg>
-              <span class="text-sm text-gray-900 dark:text-white">Balcony</span>
+              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.hasBalcony' | translate }}</span>
             </div>
             <div *ngIf="property.hasTerrace" class="flex items-center">
               <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
               </svg>
-              <span class="text-sm text-gray-900 dark:text-white">Terrace</span>
+              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.hasTerrace' | translate }}</span>
             </div>
             <div *ngIf="property.hasGarden" class="flex items-center">
               <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
               </svg>
-              <span class="text-sm text-gray-900 dark:text-white">Garden</span>
+              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.hasGarden' | translate }}</span>
             </div>
             <div *ngIf="property.hasGarage" class="flex items-center">
               <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
               </svg>
-              <span class="text-sm text-gray-900 dark:text-white">Garage</span>
+              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.hasGarage' | translate }}</span>
             </div>
             <div *ngIf="property.hasParking" class="flex items-center">
               <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
               </svg>
-              <span class="text-sm text-gray-900 dark:text-white">Parking</span>
+              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.hasParking' | translate }}</span>
             </div>
             <div *ngIf="property.hasBasement" class="flex items-center">
               <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
               </svg>
-              <span class="text-sm text-gray-900 dark:text-white">Basement</span>
+              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.hasBasement' | translate }}</span>
             </div>
             <div *ngIf="property.hasAttic" class="flex items-center">
               <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
               </svg>
-              <span class="text-sm text-gray-900 dark:text-white">Attic</span>
+              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.hasAttic' | translate }}</span>
             </div>
             <div *ngIf="property.isBarrierFree" class="flex items-center">
               <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
               </svg>
-              <span class="text-sm text-gray-900 dark:text-white">Barrier Free</span>
+              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.isBarrierFree' | translate }}</span>
             </div>
             <div *ngIf="property.petsAllowed" class="flex items-center">
               <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
               </svg>
-              <span class="text-sm text-gray-900 dark:text-white">Pets Allowed</span>
+              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.petsAllowed' | translate }}</span>
             </div>
             <div *ngIf="property.furnished" class="flex items-center">
               <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
               </svg>
-              <span class="text-sm text-gray-900 dark:text-white">Furnished</span>
+              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.furnished' | translate }}</span>
             </div>
           </div>
         </div>
@@ -361,12 +361,12 @@
       <!-- Energy Efficiency -->
       <div class="card" *ngIf="hasEnergyInfo()">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Energy & Heating</h3>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.detail.energyHeating' | translate }}</h3>
         </div>
         <div class="card-body">
           <dl class="space-y-4">
             <div *ngIf="property.energyEfficiencyClass">
-              <dt class="text-sm font-medium text-gray-500">Energy Efficiency Class</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.energyClass' | translate }}</dt>
               <dd class="mt-1">
                 <span class="inline-flex items-center px-3 py-1 rounded-md text-sm font-bold bg-green-100 text-green-800">
                   {{ property.energyEfficiencyClass }}
@@ -374,13 +374,13 @@
               </dd>
             </div>
             <div *ngIf="property.energyConsumptionKwh">
-              <dt class="text-sm font-medium text-gray-500">Energy Consumption</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.energyConsumption' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">
                 {{ property.energyConsumptionKwh }} kWh/m²a
               </dd>
             </div>
             <div *ngIf="property.heatingType">
-              <dt class="text-sm font-medium text-gray-500">Heating Type</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.heatingType' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">
                 {{ property.heatingType | translateEnum:'heatingType' }}
               </dd>
@@ -392,12 +392,12 @@
       <!-- Contact Information -->
       <div class="card" *ngIf="property.contactPhone || property.contactEmail || property.virtualTourUrl">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Contact Information</h3>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.detail.contactInformation' | translate }}</h3>
         </div>
         <div class="card-body">
           <dl class="space-y-4">
             <div *ngIf="property.contactPhone">
-              <dt class="text-sm font-medium text-gray-500">Phone</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.contactPhone' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">
                 <a [href]="'tel:' + property.contactPhone" class="text-primary-600 hover:text-primary-900">
                   {{ property.contactPhone }}
@@ -405,7 +405,7 @@
               </dd>
             </div>
             <div *ngIf="property.contactEmail">
-              <dt class="text-sm font-medium text-gray-500">Email</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.contactEmail' | translate }}</dt>
               <dd class="mt-1 text-sm text-gray-900 dark:text-white">
                 <a [href]="'mailto:' + property.contactEmail" class="text-primary-600 hover:text-primary-900">
                   {{ property.contactEmail }}
@@ -413,14 +413,14 @@
               </dd>
             </div>
             <div *ngIf="property.virtualTourUrl">
-              <dt class="text-sm font-medium text-gray-500">Virtual Tour</dt>
+              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.virtualTour' | translate }}</dt>
               <dd class="mt-1">
                 <a [href]="property.virtualTourUrl" target="_blank" class="btn btn-outline btn-sm">
                   <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                   </svg>
-                  View Virtual Tour
+                  {{ 'messages.viewVirtualTour' | translate }}
                 </a>
               </dd>
             </div>
@@ -431,7 +431,7 @@
       <!-- Additional Notes -->
       <div class="card lg:col-span-2" *ngIf="property.notes">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Additional Notes</h3>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.detail.additionalNotes' | translate }}</h3>
         </div>
         <div class="card-body">
           <p class="text-sm text-gray-900 dark:text-white whitespace-pre-line">
@@ -441,23 +441,38 @@
       </div>
     </div>
 
+    <!-- File Attachments Section -->
+    <div class="mt-8 card">
+      <div class="card-header">
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+          {{ 'attachments.sectionTitle' | translate }}
+        </h3>
+      </div>
+      <div class="card-body">
+        <app-file-attachment-manager
+          entityType="property"
+          [entityId]="property.id!"
+        ></app-file-attachment-manager>
+      </div>
+    </div>
+
     <!-- Actions -->
     <div class="mt-8 flex justify-between">
       <a routerLink="/properties" class="btn btn-outline">
-        ← Back to Properties
+        {{ 'messages.backToPropertiesArrow' | translate }}
       </a>
       <div class="space-x-3">
         <button (click)="deleteProperty()" class="btn btn-danger" [disabled]="isDeleting">
-          {{ isDeleting ? 'Deleting...' : 'Delete Property' }}
+          {{ isDeleting ? ('messages.deletingProperty' | translate) : ('messages.deletePropertyButton' | translate) }}
         </button>
       </div>
     </div>
   </div>
 
   <div *ngIf="!isLoading && !property" class="text-center py-8">
-    <p class="text-sm text-gray-500">Property not found.</p>
+    <p class="text-sm text-gray-500">{{ 'messages.propertyNotFound' | translate }}</p>
     <a routerLink="/properties" class="text-primary-600 hover:text-primary-900 text-sm font-medium">
-      Back to Properties
+      {{ 'messages.backToProperties' | translate }}
     </a>
   </div>
 </div>

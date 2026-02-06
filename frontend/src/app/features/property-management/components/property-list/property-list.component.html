@@ -8,184 +8,30 @@
       </p>
     </div>
     <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none flex space-x-3">
+      <!-- Filters temporarily disabled -->
+      <!--
       <button (click)="toggleFilters()" class="btn btn-outline">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
         </svg>
-        Filters
+        {{ 'common.filters' | translate }}
       </button>
+      -->
       <a routerLink="/properties/new" class="btn btn-primary">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
         </svg>
-        Add Property
+        {{ 'properties.add' | translate }}
       </a>
-    </div>
-  </div>
-
-  <!-- Advanced Filters Panel -->
-  <div *ngIf="showFilters" class="mt-6 card animation-slide-up">
-    <div class="card-body">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <!-- Search Query -->
-        <div>
-          <label class="form-label">{{ 'common.search' | translate }}</label>
-          <input
-            type="text"
-            [(ngModel)]="searchFilter.query"
-            (keyup.enter)="applyFilters()"
-            class="form-input"
-            placeholder="Search by title, address...">
-        </div>
-
-        <!-- Property Type -->
-        <div>
-          <label class="form-label">{{ 'properties.filters.propertyType' | translate }}</label>
-          <select [(ngModel)]="searchFilter.propertyType" class="form-input">
-            <option [ngValue]="undefined">{{ 'common.all' | translate }}</option>
-            <option *ngFor="let type of propertyTypes" [value]="type">
-              {{ type | translateEnum:'propertyType' }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Listing Type -->
-        <div>
-          <label class="form-label">{{ 'properties.filters.listingType' | translate }}</label>
-          <select [(ngModel)]="searchFilter.listingType" class="form-input">
-            <option [ngValue]="undefined">{{ 'common.all' | translate }}</option>
-            <option *ngFor="let type of listingTypes" [value]="type">
-              {{ type | translateEnum:'listingType' }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Status -->
-        <div>
-          <label class="form-label">{{ 'properties.filters.status' | translate }}</label>
-          <select [(ngModel)]="searchFilter.status" class="form-input">
-            <option [ngValue]="undefined">{{ 'common.all' | translate }}</option>
-            <option *ngFor="let status of propertyStatuses" [value]="status">
-              {{ status | translateEnum:'propertyStatus' }}
-            </option>
-          </select>
-        </div>
-
-        <!-- City -->
-        <div>
-          <label class="form-label">{{ 'properties.filters.city' | translate }}</label>
-          <input
-            type="text"
-            [(ngModel)]="searchFilter.city"
-            class="form-input"
-            placeholder="Enter city">
-        </div>
-
-        <!-- Min Price -->
-        <div>
-          <label class="form-label">{{ 'properties.filters.minPrice' | translate }}</label>
-          <input
-            type="number"
-            [(ngModel)]="searchFilter.minPrice"
-            class="form-input"
-            placeholder="0">
-        </div>
-
-        <!-- Max Price -->
-        <div>
-          <label class="form-label">{{ 'properties.filters.maxPrice' | translate }}</label>
-          <input
-            type="number"
-            [(ngModel)]="searchFilter.maxPrice"
-            class="form-input"
-            placeholder="1000000">
-        </div>
-
-        <!-- Min Living Area -->
-        <div>
-          <label class="form-label">{{ 'properties.filters.minArea' | translate }}</label>
-          <input
-            type="number"
-            [(ngModel)]="searchFilter.minLivingArea"
-            class="form-input"
-            placeholder="0">
-        </div>
-
-        <!-- Max Living Area -->
-        <div>
-          <label class="form-label">{{ 'properties.filters.maxArea' | translate }}</label>
-          <input
-            type="number"
-            [(ngModel)]="searchFilter.maxLivingArea"
-            class="form-input"
-            placeholder="500">
-        </div>
-
-        <!-- Min Rooms -->
-        <div>
-          <label class="form-label">{{ 'properties.filters.minRooms' | translate }}</label>
-          <input
-            type="number"
-            [(ngModel)]="searchFilter.minRooms"
-            step="0.5"
-            class="form-input"
-            placeholder="1">
-        </div>
-
-        <!-- Max Rooms -->
-        <div>
-          <label class="form-label">{{ 'properties.filters.maxRooms' | translate }}</label>
-          <input
-            type="number"
-            [(ngModel)]="searchFilter.maxRooms"
-            step="0.5"
-            class="form-input"
-            placeholder="10">
-        </div>
-      </div>
-
-      <!-- Feature Checkboxes -->
-      <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <label class="flex items-center">
-          <input type="checkbox" [(ngModel)]="searchFilter.hasElevator" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasElevator' | translate }}</span>
-        </label>
-        <label class="flex items-center">
-          <input type="checkbox" [(ngModel)]="searchFilter.hasBalcony" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasBalcony' | translate }}</span>
-        </label>
-        <label class="flex items-center">
-          <input type="checkbox" [(ngModel)]="searchFilter.hasGarden" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasGarden' | translate }}</span>
-        </label>
-        <label class="flex items-center">
-          <input type="checkbox" [(ngModel)]="searchFilter.hasParking" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasParking' | translate }}</span>
-        </label>
-        <label class="flex items-center">
-          <input type="checkbox" [(ngModel)]="searchFilter.petsAllowed" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.petsAllowed' | translate }}</span>
-        </label>
-      </div>
-
-      <!-- Filter Actions -->
-      <div class="mt-4 flex justify-end space-x-3">
-        <button (click)="clearFilters()" class="btn btn-outline">
-          Clear Filters
-        </button>
-        <button (click)="applyFilters()" class="btn btn-primary">
-          Apply Filters
-        </button>
-      </div>
     </div>
   </div>
 
   <!-- Results Count -->
   <div class="mt-6 flex items-center justify-between">
     <p class="text-sm text-gray-700 dark:text-gray-300">
-      Showing <span class="font-medium">{{ properties.length }}</span> of
-      <span class="font-medium">{{ totalElements }}</span> properties
+      {{ 'common.showing' | translate }} <span class="font-medium">{{ properties.length }}</span> {{ 'common.of' | translate }}
+      <span class="font-medium">{{ totalElements }}</span> {{ 'properties.title' | translate | lowercase }}
     </p>
   </div>
 
@@ -205,21 +51,30 @@
       <p class="mt-1 text-sm text-gray-500">{{ 'properties.add' | translate }}</p>
       <div class="mt-6">
         <a routerLink="/properties/new" class="btn btn-primary">
-          Add Property
+          {{ 'properties.add' | translate }}
         </a>
       </div>
     </div>
 
     <div *ngIf="!isLoading && properties.length > 0"
          class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      <div *ngFor="let property of properties"
+      <div *ngFor="let property of properties; trackBy: trackById"
            [routerLink]="['/properties', property.id]"
            class="card overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
         <!-- Property Image -->
-        <div class="relative h-48 overflow-hidden bg-gray-200">
-          <img [src]="getPrimaryImage(property)"
+        <div class="relative h-48 overflow-hidden bg-gray-200 dark:bg-gray-700">
+          <img *ngIf="getPrimaryImage(property)"
+               [src]="getPrimaryImage(property)"
                [alt]="property.title"
                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+          <!-- Default House Icon when no image -->
+          <div *ngIf="!getPrimaryImage(property)"
+               class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800">
+            <svg class="w-20 h-20 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+            </svg>
+          </div>
           <!-- Status Badge -->
           <div class="absolute top-2 right-2">
             <span [ngClass]="getStatusBadgeClass(property.status)"
@@ -278,14 +133,14 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
               </svg>
-              {{ property.rooms }} rooms
+              {{ property.rooms }} {{ 'common.rooms' | translate }}
             </div>
             <div *ngIf="property.bedrooms" class="flex items-center">
               <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
               </svg>
-              {{ property.bedrooms }} bed
+              {{ property.bedrooms }} {{ 'common.bed' | translate }}
             </div>
           </div>
 
@@ -341,17 +196,17 @@
     <div class="flex-1 flex justify-between sm:hidden">
       <button (click)="previousPage()" [disabled]="currentPage === 0"
               class="btn btn-outline" [class.opacity-50]="currentPage === 0">
-        Previous
+        {{ 'common.previous' | translate }}
       </button>
       <button (click)="nextPage()" [disabled]="currentPage >= totalPages - 1"
               class="btn btn-outline" [class.opacity-50]="currentPage >= totalPages - 1">
-        Next
+        {{ 'common.next' | translate }}
       </button>
     </div>
     <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
       <div>
         <p class="text-sm text-gray-700 dark:text-gray-300">
-          Showing page <span class="font-medium">{{ currentPage + 1 }}</span> of
+          {{ 'common.showing' | translate }} {{ 'common.page' | translate }} <span class="font-medium">{{ currentPage + 1 }}</span> {{ 'common.of' | translate }}
           <span class="font-medium">{{ totalPages }}</span>
         </p>
       </div>
