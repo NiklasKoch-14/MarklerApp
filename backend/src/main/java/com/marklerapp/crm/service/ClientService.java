@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -76,7 +77,11 @@ public class ClientService {
                 .orElseThrow(() -> new ResourceNotFoundException("Client", "id", clientId));
 
         // Verify client belongs to the agent
-        ownershipValidator.validateClientOwnership(client, agentId);
+        try {
+            ownershipValidator.validateClientOwnership(client, agentId);
+        } catch (AccessDeniedException e) {
+            throw new ResourceNotFoundException("Client not found or access denied");
+        }
 
         return clientMapper.toDto(client);
     }
@@ -138,7 +143,11 @@ public class ClientService {
                 .orElseThrow(() -> new ResourceNotFoundException("Client", "id", clientId));
 
         // Verify client belongs to the agent
-        ownershipValidator.validateClientOwnership(existingClient, agentId);
+        try {
+            ownershipValidator.validateClientOwnership(existingClient, agentId);
+        } catch (AccessDeniedException e) {
+            throw new ResourceNotFoundException("Client not found or access denied");
+        }
 
         // Check email uniqueness if email is being changed
         if (clientDto.getEmail() != null && !clientDto.getEmail().equals(existingClient.getEmail())) {
@@ -188,7 +197,11 @@ public class ClientService {
                 .orElseThrow(() -> new ResourceNotFoundException("Client", "id", clientId));
 
         // Verify client belongs to the agent
-        ownershipValidator.validateClientOwnership(client, agentId);
+        try {
+            ownershipValidator.validateClientOwnership(client, agentId);
+        } catch (AccessDeniedException e) {
+            throw new ResourceNotFoundException("Client not found or access denied");
+        }
 
         // Delete associated search criteria
         if (client.getSearchCriteria() != null) {
@@ -236,7 +249,11 @@ public class ClientService {
                 .orElseThrow(() -> new ResourceNotFoundException("Client", "id", clientId));
 
         // Verify client belongs to the agent
-        ownershipValidator.validateClientOwnership(client, agentId);
+        try {
+            ownershipValidator.validateClientOwnership(client, agentId);
+        } catch (AccessDeniedException e) {
+            throw new ResourceNotFoundException("Client not found or access denied");
+        }
 
         return clientMapper.toDto(client);
     }

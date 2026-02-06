@@ -63,7 +63,8 @@ class CallNoteServiceTest {
     @Mock
     private CallNoteMapper callNoteMapper;
 
-    @InjectMocks
+    private OwnershipValidator ownershipValidator;
+
     private CallNoteService callNoteService;
 
     private Agent testAgent;
@@ -78,6 +79,18 @@ class CallNoteServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Initialize real OwnershipValidator
+        ownershipValidator = new OwnershipValidator();
+        callNoteService = new CallNoteService(
+            callNoteRepository,
+            clientRepository,
+            agentRepository,
+            propertyRepository,
+            ollamaService,
+            asyncSummaryService,
+            callNoteMapper,
+            ownershipValidator
+        );
         agentId = UUID.randomUUID();
         clientId = UUID.randomUUID();
         propertyId = UUID.randomUUID();

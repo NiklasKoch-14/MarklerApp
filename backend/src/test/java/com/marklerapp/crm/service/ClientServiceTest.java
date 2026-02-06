@@ -53,7 +53,8 @@ class ClientServiceTest {
     @Mock
     private PropertySearchCriteriaMapper searchCriteriaMapper;
 
-    @InjectMocks
+    private OwnershipValidator ownershipValidator;
+
     private ClientService clientService;
 
     private Agent testAgent;
@@ -66,6 +67,17 @@ class ClientServiceTest {
     void setUp() {
         agentId = UUID.randomUUID();
         clientId = UUID.randomUUID();
+
+        // Initialize real OwnershipValidator
+        ownershipValidator = new OwnershipValidator();
+        clientService = new ClientService(
+            clientRepository,
+            agentRepository,
+            searchCriteriaRepository,
+            clientMapper,
+            searchCriteriaMapper,
+            ownershipValidator
+        );
 
         testAgent = Agent.builder()
             .firstName("Max")

@@ -52,7 +52,8 @@ class PropertyServiceTest {
     @Mock
     private PropertyImageMapper propertyImageMapper;
 
-    @InjectMocks
+    private OwnershipValidator ownershipValidator;
+
     private PropertyService propertyService;
 
     private Agent testAgent;
@@ -67,6 +68,17 @@ class PropertyServiceTest {
     void setUp() {
         agentId = UUID.randomUUID();
         propertyId = UUID.randomUUID();
+
+        // Initialize real OwnershipValidator
+        ownershipValidator = new OwnershipValidator();
+        propertyService = new PropertyService(
+            propertyRepository,
+            propertyImageRepository,
+            agentRepository,
+            propertyMapper,
+            propertyImageMapper,
+            ownershipValidator
+        );
 
         testAgent = Agent.builder()
             .firstName("Max")

@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -118,7 +119,11 @@ public class PropertyService {
         Property property = propertyRepository.findById(propertyId)
             .orElseThrow(() -> new ResourceNotFoundException("Property", "id", propertyId));
 
-        ownershipValidator.validatePropertyOwnership(property, agentId);
+        try {
+            ownershipValidator.validatePropertyOwnership(property, agentId);
+        } catch (AccessDeniedException e) {
+            throw new ResourceNotFoundException("Property not found or access denied");
+        }
 
         // Update fields from request (only non-null values)
         updatePropertyFields(property, request);
@@ -154,7 +159,11 @@ public class PropertyService {
         Property property = propertyRepository.findById(propertyId)
             .orElseThrow(() -> new ResourceNotFoundException("Property", "id", propertyId));
 
-        ownershipValidator.validatePropertyOwnership(property, agentId);
+        try {
+            ownershipValidator.validatePropertyOwnership(property, agentId);
+        } catch (AccessDeniedException e) {
+            throw new ResourceNotFoundException("Property not found or access denied");
+        }
 
         return propertyMapper.toDto(property);
     }
@@ -192,7 +201,11 @@ public class PropertyService {
         Property property = propertyRepository.findById(propertyId)
             .orElseThrow(() -> new ResourceNotFoundException("Property", "id", propertyId));
 
-        ownershipValidator.validatePropertyOwnership(property, agentId);
+        try {
+            ownershipValidator.validatePropertyOwnership(property, agentId);
+        } catch (AccessDeniedException e) {
+            throw new ResourceNotFoundException("Property not found or access denied");
+        }
 
         // Delete associated images (cascade will handle this, but explicit for clarity)
         propertyImageRepository.deleteByProperty(property);
@@ -779,7 +792,11 @@ public class PropertyService {
             .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + propertyId));
 
         // Verify agent ownership
-        ownershipValidator.validatePropertyOwnership(property, agentId);
+        try {
+            ownershipValidator.validatePropertyOwnership(property, agentId);
+        } catch (AccessDeniedException e) {
+            throw new IllegalArgumentException("Property does not belong to the specified agent");
+        }
 
         // Validate PDF
         validatePdfExpose(exposeDto);
@@ -813,7 +830,11 @@ public class PropertyService {
             .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + propertyId));
 
         // Verify agent ownership
-        ownershipValidator.validatePropertyOwnership(property, agentId);
+        try {
+            ownershipValidator.validatePropertyOwnership(property, agentId);
+        } catch (AccessDeniedException e) {
+            throw new IllegalArgumentException("Property does not belong to the specified agent");
+        }
 
         // Check if expose exists
         if (property.getExposeFileName() == null || property.getExposeFileData() == null) {
@@ -840,7 +861,11 @@ public class PropertyService {
             .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + propertyId));
 
         // Verify agent ownership
-        ownershipValidator.validatePropertyOwnership(property, agentId);
+        try {
+            ownershipValidator.validatePropertyOwnership(property, agentId);
+        } catch (AccessDeniedException e) {
+            throw new IllegalArgumentException("Property does not belong to the specified agent");
+        }
 
         // Clear expose data
         property.setExposeFileName(null);
@@ -862,7 +887,11 @@ public class PropertyService {
             .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + propertyId));
 
         // Verify agent ownership
-        ownershipValidator.validatePropertyOwnership(property, agentId);
+        try {
+            ownershipValidator.validatePropertyOwnership(property, agentId);
+        } catch (AccessDeniedException e) {
+            throw new IllegalArgumentException("Property does not belong to the specified agent");
+        }
 
         return property.getExposeFileName() != null && property.getExposeFileData() != null;
     }

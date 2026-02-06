@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,7 +60,11 @@ public class CallNoteService {
             .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + request.getClientId()));
 
         // Validate that the client belongs to the agent
-        ownershipValidator.validateClientOwnership(client, agentId);
+        try {
+            ownershipValidator.validateClientOwnership(client, agentId);
+        } catch (AccessDeniedException e) {
+            throw new IllegalArgumentException("Client does not belong to the specified agent");
+        }
 
         // Fetch property if propertyId is provided
         Property property = null;
@@ -68,7 +73,11 @@ public class CallNoteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + request.getPropertyId()));
 
             // Validate that the property belongs to the agent
-            ownershipValidator.validatePropertyOwnership(property, agentId);
+            try {
+                ownershipValidator.validatePropertyOwnership(property, agentId);
+            } catch (AccessDeniedException e) {
+                throw new IllegalArgumentException("Property does not belong to the specified agent");
+            }
         }
 
         CallNote callNote = CallNote.builder()
@@ -106,7 +115,11 @@ public class CallNoteService {
             .orElseThrow(() -> new ResourceNotFoundException("Call note not found with id: " + callNoteId));
 
         // Validate that the call note belongs to the agent
-        ownershipValidator.validateCallNoteOwnership(existingCallNote, agentId);
+        try {
+            ownershipValidator.validateCallNoteOwnership(existingCallNote, agentId);
+        } catch (AccessDeniedException e) {
+            throw new IllegalArgumentException("Call note does not belong to the specified agent");
+        }
 
         // Update property if propertyId is provided
         if (request.getPropertyId() != null) {
@@ -114,7 +127,11 @@ public class CallNoteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + request.getPropertyId()));
 
             // Validate that the property belongs to the agent
-            ownershipValidator.validatePropertyOwnership(property, agentId);
+            try {
+                ownershipValidator.validatePropertyOwnership(property, agentId);
+            } catch (AccessDeniedException e) {
+                throw new IllegalArgumentException("Property does not belong to the specified agent");
+            }
             existingCallNote.setProperty(property);
         } else {
             existingCallNote.setProperty(null);
@@ -148,7 +165,11 @@ public class CallNoteService {
             .orElseThrow(() -> new ResourceNotFoundException("Call note not found with id: " + callNoteId));
 
         // Validate that the call note belongs to the agent
-        ownershipValidator.validateCallNoteOwnership(callNote, agentId);
+        try {
+            ownershipValidator.validateCallNoteOwnership(callNote, agentId);
+        } catch (AccessDeniedException e) {
+            throw new IllegalArgumentException("Call note does not belong to the specified agent");
+        }
 
         return callNoteMapper.toResponse(callNote);
     }
@@ -164,7 +185,11 @@ public class CallNoteService {
             .orElseThrow(() -> new ResourceNotFoundException("Call note not found with id: " + callNoteId));
 
         // Validate that the call note belongs to the agent
-        ownershipValidator.validateCallNoteOwnership(callNote, agentId);
+        try {
+            ownershipValidator.validateCallNoteOwnership(callNote, agentId);
+        } catch (AccessDeniedException e) {
+            throw new IllegalArgumentException("Call note does not belong to the specified agent");
+        }
 
         UUID clientId = callNote.getClient().getId();
         callNoteRepository.delete(callNote);
@@ -183,7 +208,11 @@ public class CallNoteService {
             .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + clientId));
 
         // Validate that the client belongs to the agent
-        ownershipValidator.validateClientOwnership(client, agentId);
+        try {
+            ownershipValidator.validateClientOwnership(client, agentId);
+        } catch (AccessDeniedException e) {
+            throw new IllegalArgumentException("Client does not belong to the specified agent");
+        }
 
         Page<CallNote> callNotes = callNoteRepository.findByClientOrderByCallDateDesc(client, pageable);
         return callNotes.map(callNoteMapper::toSummary);
@@ -261,7 +290,11 @@ public class CallNoteService {
             .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + clientId));
 
         // Validate that the client belongs to the agent
-        ownershipValidator.validateClientOwnership(client, agentId);
+        try {
+            ownershipValidator.validateClientOwnership(client, agentId);
+        } catch (AccessDeniedException e) {
+            throw new IllegalArgumentException("Client does not belong to the specified agent");
+        }
 
         List<CallNote> allCallNotes = callNoteRepository.findByClientOrderByCallDateDesc(client);
         long totalCallNotes = allCallNotes.size();
@@ -313,7 +346,11 @@ public class CallNoteService {
         Client client = clientRepository.findById(clientId)
             .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + clientId));
 
-        ownershipValidator.validateClientOwnership(client, agentId);
+        try {
+            ownershipValidator.validateClientOwnership(client, agentId);
+        } catch (AccessDeniedException e) {
+            throw new IllegalArgumentException("Not authorized to access this client's data");
+        }
 
         // Get all call notes for the client (for count)
         List<CallNote> callNotes = callNoteRepository.findByClientOrderByCallDateDesc(client);
