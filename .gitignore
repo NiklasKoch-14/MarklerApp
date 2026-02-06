@@ -24,6 +24,9 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# Production environment with secrets (keep .env.production as template)
+.env.prod
+
 # IDE files
 .idea/
 .vscode/
@@ -67,3 +70,10 @@ coverage/
 # Spring Boot
 application-local.properties
 application-local.yml
+
+# SSL Certificates (never commit!)
+nginx/ssl/*.pem
+nginx/ssl/*.key
+nginx/ssl/*.crt
+nginx/ssl/*.csr
+nginx/ssl/dhparam.pem

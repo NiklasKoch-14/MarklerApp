@@ -1,0 +1,6 @@
+# Placeholder file to keep the ssl directory in git
+# Place your SSL certificates here:
+# - fullchain.pem (certificate + intermediate chain)
+# - privkey.pem (private key)
+#
+# These files should NOT be committed to git (see .gitignore)

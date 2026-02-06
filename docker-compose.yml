@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # PostgreSQL Database
   database:
     image: postgres:15-alpine
     container_name: realestate-db
@@ -11,59 +12,150 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./backend/src/main/resources/db/init:/docker-entrypoint-initdb.d
-    ports:
-      - "5432:5432"
+    expose:
+      - "5432"
+    networks:
+      - backend
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-crmuser} -d ${POSTGRES_DB:-realestate_crm}"]
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
 
+  # Ollama AI Service
+  ollama:
+    image: ollama/ollama:latest
+    container_name: realestate-ollama
+    volumes:
+      - ollama_models:/root/.ollama
+    expose:
+      - "11434"
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: 2048M
+        reservations:
+          memory: 1024M
+
+  # Spring Boot Backend
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: realestate-backend
     environment:
-      SPRING_PROFILES_ACTIVE: docker
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/${POSTGRES_DB:-realestate_crm}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-crmuser}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
       JWT_SECRET: ${JWT_SECRET:-dev_secret_key_change_in_production}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://localhost}
       FILE_UPLOAD_PATH: ${FILE_UPLOAD_PATH:-/app/uploads}
+      OLLAMA_ENABLED: ${OLLAMA_ENABLED:-true}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      JAVA_OPTS: ${JAVA_OPTS:--Xmx512m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication}
     volumes:
       - uploaded_files:/app/uploads
-    ports:
-      - "8085:8085"
+    expose:
+      - "8085"
+    networks:
+      - backend
+      - frontend
     depends_on:
       database:
+        condition: service_healthy
+      ollama:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8085/api/v1/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 512M
 
+  # Angular Frontend
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        API_BASE_URL: ${API_BASE_URL:-http://localhost:8085/api/v1}
+        API_BASE_URL: ${API_BASE_URL:-/api/v1}
     container_name: realestate-frontend
-    ports:
-      - "4200:80"
+    expose:
+      - "80"
+    networks:
+      - frontend
     depends_on:
       backend:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+
+  # Nginx Reverse Proxy
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: realestate-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - frontend
+    depends_on:
+      - frontend
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
 
 volumes:
   db_data:
     name: realestate_db_data
   uploaded_files:
     name: realestate_uploads
+  ollama_models:
+    name: realestate_ollama_models
 
 networks:
-  default:
-    name: realestate-network
+  backend:
+    name: realestate-backend
+    driver: bridge
+  frontend:
+    name: realestate-frontend
+    driver: bridge

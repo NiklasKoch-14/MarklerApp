@@ -153,6 +153,52 @@ VALUES (
 
 ## 🚀 Deployment
 
+### Production Docker Deployment (Recommended for Self-Hosting)
+
+**Deploy the complete stack on your own server (e.g., Raspberry Pi) with HTTPS support.**
+
+This is the recommended approach if you want full control, GDPR compliance, and on-premise hosting.
+
+#### Quick Start
+
+```bash
+# 1. Generate SSL certificates (Let's Encrypt)
+sudo apt-get install certbot
+sudo certbot certonly --standalone -d your-domain.com
+cd MarklerApp
+sudo cp /etc/letsencrypt/live/your-domain.com/fullchain.pem ./nginx/ssl/
+sudo cp /etc/letsencrypt/live/your-domain.com/privkey.pem ./nginx/ssl/
+
+# 2. Configure environment
+cp .env.production .env.prod
+nano .env.prod  # Update DOMAIN_NAME, JWT_SECRET, POSTGRES_PASSWORD
+
+# 3. Deploy
+docker compose --env-file .env.prod up --build -d
+
+# Access at: https://your-domain.com
+```
+
+**Features:**
+- ✅ Nginx reverse proxy with HTTPS (Let's Encrypt or self-signed)
+- ✅ Complete backend + frontend + database + Ollama AI
+- ✅ Network isolation (database not exposed externally)
+- ✅ Resource limits optimized for Raspberry Pi (4GB+ RAM)
+- ✅ Automatic SSL certificate renewal
+- ✅ Security headers and rate limiting
+
+**Documentation:**
+- **Complete Guide**: See `docs/PRODUCTION_DEPLOYMENT.md`
+- **Quick Reference**: See `START_PRODUCTION.md`
+
+**Requirements:**
+- Docker & Docker Compose
+- Domain name with DNS configured
+- 4GB+ RAM, 10GB+ storage
+- SSL certificate (Let's Encrypt or self-signed)
+
+---
+
 ### Vercel Deployment (Frontend)
 
 #### Step 1: Prepare Your Repository

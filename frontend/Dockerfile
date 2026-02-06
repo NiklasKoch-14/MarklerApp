@@ -12,8 +12,8 @@ RUN npm install
 # Copy source code
 COPY . .
 
-# Build argument for API URL
-ARG API_BASE_URL=http://localhost:8080/api/v1
+# Build argument for API URL (use relative path for reverse proxy)
+ARG API_BASE_URL=/api/v1
 ENV API_BASE_URL=$API_BASE_URL
 
 # Build the application

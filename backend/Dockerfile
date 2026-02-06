@@ -36,6 +36,7 @@ USER app
 EXPOSE 8085
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=60s \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8085/actuator/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8085/api/v1/actuator/health || exit 1
 
-CMD ["java", "-jar", "app.jar"]
+# Use JAVA_OPTS environment variable for JVM tuning (passed from docker-compose)
+CMD java $JAVA_OPTS -jar app.jar
