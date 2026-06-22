@@ -234,6 +234,8 @@ spring:
       idle-timeout: 300000
       max-lifetime: 600000
       connection-init-sql: "SET application_name='marklerapp'"
+      data-source-properties:
+        sslmode: require
 
   jpa:
     hibernate:
@@ -255,7 +257,7 @@ spring:
     init:
       mode: never
 
-  # Flyway: uses Session connection (port 5432) — direct connection, user = postgres (not pooler format)
+  # Flyway: uses direct Session connection (port 5432), user = plain postgres
   flyway:
     enabled: true
     url: ${FLYWAY_URL:${DATABASE_URL}}
@@ -263,6 +265,8 @@ spring:
     password: ${POSTGRES_PASSWORD}
     locations: classpath:db/migration
     baseline-on-migrate: false
+    jdbc-properties:
+      sslmode: require
 
 server:
   port: ${PORT:8085}
