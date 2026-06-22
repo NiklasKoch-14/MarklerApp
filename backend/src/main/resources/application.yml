@@ -254,11 +254,11 @@ spring:
     init:
       mode: never
 
-  # Flyway: uses Session connection (port 5432) — required for DDL outside transaction pooler
+  # Flyway: uses Session connection (port 5432) — direct connection, user = postgres (not pooler format)
   flyway:
     enabled: true
     url: ${FLYWAY_URL:${DATABASE_URL}}
-    user: ${POSTGRES_USER}
+    user: ${FLYWAY_USER:postgres}
     password: ${POSTGRES_PASSWORD}
     locations: classpath:db/migration
     baseline-on-migrate: false
