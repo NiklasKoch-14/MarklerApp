@@ -79,3 +79,10 @@ nginx/ssl/*.key
 nginx/ssl/*.crt
 nginx/ssl/*.csr
 nginx/ssl/dhparam.pem
+# Agent skills (installed locally, not part of repo)
+.agents/
+.claude/skills/
+skills-lock.json
+
+# Docker env files with credentials
+.env.docker
