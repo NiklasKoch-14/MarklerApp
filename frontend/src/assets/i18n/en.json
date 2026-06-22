@@ -683,15 +683,7 @@
     "get-started": "Get started by adding your first call note",
     "add-first-note": "Add first call note",
     "follow-up-by": "Follow up by",
-    "no-follow-up": "No follow-up",
-    "ai-summary": {
-      "generate": "Generate AI Summary",
-      "generating": "Analyzing call notes...",
-      "title": "AI Summary",
-      "based-on": "Based on",
-      "unavailable": "AI service is currently unavailable",
-      "no-notes": "No call notes to summarize"
-    }
+    "no-follow-up": "No follow-up"
   },
   "callNotes": {
     "title": "Call Notes",

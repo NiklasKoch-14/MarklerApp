@@ -1,7 +1,6 @@
 package com.marklerapp.crm.service;
 
 import com.marklerapp.crm.config.GlobalExceptionHandler.ResourceNotFoundException;
-import com.marklerapp.crm.dto.AiSummaryDto;
 import com.marklerapp.crm.dto.CallNoteDto;
 import com.marklerapp.crm.entity.CallNote;
 import com.marklerapp.crm.entity.Client;
@@ -41,8 +40,6 @@ public class CallNoteService {
     private final ClientRepository clientRepository;
     private final AgentRepository agentRepository;
     private final PropertyRepository propertyRepository;
-    private final OllamaService ollamaService;
-    private final AsyncSummaryService asyncSummaryService;
     private final CallNoteMapper callNoteMapper;
     private final OwnershipValidator ownershipValidator;
 
@@ -98,9 +95,6 @@ public class CallNoteService {
         CallNote savedCallNote = callNoteRepository.save(callNote);
         log.info("Successfully created call note with id: {}", savedCallNote.getId());
 
-        // Trigger async AI summary generation
-        asyncSummaryService.generateAndPersistSummary(client.getId());
-
         return callNoteMapper.toResponse(savedCallNote);
     }
 
@@ -150,9 +144,6 @@ public class CallNoteService {
         CallNote updatedCallNote = callNoteRepository.save(existingCallNote);
         log.info("Successfully updated call note with id: {}", updatedCallNote.getId());
 
-        // Trigger async AI summary generation
-        asyncSummaryService.generateAndPersistSummary(updatedCallNote.getClient().getId());
-
         return callNoteMapper.toResponse(updatedCallNote);
     }
 
@@ -191,12 +182,8 @@ public class CallNoteService {
             throw new IllegalArgumentException("Call note does not belong to the specified agent");
         }
 
-        UUID clientId = callNote.getClient().getId();
         callNoteRepository.delete(callNote);
         log.info("Successfully deleted call note with id: {}", callNoteId);
-
-        // Trigger async AI summary generation
-        asyncSummaryService.generateAndPersistSummary(clientId);
     }
 
     /**
@@ -334,50 +321,6 @@ public class CallNoteService {
                 .listingType(p.getListingType())
                 .build())
             .collect(Collectors.toList());
-    }
-
-    /**
-     * Get AI summary for client's call notes from database.
-     * Summary is automatically generated in background when call notes are created/updated/deleted.
-     */
-    @Transactional(readOnly = true)
-    public AiSummaryDto generateAiSummary(UUID clientId, UUID agentId) {
-        // Verify client belongs to agent
-        Client client = clientRepository.findById(clientId)
-            .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + clientId));
-
-        try {
-            ownershipValidator.validateClientOwnership(client, agentId);
-        } catch (AccessDeniedException e) {
-            throw new IllegalArgumentException("Not authorized to access this client's data");
-        }
-
-        // Get all call notes for the client (for count)
-        List<CallNote> callNotes = callNoteRepository.findByClientOrderByCallDateDesc(client);
-
-        if (callNotes.isEmpty()) {
-            throw new IllegalArgumentException("No call notes found for this client");
-        }
-
-        // Return stored summary from database
-        if (client.getAiSummary() != null && client.getAiSummaryUpdatedAt() != null) {
-            return AiSummaryDto.builder()
-                    .summary(client.getAiSummary())
-                    .generatedAt(client.getAiSummaryUpdatedAt())
-                    .callNotesCount(callNotes.size())
-                    .available(true)
-                    .build();
-        }
-
-        // If no summary exists yet, trigger async generation and return pending message
-        asyncSummaryService.generateAndPersistSummary(clientId);
-
-        return AiSummaryDto.builder()
-                .summary("AI-Zusammenfassung wird gerade generiert. Bitte aktualisieren Sie die Seite in wenigen Sekunden.")
-                .generatedAt(LocalDateTime.now())
-                .callNotesCount(callNotes.size())
-                .available(false)
-                .build();
     }
 
     /**

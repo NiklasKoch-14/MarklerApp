@@ -3,10 +3,10 @@
 **Updated**: 2026-01-29 | **Status**: Phase 5.1 & T110 Complete
 
 ## Project Context
-German Real Estate CRM with bilingual (DE/EN) support, GDPR compliance, AI summarization via Ollama.
+German Real Estate CRM with bilingual (DE/EN) support, GDPR compliance. Being evolved into a multi-tenant SaaS (see PLAN.md).
 
 ## Tech Stack
-**Backend**: Java 17, Spring Boot 3.2.0, PostgreSQL 15, JWT auth, Flyway migrations, Ollama (Phi-3 Mini)
+**Backend**: Java 17, Spring Boot 3.2.0, PostgreSQL 15 (Supabase in prod), JWT auth, Flyway migrations
 **Frontend**: Angular 17 standalone components, TypeScript 5+, Tailwind CSS, i18n
 **DevOps**: Docker Compose, Maven, npm
 
@@ -95,19 +95,17 @@ objectMapper.coercionConfigFor(LogicalType.Enum)
 **Frontend**: Check `field.hasError('serverError')` → `fieldErrors[field]` → frontend validation
 **UX**: Implement `getFieldDisplayName()` + `scrollToFirstError()`
 
-### 5. Ollama AI Integration
-**Model**: Phi-3 Mini (3.8B, 2.3GB) auto-downloads on Docker start
-**Config**: `application.yml` with env var overrides (`OLLAMA_ENABLED`, `OLLAMA_BASE_URL`)
-**Endpoint**: `POST /call-notes/client/{clientId}/ai-summary`
-**Why**: On-premise GDPR compliance
+### 5. Rule-based Call Note Summaries
+**Service**: `CallNoteSummaryService` generates deterministic, rule-based summaries (detailed/quick/timeline/period) — no external AI dependency.
+**Note**: The former Ollama AI summary was removed (see PLAN.md). A cloud-based AI summary may return later as a paid tier feature.
 
 ## Development Commands
 
 ```bash
-# Start stack (auto-downloads Ollama model ~2.3GB on first run)
+# Start stack
 docker compose -f docker-compose.dev.yml up --build
 
-# Access: Frontend:4200, Backend:8085, API Docs:8085/swagger-ui.html, Ollama:11434
+# Access: Frontend:4200, Backend:8085, API Docs:8085/swagger-ui.html
 
 # Manual
 cd backend && mvn spring-boot:run

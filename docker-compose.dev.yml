@@ -19,46 +19,26 @@ services:
       timeout: 5s
       retries: 5
 
-  ollama:
-    image: ollama/ollama:latest
-    container_name: realestate-ollama-dev
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data_dev:/root/.ollama
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "ollama", "list"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
     container_name: realestate-backend-dev
     environment:
-      SPRING_PROFILES_ACTIVE: dev
-      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/${POSTGRES_DB:-realestate_crm_dev}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-crmuser}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_PROFILES_ACTIVE: docker
+      POSTGRES_HOST: database
+      POSTGRES_DB: ${POSTGRES_DB:-realestate_crm_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-crmuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
       JWT_SECRET: ${JWT_SECRET:-dev_secret_key_for_development_only}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200}
-      FILE_UPLOAD_PATH: ${FILE_UPLOAD_PATH:-/app/uploads}
-      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-phi3:mini}
-      OLLAMA_ENABLED: ${OLLAMA_ENABLED:-true}
+      FILE_UPLOAD_DIR: ${FILE_UPLOAD_DIR:-/app/uploads}
       # Email - Set SPRING_MAIL_USERNAME and SPRING_MAIL_PASSWORD to enable
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
-      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:4200}
+      APP_MAIL_BASE_URL: ${APP_BASE_URL:-http://localhost:4200}
       LOGGING_LEVEL_COM_MARKLERAPP: DEBUG
-      LOGGING_LEVEL_ORG_HIBERNATE_SQL: DEBUG
+      LOGGING_LEVEL_ORG_HIBERNATE_SQL: WARN
     volumes:
       - ./backend/src:/app/src
       - uploaded_files_dev:/app/uploads
@@ -90,8 +70,6 @@ volumes:
     name: realestate_db_data_dev
   uploaded_files_dev:
     name: realestate_uploads_dev
-  ollama_data_dev:
-    name: realestate_ollama_data_dev
 
 networks:
   default:

@@ -59,8 +59,6 @@ public interface ClientMapper {
     @Mapping(target = "agent", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "aiSummary", ignore = true)
-    @Mapping(target = "aiSummaryUpdatedAt", ignore = true)
     @BeanMapping(builder = @Builder(disableBuilder = true))
     Client toEntity(ClientDto dto);
 

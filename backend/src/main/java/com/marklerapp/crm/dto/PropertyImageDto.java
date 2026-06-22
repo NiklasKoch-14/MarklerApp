@@ -70,12 +70,10 @@ public class PropertyImageDto {
     private String originalFilename;
 
     /**
-     * File path on the storage system (can be relative or absolute)
-     * Not exposed to clients for security reasons
+     * Legacy file path — not exposed to clients, set internally by the service.
      */
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @NotBlank(message = "File path is required", groups = {OnCreate.class})
-    @Size(min = 1, max = 500, message = "File path must be between 1 and 500 characters")
+    @Size(max = 500, message = "File path must not exceed 500 characters")
     private String filePath;
 
     /**

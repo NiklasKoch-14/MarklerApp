@@ -683,15 +683,7 @@
     "get-started": "Beginnen Sie mit dem Hinzufügen Ihrer ersten Gesprächsnotiz",
     "add-first-note": "Erste Gesprächsnotiz hinzufügen",
     "follow-up-by": "Nachfassen bis",
-    "no-follow-up": "Kein Nachfassen",
-    "ai-summary": {
-      "generate": "KI-Zusammenfassung generieren",
-      "generating": "Analysiere Gesprächsnotizen...",
-      "title": "KI-Zusammenfassung",
-      "based-on": "Basierend auf",
-      "unavailable": "KI-Service ist nicht verfügbar",
-      "no-notes": "Keine Gesprächsnotizen zum Zusammenfassen"
-    }
+    "no-follow-up": "Kein Nachfassen"
   },
   "callNotes": {
     "title": "Gesprächsnotizen",

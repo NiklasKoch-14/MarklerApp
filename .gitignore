@@ -24,8 +24,10 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
-# Production environment with secrets (keep .env.production as template)
+# Production environment with secrets (keep templates, ignore real ones)
 .env.prod
+.env.production
+.env.supabase
 
 # IDE files
 .idea/

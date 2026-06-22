@@ -28,29 +28,6 @@ services:
         reservations:
           memory: 256M
 
-  # Ollama AI Service
-  ollama:
-    image: ollama/ollama:latest
-    container_name: realestate-ollama
-    volumes:
-      - ollama_models:/root/.ollama
-    expose:
-      - "11434"
-    networks:
-      - backend
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 120s
-    deploy:
-      resources:
-        limits:
-          memory: 2048M
-        reservations:
-          memory: 1024M
-
   # Spring Boot Backend
   backend:
     build:
@@ -65,8 +42,6 @@ services:
       JWT_SECRET: ${JWT_SECRET:-dev_secret_key_change_in_production}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://localhost}
       FILE_UPLOAD_PATH: ${FILE_UPLOAD_PATH:-/app/uploads}
-      OLLAMA_ENABLED: ${OLLAMA_ENABLED:-true}
-      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
       JAVA_OPTS: ${JAVA_OPTS:--Xmx512m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication}
     volumes:
       - uploaded_files:/app/uploads
@@ -77,8 +52,6 @@ services:
       - frontend
     depends_on:
       database:
-        condition: service_healthy
-      ollama:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8085/api/v1/actuator/health || exit 1"]
@@ -149,8 +122,6 @@ volumes:
     name: realestate_db_data
   uploaded_files:
     name: realestate_uploads
-  ollama_models:
-    name: realestate_ollama_models
 
 networks:
   backend:

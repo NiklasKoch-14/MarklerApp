@@ -1,7 +1,6 @@
 package com.marklerapp.crm.service;
 
 import com.marklerapp.crm.config.GlobalExceptionHandler.ResourceNotFoundException;
-import com.marklerapp.crm.dto.AiSummaryDto;
 import com.marklerapp.crm.dto.CallNoteDto;
 import com.marklerapp.crm.entity.Agent;
 import com.marklerapp.crm.entity.CallNote;
@@ -55,12 +54,6 @@ class CallNoteServiceTest {
     private PropertyRepository propertyRepository;
 
     @Mock
-    private OllamaService ollamaService;
-
-    @Mock
-    private AsyncSummaryService asyncSummaryService;
-
-    @Mock
     private CallNoteMapper callNoteMapper;
 
     private OwnershipValidator ownershipValidator;
@@ -86,8 +79,6 @@ class CallNoteServiceTest {
             clientRepository,
             agentRepository,
             propertyRepository,
-            ollamaService,
-            asyncSummaryService,
             callNoteMapper,
             ownershipValidator
         );
@@ -167,7 +158,6 @@ class CallNoteServiceTest {
         when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(testProperty));
         when(callNoteRepository.save(any(CallNote.class))).thenReturn(testCallNote);
         when(callNoteMapper.toResponse(testCallNote)).thenReturn(testCallNoteResponse);
-        doNothing().when(asyncSummaryService).generateAndPersistSummary(clientId);
 
         // When
         CallNoteDto.Response result = callNoteService.createCallNote(agentId, request);
@@ -179,7 +169,6 @@ class CallNoteServiceTest {
         verify(clientRepository).findById(clientId);
         verify(propertyRepository).findById(propertyId);
         verify(callNoteRepository).save(any(CallNote.class));
-        verify(asyncSummaryService).generateAndPersistSummary(clientId);
     }
 
     @Test
@@ -198,7 +187,6 @@ class CallNoteServiceTest {
         when(clientRepository.findById(clientId)).thenReturn(Optional.of(testClient));
         when(callNoteRepository.save(any(CallNote.class))).thenReturn(testCallNote);
         when(callNoteMapper.toResponse(testCallNote)).thenReturn(testCallNoteResponse);
-        doNothing().when(asyncSummaryService).generateAndPersistSummary(clientId);
 
         // When
         CallNoteDto.Response result = callNoteService.createCallNote(agentId, request);
@@ -308,7 +296,6 @@ class CallNoteServiceTest {
         when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(testProperty));
         when(callNoteRepository.save(testCallNote)).thenReturn(testCallNote);
         when(callNoteMapper.toResponse(testCallNote)).thenReturn(testCallNoteResponse);
-        doNothing().when(asyncSummaryService).generateAndPersistSummary(clientId);
 
         // When
         CallNoteDto.Response result = callNoteService.updateCallNote(agentId, callNoteId, request);
@@ -317,7 +304,6 @@ class CallNoteServiceTest {
         assertThat(result).isNotNull();
         verify(callNoteRepository).findById(callNoteId);
         verify(callNoteRepository).save(testCallNote);
-        verify(asyncSummaryService).generateAndPersistSummary(clientId);
     }
 
     @Test
@@ -421,7 +407,6 @@ class CallNoteServiceTest {
         // Given
         when(callNoteRepository.findById(callNoteId)).thenReturn(Optional.of(testCallNote));
         doNothing().when(callNoteRepository).delete(testCallNote);
-        doNothing().when(asyncSummaryService).generateAndPersistSummary(clientId);
 
         // When
         callNoteService.deleteCallNote(agentId, callNoteId);
@@ -429,7 +414,6 @@ class CallNoteServiceTest {
         // Then
         verify(callNoteRepository).findById(callNoteId);
         verify(callNoteRepository).delete(testCallNote);
-        verify(asyncSummaryService).generateAndPersistSummary(clientId);
     }
 
     @Test
@@ -719,81 +703,5 @@ class CallNoteServiceTest {
         assertThat(result.getClientId()).isEqualTo(clientId);
         assertThat(result.getTotalCallNotes()).isEqualTo(0);
         assertThat(result.getLastCallDate()).isNull();
-    }
-
-    // ========================================
-    // generateAiSummary Tests
-    // ========================================
-
-    @Test
-    void generateAiSummary_WithExistingSummary_ShouldReturnStoredSummary() {
-        // Given
-        String existingSummary = "This is an existing AI summary";
-        LocalDateTime summaryDate = LocalDateTime.now().minusHours(1);
-        testClient.setAiSummary(existingSummary);
-        testClient.setAiSummaryUpdatedAt(summaryDate);
-
-        when(clientRepository.findById(clientId)).thenReturn(Optional.of(testClient));
-        when(callNoteRepository.findByClientOrderByCallDateDesc(testClient))
-            .thenReturn(List.of(testCallNote));
-
-        // When
-        AiSummaryDto result = callNoteService.generateAiSummary(clientId, agentId);
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getSummary()).isEqualTo(existingSummary);
-        assertThat(result.getGeneratedAt()).isEqualTo(summaryDate);
-        assertThat(result.getCallNotesCount()).isEqualTo(1);
-        assertThat(result.isAvailable()).isTrue();
-        verifyNoInteractions(asyncSummaryService);
-    }
-
-    @Test
-    void generateAiSummary_WithNoExistingSummary_ShouldTriggerGeneration() {
-        // Given
-        testClient.setAiSummary(null);
-        testClient.setAiSummaryUpdatedAt(null);
-
-        when(clientRepository.findById(clientId)).thenReturn(Optional.of(testClient));
-        when(callNoteRepository.findByClientOrderByCallDateDesc(testClient))
-            .thenReturn(List.of(testCallNote));
-        doNothing().when(asyncSummaryService).generateAndPersistSummary(clientId);
-
-        // When
-        AiSummaryDto result = callNoteService.generateAiSummary(clientId, agentId);
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getSummary()).contains("wird gerade generiert");
-        assertThat(result.isAvailable()).isFalse();
-        verify(asyncSummaryService).generateAndPersistSummary(clientId);
-    }
-
-    @Test
-    void generateAiSummary_WithNoCallNotes_ShouldThrowException() {
-        // Given
-        when(clientRepository.findById(clientId)).thenReturn(Optional.of(testClient));
-        when(callNoteRepository.findByClientOrderByCallDateDesc(testClient))
-            .thenReturn(List.of());
-
-        // When & Then
-        assertThatThrownBy(() -> callNoteService.generateAiSummary(clientId, agentId))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("No call notes found");
-    }
-
-    @Test
-    void generateAiSummary_WithWrongAgent_ShouldThrowException() {
-        // Given
-        UUID wrongAgentId = UUID.randomUUID();
-        when(clientRepository.findById(clientId)).thenReturn(Optional.of(testClient));
-
-        // When & Then
-        assertThatThrownBy(() -> callNoteService.generateAiSummary(clientId, wrongAgentId))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Not authorized");
-
-        verifyNoInteractions(callNoteRepository);
     }
 }

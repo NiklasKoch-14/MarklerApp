@@ -151,13 +151,6 @@ app:
       compression-quality: 0.9
       max-width: 0  # 0 = no resizing
       max-height: 0  # 0 = no resizing
-  # Ollama AI Configuration
-  ollama:
-    enabled: ${OLLAMA_ENABLED:false}  # Disabled by default (requires Ollama container)
-    base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
-    model: ${OLLAMA_MODEL:phi3:mini}
-    timeout: ${OLLAMA_TIMEOUT:120000}  # 2 minutes (120 seconds) for AI inference
-    max-tokens: 500  # Max tokens for summary generation
 
 ---
 spring:
@@ -168,11 +161,19 @@ spring:
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:database}:5432/${POSTGRES_DB:realestate_crm}
     username: ${POSTGRES_USER:crmuser}
+    password: ${POSTGRES_PASSWORD:devpassword}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 300000
+      max-lifetime: 600000
 
   jpa:
     hibernate:
-      ddl-auto: update  # Use update for now, can switch to Flyway later
+      ddl-auto: none
+    show-sql: false
+    defer-datasource-initialization: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -183,17 +184,15 @@ spring:
           order_updates: true
         query:
           in_clause_parameter_padding: true
-    defer-datasource-initialization: true
 
   sql:
     init:
-      mode: always
-      continue-on-error: true
+      mode: never
 
   flyway:
-    enabled: false  # Disable Flyway for now to avoid circular dependency
+    enabled: true
     locations: classpath:db/migration
-    baseline-on-migrate: true
+    baseline-on-migrate: false
 
 server:
   port: 8085
@@ -223,16 +222,18 @@ spring:
     activate:
       on-profile: prod
 
+  # Runtime: Supabase Transaction Pooler (port 6543) — stateless, HikariCP friendly
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT:5432}/${POSTGRES_DB}
+    url: ${DATABASE_URL}
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: 20
-      minimum-idle: 5
+      maximum-pool-size: 10
+      minimum-idle: 2
       idle-timeout: 300000
       max-lifetime: 600000
+      connection-init-sql: "SET application_name='marklerapp'"
 
   jpa:
     hibernate:
@@ -249,8 +250,16 @@ spring:
         query:
           in_clause_parameter_padding: true
 
+  sql:
+    init:
+      mode: never
+
+  # Flyway: uses Session connection (port 5432) — required for DDL outside transaction pooler
   flyway:
     enabled: true
+    url: ${FLYWAY_URL:${DATABASE_URL}}
+    user: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
     locations: classpath:db/migration
     baseline-on-migrate: false
 
@@ -282,3 +291,10 @@ app:
   file-storage:
     upload-dir: ${FILE_UPLOAD_DIR:/app/uploads/properties}
     max-file-size: ${MAX_FILE_SIZE:10485760}  # 10MB
+
+supabase:
+  storage:
+    url: ${SUPABASE_URL}
+    service-role-key: ${SUPABASE_SERVICE_ROLE_KEY}
+    bucket: property-images
+    signed-url-expiry-seconds: 3600

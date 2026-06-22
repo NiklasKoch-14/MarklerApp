@@ -96,9 +96,6 @@ docker compose -f docker-compose.dev.yml up --build
 # Backend API: http://localhost:8085
 # API Docs: http://localhost:8085/swagger-ui.html
 # PostgreSQL: localhost:5432
-
-#Ollama model 
-docker exec realestate-ollama-dev ollama pull phi3:mini
 ```
 
 ### 3. Manual Local Development
@@ -181,7 +178,7 @@ docker compose --env-file .env.prod up --build -d
 
 **Features:**
 - ✅ Nginx reverse proxy with HTTPS (Let's Encrypt or self-signed)
-- ✅ Complete backend + frontend + database + Ollama AI
+- ✅ Complete backend + frontend + database
 - ✅ Network isolation (database not exposed externally)
 - ✅ Resource limits optimized for Raspberry Pi (4GB+ RAM)
 - ✅ Automatic SSL certificate renewal

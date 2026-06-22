@@ -42,12 +42,19 @@ public class PropertyImage extends BaseEntity {
     @Size(max = 500, message = "File path must not exceed 500 characters")
     private String filePath;
 
-    // Base64 Image Data (stored directly in database)
+    // Base64 Image Data — legacy; kept for rows uploaded before Supabase Storage migration
     @Column(name = "image_data", columnDefinition = "TEXT")
     private String imageData;
 
     @Column(name = "thumbnail_data", columnDefinition = "TEXT")
     private String thumbnailData;
+
+    // Supabase Storage paths (set for all new uploads; null on legacy Base64 rows)
+    @Column(name = "storage_path", length = 1000)
+    private String storagePath;
+
+    @Column(name = "thumbnail_storage_path", length = 1000)
+    private String thumbnailStoragePath;
 
     @Column(name = "content_type", nullable = false, length = 100)
     @NotBlank(message = "Content type is required")
