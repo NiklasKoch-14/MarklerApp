@@ -257,11 +257,11 @@ spring:
     init:
       mode: never
 
-  # Flyway: uses direct Session connection (port 5432), user = plain postgres
+  # Flyway: Session Pooler (pooler.supabase.com:5432) — IPv4-reachable, same user format as Transaction Pooler
   flyway:
     enabled: true
     url: ${FLYWAY_URL:${DATABASE_URL}}
-    user: ${FLYWAY_USER:postgres}
+    user: ${FLYWAY_USER:${POSTGRES_USER}}
     password: ${POSTGRES_PASSWORD}
     locations: classpath:db/migration
     baseline-on-migrate: false
