@@ -238,6 +238,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
+    defer-datasource-initialization: false
     show-sql: false
     properties:
       hibernate:
