@@ -128,7 +128,7 @@ INSERT INTO properties (id, agent_id, title, description, property_type, listing
                        address_state, living_area_sqm, rooms, bedrooms, bathrooms, construction_year,
                        price, has_elevator, has_balcony, has_parking, energy_efficiency_class, available_from)
 VALUES
-    ('p1234567-8901-2345-6789-012345678901', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    ('b1234567-8901-2345-6789-012345678901', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
      'Moderne 3-Zimmer-Wohnung in Berlin Mitte',
      'Stilvolle und moderne 3-Zimmer-Wohnung im Herzen von Berlin. Die Wohnung besticht durch helle Räume, eine moderne Ausstattung und eine perfekte Lage. Ideal für Berufstätige oder kleine Familien.',
      'APARTMENT', 'SALE', 'AVAILABLE',
@@ -136,7 +136,7 @@ VALUES
      'Berlin', 95.50, 3.0, 2, 1, 2015,
      450000.00, true, true, false, 'B', '2024-01-15'),
 
-    ('p2345678-9012-3456-7890-123456789012', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    ('b2345678-9012-3456-7890-123456789012', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
      'Charmantes Einfamilienhaus mit Garten',
      'Wunderschönes Einfamilienhaus in ruhiger Wohnlage mit gepflegtem Garten. Das Haus verfügt über 5 Zimmer, 2 Bäder und einen Keller. Perfekt für Familien mit Kindern.',
      'HOUSE', 'SALE', 'AVAILABLE',
@@ -144,7 +144,7 @@ VALUES
      'Bayern', 140.00, 5.0, 3, 2, 1995,
      680000.00, false, false, true, 'C', '2024-02-01'),
 
-    ('p3456789-0123-4567-8901-234567890123', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    ('b3456789-0123-4567-8901-234567890123', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
      'Luxus-Penthouse mit Dachterrasse',
      'Exklusives Penthouse in erstklassiger Lage mit großer Dachterrasse und herrlichem Blick über die Stadt. Hochwertige Ausstattung und modernste Technik.',
      'PENTHOUSE', 'RENT', 'AVAILABLE',
@@ -152,7 +152,7 @@ VALUES
      'Hamburg', 180.00, 4.0, 3, 2, 2020,
      3500.00, true, false, true, 'A+', '2024-03-01'),
 
-    ('p4567890-1234-5678-9012-345678901234', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    ('b4567890-1234-5678-9012-345678901234', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
      'Gemütliche 2-Zimmer-Wohnung für Studenten',
      'Kleine aber feine 2-Zimmer-Wohnung in Universitätsnähe. Ideal für Studenten oder Singles. Gute Verkehrsanbindung und Einkaufsmöglichkeiten in der Nähe.',
      'APARTMENT', 'RENT', 'AVAILABLE',
@@ -160,7 +160,7 @@ VALUES
      'Baden-Württemberg', 52.00, 2.0, 1, 1, 1980,
      850.00, false, true, false, 'D', '2024-01-01'),
 
-    ('p5678901-2345-6789-0123-456789012345', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    ('b5678901-2345-6789-0123-456789012345', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
      'Renoviertes Stadthaus im Zentrum',
      'Vollständig renoviertes Stadthaus in zentraler Lage. Kombination aus historischem Charme und modernem Komfort. 3 Etagen mit viel Platz für die ganze Familie.',
      'TOWNHOUSE', 'SALE', 'RESERVED',
@@ -171,19 +171,19 @@ VALUES
 -- Insert sample property images
 INSERT INTO property_images (id, property_id, filename, original_filename, content_type, title, is_primary, sort_order, image_type)
 VALUES
-    ('i1234567-8901-2345-6789-012345678901', 'p1234567-8901-2345-6789-012345678901',
+    ('e1234567-8901-2345-6789-012345678901', 'b1234567-8901-2345-6789-012345678901',
      'berlin_apartment_main.jpg', 'IMG_001.jpg', 'image/jpeg', 'Hauptansicht Wohnzimmer', true, 1, 'INTERIOR'),
 
-    ('i2345678-9012-3456-7890-123456789012', 'p1234567-8901-2345-6789-012345678901',
+    ('e2345678-9012-3456-7890-123456789012', 'b1234567-8901-2345-6789-012345678901',
      'berlin_apartment_kitchen.jpg', 'IMG_002.jpg', 'image/jpeg', 'Moderne Küche', false, 2, 'KITCHEN'),
 
-    ('i3456789-0123-4567-8901-234567890123', 'p2345678-9012-3456-7890-123456789012',
+    ('e3456789-0123-4567-8901-234567890123', 'b2345678-9012-3456-7890-123456789012',
      'munich_house_exterior.jpg', 'IMG_003.jpg', 'image/jpeg', 'Hausansicht mit Garten', true, 1, 'EXTERIOR'),
 
-    ('i4567890-1234-5678-9012-345678901234', 'p3456789-0123-4567-8901-234567890123',
+    ('e4567890-1234-5678-9012-345678901234', 'b3456789-0123-4567-8901-234567890123',
      'hamburg_penthouse_terrace.jpg', 'IMG_004.jpg', 'image/jpeg', 'Dachterrasse mit Blick', true, 1, 'BALCONY_TERRACE'),
 
-    ('i5678901-2345-6789-0123-456789012345', 'p4567890-1234-5678-9012-345678901234',
+    ('e5678901-2345-6789-0123-456789012345', 'b4567890-1234-5678-9012-345678901234',
      'heidelberg_apartment_main.jpg', 'IMG_005.jpg', 'image/jpeg', 'Wohnbereich', true, 1, 'INTERIOR');
 
 -- Create constraints and checks

@@ -58,6 +58,6 @@ VALUES
 -- Insert sample search criteria for the clients
 INSERT INTO property_search_criteria (id, client_id, min_square_meters, max_square_meters, min_rooms, max_rooms, min_budget, max_budget, preferred_locations, property_types)
 VALUES
-    ('s1234567-8901-2345-6789-012345678901', 'c1234567-8901-2345-6789-012345678901', 80, 120, 3, 4, 300000.00, 500000.00, 'Berlin, Charlottenburg, Wilmersdorf', 'APARTMENT'),
-    ('s2345678-9012-3456-7890-123456789012', 'c2345678-9012-3456-7890-123456789012', 100, 150, 2, 3, 400000.00, 700000.00, 'Munich, Schwabing, Maxvorstadt', 'APARTMENT, HOUSE'),
-    ('s3456789-0123-4567-8901-234567890123', 'c3456789-0123-4567-8901-234567890123', 120, 200, 4, 5, 500000.00, 800000.00, 'Hamburg, Altona, Eppendorf', 'HOUSE');
+    ('a1234567-8901-2345-6789-012345678901', 'c1234567-8901-2345-6789-012345678901', 80, 120, 3, 4, 300000.00, 500000.00, 'Berlin, Charlottenburg, Wilmersdorf', 'APARTMENT'),
+    ('a2345678-9012-3456-7890-123456789012', 'c2345678-9012-3456-7890-123456789012', 100, 150, 2, 3, 400000.00, 700000.00, 'Munich, Schwabing, Maxvorstadt', 'APARTMENT, HOUSE'),
+    ('a3456789-0123-4567-8901-234567890123', 'c3456789-0123-4567-8901-234567890123', 120, 200, 4, 5, 500000.00, 800000.00, 'Hamburg, Altona, Eppendorf', 'HOUSE');
