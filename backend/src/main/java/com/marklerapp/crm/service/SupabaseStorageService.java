@@ -5,6 +5,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -86,9 +87,9 @@ public class SupabaseStorageService {
         if (storagePaths == null || storagePaths.isEmpty()) {
             return;
         }
-        client.delete()
+        client.method(HttpMethod.DELETE)
             .uri("/storage/v1/object/{bucket}", props.getBucket())
-            .header("Content-Type", "application/json")
+            .contentType(MediaType.APPLICATION_JSON)
             .body(Map.of("prefixes", storagePaths))
             .retrieve()
             .toBodilessEntity();

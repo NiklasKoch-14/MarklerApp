@@ -62,6 +62,8 @@ public interface PropertyImageMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "imageData", ignore = true)
     @Mapping(target = "thumbnailData", ignore = true)
+    @Mapping(target = "storagePath", ignore = true)
+    @Mapping(target = "thumbnailStoragePath", ignore = true)
     @Mapping(target = "isMainImage", ignore = true)
     @Mapping(target = "displayOrder", ignore = true)
     @Mapping(target = "mimeType", ignore = true)
