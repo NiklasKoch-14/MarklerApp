@@ -294,7 +294,7 @@ app:
 
 supabase:
   storage:
-    url: ${SUPABASE_URL}
-    service-role-key: ${SUPABASE_SERVICE_ROLE_KEY}
+    url: ${SUPABASE_URL:}
+    service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:}
     bucket: property-images
     signed-url-expiry-seconds: 3600
