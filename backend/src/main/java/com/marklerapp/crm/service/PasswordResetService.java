@@ -38,11 +38,10 @@ public class PasswordResetService {
 
     private final PasswordResetTokenRepository tokenRepository;
     private final AgentRepository agentRepository;
-    private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    @Value("${application.mail.reset-token-expiration-minutes}")
+    @Value("${application.password-reset.token-expiration-minutes:15}")
     private int expirationMinutes;
 
     /**
@@ -97,14 +96,7 @@ public class PasswordResetService {
 
         tokenRepository.save(resetToken);
 
-        // Send email with plaintext token
-        // Note: EmailService handles its own logging for success/skip/failure
-        try {
-            emailService.sendPasswordResetEmail(agent, token);
-        } catch (Exception e) {
-            log.error("Failed to send password reset email to: {}", email, e);
-            // Continue anyway to prevent leaking information about email existence
-        }
+        log.info("Password reset token generated for: {}. Email delivery not configured.", email);
 
         return ValidationConstants.PASSWORD_RESET_EMAIL_SENT_MESSAGE;
     }
