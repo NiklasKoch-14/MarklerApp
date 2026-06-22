@@ -257,16 +257,16 @@ spring:
     init:
       mode: never
 
-  # Flyway: Session Pooler (pooler.supabase.com:5432) — IPv4-reachable, same user format as Transaction Pooler
+  # Flyway: reuses the shared HikariCP DataSource (no separate flyway.url needed).
+  # postgresql.transactional-lock=false is required when Supabase Transaction Pooler (PGBouncer
+  # transaction mode) is the only available endpoint — advisory locks don't survive across
+  # pooled transactions. Safe because Railway deploys a single instance (no concurrent migrations).
   flyway:
     enabled: true
-    url: ${FLYWAY_URL:${DATABASE_URL}}
-    user: ${FLYWAY_USER:${POSTGRES_USER}}
-    password: ${POSTGRES_PASSWORD}
     locations: classpath:db/migration
     baseline-on-migrate: false
-    jdbc-properties:
-      sslmode: require
+    postgresql:
+      transactional-lock: false
 
 server:
   port: ${PORT:8085}
