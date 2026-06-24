@@ -1,3 +1,8 @@
+# Cypress
+frontend/cypress.env.json
+frontend/cypress/screenshots/
+frontend/cypress/videos/
+
 # Java / Spring Boot
 target/
 *.class
