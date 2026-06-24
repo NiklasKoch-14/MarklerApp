@@ -18,8 +18,8 @@ COPY nginx.conf /etc/nginx/templates/default.conf.template
 # Angular-Build rein
 COPY --from=build /app/dist/realestate-crm-frontend /usr/share/nginx/html
 
+ENV PORT=80
 EXPOSE 80
 
-# envsubst ersetzt ${BACKEND_URL} im Template, dann startet nginx
-# Nur ${BACKEND_URL} wird substituiert — nginx-Variablen wie $uri bleiben unberührt
-CMD ["sh", "-c", "envsubst '${BACKEND_URL}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+# envsubst ersetzt ${BACKEND_URL} und ${PORT} — nginx-Variablen wie $uri bleiben unberührt
+CMD ["sh", "-c", "envsubst '${BACKEND_URL} ${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
