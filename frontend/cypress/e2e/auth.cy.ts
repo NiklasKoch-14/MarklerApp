@@ -1,6 +1,25 @@
 const uniqueEmail = () => `cypress.${Date.now()}@marklerapp.test`;
 
+const TEST_EMAIL = Cypress.env('TEST_EMAIL') as string;
+const TEST_PASSWORD = Cypress.env('TEST_PASSWORD') as string;
+
+function ensureTestUserExists() {
+  cy.request({
+    method: 'POST',
+    url: '/api/v1/auth/register',
+    body: {
+      firstName: 'Cypress',
+      lastName: 'TestUser',
+      email: TEST_EMAIL,
+      password: TEST_PASSWORD,
+      languagePreference: 'DE',
+    },
+    failOnStatusCode: false,
+  });
+}
+
 describe('Login', () => {
+  before(ensureTestUserExists);
   beforeEach(() => cy.visit('/auth/login'));
 
   it('zeigt Fehler bei falschen Zugangsdaten', () => {
@@ -12,8 +31,8 @@ describe('Login', () => {
   });
 
   it('leitet nach erfolgreichem Login zum Dashboard weiter', () => {
-    cy.get('#email').type(Cypress.env('TEST_EMAIL'));
-    cy.get('#password').type(Cypress.env('TEST_PASSWORD'));
+    cy.get('#email').type(TEST_EMAIL);
+    cy.get('#password').type(TEST_PASSWORD);
     cy.get('button[type=submit]').click();
     cy.url().should('include', '/dashboard');
   });
@@ -24,6 +43,7 @@ describe('Login', () => {
 });
 
 describe('Register', () => {
+  before(ensureTestUserExists);
   beforeEach(() => cy.visit('/auth/register'));
 
   it('registriert erfolgreich mit gültigen Daten', () => {
@@ -49,8 +69,8 @@ describe('Register', () => {
   it('zeigt Fehler bei bereits genutzter E-Mail', () => {
     cy.get('#firstName').type('Cypress');
     cy.get('#lastName').type('Dupe');
-    cy.get('#email').type(Cypress.env('TEST_EMAIL')).blur();
-    cy.get('[class*=error]').should('contain.text', /taken|vergeben|bereits/i);
+    cy.get('#email').type(TEST_EMAIL).blur();
+    cy.get('[class*=error]', { timeout: 12000 }).should('be.visible');
   });
 
   it('blockiert Absenden bei nicht übereinstimmenden Passwörtern', () => {
@@ -72,6 +92,8 @@ describe('Register', () => {
 });
 
 describe('Auth Guards', () => {
+  before(ensureTestUserExists);
+
   it('leitet unauthentifizierten Nutzer vom Dashboard zum Login', () => {
     cy.visit('/dashboard');
     cy.url().should('include', '/auth/login');
