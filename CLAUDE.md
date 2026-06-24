@@ -17,7 +17,7 @@ Plan tiers: Free/Trial · Basic 29€ · Pro 69€ · Agency 149€. Full roadma
 | Frontend | Angular 17 standalone components, TypeScript 5+, Tailwind CSS, i18n |
 | Database | Supabase (managed PostgreSQL 17.6) — Session Pooler in prod |
 | Storage | Supabase Storage (S3-compatible REST API) |
-| Hosting | Railway (backend Docker), Vercel (frontend — Phase 1.6) |
+| Hosting | Railway (backend Docker + frontend nginx — ein Dashboard, kein Vercel) |
 | Local dev | SQLite (dev profile), Docker Compose (`docker-compose.dev.yml`) |
 
 **Key Paths**:
@@ -33,7 +33,7 @@ Plan tiers: Free/Trial · Basic 29€ · Pro 69€ · Agency 149€. Full roadma
 | 1.1–1.3 | ✅ Done | Supabase Postgres + Storage integration |
 | 1.4 | ✅ Done | Supabase Storage for property images |
 | 1.5 | ✅ Done | Railway backend deployment |
-| 1.6 | ⏳ Next | Vercel frontend deployment |
+| 1.6 | ⏳ Next | Railway frontend (nginx Docker, kein Vercel) |
 | 2 | Planned | Multi-tenancy (Organization entity, tenant isolation) |
 | 3 | Planned | Plan limits |
 | 4 | Planned | Stripe integration |

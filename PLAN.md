@@ -61,14 +61,27 @@
 - [ ] `backend/Dockerfile` deployen, Env-Vars setzen (DB-URL, JWT_SECRET, CORS, Storage-Keys)
 - [ ] Healthcheck `/api/v1/actuator/health` einbinden
 
-### 1.6 Frontend-Hosting
-- [ ] Angular-Frontend auf Vercel/Netlify deployen (`dist/frontend/browser`)
-- [ ] `environment.prod.ts` → API-URL des Railway-Backends
-- [ ] CORS im Backend auf Frontend-Domain einschränken
+### 1.6 Frontend-Hosting (Railway nginx — kein Vercel)
+
+> Entscheidung (2026-06-24): Kein dritter Service. Angular läuft als zweiter Railway-Service mit nginx.
+> nginx proxied `/api/` intern zum Backend → Angular nutzt relative URL `/api/v1` → kein Build-Time-URL nötig.
+
+- [x] `frontend/Dockerfile` — nginx multi-stage build, `envsubst` injiziert `BACKEND_URL` zur Laufzeit
+- [x] `frontend/nginx.conf` — proxy `/api/` → `${BACKEND_URL}`, Angular SPA-Routing, Gzip, Security-Header
+- [x] `frontend/src/environments/environment.prod.ts` — `apiUrl: '/api/v1'` (relativ, war Vercel-URL)
+- [ ] Zweiten Railway-Service `frontend` anlegen (gleiche Railway-App wie Backend-Service)
+  - Source: `frontend/` Verzeichnis
+  - Dockerfile: `frontend/Dockerfile`
+  - Env-Var: `BACKEND_URL=https://<deine-railway-backend-domain>`
+- [ ] CORS im Backend (`CORS_ALLOWED_ORIGINS`) auf Frontend-Railway-Domain setzen
+- [ ] Healthcheck Railway → `/health` (nginx gibt 200 zurück)
 
 ---
 
 ## Phase 2 — Multi-Tenancy (Fundament fürs Abrechnen)
+
+> **Defer-Entscheidung (2026-06-24):** Erst umsetzen wenn der erste externe Makler sagt "ich will einen Kollegen hinzufügen".
+> Bis dahin: eine Instanz, ein Makler, Fokus auf Kernfeature (Gesprächsnotizen + Kundenkontakt).
 
 > Heute: ein Makler pro Instanz. Für SaaS braucht jede Maklerfirma ihren eigenen Daten-Silo.
 
@@ -85,14 +98,16 @@
 
 ## Phase 3 — Abo-Tiers & Usage-Limits
 
-| Feature | Free (14-Tage-Trial) | Basic 29€/Mo | Pro 69€/Mo | Agency 149€/Mo |
-|---|---|---|---|---|
-| Makler/Nutzer | 1 | 3 | 10 | unbegrenzt |
-| Kunden | 20 | 200 | unbegrenzt | unbegrenzt |
-| Objekte | 5 | 100 | unbegrenzt | unbegrenzt |
-| Expose-PDF-Export | – | – | ✅ | ✅ |
-| Custom Branding | – | – | – | ✅ |
-| GDPR-Export | ✅ | ✅ | ✅ | ✅ |
+> **Vereinfacht (2026-06-24):** Start mit 2 Tiers. Basic + Pro kommen wenn der erste Kunde sagt
+> "ich bräuchte mehr Kunden/Objekte". Agency-Tier erst wenn Multi-Tenancy (Phase 2) gebaut ist.
+
+| Feature | Free (14-Tage-Trial) | Pro 49€/Mo |
+|---|---|---|
+| Makler/Nutzer | 1 | 1 |
+| Kunden | 20 | unbegrenzt |
+| Objekte | 10 | unbegrenzt |
+| Gesprächsnotizen | unbegrenzt | unbegrenzt |
+| GDPR-Export | ✅ | ✅ |
 
 - [ ] `PlanTier`-Enum + Limit-Definitionen zentral (Konfiguration, nicht hartcodiert verstreut)
 - [ ] `PlanLimitService`: prüft Limits vor jedem Create (Clients/Properties/Agents)
@@ -103,6 +118,10 @@
 ---
 
 ## Phase 4 — Stripe-Integration (Monetarisierung)
+
+> **Defer-Entscheidung (2026-06-24):** Stripe erst einbauen wenn der erste Kunde manuell zahlt
+> (Überweisung oder PayPal-Link). Kein Stripe ohne echten zahlenden Kunden — sonst baut man
+> Payment-Infrastruktur für 0 Nutzer.
 
 ### 4.1 Backend
 - [ ] `stripe-java` Dependency in `pom.xml`

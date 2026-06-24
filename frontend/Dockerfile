@@ -1,40 +1,25 @@
-# Build stage
-FROM node:20-alpine as build
+# Build stage — Angular kompilieren
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
+RUN npm ci
 
-# Install dependencies (including dev dependencies needed for build)
-RUN npm install
-
-# Copy source code
 COPY . .
-
-# Build argument for API URL (use relative path for reverse proxy)
-ARG API_BASE_URL=/api/v1
-ENV API_BASE_URL=$API_BASE_URL
-
-# Build the application
 RUN npm run build:prod
 
-# Production stage
+# Production stage — nginx serviert die App
 FROM nginx:alpine
 
-# Copy custom nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# nginx.conf als Template kopieren (BACKEND_URL wird zur Laufzeit ersetzt)
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 
-# Copy built application
+# Angular-Build rein
 COPY --from=build /app/dist/realestate-crm-frontend /usr/share/nginx/html
-
-# Create nginx user directories
-RUN mkdir -p /var/cache/nginx/client_temp /var/cache/nginx/proxy_temp \
-    /var/cache/nginx/fastcgi_temp /var/cache/nginx/uwsgi_temp \
-    /var/cache/nginx/scgi_temp && \
-    chmod -R 755 /var/cache/nginx && \
-    chown -R nginx:nginx /var/cache/nginx
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+# envsubst ersetzt ${BACKEND_URL} im Template, dann startet nginx
+# Nur ${BACKEND_URL} wird substituiert — nginx-Variablen wie $uri bleiben unberührt
+CMD ["sh", "-c", "envsubst '${BACKEND_URL}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
