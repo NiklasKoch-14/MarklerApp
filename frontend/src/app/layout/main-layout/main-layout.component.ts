@@ -1,82 +1,172 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
-import { AuthService } from '../../core/auth/auth.service';
-import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
-import { LanguageSwitcherComponent } from '../../shared/components/language-switcher/language-switcher.component';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { AuthService, Agent } from '../../core/auth/auth.service';
+import { ThemeService } from '../../core/services/theme.service';
+
+interface NavItem {
+  route: string;
+  icon: string;
+  labelKey: string;
+  exact?: boolean;
+}
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, TranslateModule, ThemeToggleComponent, LanguageSwitcherComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, TranslateModule],
   template: `
-    <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <!-- Navigation -->
-      <nav class="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex justify-between h-16">
-            <div class="flex">
-              <div class="flex-shrink-0 flex items-center">
-                <h1 class="text-xl font-bold text-primary-600 dark:text-primary-400">Real Estate CRM</h1>
-              </div>
-              <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <a routerLink="/dashboard"
-                   routerLinkActive="border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20"
-                   [routerLinkActiveOptions]="{exact: true}"
-                   class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-3 pt-1 pb-1 border-b-2 text-sm font-medium transition-colors duration-200">
-                  {{ 'navigation.dashboard' | translate }}
-                </a>
-                <a routerLink="/clients"
-                   routerLinkActive="border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20"
-                   class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-3 pt-1 pb-1 border-b-2 text-sm font-medium transition-colors duration-200">
-                  {{ 'navigation.clients' | translate }}
-                </a>
-                <a routerLink="/properties"
-                   routerLinkActive="border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20"
-                   class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-3 pt-1 pb-1 border-b-2 text-sm font-medium transition-colors duration-200">
-                  {{ 'navigation.properties' | translate }}
-                </a>
-                <a routerLink="/call-notes"
-                   routerLinkActive="border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20"
-                   class="border-transparent text-gray-500 dark:text-gray-300 hover:border-gray-300 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center px-3 pt-1 pb-1 border-b-2 text-sm font-medium transition-colors duration-200">
-                  {{ 'navigation.callNotes' | translate }}
-                </a>
-              </div>
-            </div>
-            <div class="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
-              <!-- Theme Toggle -->
-              <app-theme-toggle></app-theme-toggle>
+    <div class="app-shell">
 
-              <!-- Language Switcher -->
-              <app-language-switcher></app-language-switcher>
+      <!-- ── Sidebar ─────────────────────────────────── -->
+      <aside class="sidebar">
 
-              <!-- Logout -->
-              <div class="ml-3 relative">
-                <button (click)="logout()"
-                        class="bg-white dark:bg-gray-800 rounded-md p-2 text-gray-400 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600">
-                  {{ 'auth.logout' | translate }}
-                </button>
-              </div>
-            </div>
+        <!-- Brand -->
+        <div class="sidebar-brand">
+          <div class="sidebar-logo">
+            <i class="ph-bold ph-house-line" style="font-size:20px; color:#fff;"></i>
+          </div>
+          <div>
+            <div class="sidebar-brand-name">MarklerApp</div>
+            <div class="sidebar-brand-tagline">{{ 'navigation.tagline' | translate }}</div>
           </div>
         </div>
-      </nav>
 
-      <!-- Main content -->
-      <main>
-        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <router-outlet></router-outlet>
+        <!-- Nav -->
+        <nav class="sidebar-nav">
+          @for (item of navItems; track item.route) {
+            <a [routerLink]="item.route"
+               routerLinkActive="active"
+               [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+               class="sidebar-nav-item">
+              <i [class]="item.icon" style="font-size:19px; width:22px; text-align:center;"></i>
+              <span style="flex:1; text-align:left;">{{ item.labelKey | translate }}</span>
+            </a>
+          }
+        </nav>
+
+        <!-- User -->
+        <div class="sidebar-user">
+          <div class="sidebar-avatar">{{ userInitials }}</div>
+          <div style="min-width:0; flex:1;">
+            <div class="sidebar-user-name">{{ userName }}</div>
+            <div class="sidebar-user-role">{{ 'navigation.role' | translate }}</div>
+          </div>
+          <button class="sidebar-icon-btn" (click)="logout()" [title]="'auth.logout' | translate">
+            <i class="ph ph-sign-out" style="font-size:17px;"></i>
+          </button>
         </div>
-      </main>
+
+      </aside>
+
+      <!-- ── Content area ────────────────────────────── -->
+      <div class="content-area">
+
+        <!-- Topbar -->
+        <header class="topbar">
+          <div class="topbar-search-wrap">
+            <i class="ph ph-magnifying-glass topbar-search-icon"></i>
+            <input class="topbar-search-input"
+                   type="text"
+                   [placeholder]="'navigation.search' | translate" />
+          </div>
+
+          <div class="topbar-spacer"></div>
+
+          <!-- Language toggle -->
+          <div class="lang-toggle">
+            <button class="lang-btn" [class.active]="currentLang === 'de'" (click)="setLang('de')">DE</button>
+            <button class="lang-btn" [class.active]="currentLang === 'en'" (click)="setLang('en')">EN</button>
+          </div>
+
+          <!-- Theme toggle -->
+          <button class="topbar-icon-btn" (click)="toggleTheme()" [title]="'navigation.toggleTheme' | translate">
+            <i [class]="isDark ? 'ph ph-sun' : 'ph ph-moon'" style="font-size:17px;"></i>
+          </button>
+
+          <!-- Notifications -->
+          <button class="topbar-icon-btn">
+            <i class="ph ph-bell" style="font-size:17px;"></i>
+          </button>
+
+          <!-- New Note CTA -->
+          <button class="topbar-cta-btn" [routerLink]="['/call-notes/new']">
+            <i class="ph-bold ph-plus" style="font-size:15px;"></i>
+            <span>{{ 'navigation.newNote' | translate }}</span>
+          </button>
+        </header>
+
+        <!-- Page content -->
+        <main class="page-content">
+          <router-outlet></router-outlet>
+        </main>
+
+      </div>
     </div>
   `
 })
-export class MainLayoutComponent {
+export class MainLayoutComponent implements OnInit, OnDestroy {
+  navItems: NavItem[] = [
+    { route: '/dashboard',   icon: 'ph-fill ph-squares-four',    labelKey: 'navigation.dashboard',  exact: true },
+    { route: '/call-notes',  icon: 'ph-fill ph-chats-circle',    labelKey: 'navigation.callNotes'              },
+    { route: '/clients',     icon: 'ph-fill ph-users',           labelKey: 'navigation.clients'                },
+    { route: '/properties',  icon: 'ph-fill ph-buildings',       labelKey: 'navigation.properties'             },
+  ];
 
-  constructor(private authService: AuthService) {}
+  userInitials = '?';
+  userName = '';
+  currentLang = 'de';
+  isDark = false;
+
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    private authService: AuthService,
+    private themeService: ThemeService,
+    private translate: TranslateService,
+  ) {}
+
+  ngOnInit(): void {
+    this.authService.currentUser$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(user => this.updateUser(user));
+
+    this.themeService.theme$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(theme => this.isDark = theme === 'dark');
+
+    this.currentLang = this.translate.currentLang || this.translate.defaultLang || 'de';
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private updateUser(user: Agent | null): void {
+    if (user) {
+      this.userInitials = `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
+      this.userName = `${user.firstName} ${user.lastName}`;
+    } else {
+      this.userInitials = '?';
+      this.userName = '';
+    }
+  }
 
   logout(): void {
     this.authService.logout();
+  }
+
+  setLang(lang: string): void {
+    this.currentLang = lang;
+    this.translate.use(lang);
+    localStorage.setItem('lang', lang);
+  }
+
+  toggleTheme(): void {
+    this.themeService.toggleTheme();
   }
 }

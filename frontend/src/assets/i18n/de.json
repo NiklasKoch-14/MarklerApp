@@ -145,12 +145,17 @@
     "settings": "Einstellungen",
     "profile": "Profil",
     "help": "Hilfe",
-    "about": "Über uns"
+    "about": "Über uns",
+    "tagline": "Immobilien CRM",
+    "role": "Makler",
+    "search": "Kunden, Notizen suchen...",
+    "newNote": "Neue Notiz",
+    "toggleTheme": "Design wechseln"
   },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Willkommen",
-    "welcomeTitle": "Willkommen bei Immobilien CRM",
+    "welcomeTitle": "Willkommen bei MarklerApp",
     "welcomeDescription": "Verwalten Sie Ihre Kunden, Immobilien und Kommunikation effizient.",
     "overview": "Übersicht",
     "clientManagement": "Kundenverwaltung",
@@ -174,7 +179,30 @@
     "totalCallNotes": "Gesprächsnotizen gesamt",
     "thisMonth": "Diesen Monat",
     "thisWeek": "Diese Woche",
-    "today": "Heute"
+    "today": "Heute",
+    "greetingMorning": "Guten Morgen",
+    "greetingAfternoon": "Guten Tag",
+    "greetingEvening": "Guten Abend",
+    "newCustomer": "Neuer Kunde",
+    "newObject": "Neues Objekt",
+    "tabCards": "Karten",
+    "tabPipeline": "Pipeline",
+    "openFollowups": "Offene Nachfassaktionen",
+    "recentActivity": "Letzte Aktivität",
+    "viewAll": "Alle anzeigen",
+    "markDone": "Als erledigt markieren",
+    "openCustomer": "Kunde öffnen",
+    "noFollowups": "Keine offenen Nachfassaktionen!",
+    "noActivity": "Noch keine Aktivität",
+    "stats": {
+      "clients": "Kunden",
+      "notes": "Gesprächsnotizen",
+      "properties": "Immobilien",
+      "followups": "Nachfassaktionen",
+      "activeThis": "Aktive Kunden",
+      "thisMonth": "Diesen Monat",
+      "open": "Offen"
+    }
   },
   "clients": {
     "title": "Kunden",

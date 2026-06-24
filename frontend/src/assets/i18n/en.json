@@ -145,12 +145,17 @@
     "settings": "Settings",
     "profile": "Profile",
     "help": "Help",
-    "about": "About"
+    "about": "About",
+    "tagline": "Real Estate CRM",
+    "role": "Agent",
+    "search": "Search clients, notes...",
+    "newNote": "New Note",
+    "toggleTheme": "Toggle theme"
   },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome",
-    "welcomeTitle": "Welcome to Real Estate CRM",
+    "welcomeTitle": "Welcome to MarklerApp",
     "welcomeDescription": "Manage your clients, properties, and communications efficiently.",
     "overview": "Overview",
     "clientManagement": "Client Management",
@@ -174,7 +179,30 @@
     "totalCallNotes": "Total Call Notes",
     "thisMonth": "This Month",
     "thisWeek": "This Week",
-    "today": "Today"
+    "today": "Today",
+    "greetingMorning": "Good morning",
+    "greetingAfternoon": "Good afternoon",
+    "greetingEvening": "Good evening",
+    "newCustomer": "New Client",
+    "newObject": "New Property",
+    "tabCards": "Cards",
+    "tabPipeline": "Pipeline",
+    "openFollowups": "Open Follow-ups",
+    "recentActivity": "Recent Activity",
+    "viewAll": "View all",
+    "markDone": "Mark as done",
+    "openCustomer": "Open client",
+    "noFollowups": "No open follow-ups!",
+    "noActivity": "No activity yet",
+    "stats": {
+      "clients": "Clients",
+      "notes": "Call Notes",
+      "properties": "Properties",
+      "followups": "Follow-ups",
+      "activeThis": "Active clients",
+      "thisMonth": "This month",
+      "open": "Open"
+    }
   },
   "clients": {
     "title": "Clients",
