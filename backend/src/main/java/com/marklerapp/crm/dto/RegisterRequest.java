@@ -29,7 +29,7 @@ public class RegisterRequest {
     @Size(min = 2, max = 100, message = "Last name must be between 2 and 100 characters")
     private String lastName;
 
-    @Pattern(regexp = "^[+]?[0-9\\s\\-()]+$", message = "Phone number format is invalid")
+    @Pattern(regexp = "^$|^[+]?[0-9\\s\\-()]+$", message = "Phone number format is invalid")
     @Size(max = 20, message = "Phone number must not exceed 20 characters")
     private String phone;
 
