@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
-import { catchError, of, debounceTime, switchMap } from 'rxjs';
+import { catchError, of, switchMap } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
@@ -236,7 +236,11 @@ export class RegisterComponent {
     this.registerForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
       lastName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-      email: ['', [Validators.required, Validators.email], [this.emailAsyncValidator.bind(this)]],
+      email: ['', {
+        validators: [Validators.required, Validators.email],
+        asyncValidators: [this.emailAsyncValidator.bind(this)],
+        updateOn: 'blur'
+      }],
       phone: ['', [Validators.pattern(/^[+]?[0-9\s\-()]+$/)]],
       password: ['', [
         Validators.required,
@@ -272,13 +276,8 @@ export class RegisterComponent {
       return of(null);
     }
 
-    return of(control.value).pipe(
-      debounceTime(500),
-      switchMap(email =>
-        this.authService.checkEmailAvailability(email).pipe(
-          catchError(() => of({ available: true }))
-        )
-      ),
+    return this.authService.checkEmailAvailability(control.value).pipe(
+      catchError(() => of({ available: true })),
       switchMap(result => of(result.available ? null : { emailTaken: true }))
     );
   }
