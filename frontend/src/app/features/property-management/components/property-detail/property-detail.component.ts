@@ -11,13 +11,15 @@ import {
 } from '../../services/property.service';
 import { FileAttachmentManagerComponent } from '../../../../shared/components/file-attachment-manager/file-attachment-manager.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { FormsModule } from '@angular/forms';
 import { ViewingService, ViewingSummary, ViewingStatus } from '../../../viewing-management/services/viewing.service';
 import { ViewingAddDialogComponent } from '../../../viewing-management/components/viewing-add-dialog/viewing-add-dialog.component';
+import { PropertyNoteService, PropertyNoteResponse, NoteCategory } from '../../services/property-note.service';
 
 @Component({
   selector: 'app-property-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule, TranslateEnumPipe, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, TranslateEnumPipe, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent],
   templateUrl: './property-detail.component.html',
   styleUrls: ['./property-detail.component.scss']
 })
@@ -33,11 +35,37 @@ export class PropertyDetailComponent implements OnInit {
   isLoadingViewings = false;
   showViewingDialog = false;
 
+  propertyNotes: PropertyNoteResponse[] = [];
+  isLoadingNotes = false;
+  newNoteText = '';
+  newNoteCategory: NoteCategory = NoteCategory.GENERAL;
+  isSavingNote = false;
+  NoteCategory = NoteCategory;
+
+  noteCategoryLabels: Record<NoteCategory, string> = {
+    [NoteCategory.GENERAL]: 'Allgemein',
+    [NoteCategory.SELLER_INFO]: 'Verkäufer-Info',
+    [NoteCategory.PRICE_NOTE]: 'Preis-Notiz',
+    [NoteCategory.VIEWING_NOTE]: 'Besichtigungs-Notiz',
+    [NoteCategory.LEGAL_NOTE]: 'Rechtliches'
+  };
+
+  noteCategoryColors: Record<NoteCategory, string> = {
+    [NoteCategory.GENERAL]: 'rgba(0,0,0,0.06)',
+    [NoteCategory.SELLER_INFO]: 'rgba(234,179,8,0.15)',
+    [NoteCategory.PRICE_NOTE]: 'rgba(34,197,94,0.15)',
+    [NoteCategory.VIEWING_NOTE]: 'rgba(59,130,246,0.15)',
+    [NoteCategory.LEGAL_NOTE]: 'rgba(239,68,68,0.12)'
+  };
+
+  noteCategories = Object.values(NoteCategory);
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     public propertyService: PropertyService,
-    private viewingService: ViewingService
+    private viewingService: ViewingService,
+    private propertyNoteService: PropertyNoteService
   ) {}
 
   ngOnInit(): void {
@@ -45,6 +73,7 @@ export class PropertyDetailComponent implements OnInit {
     if (propertyId) {
       this.loadProperty(propertyId);
       this.loadViewings(propertyId);
+      this.loadNotes(propertyId);
     }
   }
 
@@ -100,6 +129,44 @@ export class PropertyDetailComponent implements OnInit {
       case ViewingStatus.CANCELLED: return '#dc2626';
       default: return '#2563eb';
     }
+  }
+
+  private loadNotes(propertyId: string): void {
+    this.isLoadingNotes = true;
+    this.propertyNoteService.getNotesByProperty(propertyId).subscribe({
+      next: (notes) => {
+        this.propertyNotes = notes;
+        this.isLoadingNotes = false;
+      },
+      error: () => { this.isLoadingNotes = false; }
+    });
+  }
+
+  saveNote(): void {
+    if (!this.newNoteText.trim() || !this.property?.id || this.isSavingNote) return;
+    this.isSavingNote = true;
+    this.propertyNoteService.createNote({
+      propertyId: this.property.id,
+      content: this.newNoteText.trim(),
+      category: this.newNoteCategory
+    }).subscribe({
+      next: (note) => {
+        this.propertyNotes = [note, ...this.propertyNotes];
+        this.newNoteText = '';
+        this.newNoteCategory = NoteCategory.GENERAL;
+        this.isSavingNote = false;
+      },
+      error: () => { this.isSavingNote = false; }
+    });
+  }
+
+  deleteNote(noteId: string): void {
+    if (!confirm('Notiz löschen?')) return;
+    this.propertyNoteService.deleteNote(noteId).subscribe({
+      next: () => {
+        this.propertyNotes = this.propertyNotes.filter(n => n.id !== noteId);
+      }
+    });
   }
 
   deleteProperty(): void {
