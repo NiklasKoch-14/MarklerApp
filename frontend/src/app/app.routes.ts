@@ -53,6 +53,15 @@ export const routes: Routes = [
       {
         path: 'call-notes',
         loadChildren: () => import('./features/call-notes/call-notes.routes').then(r => r.callNotesRoutes)
+      },
+      {
+        path: 'notifications',
+        loadComponent: () => import('./features/notifications/notifications.component').then(c => c.NotificationsComponent)
+      },
+      {
+        path: 'matching',
+        redirectTo: '/properties/match',
+        pathMatch: 'full'
       }
     ]
   },

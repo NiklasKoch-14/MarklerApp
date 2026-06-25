@@ -150,7 +150,9 @@
     "role": "Makler",
     "search": "Kunden, Notizen suchen...",
     "newNote": "Neue Notiz",
-    "toggleTheme": "Design wechseln"
+    "toggleTheme": "Design wechseln",
+    "matching": "Matching",
+    "notifications": "Benachrichtigungen"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -310,7 +312,27 @@
       "additionalRequirements": "Zusätzliche Anforderungen",
       "additionalRequirementsPlaceholder": "Weitere Anforderungen oder Wünsche des Kunden...",
       "minMaxError": "Der Mindestwert muss kleiner als der Maximalwert sein"
+    },
+    "contactData": "Kontaktdaten",
+    "hints": {
+      "title": "Tipps",
+      "gdpr": "Erfassen Sie die DSGVO-Einwilligung, bevor Sie Kundendaten speichern.",
+      "searchCriteria": "Definieren Sie Suchkriterien für automatisches Matching mit passenden Immobilien.",
+      "matching": "Nach dem Speichern werden passende Immobilien automatisch vorgeschlagen."
     }
+  },
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "all": "Alle",
+    "followUps": "Follow-ups",
+    "matches": "Matches",
+    "notes": "Notizen",
+    "today": "Heute",
+    "thisWeek": "Diese Woche",
+    "earlier": "Früher",
+    "empty": "Keine Benachrichtigungen",
+    "markAllRead": "Alle gelesen",
+    "unread": "Ungelesen"
   },
   "properties": {
     "title": "Immobilien",

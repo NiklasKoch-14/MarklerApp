@@ -10,291 +10,230 @@ import { ClientService } from '../../services/client.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, TranslateModule],
   template: `
-    <div class="p-6">
-      <h1 class="text-xl font-semibold text-gray-900 mb-6">{{ isEditMode ? ('clients.edit' | translate) : ('clients.add' | translate) }}</h1>
-
-      <div class="max-w-2xl">
-        <form [formGroup]="clientForm" (ngSubmit)="onSubmit()" class="space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label for="firstName" class="form-label">{{ 'clients.firstName' | translate }} *</label>
-              <input
-                type="text"
-                id="firstName"
-                formControlName="firstName"
-                class="form-input"
-                [placeholder]="'clients.firstNamePlaceholder' | translate">
-              <div *ngIf="clientForm.get('firstName')?.invalid && clientForm.get('firstName')?.touched" class="form-error">
-                {{ 'clients.firstNameRequired' | translate }}
-              </div>
-            </div>
-
-            <div>
-              <label for="lastName" class="form-label">{{ 'clients.lastName' | translate }} *</label>
-              <input
-                type="text"
-                id="lastName"
-                formControlName="lastName"
-                class="form-input"
-                [placeholder]="'clients.lastNamePlaceholder' | translate">
-              <div *ngIf="clientForm.get('lastName')?.invalid && clientForm.get('lastName')?.touched" class="form-error">
-                {{ 'clients.lastNameRequired' | translate }}
-              </div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label for="email" class="form-label">{{ 'clients.email' | translate }}</label>
-              <input
-                type="email"
-                id="email"
-                formControlName="email"
-                class="form-input"
-                [placeholder]="'clients.emailPlaceholder' | translate">
-              <div *ngIf="clientForm.get('email')?.invalid && clientForm.get('email')?.touched" class="form-error">
-                {{ 'clients.emailInvalid' | translate }}
-              </div>
-            </div>
-
-            <div>
-              <label for="phone" class="form-label">{{ 'clients.phone' | translate }}</label>
-              <input
-                type="tel"
-                id="phone"
-                formControlName="phone"
-                class="form-input"
-                [placeholder]="'clients.phonePlaceholder' | translate">
-            </div>
-          </div>
-
-          <div>
-            <label for="addressStreet" class="form-label">{{ 'clients.street' | translate }}</label>
-            <input
-              type="text"
-              id="addressStreet"
-              formControlName="addressStreet"
-              class="form-input"
-              [placeholder]="'clients.streetPlaceholder' | translate">
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label for="addressCity" class="form-label">{{ 'clients.city' | translate }}</label>
-              <input
-                type="text"
-                id="addressCity"
-                formControlName="addressCity"
-                class="form-input"
-                [placeholder]="'clients.cityPlaceholder' | translate">
-            </div>
-
-            <div>
-              <label for="addressPostalCode" class="form-label">{{ 'clients.postalCode' | translate }}</label>
-              <input
-                type="text"
-                id="addressPostalCode"
-                formControlName="addressPostalCode"
-                class="form-input"
-                [placeholder]="'clients.postalCodePlaceholder' | translate">
-              <div *ngIf="clientForm.get('addressPostalCode')?.invalid && clientForm.get('addressPostalCode')?.touched" class="form-error">
-                {{ 'clients.postalCodeInvalid' | translate }}
-              </div>
-            </div>
-
-            <div>
-              <label for="addressCountry" class="form-label">{{ 'clients.country' | translate }}</label>
-              <input
-                type="text"
-                id="addressCountry"
-                formControlName="addressCountry"
-                class="form-input"
-                [value]="'clients.countryDefault' | translate">
-            </div>
-          </div>
-
-          <div>
-            <div class="flex items-center">
-              <input
-                id="gdprConsent"
-                type="checkbox"
-                formControlName="gdprConsentGiven"
-                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-              <label for="gdprConsent" class="ml-2 block text-sm text-gray-900 dark:text-gray-100">
-                {{ 'clients.gdprConsentText' | translate }}
-              </label>
-            </div>
-            <div *ngIf="clientForm.get('gdprConsentGiven')?.invalid && clientForm.get('gdprConsentGiven')?.touched" class="form-error">
-              {{ 'clients.gdprConsentRequired' | translate }}
-            </div>
-          </div>
-
-          <!-- Property Search Criteria Section -->
-          <div class="border border-gray-200 dark:border-gray-700 rounded-lg" [formGroup]="searchCriteriaGroup">
-            <button
-              type="button"
-              (click)="toggleSearchCriteria()"
-              class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-              <span class="text-base font-medium text-gray-900 dark:text-gray-100">
-                {{ 'clients.propertySearchCriteria' | translate }}
-              </span>
-              <svg
-                class="w-5 h-5 text-gray-500 transition-transform"
-                [class.rotate-180]="searchCriteriaExpanded"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </button>
-
-            <div *ngIf="searchCriteriaExpanded" class="p-4 pt-0 space-y-6 border-t border-gray-200 dark:border-gray-700">
-              <!-- Size Range -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label for="minSquareMeters" class="form-label">{{ 'clients.searchCriteria.minSquareMeters' | translate }}</label>
-                  <input
-                    type="number"
-                    id="minSquareMeters"
-                    formControlName="minSquareMeters"
-                    min="0"
-                    class="form-input"
-                    [placeholder]="'clients.searchCriteria.minSquareMetersPlaceholder' | translate">
-                </div>
-                <div>
-                  <label for="maxSquareMeters" class="form-label">{{ 'clients.searchCriteria.maxSquareMeters' | translate }}</label>
-                  <input
-                    type="number"
-                    id="maxSquareMeters"
-                    formControlName="maxSquareMeters"
-                    min="0"
-                    class="form-input"
-                    [placeholder]="'clients.searchCriteria.maxSquareMetersPlaceholder' | translate">
-                </div>
-              </div>
-              <div *ngIf="searchCriteriaGroup.hasError('squareMetersRange')" class="form-error -mt-4">
-                {{ 'clients.searchCriteria.minMaxError' | translate }}
-              </div>
-
-              <!-- Rooms Range -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label for="minRooms" class="form-label">{{ 'clients.searchCriteria.minRooms' | translate }}</label>
-                  <input
-                    type="number"
-                    id="minRooms"
-                    formControlName="minRooms"
-                    min="0"
-                    step="0.5"
-                    class="form-input"
-                    [placeholder]="'clients.searchCriteria.minRoomsPlaceholder' | translate">
-                </div>
-                <div>
-                  <label for="maxRooms" class="form-label">{{ 'clients.searchCriteria.maxRooms' | translate }}</label>
-                  <input
-                    type="number"
-                    id="maxRooms"
-                    formControlName="maxRooms"
-                    min="0"
-                    step="0.5"
-                    class="form-input"
-                    [placeholder]="'clients.searchCriteria.maxRoomsPlaceholder' | translate">
-                </div>
-              </div>
-              <div *ngIf="searchCriteriaGroup.hasError('roomsRange')" class="form-error -mt-4">
-                {{ 'clients.searchCriteria.minMaxError' | translate }}
-              </div>
-
-              <!-- Budget Range -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label for="minBudget" class="form-label">{{ 'clients.searchCriteria.minBudget' | translate }}</label>
-                  <div class="relative">
-                    <input
-                      type="number"
-                      id="minBudget"
-                      formControlName="minBudget"
-                      min="0"
-                      class="form-input pr-12"
-                      [placeholder]="'clients.searchCriteria.minBudgetPlaceholder' | translate">
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">EUR</span>
-                  </div>
-                </div>
-                <div>
-                  <label for="maxBudget" class="form-label">{{ 'clients.searchCriteria.maxBudget' | translate }}</label>
-                  <div class="relative">
-                    <input
-                      type="number"
-                      id="maxBudget"
-                      formControlName="maxBudget"
-                      min="0"
-                      class="form-input pr-12"
-                      [placeholder]="'clients.searchCriteria.maxBudgetPlaceholder' | translate">
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">EUR</span>
-                  </div>
-                </div>
-              </div>
-              <div *ngIf="searchCriteriaGroup.hasError('budgetRange')" class="form-error -mt-4">
-                {{ 'clients.searchCriteria.minMaxError' | translate }}
-              </div>
-
-              <!-- Preferred Locations -->
-              <div>
-                <label for="preferredLocations" class="form-label">{{ 'clients.searchCriteria.preferredLocations' | translate }}</label>
-                <input
-                  type="text"
-                  id="preferredLocations"
-                  formControlName="preferredLocations"
-                  class="form-input"
-                  [placeholder]="'clients.searchCriteria.preferredLocationsPlaceholder' | translate">
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ 'clients.searchCriteria.preferredLocationsHint' | translate }}</p>
-              </div>
-
-              <!-- Property Types -->
-              <div>
-                <label for="propertyTypes" class="form-label">{{ 'clients.searchCriteria.propertyTypes' | translate }}</label>
-                <input
-                  type="text"
-                  id="propertyTypes"
-                  formControlName="propertyTypes"
-                  class="form-input"
-                  [placeholder]="'clients.searchCriteria.propertyTypesPlaceholder' | translate">
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ 'clients.searchCriteria.propertyTypesHint' | translate }}</p>
-              </div>
-
-              <!-- Additional Requirements -->
-              <div>
-                <label for="additionalRequirements" class="form-label">{{ 'clients.searchCriteria.additionalRequirements' | translate }}</label>
-                <textarea
-                  id="additionalRequirements"
-                  formControlName="additionalRequirements"
-                  rows="4"
-                  class="form-input"
-                  [placeholder]="'clients.searchCriteria.additionalRequirementsPlaceholder' | translate"></textarea>
-              </div>
-            </div>
-          </div>
-
-          <div *ngIf="errorMessage" class="rounded-md bg-error-50 p-4">
-            <div class="text-sm text-error-800">{{ errorMessage }}</div>
-          </div>
-
-          <div class="flex justify-end space-x-3">
-            <button
-              type="button"
-              (click)="cancel()"
-              class="btn btn-outline">
-              {{ 'common.cancel' | translate }}
-            </button>
-            <button
-              type="submit"
-              [disabled]="!clientForm.valid || isLoading"
-              class="btn btn-primary">
-              {{ isLoading ? (isEditMode ? ('clients.updating' | translate) : ('clients.creating' | translate)) : (isEditMode ? ('clients.updateClient' | translate) : ('clients.createClient' | translate)) }}
-            </button>
-          </div>
-        </form>
+    <div>
+      <div class="page-header">
+        <div>
+          <div class="page-subtitle">{{ 'navigation.clients' | translate }}</div>
+          <h1 class="page-title">{{ isEditMode ? ('clients.edit' | translate) : ('clients.add' | translate) }}</h1>
+        </div>
       </div>
+
+      <form [formGroup]="clientForm" (ngSubmit)="onSubmit()">
+        <div style="display:flex; gap:24px; align-items:flex-start;">
+
+          <!-- Left: form sections -->
+          <div style="flex:2; min-width:0; display:flex; flex-direction:column; gap:20px;">
+
+            <!-- Kontaktdaten -->
+            <div class="widget-card">
+              <div class="widget-header">
+                <i class="ph-fill ph-user" style="font-size:18px; color:var(--primary);"></i>
+                <h3 class="widget-title">{{ 'clients.contactData' | translate }}</h3>
+              </div>
+              <div style="padding:20px; display:flex; flex-direction:column; gap:16px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                  <div>
+                    <label class="form-label">{{ 'clients.firstName' | translate }} *</label>
+                    <input type="text" formControlName="firstName" class="form-input"
+                      [placeholder]="'clients.firstNamePlaceholder' | translate">
+                    <div *ngIf="clientForm.get('firstName')?.invalid && clientForm.get('firstName')?.touched" class="form-error">
+                      {{ 'clients.firstNameRequired' | translate }}
+                    </div>
+                  </div>
+                  <div>
+                    <label class="form-label">{{ 'clients.lastName' | translate }} *</label>
+                    <input type="text" formControlName="lastName" class="form-input"
+                      [placeholder]="'clients.lastNamePlaceholder' | translate">
+                    <div *ngIf="clientForm.get('lastName')?.invalid && clientForm.get('lastName')?.touched" class="form-error">
+                      {{ 'clients.lastNameRequired' | translate }}
+                    </div>
+                  </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                  <div>
+                    <label class="form-label">{{ 'clients.email' | translate }}</label>
+                    <input type="email" formControlName="email" class="form-input"
+                      [placeholder]="'clients.emailPlaceholder' | translate">
+                    <div *ngIf="clientForm.get('email')?.invalid && clientForm.get('email')?.touched" class="form-error">
+                      {{ 'clients.emailInvalid' | translate }}
+                    </div>
+                  </div>
+                  <div>
+                    <label class="form-label">{{ 'clients.phone' | translate }}</label>
+                    <input type="tel" formControlName="phone" class="form-input"
+                      [placeholder]="'clients.phonePlaceholder' | translate">
+                  </div>
+                </div>
+                <div>
+                  <label class="form-label">{{ 'clients.street' | translate }}</label>
+                  <input type="text" formControlName="addressStreet" class="form-input"
+                    [placeholder]="'clients.streetPlaceholder' | translate">
+                </div>
+                <div style="display:grid; grid-template-columns:120px 1fr 1fr; gap:16px;">
+                  <div>
+                    <label class="form-label">{{ 'clients.postalCode' | translate }}</label>
+                    <input type="text" formControlName="addressPostalCode" class="form-input"
+                      [placeholder]="'clients.postalCodePlaceholder' | translate">
+                    <div *ngIf="clientForm.get('addressPostalCode')?.invalid && clientForm.get('addressPostalCode')?.touched" class="form-error">
+                      {{ 'clients.postalCodeInvalid' | translate }}
+                    </div>
+                  </div>
+                  <div>
+                    <label class="form-label">{{ 'clients.city' | translate }}</label>
+                    <input type="text" formControlName="addressCity" class="form-input"
+                      [placeholder]="'clients.cityPlaceholder' | translate">
+                  </div>
+                  <div>
+                    <label class="form-label">{{ 'clients.country' | translate }}</label>
+                    <input type="text" formControlName="addressCountry" class="form-input">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Suchkriterien -->
+            <div class="widget-card">
+              <button type="button" (click)="toggleSearchCriteria()"
+                style="width:100%; display:flex; align-items:center; gap:10px; padding:15px 18px; background:none; border:none; border-bottom:1px solid var(--border); cursor:pointer; text-align:left;">
+                <i class="ph-fill ph-magnifying-glass" style="font-size:18px; color:var(--primary);"></i>
+                <h3 class="widget-title" style="margin:0; flex:1;">{{ 'clients.propertySearchCriteria' | translate }}</h3>
+                <i [class]="'ph ph-caret-' + (searchCriteriaExpanded ? 'up' : 'down')"
+                   style="font-size:16px; color:var(--text-3);"></i>
+              </button>
+              <div *ngIf="searchCriteriaExpanded" [formGroup]="searchCriteriaGroup"
+                   style="padding:20px; display:flex; flex-direction:column; gap:16px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                  <div>
+                    <label class="form-label">{{ 'clients.searchCriteria.minSquareMeters' | translate }}</label>
+                    <input type="number" formControlName="minSquareMeters" min="0" class="form-input"
+                      [placeholder]="'clients.searchCriteria.minSquareMetersPlaceholder' | translate">
+                  </div>
+                  <div>
+                    <label class="form-label">{{ 'clients.searchCriteria.maxSquareMeters' | translate }}</label>
+                    <input type="number" formControlName="maxSquareMeters" min="0" class="form-input"
+                      [placeholder]="'clients.searchCriteria.maxSquareMetersPlaceholder' | translate">
+                  </div>
+                </div>
+                <div *ngIf="searchCriteriaGroup.hasError('squareMetersRange')" class="form-error">
+                  {{ 'clients.searchCriteria.minMaxError' | translate }}
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                  <div>
+                    <label class="form-label">{{ 'clients.searchCriteria.minRooms' | translate }}</label>
+                    <input type="number" formControlName="minRooms" min="0" step="0.5" class="form-input"
+                      [placeholder]="'clients.searchCriteria.minRoomsPlaceholder' | translate">
+                  </div>
+                  <div>
+                    <label class="form-label">{{ 'clients.searchCriteria.maxRooms' | translate }}</label>
+                    <input type="number" formControlName="maxRooms" min="0" step="0.5" class="form-input"
+                      [placeholder]="'clients.searchCriteria.maxRoomsPlaceholder' | translate">
+                  </div>
+                </div>
+                <div *ngIf="searchCriteriaGroup.hasError('roomsRange')" class="form-error">
+                  {{ 'clients.searchCriteria.minMaxError' | translate }}
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                  <div>
+                    <label class="form-label">{{ 'clients.searchCriteria.minBudget' | translate }}</label>
+                    <div style="position:relative;">
+                      <input type="number" formControlName="minBudget" min="0" class="form-input" style="padding-right:46px;"
+                        [placeholder]="'clients.searchCriteria.minBudgetPlaceholder' | translate">
+                      <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:13px; font-weight:600; color:var(--text-3);">EUR</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="form-label">{{ 'clients.searchCriteria.maxBudget' | translate }}</label>
+                    <div style="position:relative;">
+                      <input type="number" formControlName="maxBudget" min="0" class="form-input" style="padding-right:46px;"
+                        [placeholder]="'clients.searchCriteria.maxBudgetPlaceholder' | translate">
+                      <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:13px; font-weight:600; color:var(--text-3);">EUR</span>
+                    </div>
+                  </div>
+                </div>
+                <div *ngIf="searchCriteriaGroup.hasError('budgetRange')" class="form-error">
+                  {{ 'clients.searchCriteria.minMaxError' | translate }}
+                </div>
+                <div>
+                  <label class="form-label">{{ 'clients.searchCriteria.preferredLocations' | translate }}</label>
+                  <input type="text" formControlName="preferredLocations" class="form-input"
+                    [placeholder]="'clients.searchCriteria.preferredLocationsPlaceholder' | translate">
+                  <p style="margin-top:5px; font-size:12px; color:var(--text-3);">{{ 'clients.searchCriteria.preferredLocationsHint' | translate }}</p>
+                </div>
+                <div>
+                  <label class="form-label">{{ 'clients.searchCriteria.propertyTypes' | translate }}</label>
+                  <input type="text" formControlName="propertyTypes" class="form-input"
+                    [placeholder]="'clients.searchCriteria.propertyTypesPlaceholder' | translate">
+                  <p style="margin-top:5px; font-size:12px; color:var(--text-3);">{{ 'clients.searchCriteria.propertyTypesHint' | translate }}</p>
+                </div>
+                <div>
+                  <label class="form-label">{{ 'clients.searchCriteria.additionalRequirements' | translate }}</label>
+                  <textarea formControlName="additionalRequirements" rows="4" class="form-textarea"
+                    [placeholder]="'clients.searchCriteria.additionalRequirementsPlaceholder' | translate"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- DSGVO -->
+            <div class="widget-card">
+              <div class="widget-header">
+                <i class="ph-fill ph-shield-check" style="font-size:18px; color:var(--primary);"></i>
+                <h3 class="widget-title">DSGVO</h3>
+              </div>
+              <div style="padding:20px;">
+                <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer;">
+                  <input type="checkbox" formControlName="gdprConsentGiven"
+                    style="width:18px; height:18px; margin-top:2px; accent-color:var(--primary); cursor:pointer; flex-shrink:0;">
+                  <span style="font-size:14px; color:var(--text); line-height:1.5;">{{ 'clients.gdprConsentText' | translate }}</span>
+                </label>
+                <div *ngIf="clientForm.get('gdprConsentGiven')?.invalid && clientForm.get('gdprConsentGiven')?.touched" class="form-error" style="margin-top:8px;">
+                  {{ 'clients.gdprConsentRequired' | translate }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Error -->
+            <div *ngIf="errorMessage" style="background:#fef2f5; border:1px solid #f5c2cc; border-radius:10px; padding:14px 16px;">
+              <p style="margin:0; color:#b23a55; font-size:14px; font-weight:500;">{{ errorMessage }}</p>
+            </div>
+
+            <!-- Actions -->
+            <div style="display:flex; justify-content:flex-end; gap:10px; padding-bottom:32px;">
+              <button type="button" (click)="cancel()" class="btn-secondary">
+                {{ 'common.cancel' | translate }}
+              </button>
+              <button type="submit" [disabled]="!clientForm.valid || isLoading" class="btn-primary">
+                {{ isLoading ? (isEditMode ? ('clients.updating' | translate) : ('clients.creating' | translate)) : (isEditMode ? ('clients.updateClient' | translate) : ('clients.createClient' | translate)) }}
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Right: hints -->
+          <div style="width:300px; flex-shrink:0;">
+            <div class="widget-card" style="position:sticky; top:20px;">
+              <div class="widget-header">
+                <i class="ph-fill ph-lightbulb" style="font-size:18px; color:#c07a1e;"></i>
+                <h3 class="widget-title">{{ 'clients.hints.title' | translate }}</h3>
+              </div>
+              <div style="padding:18px; display:flex; flex-direction:column; gap:14px;">
+                <div style="display:flex; gap:10px; align-items:flex-start;">
+                  <i class="ph ph-check-circle" style="color:#1f8a5b; font-size:18px; flex-shrink:0; margin-top:1px;"></i>
+                  <p style="margin:0; font-size:13px; color:var(--text-2); line-height:1.5;">{{ 'clients.hints.gdpr' | translate }}</p>
+                </div>
+                <div style="display:flex; gap:10px; align-items:flex-start;">
+                  <i class="ph ph-check-circle" style="color:#1f8a5b; font-size:18px; flex-shrink:0; margin-top:1px;"></i>
+                  <p style="margin:0; font-size:13px; color:var(--text-2); line-height:1.5;">{{ 'clients.hints.searchCriteria' | translate }}</p>
+                </div>
+                <div style="display:flex; gap:10px; align-items:flex-start;">
+                  <i class="ph ph-check-circle" style="color:#1f8a5b; font-size:18px; flex-shrink:0; margin-top:1px;"></i>
+                  <p style="margin:0; font-size:13px; color:var(--text-2); line-height:1.5;">{{ 'clients.hints.matching' | translate }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </form>
     </div>
   `
 })
@@ -343,7 +282,7 @@ export class ClientFormComponent implements OnInit {
 
     if (this.isEditMode && this.clientId) {
       this.loadClient(this.clientId);
-      this.searchCriteriaExpanded = true; // Expand when editing
+      this.searchCriteriaExpanded = true;
     }
   }
 
@@ -375,7 +314,7 @@ export class ClientFormComponent implements OnInit {
         });
         this.isLoading = false;
       },
-      error: (error) => {
+      error: () => {
         this.isLoading = false;
         this.errorMessage = 'Failed to load client data. Please try again.';
       }
@@ -422,7 +361,6 @@ export class ClientFormComponent implements OnInit {
   private prepareSearchCriteria(criteria: any): any {
     if (!criteria) return null;
 
-    // Convert comma-separated strings to arrays and handle empty values
     const preferredLocations = criteria.preferredLocations
       ? criteria.preferredLocations.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
       : [];
@@ -431,7 +369,6 @@ export class ClientFormComponent implements OnInit {
       ? criteria.propertyTypes.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
       : [];
 
-    // Only include searchCriteria if at least one field is filled
     const hasAnyValue = criteria.minSquareMeters || criteria.maxSquareMeters ||
                         criteria.minRooms || criteria.maxRooms ||
                         criteria.minBudget || criteria.maxBudget ||
@@ -466,11 +403,9 @@ export class ClientFormComponent implements OnInit {
     if (minSquareMeters && maxSquareMeters && minSquareMeters > maxSquareMeters) {
       errors.squareMetersRange = true;
     }
-
     if (minRooms && maxRooms && minRooms > maxRooms) {
       errors.roomsRange = true;
     }
-
     if (minBudget && maxBudget && minBudget > maxBudget) {
       errors.budgetRange = true;
     }

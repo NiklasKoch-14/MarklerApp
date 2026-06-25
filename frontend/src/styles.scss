@@ -86,6 +86,11 @@
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: none; }
   }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 }
 
 /* ── Layout Shell ──────────────────────────────────────────────────────── */
@@ -693,6 +698,48 @@
   .form-textarea:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .form-error {
+    font-size: 12px;
+    color: #b23a55;
+    font-weight: 500;
+    margin-top: 4px;
+  }
+
+  /* Card aliases — used by property-form and legacy components */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 15px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card-body {
+    padding: 20px 18px;
+  }
+
+  .animation-fade-in {
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   /* Auth pages */

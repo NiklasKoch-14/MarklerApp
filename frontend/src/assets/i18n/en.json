@@ -150,7 +150,9 @@
     "role": "Agent",
     "search": "Search clients, notes...",
     "newNote": "New Note",
-    "toggleTheme": "Toggle theme"
+    "toggleTheme": "Toggle theme",
+    "matching": "Matching",
+    "notifications": "Notifications"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -310,7 +312,27 @@
       "additionalRequirements": "Additional Requirements",
       "additionalRequirementsPlaceholder": "Any other requirements or preferences...",
       "minMaxError": "Minimum value must be less than maximum value"
+    },
+    "contactData": "Contact Information",
+    "hints": {
+      "title": "Tips",
+      "gdpr": "Capture GDPR consent before saving any client data.",
+      "searchCriteria": "Define search criteria for automatic matching with suitable properties.",
+      "matching": "After saving, matching properties will be suggested automatically."
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "all": "All",
+    "followUps": "Follow-ups",
+    "matches": "Matches",
+    "notes": "Notes",
+    "today": "Today",
+    "thisWeek": "This Week",
+    "earlier": "Earlier",
+    "empty": "No notifications",
+    "markAllRead": "Mark all read",
+    "unread": "Unread"
   },
   "properties": {
     "title": "Properties",

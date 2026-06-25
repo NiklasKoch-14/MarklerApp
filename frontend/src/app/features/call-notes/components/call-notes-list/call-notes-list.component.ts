@@ -44,7 +44,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
             [disabled]="!hasClients"
             [appTooltip]="!hasClients ? ('call-notes.no-clients-tooltip' | translate) : ''"
             tooltipPosition="bottom"
-            class="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed">
+            class="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
             {{ 'call-notes.add-call-note' | translate }}
           </button>
         </div>
@@ -54,7 +54,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
       <div class="mt-4" *ngIf="clientId">
         <a
           [routerLink]="['/call-notes/client', clientId, 'summary']"
-          class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-900">
+          class="inline-flex items-center gap-1 text-sm font-medium" style="color:var(--primary)">
           {{ 'call-notes.view-summary' | translate }}
           <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -64,7 +64,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
 
       <!-- Loading State -->
       <div *ngIf="loading" class="mt-8 text-center">
-        <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+        <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500"></div>
         <p class="mt-2 text-sm text-gray-500">{{ 'common.loading' | translate }}</p>
       </div>
 
@@ -83,7 +83,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
             [disabled]="!hasClients"
             [appTooltip]="!hasClients ? ('call-notes.no-clients-tooltip' | translate) : ''"
             tooltipPosition="bottom"
-            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+            class="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
             {{ 'call-notes.add-first-note' | translate }}
           </button>
         </div>
@@ -200,7 +200,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
                   [disabled]="page === '...'"
                   (click)="page !== '...' && goToPage(+page - 1)"
                   [ngClass]="{
-                    'bg-blue-50 border-blue-500 text-blue-600': +page - 1 === currentPage,
+                    'bg-primary-50 border-primary-500 text-primary-600': +page - 1 === currentPage,
                     'bg-white border-gray-300 text-gray-500 hover:bg-gray-50': +page - 1 !== currentPage && page !== '...',
                     'bg-white border-gray-300 text-gray-400 cursor-not-allowed': page === '...'
                   }"

@@ -88,8 +88,9 @@ interface NavItem {
           </button>
 
           <!-- Notifications -->
-          <button class="topbar-icon-btn">
+          <button class="topbar-icon-btn" [routerLink]="['/notifications']">
             <i class="ph ph-bell" style="font-size:17px;"></i>
+            <span class="notification-dot"></span>
           </button>
 
           <!-- New Note CTA -->
@@ -110,10 +111,12 @@ interface NavItem {
 })
 export class MainLayoutComponent implements OnInit, OnDestroy {
   navItems: NavItem[] = [
-    { route: '/dashboard',   icon: 'ph-fill ph-squares-four',    labelKey: 'navigation.dashboard',  exact: true },
-    { route: '/call-notes',  icon: 'ph-fill ph-chats-circle',    labelKey: 'navigation.callNotes'              },
-    { route: '/clients',     icon: 'ph-fill ph-users',           labelKey: 'navigation.clients'                },
-    { route: '/properties',  icon: 'ph-fill ph-buildings',       labelKey: 'navigation.properties'             },
+    { route: '/dashboard',      icon: 'ph-fill ph-squares-four',  labelKey: 'navigation.dashboard',      exact: true },
+    { route: '/call-notes',     icon: 'ph-fill ph-chats-circle',  labelKey: 'navigation.callNotes'                   },
+    { route: '/clients',        icon: 'ph-fill ph-users',         labelKey: 'navigation.clients'                     },
+    { route: '/properties',     icon: 'ph-fill ph-buildings',     labelKey: 'navigation.properties'                  },
+    { route: '/matching',       icon: 'ph-fill ph-shuffle',       labelKey: 'navigation.matching'                    },
+    { route: '/notifications',  icon: 'ph-fill ph-bell',          labelKey: 'navigation.notifications'               },
   ];
 
   userInitials = '?';
