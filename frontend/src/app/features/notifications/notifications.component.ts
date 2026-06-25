@@ -8,6 +8,7 @@ interface Notification {
   id: string;
   type: 'followup';
   clientId: string;
+  subject: string;
   title: string;
   text: string;
   time: string;
@@ -160,6 +161,7 @@ export class NotificationsComponent implements OnInit {
       id: r.id,
       type: 'followup',
       clientId: r.clientId,
+      subject: r.subject,
       title: `Follow-up — ${r.clientName}`,
       text: r.subject + this.formatDueText(r),
       time: this.formatTime(r.followUpDate, r.isOverdue),
@@ -225,6 +227,8 @@ export class NotificationsComponent implements OnInit {
   }
 
   onNotificationClick(item: Notification): void {
-    this.router.navigate(['/clients', item.clientId]);
+    this.router.navigate(['/clients', item.clientId], {
+      queryParams: { action: 'contact', subject: item.subject }
+    });
   }
 }

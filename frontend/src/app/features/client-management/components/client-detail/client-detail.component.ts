@@ -1,16 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { ClientService, Client } from '../../services/client.service';
-import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse } from '../../../call-notes/services/call-notes.service';
+import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse, CallNoteCreateRequest, CallType, CallOutcome } from '../../../call-notes/services/call-notes.service';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 import { FileAttachmentManagerComponent } from '../../../../shared/components/file-attachment-manager/file-attachment-manager.component';
 
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule, TranslateEnumPipe, FileAttachmentManagerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, TranslateEnumPipe, FileAttachmentManagerComponent],
   template: `
     <div class="p-6">
       <div *ngIf="isLoading" class="text-center py-8">
@@ -19,6 +20,91 @@ import { FileAttachmentManagerComponent } from '../../../../shared/components/fi
       </div>
 
       <div *ngIf="!isLoading && client">
+
+        <!-- ── Follow-up Kontakt-Panel ─────────────────────── -->
+        <div *ngIf="showContactPanel"
+             style="border-left:4px solid #d9534f; background:var(--surface,#fff);
+                    border-radius:12px; padding:20px 24px; margin-bottom:24px;
+                    box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+
+          <!-- Header -->
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:16px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <i class="ph-fill ph-warning" style="color:#d9534f; font-size:20px; flex-shrink:0;"></i>
+              <div>
+                <div style="font-size:12px; font-weight:700; color:#d9534f; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">Follow-up fällig</div>
+                <div style="font-size:15px; font-weight:600; color:var(--text);">{{ followUpSubject }}</div>
+              </div>
+            </div>
+            <button (click)="dismissContactPanel()"
+                    style="background:none; border:none; cursor:pointer; padding:4px; color:var(--text-3); font-size:18px; line-height:1;">
+              <i class="ph ph-x"></i>
+            </button>
+          </div>
+
+          <!-- Kontakt-Buttons -->
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
+            <a *ngIf="client.phone" [href]="'tel:' + client.phone"
+               style="display:inline-flex; align-items:center; gap:8px; padding:10px 18px;
+                      background:var(--primary,#2f6b7a); color:#fff; border-radius:8px;
+                      font-size:14px; font-weight:600; text-decoration:none;">
+              <i class="ph-bold ph-phone" style="font-size:16px;"></i>
+              {{ client.phone }}
+            </a>
+            <a *ngIf="client.email" [href]="'mailto:' + client.email"
+               style="display:inline-flex; align-items:center; gap:8px; padding:10px 18px;
+                      background:transparent; color:var(--primary,#2f6b7a);
+                      border:1.5px solid var(--primary,#2f6b7a); border-radius:8px;
+                      font-size:14px; font-weight:600; text-decoration:none;">
+              <i class="ph-bold ph-envelope" style="font-size:16px;"></i>
+              E-Mail
+            </a>
+            <span *ngIf="!client.phone && !client.email"
+                  style="font-size:13px; color:var(--text-3); align-self:center;">
+              Keine Kontaktdaten hinterlegt —
+              <a [routerLink]="['/clients', client.id, 'edit']" style="color:var(--primary);">Jetzt ergänzen</a>
+            </span>
+          </div>
+
+          <!-- Schnelle Gesprächsnotiz -->
+          <div style="border-top:1px solid var(--border); padding-top:16px;">
+            <div style="font-size:13px; font-weight:600; color:var(--text-2); margin-bottom:10px;">
+              Kontakt direkt notieren
+            </div>
+            <textarea [(ngModel)]="quickNoteText"
+                      placeholder="Kurze Notiz zum Gespräch..."
+                      rows="2"
+                      style="width:100%; padding:10px 12px; border:1.5px solid var(--border);
+                             border-radius:8px; font-size:14px; color:var(--text);
+                             background:var(--input-bg,#f9f9f9); resize:vertical;
+                             font-family:inherit; margin-bottom:10px; box-sizing:border-box;">
+            </textarea>
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <select [(ngModel)]="quickNoteOutcome"
+                      style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px;
+                             font-size:13px; color:var(--text); background:var(--input-bg,#f9f9f9);
+                             cursor:pointer;">
+                <option value="">Ergebnis wählen…</option>
+                <option value="INTERESTED">Interessiert</option>
+                <option value="NOT_INTERESTED">Kein Interesse</option>
+                <option value="SCHEDULED_VIEWING">Besichtigung vereinbart</option>
+                <option value="OFFER_MADE">Angebot gemacht</option>
+                <option value="DEAL_CLOSED">Abschluss</option>
+              </select>
+              <button (click)="saveQuickNote()"
+                      [disabled]="isSavingNote || !quickNoteText.trim()"
+                      style="padding:8px 18px; background:var(--primary,#2f6b7a); color:#fff;
+                             border:none; border-radius:8px; font-size:13px; font-weight:600;
+                             cursor:pointer; opacity:1; transition:opacity 0.15s;"
+                      [style.opacity]="(isSavingNote || !quickNoteText.trim()) ? '0.5' : '1'">
+                <i class="ph ph-check" style="margin-right:4px;"></i>
+                {{ isSavingNote ? 'Wird gespeichert…' : 'Notiz speichern' }}
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- ── Ende Kontakt-Panel ──────────────────────────── -->
+
         <div class="sm:flex sm:items-center sm:justify-between">
           <div>
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ client.firstName }} {{ client.lastName }}</h1>
@@ -270,6 +356,13 @@ export class ClientDetailComponent implements OnInit {
   isLoading = false;
   isDeleting = false;
 
+  // Follow-up contact panel
+  showContactPanel = false;
+  followUpSubject = '';
+  quickNoteText = '';
+  quickNoteOutcome = '';
+  isSavingNote = false;
+
   // Call Notes
   recentCallNotes: CallNoteSummary[] = [];
   callNotesSummary: BulkSummary | null = null;
@@ -287,6 +380,12 @@ export class ClientDetailComponent implements OnInit {
     if (clientId) {
       this.loadClient(clientId);
       this.loadCallNotes(clientId);
+    }
+
+    const action = this.route.snapshot.queryParamMap.get('action');
+    if (action === 'contact') {
+      this.showContactPanel = true;
+      this.followUpSubject = this.route.snapshot.queryParamMap.get('subject') ?? '';
     }
   }
 
@@ -326,6 +425,41 @@ export class ClientDetailComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading call notes summary:', error);
+      }
+    });
+  }
+
+  dismissContactPanel(): void {
+    this.showContactPanel = false;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {},
+      replaceUrl: true
+    });
+  }
+
+  saveQuickNote(): void {
+    if (!this.client?.id || !this.quickNoteText.trim()) return;
+    this.isSavingNote = true;
+
+    const request: CallNoteCreateRequest = {
+      clientId: this.client.id,
+      callDate: new Date().toISOString(),
+      callType: CallType.PHONE_OUTBOUND,
+      subject: this.followUpSubject || 'Follow-up Kontakt',
+      notes: this.quickNoteText.trim(),
+      followUpRequired: false,
+      outcome: (this.quickNoteOutcome as CallOutcome) || undefined
+    };
+
+    this.callNotesService.createCallNote(request).subscribe({
+      next: () => {
+        this.isSavingNote = false;
+        this.loadCallNotes(this.client!.id!);
+        this.dismissContactPanel();
+      },
+      error: () => {
+        this.isSavingNote = false;
       }
     });
   }
