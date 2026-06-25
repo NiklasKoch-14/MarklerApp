@@ -78,6 +78,18 @@
 
 ---
 
+## Geplant: KI-Kundenprofil (Claude API)
+
+> Voraussetzung: Mindestens 3 Call Notes pro Kunde vorhanden. Regelbasierte Überblick-Karte ist bereits implementiert — dies ist die nächste Stufe.
+
+- [ ] **Backend:** `GET /api/v1/clients/{id}/ai-summary` — lädt letzte 10 Call Notes, sendet Kontext an Claude API (`claude-haiku-4-5`), gibt 2-3 Satz Kundenprofil zurück
+- [ ] **Backend:** Caching — neue Spalten `ai_summary TEXT` + `ai_summary_updated_at TIMESTAMP` in `clients`-Tabelle (Flyway-Migration). Neu generiert wenn neue Note hinzukommt, max. 1x/Tag
+- [ ] **Frontend:** `ai_summary`-Feld in der Kontakthistorie-Karte anzeigen (als Ergänzung zur Mini-Timeline — eingeblendet wenn vorhanden)
+- [ ] **Kosten:** ~0.001€/Summary (claude-haiku-4-5) — vernachlässigbar
+- [ ] **Kein Ollama** — Railway-Infrastruktur passt nicht; Claude API ist direkt nutzbar
+
+---
+
 ## Geplant: E-Mail an Kunden (kontextbezogene Vorlagen)
 
 > Voraussetzung: SMTP-Infrastruktur (spring-boot-starter-mail wurde 2026-06-22 entfernt).

@@ -5,11 +5,12 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { PropertyService, PropertyExpose } from '../../services/property.service';
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-property-expose',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, TranslateModule, LoadingSpinnerComponent],
   template: `
     <div class="bg-white shadow rounded-lg p-6">
       <h3 class="text-lg font-medium text-gray-900 mb-4">
@@ -104,7 +105,7 @@ import { PropertyService, PropertyExpose } from '../../services/property.service
 
       <!-- Uploading State -->
       <div *ngIf="uploading" class="text-center py-8">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <app-loading-spinner size="lg"></app-loading-spinner>
         <p class="mt-4 text-sm text-gray-500">{{ 'properties.expose.uploading' | translate }}</p>
       </div>
 

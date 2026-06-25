@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { ClientService, Client, PagedResponse } from '../../services/client.service';
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-client-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule],
+  imports: [CommonModule, RouterLink, TranslateModule, LoadingSpinnerComponent],
   styles: [`
     .client-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow); cursor:pointer; transition:box-shadow 0.15s, border-color 0.15s; display:flex; flex-direction:column; }
     .client-card:hover { border-color:var(--primary); box-shadow:0 4px 16px rgba(20,40,45,0.12); }
@@ -28,7 +29,7 @@ import { ClientService, Client, PagedResponse } from '../../services/client.serv
 
       <!-- Loading -->
       <div *ngIf="isLoading" style="text-align:center; padding:48px 0;">
-        <div class="spinner" style="width:32px; height:32px; margin:0 auto 12px;"></div>
+        <app-loading-spinner size="lg"></app-loading-spinner>
         <p style="font-size:14px; color:var(--text-3);">{{ 'common.loading' | translate }}</p>
       </div>
 

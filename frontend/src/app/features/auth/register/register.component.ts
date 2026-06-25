@@ -5,11 +5,12 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { catchError, of, switchMap } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
+import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule, LoadingSpinnerComponent],
   template: `
     <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div class="max-w-md w-full space-y-8">
@@ -203,7 +204,7 @@ import { TranslateModule } from '@ngx-translate/core';
               class="btn btn-primary w-full">
 
               <span *ngIf="isLoading" class="absolute left-0 inset-y-0 flex items-center pl-3">
-                <div class="spinner h-5 w-5"></div>
+                <app-loading-spinner size="xs" [centered]="false"></app-loading-spinner>
               </span>
 
               {{ isLoading ? ('auth.register.registering' | translate) : ('auth.register.registerButton' | translate) }}

@@ -5,18 +5,19 @@ import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { catchError, of } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
+import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule, LoadingSpinnerComponent],
   template: `
     <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div class="max-w-md w-full space-y-8">
 
         <!-- Loading state -->
         <div *ngIf="isVerifying" class="text-center">
-          <div class="spinner h-12 w-12 mx-auto mb-4"></div>
+          <app-loading-spinner size="lg"></app-loading-spinner>
           <p class="text-gray-600 dark:text-gray-400">
             {{ 'auth.resetPassword.tokenVerifying' | translate }}
           </p>
@@ -143,7 +144,7 @@ import { TranslateModule } from '@ngx-translate/core';
                 class="btn btn-primary w-full">
 
                 <span *ngIf="isSubmitting" class="absolute left-0 inset-y-0 flex items-center pl-3">
-                  <div class="spinner h-5 w-5"></div>
+                  <app-loading-spinner size="xs" [centered]="false"></app-loading-spinner>
                 </span>
 
                 {{ isSubmitting ? ('auth.resetPassword.submitting' | translate) : ('auth.resetPassword.submitButton' | translate) }}

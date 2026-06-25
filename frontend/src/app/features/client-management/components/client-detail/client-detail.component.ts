@@ -7,24 +7,37 @@ import { ClientService, Client } from '../../services/client.service';
 import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse, CallNoteCreateRequest, CallType, CallOutcome } from '../../../call-notes/services/call-notes.service';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 import { FileAttachmentManagerComponent } from '../../../../shared/components/file-attachment-manager/file-attachment-manager.component';
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, TranslateEnumPipe, FileAttachmentManagerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, TranslateEnumPipe, FileAttachmentManagerComponent, LoadingSpinnerComponent],
   template: `
     <div class="p-6">
       <div *ngIf="isLoading" class="text-center py-8">
-        <div class="spinner h-8 w-8 mx-auto"></div>
+        <app-loading-spinner size="lg"></app-loading-spinner>
         <p class="mt-2 text-sm text-gray-500">{{ 'clients.loadingDetails' | translate }}</p>
       </div>
 
       <div *ngIf="!isLoading && client">
 
+        <div class="sm:flex sm:items-center sm:justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ client.firstName }} {{ client.lastName }}</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ 'clients.details' | translate }}</p>
+          </div>
+          <div class="mt-4 sm:mt-0 sm:ml-4">
+            <a [routerLink]="['/clients', client.id, 'edit']" class="btn btn-primary">
+              {{ 'clients.editClient' | translate }}
+            </a>
+          </div>
+        </div>
+
         <!-- ── Follow-up Kontakt-Panel ─────────────────────── -->
         <div *ngIf="showContactPanel"
              style="border-left:4px solid #d9534f; background:var(--surface,#fff);
-                    border-radius:12px; padding:20px 24px; margin-bottom:24px;
+                    border-radius:12px; padding:20px 24px; margin-top:20px;
                     box-shadow:0 2px 12px rgba(0,0,0,0.08);">
 
           <!-- Header -->
@@ -105,17 +118,84 @@ import { FileAttachmentManagerComponent } from '../../../../shared/components/fi
         </div>
         <!-- ── Ende Kontakt-Panel ──────────────────────────── -->
 
-        <div class="sm:flex sm:items-center sm:justify-between">
-          <div>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ client.firstName }} {{ client.lastName }}</h1>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ 'clients.details' | translate }}</p>
+        <!-- ── Kontakt-Überblick ─────────────────────────────── -->
+        <div style="margin-top:20px; background:var(--surface,#fff); border:1.5px solid var(--border);
+                    border-radius:12px; padding:20px 24px;">
+          <!-- Title -->
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+            <i class="ph-fill ph-chat-circle-text" style="font-size:18px; color:var(--primary);"></i>
+            <span style="font-size:15px; font-weight:700; color:var(--text);">Kontakthistorie</span>
           </div>
-          <div class="mt-4 sm:mt-0 sm:ml-4">
-            <a [routerLink]="['/clients', client.id, 'edit']" class="btn btn-primary">
-              {{ 'clients.editClient' | translate }}
-            </a>
+
+          <!-- Loading -->
+          <app-loading-spinner *ngIf="isLoadingCallNotes && !callNotesSummary" size="sm"></app-loading-spinner>
+
+          <!-- Stats chips -->
+          <div *ngIf="callNotesSummary" style="display:flex; gap:10px; flex-wrap:wrap;">
+            <span style="display:inline-flex; align-items:center; gap:5px; padding:5px 12px;
+                         background:rgba(47,107,122,0.1); border-radius:20px;">
+              <i class="ph ph-phone" style="font-size:13px; color:var(--primary);"></i>
+              <strong style="font-size:13px; color:var(--primary);">{{ callNotesSummary.totalCallNotes }}</strong>
+              <span style="font-size:12px; color:var(--text-2);">Gespräche</span>
+            </span>
+            <span style="display:inline-flex; align-items:center; gap:5px; padding:5px 12px;
+                         background:rgba(0,0,0,0.04); border-radius:20px;">
+              <i class="ph ph-calendar-blank" style="font-size:13px; color:var(--text-3);"></i>
+              <span style="font-size:12px; color:var(--text-2);">
+                {{ callNotesSummary.lastCallDate ? (callNotesSummary.lastCallDate | date:'dd.MM.yy') : 'Noch kein Kontakt' }}
+              </span>
+            </span>
+            <span *ngIf="callNotesSummary.pendingFollowUps > 0"
+                  style="display:inline-flex; align-items:center; gap:5px; padding:5px 12px;
+                         background:rgba(192,122,30,0.12); border-radius:20px;">
+              <i class="ph ph-clock-countdown" style="font-size:13px; color:#c07a1e;"></i>
+              <strong style="font-size:13px; color:#c07a1e;">{{ callNotesSummary.pendingFollowUps }}</strong>
+              <span style="font-size:12px; color:#c07a1e;">offene Follow-ups</span>
+            </span>
+            <span *ngIf="callNotesSummary.lastOutcome"
+                  style="display:inline-flex; align-items:center; gap:5px; padding:5px 12px;
+                         background:rgba(0,0,0,0.04); border-radius:20px;">
+              <i class="ph ph-flag" style="font-size:13px; color:var(--text-3);"></i>
+              <span style="font-size:12px; color:var(--text-2);">{{ callNotesSummary.lastOutcome | translateEnum:'callOutcome' }}</span>
+            </span>
+          </div>
+
+          <!-- Mini-timeline: last 3 notes -->
+          <div *ngIf="recentCallNotes.length > 0"
+               style="border-top:1px solid var(--border); margin-top:14px; padding-top:14px;">
+            <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;
+                        color:var(--text-3); margin-bottom:10px;">Letzte Kontakte</div>
+            <div *ngFor="let note of previewCallNotes; let last = last"
+                 style="display:flex; align-items:center; gap:10px;"
+                 [style.margin-bottom]="last ? '0' : '8px'">
+              <span style="font-size:12px; color:var(--text-3); white-space:nowrap; min-width:38px;">
+                {{ note.callDate | date:'dd.MM' }}
+              </span>
+              <div style="width:26px; height:26px; border-radius:50%;
+                          background:rgba(0,0,0,0.05); display:flex; align-items:center;
+                          justify-content:center; flex-shrink:0;">
+                <i [class]="getCallTypeIcon(note.callType)" style="font-size:12px; color:var(--text-3);"></i>
+              </div>
+              <span style="flex:1; font-size:13px; color:var(--text);
+                           white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                {{ note.subject }}
+              </span>
+              <span *ngIf="note.outcome"
+                    [ngClass]="getOutcomeClass(note.outcome)"
+                    style="font-size:11px; font-weight:600; padding:2px 8px;
+                           border-radius:10px; white-space:nowrap; flex-shrink:0;">
+                {{ note.outcome | translateEnum:'callOutcome' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Empty state -->
+          <div *ngIf="!isLoadingCallNotes && !callNotesSummary"
+               style="color:var(--text-3); font-size:13px; text-align:center; padding:8px 0;">
+            Noch keine Kontakthistorie vorhanden.
           </div>
         </div>
+        <!-- ── Ende Kontakt-Überblick ────────────────────────── -->
 
         <div class="mt-8">
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -309,7 +389,7 @@ import { FileAttachmentManagerComponent } from '../../../../shared/components/fi
 
               <!-- Loading Call Notes -->
               <div *ngIf="isLoadingCallNotes" class="text-center py-6">
-                <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+                <app-loading-spinner></app-loading-spinner>
                 <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ 'clients.loadingCallNotes' | translate }}</p>
               </div>
             </div>
@@ -365,6 +445,7 @@ export class ClientDetailComponent implements OnInit {
 
   // Call Notes
   recentCallNotes: CallNoteSummary[] = [];
+  previewCallNotes: CallNoteSummary[] = [];
   callNotesSummary: BulkSummary | null = null;
   isLoadingCallNotes = false;
 
@@ -410,6 +491,7 @@ export class ClientDetailComponent implements OnInit {
     this.callNotesService.getCallNotesByClient(clientId, 0, 5).subscribe({
       next: (response: PagedResponse<CallNoteSummary>) => {
         this.recentCallNotes = response.content;
+        this.previewCallNotes = response.content.slice(0, 3);
         this.isLoadingCallNotes = false;
       },
       error: (error) => {
@@ -467,6 +549,16 @@ export class ClientDetailComponent implements OnInit {
   hasAddress(): boolean {
     return !!(this.client?.addressStreet || this.client?.addressCity ||
               this.client?.addressPostalCode || this.client?.addressCountry);
+  }
+
+  getCallTypeIcon(callType: CallType): string {
+    switch (callType) {
+      case CallType.PHONE_INBOUND:  return 'ph ph-phone-incoming';
+      case CallType.PHONE_OUTBOUND: return 'ph ph-phone-outgoing';
+      case CallType.EMAIL:          return 'ph ph-envelope';
+      case CallType.MEETING:        return 'ph ph-handshake';
+      default:                      return 'ph ph-chat-circle';
+    }
   }
 
   getOutcomeClass(outcome: string): string {

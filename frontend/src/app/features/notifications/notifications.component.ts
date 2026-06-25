@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { Router } from '@angular/router';
 import { CallNotesService, FollowUpReminder } from '../call-notes/services/call-notes.service';
+import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
 
 interface Notification {
   id: string;
@@ -23,7 +24,7 @@ interface Notification {
 @Component({
   selector: 'app-notifications',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, TranslateModule, LoadingSpinnerComponent],
   template: `
     <div>
       <div class="page-header">
@@ -53,7 +54,7 @@ interface Notification {
 
       <!-- Loading -->
       <div *ngIf="isLoading" class="widget-card" style="text-align:center; padding:48px 24px;">
-        <div class="inline-block animate-spin rounded-full" style="width:28px; height:28px; border:3px solid var(--border); border-top-color:var(--primary); border-radius:50%;"></div>
+        <app-loading-spinner></app-loading-spinner>
       </div>
 
       <ng-container *ngIf="!isLoading">

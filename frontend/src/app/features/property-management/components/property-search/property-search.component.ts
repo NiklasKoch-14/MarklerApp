@@ -5,11 +5,12 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { TranslateModule } from '@ngx-translate/core';
 import { PropertyService, Property, PagedResponse, PropertySearchFilter, PropertyType, ListingType, PropertyStatus } from '../../services/property.service';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-property-search',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, TranslateModule, TranslateEnumPipe],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, TranslateModule, TranslateEnumPipe, LoadingSpinnerComponent],
   template: `
     <div class="p-6 max-w-7xl mx-auto">
       <div class="mb-6">
@@ -192,7 +193,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
           <!-- Actions -->
           <div class="flex gap-4">
             <button type="submit" class="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" [disabled]="isLoading">
-              <span *ngIf="isLoading" class="inline-block animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
+              <app-loading-spinner *ngIf="isLoading" size="xs" [centered]="false"></app-loading-spinner>
               {{ 'properties.search.searchButton' | translate }}
             </button>
             <button type="button" (click)="onReset()" class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-medium rounded-lg transition-colors">
@@ -215,7 +216,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
 
         <!-- Loading State -->
         <div *ngIf="isLoading" class="text-center py-12">
-          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <app-loading-spinner size="lg"></app-loading-spinner>
           <p class="mt-4 text-gray-600 dark:text-gray-400">{{ 'properties.search.searching' | translate }}</p>
         </div>
 
