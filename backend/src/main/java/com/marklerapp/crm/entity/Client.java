@@ -60,6 +60,11 @@ public class Client extends BaseEntity {
     @Builder.Default
     private String addressCountry = "Germany";
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pipeline_stage", nullable = false)
+    @Builder.Default
+    private PipelineStage pipelineStage = PipelineStage.PROSPECT;
+
     @Column(name = "gdpr_consent_given", nullable = false)
     @Builder.Default
     private boolean gdprConsentGiven = false;
@@ -69,6 +74,15 @@ public class Client extends BaseEntity {
 
     @OneToOne(mappedBy = "client", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private PropertySearchCriteria searchCriteria;
+
+    public enum PipelineStage {
+        PROSPECT,
+        ACTIVE_SEARCH,
+        VIEWING,
+        OFFER,
+        CLOSED,
+        INACTIVE
+    }
 
     /**
      * Get the full name of the client

@@ -1,6 +1,7 @@
 package com.marklerapp.crm.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.marklerapp.crm.entity.Client;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -52,6 +53,8 @@ public class ClientDto {
     private String addressPostalCode;
 
     private String addressCountry;
+
+    private Client.PipelineStage pipelineStage;
 
     private boolean gdprConsentGiven;
 

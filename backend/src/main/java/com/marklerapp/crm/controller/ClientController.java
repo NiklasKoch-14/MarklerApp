@@ -2,6 +2,7 @@ package com.marklerapp.crm.controller;
 
 import com.marklerapp.crm.constants.PaginationConstants;
 import com.marklerapp.crm.dto.ClientDto;
+import com.marklerapp.crm.entity.Client;
 import com.marklerapp.crm.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -164,6 +165,19 @@ public class ClientController extends BaseController {
                 .build();
 
         return ResponseEntity.ok(stats);
+    }
+
+    /**
+     * Quick pipeline stage update (click-dropdown in header)
+     */
+    @PatchMapping("/{clientId}/pipeline-stage")
+    @Operation(summary = "Update pipeline stage", description = "Quick update of a client's pipeline stage")
+    public ResponseEntity<ClientDto> updatePipelineStage(
+            @PathVariable UUID clientId,
+            @RequestParam Client.PipelineStage stage,
+            Authentication authentication) {
+        UUID agentId = getAgentIdFromAuth(authentication);
+        return ResponseEntity.ok(clientService.updatePipelineStage(clientId, agentId, stage));
     }
 
     /**

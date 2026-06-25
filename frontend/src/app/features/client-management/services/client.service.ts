@@ -5,6 +5,15 @@ import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
+export enum PipelineStage {
+  PROSPECT = 'PROSPECT',
+  ACTIVE_SEARCH = 'ACTIVE_SEARCH',
+  VIEWING = 'VIEWING',
+  OFFER = 'OFFER',
+  CLOSED = 'CLOSED',
+  INACTIVE = 'INACTIVE'
+}
+
 export interface Client {
   id?: string;
   agentId?: string;
@@ -16,6 +25,7 @@ export interface Client {
   addressCity?: string;
   addressPostalCode?: string;
   addressCountry?: string;
+  pipelineStage?: PipelineStage;
   gdprConsentGiven: boolean;
   gdprConsentDate?: string;
   searchCriteria?: PropertySearchCriteria;
@@ -121,6 +131,13 @@ export class ClientService {
    */
   updateClient(id: string, client: Client): Observable<Client> {
     return this.http.put<Client>(`${this.apiUrl}/${id}`, client).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
+
+  updatePipelineStage(id: string, stage: PipelineStage): Observable<Client> {
+    const params = new HttpParams().set('stage', stage);
+    return this.http.patch<Client>(`${this.apiUrl}/${id}/pipeline-stage`, null, { params }).pipe(
       catchError(err => this.errorHandler.handleError(err))
     );
   }

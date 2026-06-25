@@ -165,6 +165,9 @@ public class ClientService {
         existingClient.setAddressCity(clientDto.getAddressCity());
         existingClient.setAddressPostalCode(clientDto.getAddressPostalCode());
         existingClient.setAddressCountry(clientDto.getAddressCountry());
+        if (clientDto.getPipelineStage() != null) {
+            existingClient.setPipelineStage(clientDto.getPipelineStage());
+        }
 
         // Handle GDPR consent updates
         if (clientDto.isGdprConsentGiven() && !existingClient.isGdprConsentGiven()) {
@@ -184,6 +187,24 @@ public class ClientService {
 
         log.info("Client updated: {} for agent: {}", clientId, agentId);
         return clientMapper.toDto(savedClient);
+    }
+
+    /**
+     * Update just the pipeline stage of a client (quick dropdown action)
+     */
+    @Transactional
+    public ClientDto updatePipelineStage(UUID clientId, UUID agentId, Client.PipelineStage stage) {
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new ResourceNotFoundException("Client", "id", clientId));
+        try {
+            ownershipValidator.validateClientOwnership(client, agentId);
+        } catch (AccessDeniedException e) {
+            throw new ResourceNotFoundException("Client not found or access denied");
+        }
+        client.setPipelineStage(stage);
+        Client saved = clientRepository.save(client);
+        log.info("Pipeline stage for client {} set to {} by agent {}", clientId, stage, agentId);
+        return clientMapper.toDto(saved);
     }
 
     /**

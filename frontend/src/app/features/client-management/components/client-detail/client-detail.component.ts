@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { ClientService, Client } from '../../services/client.service';
+import { ClientService, Client, PipelineStage } from '../../services/client.service';
 import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse, CallNoteCreateRequest, CallType, CallOutcome } from '../../../call-notes/services/call-notes.service';
 import { ViewingService, ViewingSummary, ViewingFeedback, ViewingStatus } from '../../../viewing-management/services/viewing.service';
 import { ViewingAddDialogComponent } from '../../../viewing-management/components/viewing-add-dialog/viewing-add-dialog.component';
@@ -26,7 +26,32 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
 
         <div class="sm:flex sm:items-center sm:justify-between">
           <div>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ client.firstName }} {{ client.lastName }}</h1>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ client.firstName }} {{ client.lastName }}</h1>
+              <!-- Pipeline Stage Dropdown -->
+              <div style="position:relative;" *ngIf="client.id">
+                <button (click)="stageDropdownOpen = !stageDropdownOpen"
+                        [style.background]="getStageBg(client.pipelineStage)"
+                        [style.color]="getStageColor(client.pipelineStage)"
+                        style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:600;">
+                  {{ getStageLabel(client.pipelineStage) }}
+                  <i class="ph ph-caret-down" style="font-size:11px;"></i>
+                </button>
+                <!-- Backdrop to close dropdown -->
+                <div *ngIf="stageDropdownOpen" (click)="stageDropdownOpen = false"
+                     style="position:fixed;inset:0;z-index:99;"></div>
+                <div *ngIf="stageDropdownOpen"
+                     style="position:absolute;top:100%;left:0;margin-top:4px;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:100;min-width:160px;overflow:hidden;">
+                  <button *ngFor="let s of pipelineStages"
+                          (click)="setStage(s.value)"
+                          style="width:100%;text-align:left;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:500;"
+                          [style.color]="getStageColor(s.value)"
+                          class="stage-option">
+                    {{ s.label }}
+                  </button>
+                </div>
+              </div>
+            </div>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ 'clients.details' | translate }}</p>
           </div>
           <div class="mt-4 sm:mt-0 sm:ml-4">
@@ -473,9 +498,32 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
       (viewingCreated)="onViewingCreated()"
       (cancelled)="showViewingDialog = false">
     </app-viewing-add-dialog>
+
+    <!-- Stage Upgrade Hint -->
+    <div *ngIf="showStageUpgradeHint"
+         style="position:fixed;bottom:24px;right:24px;background:var(--surface);border:1.5px solid var(--primary);border-radius:12px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,.15);z-index:500;max-width:320px;">
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <i class="ph ph-info" style="color:var(--primary);font-size:20px;flex-shrink:0;margin-top:1px;"></i>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;color:var(--text-1);margin-bottom:4px;">Pipeline-Stage aktualisieren?</div>
+          <div style="font-size:12px;color:var(--text-2);margin-bottom:12px;">Besichtigung erfasst — soll der Stage auf "Besichtigungen" gesetzt werden?</div>
+          <div style="display:flex;gap:8px;">
+            <button (click)="setStage(PipelineStage.VIEWING); showStageUpgradeHint = false"
+                    style="padding:6px 14px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">
+              Ja, setzen
+            </button>
+            <button (click)="showStageUpgradeHint = false"
+                    style="padding:6px 12px;background:none;border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text-2);cursor:pointer;">
+              Nein
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   `
 })
 export class ClientDetailComponent implements OnInit {
+  readonly PipelineStage = PipelineStage;
   client: Client | null = null;
   isLoading = false;
   isDeleting = false;
@@ -497,6 +545,18 @@ export class ClientDetailComponent implements OnInit {
   viewings: ViewingSummary[] = [];
   isLoadingViewings = false;
   showViewingDialog = false;
+
+  // Pipeline Stage
+  stageDropdownOpen = false;
+  showStageUpgradeHint = false;
+  pipelineStages = [
+    { value: PipelineStage.PROSPECT,      label: 'Interessent',     color: '#6b7280', bg: 'rgba(107,114,128,0.12)' },
+    { value: PipelineStage.ACTIVE_SEARCH, label: 'Aktive Suche',    color: '#2563eb', bg: 'rgba(37,99,235,0.12)' },
+    { value: PipelineStage.VIEWING,       label: 'Besichtigungen',  color: '#7c3aed', bg: 'rgba(124,58,237,0.12)' },
+    { value: PipelineStage.OFFER,         label: 'Angebot',         color: '#d97706', bg: 'rgba(217,119,6,0.12)' },
+    { value: PipelineStage.CLOSED,        label: 'Abschluss',       color: '#16a34a', bg: 'rgba(22,163,74,0.12)' },
+    { value: PipelineStage.INACTIVE,      label: 'Inaktiv',         color: '#9ca3af', bg: 'rgba(156,163,175,0.1)' }
+  ];
 
   constructor(
     private route: ActivatedRoute,
@@ -614,6 +674,34 @@ export class ClientDetailComponent implements OnInit {
     this.showViewingDialog = false;
     const clientId = this.route.snapshot.paramMap.get('id');
     if (clientId) this.loadViewings(clientId);
+
+    // Suggest stage upgrade if client is not yet in VIEWING stage
+    const stageOrder = [PipelineStage.PROSPECT, PipelineStage.ACTIVE_SEARCH];
+    if (this.client?.id && this.client.pipelineStage && stageOrder.includes(this.client.pipelineStage)) {
+      this.showStageUpgradeHint = true;
+    }
+  }
+
+  setStage(stage: PipelineStage): void {
+    if (!this.client?.id) return;
+    this.stageDropdownOpen = false;
+    this.clientService.updatePipelineStage(this.client.id, stage).subscribe({
+      next: (updated) => {
+        this.client = updated;
+      }
+    });
+  }
+
+  getStageLabel(stage?: PipelineStage): string {
+    return this.pipelineStages.find(s => s.value === stage)?.label ?? 'Interessent';
+  }
+
+  getStageBg(stage?: PipelineStage): string {
+    return this.pipelineStages.find(s => s.value === stage)?.bg ?? 'rgba(107,114,128,0.12)';
+  }
+
+  getStageColor(stage?: PipelineStage): string {
+    return this.pipelineStages.find(s => s.value === stage)?.color ?? '#6b7280';
   }
 
   getViewingStatusBg(status: ViewingStatus): string {
