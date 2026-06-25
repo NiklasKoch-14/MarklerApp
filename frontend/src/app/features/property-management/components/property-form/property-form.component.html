@@ -38,91 +38,21 @@
     </div>
   </div>
 
-  <h1 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-    {{ isEditMode ? ('properties.edit' | translate) : ('properties.new' | translate) }}
-  </h1>
-
-  <!-- Section Navigation -->
-  <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
-    <nav class="flex space-x-8 overflow-x-auto">
-      <button
-        type="button"
-        (click)="goToSection('basic')"
-        [class.border-primary-500]="currentSection === 'basic'"
-        [class.text-primary-600]="currentSection === 'basic'"
-        [class.border-transparent]="currentSection !== 'basic'"
-        [class.text-gray-500]="currentSection !== 'basic'"
-        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
-        {{ 'properties.form.basicInfo' | translate }}
-      </button>
-      <button
-        type="button"
-        (click)="goToSection('location')"
-        [class.border-primary-500]="currentSection === 'location'"
-        [class.text-primary-600]="currentSection === 'location'"
-        [class.border-transparent]="currentSection !== 'location'"
-        [class.text-gray-500]="currentSection !== 'location'"
-        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
-        {{ 'properties.form.location' | translate }}
-      </button>
-      <button
-        type="button"
-        (click)="goToSection('specs')"
-        [class.border-primary-500]="currentSection === 'specs'"
-        [class.text-primary-600]="currentSection === 'specs'"
-        [class.border-transparent]="currentSection !== 'specs'"
-        [class.text-gray-500]="currentSection !== 'specs'"
-        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
-        {{ 'properties.form.specifications' | translate }}
-      </button>
-      <button
-        type="button"
-        (click)="goToSection('financial')"
-        [class.border-primary-500]="currentSection === 'financial'"
-        [class.text-primary-600]="currentSection === 'financial'"
-        [class.border-transparent]="currentSection !== 'financial'"
-        [class.text-gray-500]="currentSection !== 'financial'"
-        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
-        {{ 'properties.form.financial' | translate }}
-      </button>
-      <button
-        type="button"
-        (click)="goToSection('features')"
-        [class.border-primary-500]="currentSection === 'features'"
-        [class.text-primary-600]="currentSection === 'features'"
-        [class.border-transparent]="currentSection !== 'features'"
-        [class.text-gray-500]="currentSection !== 'features'"
-        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
-        {{ 'properties.form.featuresEnergy' | translate }}
-      </button>
-      <button
-        type="button"
-        (click)="goToSection('images')"
-        [class.border-primary-500]="currentSection === 'images'"
-        [class.text-primary-600]="currentSection === 'images'"
-        [class.border-transparent]="currentSection !== 'images'"
-        [class.text-gray-500]="currentSection !== 'images'"
-        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
-        {{ 'properties.images.title' | translate }}
-      </button>
-      <button
-        type="button"
-        (click)="goToSection('expose')"
-        [class.border-primary-500]="currentSection === 'expose'"
-        [class.text-primary-600]="currentSection === 'expose'"
-        [class.border-transparent]="currentSection !== 'expose'"
-        [class.text-gray-500]="currentSection !== 'expose'"
-        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
-        {{ 'properties.expose.title' | translate }}
-      </button>
-    </nav>
+  <!-- Page Header -->
+  <div class="page-header" style="margin-bottom:24px;">
+    <div>
+      <h1 class="page-title">{{ isEditMode ? ('properties.edit' | translate) : ('properties.new' | translate) }}</h1>
+      <p style="font-size:14px; color:var(--text-2); margin-top:4px;">
+        {{ isEditMode ? ('properties.editSubtitle' | translate) : ('properties.newSubtitle' | translate) }}
+      </p>
+    </div>
   </div>
 
-  <div class="max-w-4xl">
+  <div style="max-width:720px; margin:0 auto;">
     <form [formGroup]="propertyForm" (ngSubmit)="onSubmit()" class="space-y-6">
 
       <!-- Basic Information Section -->
-      <div *ngIf="currentSection === 'basic'" class="card animation-fade-in">
+      <div class="card animation-fade-in">
         <div class="card-header">
           <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.form.basicInfo' | translate }}</h3>
         </div>
@@ -208,7 +138,7 @@
       </div>
 
       <!-- Location Section -->
-      <div *ngIf="currentSection === 'location'" class="card animation-fade-in">
+      <div class="card animation-fade-in">
         <div class="card-header">
           <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.form.location' | translate }}</h3>
         </div>
@@ -307,7 +237,7 @@
       </div>
 
       <!-- Specifications Section -->
-      <div *ngIf="currentSection === 'specs'" class="card animation-fade-in">
+      <div class="card animation-fade-in">
         <div class="card-header">
           <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.form.specifications' | translate }}</h3>
         </div>
@@ -461,7 +391,7 @@
       </div>
 
       <!-- Financial Section -->
-      <div *ngIf="currentSection === 'financial'" class="card animation-fade-in">
+      <div class="card animation-fade-in">
         <div class="card-header">
           <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.form.financial' | translate }}</h3>
         </div>
@@ -548,7 +478,7 @@
       </div>
 
       <!-- Features & Energy Section -->
-      <div *ngIf="currentSection === 'features'" class="card animation-fade-in">
+      <div class="card animation-fade-in">
         <div class="card-header">
           <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.form.featuresEnergy' | translate }}</h3>
         </div>
@@ -708,7 +638,7 @@
       </div>
 
       <!-- Images Section -->
-      <div *ngIf="currentSection === 'images'" class="card animation-fade-in">
+      <div *ngIf="isEditMode" class="card animation-fade-in">
         <div class="card-header">
           <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.images.title' | translate }}</h3>
           <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -734,7 +664,7 @@
       </div>
 
       <!-- Expose/Brochure Section -->
-      <div *ngIf="currentSection === 'expose'" class="card animation-fade-in">
+      <div *ngIf="isEditMode" class="card animation-fade-in">
         <div class="card-header">
           <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.expose.title' | translate }}</h3>
           <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">

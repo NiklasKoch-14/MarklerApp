@@ -8,9 +8,14 @@ import { ClientService, Client, PagedResponse } from '../../services/client.serv
   selector: 'app-client-list',
   standalone: true,
   imports: [CommonModule, RouterLink, TranslateModule],
+  styles: [`
+    .client-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow); cursor:pointer; transition:box-shadow 0.15s, border-color 0.15s; display:flex; flex-direction:column; }
+    .client-card:hover { border-color:var(--primary); box-shadow:0 4px 16px rgba(20,40,45,0.12); }
+  `],
   template: `
-    <div class="p-6">
-      <div class="page-header">
+    <div style="padding:28px 32px;">
+      <!-- Header -->
+      <div class="page-header" style="margin-bottom:24px;">
         <div>
           <h1 class="page-title">{{ 'clients.title' | translate }}</h1>
           <p style="font-size:14px; color:var(--text-2); margin-top:4px;">{{ 'clients.listDescription' | translate }}</p>
@@ -21,52 +26,76 @@ import { ClientService, Client, PagedResponse } from '../../services/client.serv
         </a>
       </div>
 
-      <div class="mt-8 flow-root">
-        <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-            <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-              <table class="min-w-full divide-y divide-gray-300">
-                <thead class="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white sm:pl-6">{{ 'clients.name' | translate }}</th>
-                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">{{ 'clients.email' | translate }}</th>
-                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">{{ 'clients.phone' | translate }}</th>
-                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">{{ 'clients.city' | translate }}</th>
-                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">{{ 'clients.gdpr' | translate }}</th>
-                    <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                      <span class="sr-only">Actions</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 bg-white dark:bg-gray-800">
-                  <tr *ngFor="let client of clients; trackBy: trackById" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">
-                      {{ client.firstName }} {{ client.lastName }}
-                    </td>
-                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">{{ client.email || '-' }}</td>
-                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">{{ client.phone || '-' }}</td>
-                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">{{ client.addressCity || '-' }}</td>
-                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
-                      <span *ngIf="client.gdprConsentGiven" class="badge badge-success">✓ {{ 'clients.consent' | translate }}</span>
-                      <span *ngIf="!client.gdprConsentGiven" class="badge badge-error">✗ {{ 'common.no' | translate }} {{ 'clients.consent' | translate }}</span>
-                    </td>
-                    <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                      <a [routerLink]="['/clients', client.id]" class="text-primary-600 hover:text-primary-900">{{ 'common.view' | translate }}</a>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+      <!-- Loading -->
+      <div *ngIf="isLoading" style="text-align:center; padding:48px 0;">
+        <div class="spinner" style="width:32px; height:32px; margin:0 auto 12px;"></div>
+        <p style="font-size:14px; color:var(--text-3);">{{ 'common.loading' | translate }}</p>
+      </div>
 
-              <div *ngIf="isLoading" class="p-4 text-center">
-                <div class="spinner h-8 w-8 mx-auto"></div>
-                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ 'common.loading' | translate }}</p>
-              </div>
+      <!-- Empty State -->
+      <div *ngIf="!isLoading && clients.length === 0"
+        style="text-align:center; padding:56px 24px; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow);">
+        <i class="ph ph-users" style="font-size:48px; color:var(--text-3); display:block; margin-bottom:12px;"></i>
+        <h3 style="font-size:15px; font-weight:600; color:var(--text); margin:0 0 6px;">{{ 'clients.noClientsFound' | translate }}</h3>
+        <p style="font-size:13px; color:var(--text-2); margin:0 0 20px;">{{ 'clients.addFirstClient' | translate }}</p>
+        <a routerLink="/clients/new" class="btn-primary" style="display:inline-flex;">
+          <i class="ph ph-user-plus"></i>
+          {{ 'clients.addClient' | translate }}
+        </a>
+      </div>
 
-              <div *ngIf="!isLoading && clients.length === 0" class="p-4 text-center">
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ 'clients.noClientsFound' | translate }}</p>
-                <a routerLink="/clients/new" class="text-primary-600 hover:text-primary-900 text-sm font-medium">{{ 'clients.addFirstClient' | translate }}</a>
-              </div>
+      <!-- Card Grid -->
+      <div *ngIf="!isLoading && clients.length > 0"
+        style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
+        <div *ngFor="let client of clients; trackBy: trackById"
+          [routerLink]="['/clients', client.id]"
+          class="client-card">
+
+          <!-- Card Header: Avatar + Name + Chevron -->
+          <div style="display:flex; align-items:center; gap:12px; padding:16px 16px 12px;">
+            <div style="width:42px; height:42px; border-radius:50%; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:var(--primary); flex-shrink:0; letter-spacing:0.5px;">
+              {{ getInitials(client) }}
             </div>
+            <div style="flex:1; min-width:0; overflow:hidden;">
+              <div style="font-weight:700; font-size:14px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                {{ client.firstName }} {{ client.lastName }}
+              </div>
+              <div style="font-size:12px; color:var(--text-3); margin-top:1px;">{{ client.addressCity || '—' }}</div>
+            </div>
+            <i class="ph ph-caret-right" style="color:var(--text-3); font-size:16px; flex-shrink:0;"></i>
+          </div>
+
+          <!-- Contact Info -->
+          <div style="padding:0 16px 12px; display:flex; flex-direction:column; gap:7px; flex:1;">
+            <div *ngIf="client.phone" style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);">
+              <i class="ph ph-phone" style="color:var(--text-3); font-size:14px; flex-shrink:0;"></i>
+              <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ client.phone }}</span>
+            </div>
+            <div *ngIf="client.email" style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);">
+              <i class="ph ph-envelope" style="color:var(--text-3); font-size:14px; flex-shrink:0;"></i>
+              <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ client.email }}</span>
+            </div>
+            <div *ngIf="client.searchCriteria" style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);">
+              <i class="ph ph-buildings" style="color:var(--text-3); font-size:14px; flex-shrink:0;"></i>
+              <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ getSearchSummary(client) }}</span>
+            </div>
+          </div>
+
+          <!-- Footer: DSGVO -->
+          <div style="padding:10px 16px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
+            <span style="font-size:12px; color:var(--text-3);">
+              {{ client.addressCountry || 'DE' }}
+            </span>
+            <span *ngIf="client.gdprConsentGiven"
+              style="display:flex; align-items:center; gap:4px; font-size:12px; font-weight:600; color:#1f8a5b;">
+              <i class="ph ph-shield-check"></i>
+              {{ 'clients.consent' | translate }}
+            </span>
+            <span *ngIf="!client.gdprConsentGiven"
+              style="display:flex; align-items:center; gap:4px; font-size:12px; font-weight:600; color:#b23a55;">
+              <i class="ph ph-shield-warning"></i>
+              {{ 'clients.gdprPending' | translate }}
+            </span>
           </div>
         </div>
       </div>
@@ -85,7 +114,7 @@ export class ClientListComponent implements OnInit {
 
   private loadClients(): void {
     this.isLoading = true;
-    this.clientService.getClients().subscribe({
+    this.clientService.getClients(0, 50).subscribe({
       next: (response: PagedResponse<Client>) => {
         this.clients = response.content;
         this.isLoading = false;
@@ -97,9 +126,21 @@ export class ClientListComponent implements OnInit {
     });
   }
 
-  /**
-   * TrackBy function for *ngFor performance optimization
-   */
+  getInitials(client: Client): string {
+    const f = client.firstName?.charAt(0)?.toUpperCase() || '';
+    const l = client.lastName?.charAt(0)?.toUpperCase() || '';
+    return f + l;
+  }
+
+  getSearchSummary(client: Client): string {
+    const c = client.searchCriteria;
+    if (!c) return '';
+    const parts: string[] = [];
+    if (c.propertyTypes?.length) parts.push(c.propertyTypes[0]);
+    if (c.maxBudget) parts.push(new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(c.maxBudget));
+    return parts.join(' · ');
+  }
+
   trackById(index: number, item: Client): string | undefined {
     return item.id;
   }
