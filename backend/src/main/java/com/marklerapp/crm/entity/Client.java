@@ -61,6 +61,21 @@ public class Client extends BaseEntity {
     private String addressCountry = "Germany";
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "client_type", nullable = false)
+    @Builder.Default
+    private ClientType clientType = ClientType.BUYER;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "financing_status", nullable = false)
+    @Builder.Default
+    private FinancingStatus financingStatus = FinancingStatus.UNKNOWN;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "move_in_timeline", nullable = false)
+    @Builder.Default
+    private MoveInTimeline moveInTimeline = MoveInTimeline.FLEXIBLE;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "pipeline_stage", nullable = false)
     @Builder.Default
     private PipelineStage pipelineStage = PipelineStage.PROSPECT;
@@ -74,6 +89,27 @@ public class Client extends BaseEntity {
 
     @OneToOne(mappedBy = "client", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private PropertySearchCriteria searchCriteria;
+
+    public enum ClientType {
+        BUYER,
+        RENTER,
+        SELLER
+    }
+
+    public enum FinancingStatus {
+        UNKNOWN,
+        SELF_FINANCED,
+        BANK_PRE_APPROVED,
+        NEEDS_FINANCING
+    }
+
+    public enum MoveInTimeline {
+        IMMEDIATE,
+        THREE_MONTHS,
+        SIX_MONTHS,
+        ONE_YEAR,
+        FLEXIBLE
+    }
 
     public enum PipelineStage {
         PROSPECT,

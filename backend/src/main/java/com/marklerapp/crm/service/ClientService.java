@@ -165,6 +165,15 @@ public class ClientService {
         existingClient.setAddressCity(clientDto.getAddressCity());
         existingClient.setAddressPostalCode(clientDto.getAddressPostalCode());
         existingClient.setAddressCountry(clientDto.getAddressCountry());
+        if (clientDto.getClientType() != null) {
+            existingClient.setClientType(clientDto.getClientType());
+        }
+        if (clientDto.getFinancingStatus() != null) {
+            existingClient.setFinancingStatus(clientDto.getFinancingStatus());
+        }
+        if (clientDto.getMoveInTimeline() != null) {
+            existingClient.setMoveInTimeline(clientDto.getMoveInTimeline());
+        }
         if (clientDto.getPipelineStage() != null) {
             existingClient.setPipelineStage(clientDto.getPipelineStage());
         }

@@ -5,6 +5,27 @@ import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
+export enum ClientType {
+  BUYER  = 'BUYER',
+  RENTER = 'RENTER',
+  SELLER = 'SELLER',
+}
+
+export enum FinancingStatus {
+  UNKNOWN          = 'UNKNOWN',
+  SELF_FINANCED    = 'SELF_FINANCED',
+  BANK_PRE_APPROVED = 'BANK_PRE_APPROVED',
+  NEEDS_FINANCING  = 'NEEDS_FINANCING',
+}
+
+export enum MoveInTimeline {
+  IMMEDIATE     = 'IMMEDIATE',
+  THREE_MONTHS  = 'THREE_MONTHS',
+  SIX_MONTHS    = 'SIX_MONTHS',
+  ONE_YEAR      = 'ONE_YEAR',
+  FLEXIBLE      = 'FLEXIBLE',
+}
+
 export enum PipelineStage {
   PROSPECT = 'PROSPECT',
   ACTIVE_SEARCH = 'ACTIVE_SEARCH',
@@ -25,6 +46,9 @@ export interface Client {
   addressCity?: string;
   addressPostalCode?: string;
   addressCountry?: string;
+  clientType?: ClientType;
+  financingStatus?: FinancingStatus;
+  moveInTimeline?: MoveInTimeline;
   pipelineStage?: PipelineStage;
   gdprConsentGiven: boolean;
   gdprConsentDate?: string;

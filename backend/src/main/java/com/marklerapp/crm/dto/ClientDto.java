@@ -54,6 +54,9 @@ public class ClientDto {
 
     private String addressCountry;
 
+    private Client.ClientType clientType;
+    private Client.FinancingStatus financingStatus;
+    private Client.MoveInTimeline moveInTimeline;
     private Client.PipelineStage pipelineStage;
 
     private boolean gdprConsentGiven;

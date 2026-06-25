@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { ClientService, Client, PipelineStage } from '../../services/client.service';
+import { ClientService, Client, PipelineStage, ClientType, FinancingStatus, MoveInTimeline } from '../../services/client.service';
 import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse, CallNoteCreateRequest, CallType, CallOutcome } from '../../../call-notes/services/call-notes.service';
 import { ViewingService, ViewingSummary, ViewingFeedback, ViewingStatus } from '../../../viewing-management/services/viewing.service';
 import { ViewingAddDialogComponent } from '../../../viewing-management/components/viewing-add-dialog/viewing-add-dialog.component';
@@ -254,7 +254,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
                 <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border);
                             display:flex; align-items:center; gap:6px;">
                   <i [class]="client.gdprConsentGiven ? 'ph ph-shield-check' : 'ph ph-shield-warning'"
-                     [style.color]="client.gdprConsentGiven ? '#1f8a5b' : '#b23a55'"
+                     [style.color]="client.gdprConsentGiven ? 'var(--color-success)' : 'var(--color-error)'"
                      style="font-size:13px; flex-shrink:0;"></i>
                   <span style="font-size:11px; color:var(--text-3);">
                     DSGVO
@@ -264,6 +264,60 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
                     </ng-container>
                   </span>
                 </div>
+              </div>
+            </div>
+
+            <!-- Kunden-Profil (clientType / financingStatus / moveInTimeline) -->
+            <div class="card">
+              <div class="card-header" style="display:flex; align-items:center; gap:8px;">
+                <i class="ph-fill ph-user-gear" style="font-size:16px; color:var(--primary);"></i>
+                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Kunden-Profil</h3>
+              </div>
+              <div class="card-body">
+                <dl class="space-y-4">
+                  <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Kundentyp</dt>
+                    <dd class="mt-1">
+                      <select [(ngModel)]="client.clientType" (change)="onClientProfileChange()"
+                              style="width:100%; padding:7px 10px; border:1.5px solid var(--border);
+                                     border-radius:8px; font-size:13px; color:var(--text);
+                                     background:var(--surface-2); cursor:pointer;">
+                        <option value="BUYER">Käufer</option>
+                        <option value="RENTER">Mieter</option>
+                        <option value="SELLER">Verkäufer</option>
+                      </select>
+                    </dd>
+                  </div>
+                  <div *ngIf="client.clientType !== 'SELLER'">
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Finanzierung</dt>
+                    <dd class="mt-1">
+                      <select [(ngModel)]="client.financingStatus" (change)="onClientProfileChange()"
+                              style="width:100%; padding:7px 10px; border:1.5px solid var(--border);
+                                     border-radius:8px; font-size:13px; color:var(--text);
+                                     background:var(--surface-2); cursor:pointer;">
+                        <option value="UNKNOWN">Unbekannt</option>
+                        <option value="SELF_FINANCED">Eigenfinanzierung</option>
+                        <option value="BANK_PRE_APPROVED">Bank-Vorabzusage</option>
+                        <option value="NEEDS_FINANCING">Finanzierung nötig</option>
+                      </select>
+                    </dd>
+                  </div>
+                  <div *ngIf="client.clientType !== 'SELLER'">
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Einzugs-Zeitraum</dt>
+                    <dd class="mt-1">
+                      <select [(ngModel)]="client.moveInTimeline" (change)="onClientProfileChange()"
+                              style="width:100%; padding:7px 10px; border:1.5px solid var(--border);
+                                     border-radius:8px; font-size:13px; color:var(--text);
+                                     background:var(--surface-2); cursor:pointer;">
+                        <option value="IMMEDIATE">Sofort</option>
+                        <option value="THREE_MONTHS">In 3 Monaten</option>
+                        <option value="SIX_MONTHS">In 6 Monaten</option>
+                        <option value="ONE_YEAR">In 1 Jahr</option>
+                        <option value="FLEXIBLE">Flexibel</option>
+                      </select>
+                    </dd>
+                  </div>
+                </dl>
               </div>
             </div>
 
@@ -686,6 +740,15 @@ export class ClientDetailComponent implements OnInit {
     if (!this.client?.id) return;
     this.stageDropdownOpen = false;
     this.clientService.updatePipelineStage(this.client.id, stage).subscribe({
+      next: (updated) => {
+        this.client = updated;
+      }
+    });
+  }
+
+  onClientProfileChange(): void {
+    if (!this.client?.id) return;
+    this.clientService.updateClient(this.client.id, this.client).subscribe({
       next: (updated) => {
         this.client = updated;
       }
