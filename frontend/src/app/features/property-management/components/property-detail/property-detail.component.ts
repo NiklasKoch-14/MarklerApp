@@ -51,11 +51,11 @@ export class PropertyDetailComponent implements OnInit {
   };
 
   noteCategoryColors: Record<NoteCategory, string> = {
-    [NoteCategory.GENERAL]: 'rgba(0,0,0,0.06)',
-    [NoteCategory.SELLER_INFO]: 'rgba(234,179,8,0.15)',
-    [NoteCategory.PRICE_NOTE]: 'rgba(34,197,94,0.15)',
-    [NoteCategory.VIEWING_NOTE]: 'rgba(59,130,246,0.15)',
-    [NoteCategory.LEGAL_NOTE]: 'rgba(239,68,68,0.12)'
+    [NoteCategory.GENERAL]:      'var(--color-gray-soft)',
+    [NoteCategory.SELLER_INFO]:  'var(--color-amber-soft)',
+    [NoteCategory.PRICE_NOTE]:   'var(--color-success-soft)',
+    [NoteCategory.VIEWING_NOTE]: 'var(--color-blue-soft)',
+    [NoteCategory.LEGAL_NOTE]:   'var(--color-error-soft)',
   };
 
   noteCategories = Object.values(NoteCategory);
@@ -117,17 +117,17 @@ export class PropertyDetailComponent implements OnInit {
 
   getViewingStatusBg(status: ViewingStatus): string {
     switch (status) {
-      case ViewingStatus.COMPLETED: return 'rgba(22,163,74,0.12)';
-      case ViewingStatus.CANCELLED: return 'rgba(220,38,38,0.1)';
-      default: return 'rgba(37,99,235,0.1)';
+      case ViewingStatus.COMPLETED: return 'var(--color-success-soft)';
+      case ViewingStatus.CANCELLED: return 'var(--color-error-soft)';
+      default: return 'var(--stage-viewing-bg)';
     }
   }
 
   getViewingStatusColor(status: ViewingStatus): string {
     switch (status) {
-      case ViewingStatus.COMPLETED: return '#16a34a';
-      case ViewingStatus.CANCELLED: return '#dc2626';
-      default: return '#2563eb';
+      case ViewingStatus.COMPLETED: return 'var(--color-success)';
+      case ViewingStatus.CANCELLED: return 'var(--color-error)';
+      default: return 'var(--stage-viewing)';
     }
   }
 

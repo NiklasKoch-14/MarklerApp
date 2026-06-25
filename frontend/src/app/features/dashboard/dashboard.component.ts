@@ -389,17 +389,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.statCards = [
         {
           icon: 'ph-fill ph-users',
-          iconBg: 'color-mix(in srgb,#2f6b7a 12%,var(--surface))',
-          iconColor: '#2f6b7a',
+          iconBg: 'color-mix(in srgb,var(--primary) 12%,var(--surface))',
+          iconColor: 'var(--primary)',
           value: String(clients),
           label: t['dashboard.stats.clients'],
           caption: t['dashboard.stats.activeThis'],
-          capColor: '#1f8a5b',
+          capColor: 'var(--color-success)',
         },
         {
           icon: 'ph-fill ph-chats-circle',
-          iconBg: 'color-mix(in srgb,#9f5aaa 12%,var(--surface))',
-          iconColor: '#9f5aaa',
+          iconBg: 'color-mix(in srgb,var(--color-viewing) 12%,var(--surface))',
+          iconColor: 'var(--color-viewing)',
           value: String(notes),
           label: t['dashboard.stats.notes'],
           caption: t['dashboard.stats.thisMonth'],
@@ -407,8 +407,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         },
         {
           icon: 'ph-fill ph-buildings',
-          iconBg: 'color-mix(in srgb,#1f8a5b 12%,var(--surface))',
-          iconColor: '#1f8a5b',
+          iconBg: 'color-mix(in srgb,var(--color-success) 12%,var(--surface))',
+          iconColor: 'var(--color-success)',
           value: String(properties),
           label: t['dashboard.stats.properties'],
           caption: '',
@@ -416,12 +416,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
         },
         {
           icon: 'ph-fill ph-bell-ringing',
-          iconBg: 'color-mix(in srgb,#c07a1e 12%,var(--surface))',
-          iconColor: '#c07a1e',
+          iconBg: 'color-mix(in srgb,var(--color-warning) 12%,var(--surface))',
+          iconColor: 'var(--color-warning)',
           value: String(followups),
           label: t['dashboard.stats.followups'],
           caption: t['dashboard.stats.open'],
-          capColor: followups > 0 ? '#c07a1e' : '#1f8a5b',
+          capColor: followups > 0 ? 'var(--color-warning)' : 'var(--color-success)',
         },
       ];
     });
@@ -449,7 +449,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         subject: r.subject,
         typeLabel: '',
         dueLabel: r.isOverdue ? '⚠ Überfällig' : dueLabel,
-        dueColor: r.isOverdue ? '#b23a55' : (r.daysUntilDue <= 2 ? '#c07a1e' : '#1f8a5b'),
+        dueColor: r.isOverdue ? 'var(--color-error)' : (r.daysUntilDue <= 2 ? 'var(--color-warning)' : 'var(--color-success)'),
         followupFmt: dueLabel,
         isOverdue: r.isOverdue,
       };
@@ -475,10 +475,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const locale = lang === 'de' ? 'de-DE' : 'en-US';
 
     const cols = [
-      { outcome: CallOutcome.INTERESTED,       label: 'Interessiert',  color: '#2f6b7a', items: [] as any[] },
-      { outcome: CallOutcome.SCHEDULED_VIEWING, label: 'Besichtigung', color: '#9f5aaa', items: [] as any[] },
-      { outcome: CallOutcome.OFFER_MADE,        label: 'Angebot',      color: '#c07a1e', items: [] as any[] },
-      { outcome: CallOutcome.DEAL_CLOSED,       label: 'Abschluss',    color: '#1f8a5b', items: [] as any[] },
+      { outcome: CallOutcome.INTERESTED,        label: 'Interessiert', color: 'var(--primary)',         items: [] as any[] },
+      { outcome: CallOutcome.SCHEDULED_VIEWING, label: 'Besichtigung', color: 'var(--color-viewing)',   items: [] as any[] },
+      { outcome: CallOutcome.OFFER_MADE,        label: 'Angebot',      color: 'var(--color-offer)',     items: [] as any[] },
+      { outcome: CallOutcome.DEAL_CLOSED,       label: 'Abschluss',    color: 'var(--color-closed)',    items: [] as any[] },
     ];
 
     for (const n of notes) {
@@ -511,8 +511,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const initials = parts.slice(0, 2).map(p => p.charAt(0).toUpperCase()).join('');
       const timeFmt = new Date(v.viewingDate).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
       const statusLabel = v.status === 'COMPLETED' ? 'Erledigt' : v.status === 'CANCELLED' ? 'Abgesagt' : 'Geplant';
-      const statusBg    = v.status === 'COMPLETED' ? 'rgba(31,138,91,.12)' : v.status === 'CANCELLED' ? 'rgba(178,58,85,.1)' : 'rgba(124,58,237,.1)';
-      const statusColor = v.status === 'COMPLETED' ? '#1f8a5b' : v.status === 'CANCELLED' ? '#b23a55' : '#7c3aed';
+      const statusBg    = v.status === 'COMPLETED' ? 'var(--color-success-soft)' : v.status === 'CANCELLED' ? 'var(--color-error-soft)' : 'var(--stage-viewing-bg)';
+      const statusColor = v.status === 'COMPLETED' ? 'var(--color-success)' : v.status === 'CANCELLED' ? 'var(--color-error)' : 'var(--stage-viewing)';
       return { id: v.id, clientId: v.clientId, clientName: v.clientName, initials, propertyLabel: v.propertyTitle || v.propertyAddress, timeFmt, statusLabel, statusBg, statusColor };
     });
   }
@@ -529,21 +529,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private typeColor(type: CallType): string {
     switch (type) {
-      case CallType.PHONE_INBOUND:  return '#2f6b7a';
-      case CallType.PHONE_OUTBOUND: return '#9f5aaa';
-      case CallType.EMAIL:          return '#c07a1e';
-      case CallType.MEETING:        return '#1f8a5b';
+      case CallType.PHONE_INBOUND:  return 'var(--primary)';
+      case CallType.PHONE_OUTBOUND: return 'var(--color-viewing)';
+      case CallType.EMAIL:          return 'var(--color-offer)';
+      case CallType.MEETING:        return 'var(--color-closed)';
       default:                      return 'var(--text-3)';
     }
   }
 
   private outcomeColor(outcome?: CallOutcome): string {
     switch (outcome) {
-      case CallOutcome.INTERESTED:        return '#2f6b7a';
-      case CallOutcome.SCHEDULED_VIEWING: return '#9f5aaa';
-      case CallOutcome.OFFER_MADE:        return '#c07a1e';
-      case CallOutcome.DEAL_CLOSED:       return '#1f8a5b';
-      case CallOutcome.NOT_INTERESTED:    return '#b23a55';
+      case CallOutcome.INTERESTED:        return 'var(--color-interested)';
+      case CallOutcome.SCHEDULED_VIEWING: return 'var(--color-viewing)';
+      case CallOutcome.OFFER_MADE:        return 'var(--color-offer)';
+      case CallOutcome.DEAL_CLOSED:       return 'var(--color-closed)';
+      case CallOutcome.NOT_INTERESTED:    return 'var(--color-not-interested)';
       default:                            return 'var(--text-3)';
     }
   }

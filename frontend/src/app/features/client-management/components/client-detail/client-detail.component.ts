@@ -550,12 +550,12 @@ export class ClientDetailComponent implements OnInit {
   stageDropdownOpen = false;
   showStageUpgradeHint = false;
   pipelineStages = [
-    { value: PipelineStage.PROSPECT,      label: 'Interessent',     color: '#6b7280', bg: 'rgba(107,114,128,0.12)' },
-    { value: PipelineStage.ACTIVE_SEARCH, label: 'Aktive Suche',    color: '#2563eb', bg: 'rgba(37,99,235,0.12)' },
-    { value: PipelineStage.VIEWING,       label: 'Besichtigungen',  color: '#7c3aed', bg: 'rgba(124,58,237,0.12)' },
-    { value: PipelineStage.OFFER,         label: 'Angebot',         color: '#d97706', bg: 'rgba(217,119,6,0.12)' },
-    { value: PipelineStage.CLOSED,        label: 'Abschluss',       color: '#16a34a', bg: 'rgba(22,163,74,0.12)' },
-    { value: PipelineStage.INACTIVE,      label: 'Inaktiv',         color: '#9ca3af', bg: 'rgba(156,163,175,0.1)' }
+    { value: PipelineStage.PROSPECT,      label: 'Interessent',    color: 'var(--stage-prospect)',      bg: 'var(--stage-prospect-bg)' },
+    { value: PipelineStage.ACTIVE_SEARCH, label: 'Aktive Suche',   color: 'var(--stage-active-search)', bg: 'var(--stage-active-search-bg)' },
+    { value: PipelineStage.VIEWING,       label: 'Besichtigungen', color: 'var(--stage-viewing)',       bg: 'var(--stage-viewing-bg)' },
+    { value: PipelineStage.OFFER,         label: 'Angebot',        color: 'var(--stage-offer)',         bg: 'var(--stage-offer-bg)' },
+    { value: PipelineStage.CLOSED,        label: 'Abschluss',      color: 'var(--stage-closed)',        bg: 'var(--stage-closed-bg)' },
+    { value: PipelineStage.INACTIVE,      label: 'Inaktiv',        color: 'var(--stage-inactive)',      bg: 'var(--stage-inactive-bg)' },
   ];
 
   constructor(
@@ -697,26 +697,26 @@ export class ClientDetailComponent implements OnInit {
   }
 
   getStageBg(stage?: PipelineStage): string {
-    return this.pipelineStages.find(s => s.value === stage)?.bg ?? 'rgba(107,114,128,0.12)';
+    return this.pipelineStages.find(s => s.value === stage)?.bg ?? 'var(--stage-prospect-bg)';
   }
 
   getStageColor(stage?: PipelineStage): string {
-    return this.pipelineStages.find(s => s.value === stage)?.color ?? '#6b7280';
+    return this.pipelineStages.find(s => s.value === stage)?.color ?? 'var(--stage-prospect)';
   }
 
   getViewingStatusBg(status: ViewingStatus): string {
     switch (status) {
-      case ViewingStatus.COMPLETED: return 'rgba(22,163,74,0.12)';
-      case ViewingStatus.CANCELLED: return 'rgba(220,38,38,0.1)';
-      default: return 'rgba(37,99,235,0.1)';
+      case ViewingStatus.COMPLETED: return 'var(--color-success-soft)';
+      case ViewingStatus.CANCELLED: return 'var(--color-error-soft)';
+      default: return 'var(--stage-viewing-bg)';
     }
   }
 
   getViewingStatusColor(status: ViewingStatus): string {
     switch (status) {
-      case ViewingStatus.COMPLETED: return '#16a34a';
-      case ViewingStatus.CANCELLED: return '#dc2626';
-      default: return '#2563eb';
+      case ViewingStatus.COMPLETED: return 'var(--color-success)';
+      case ViewingStatus.CANCELLED: return 'var(--color-error)';
+      default: return 'var(--stage-viewing)';
     }
   }
 
