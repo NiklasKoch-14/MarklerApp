@@ -120,7 +120,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
                 {{ 'properties.matching.reset' | translate }}
               </button>
               <a routerLink="/properties" class="btn-secondary">
-                {{ 'properties.backToProperties' | translate }}
+                {{ 'messages.backToProperties' | translate }}
               </a>
             </div>
           </div>
