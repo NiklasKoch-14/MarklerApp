@@ -141,7 +141,6 @@
     "dashboard": "Dashboard",
     "clients": "Clients",
     "properties": "Properties",
-    "callNotes": "Call Notes",
     "settings": "Settings",
     "profile": "Profile",
     "help": "Help",
@@ -149,7 +148,6 @@
     "tagline": "Real Estate CRM",
     "role": "Agent",
     "search": "Search clients, notes...",
-    "newNote": "New Note",
     "toggleTheme": "Toggle theme",
     "matching": "Matching",
     "notifications": "Notifications"

@@ -155,7 +155,7 @@ interface ActivityRow {
             <div class="widget-header">
               <i class="ph ph-clock-counter-clockwise" style="color:var(--primary); font-size:18px;"></i>
               <h3 class="widget-title">{{ 'dashboard.recentActivity' | translate }}</h3>
-              <button [routerLink]="['/call-notes']"
+              <button [routerLink]="['/notifications']"
                       style="background:none; border:none; color:var(--primary); font-size:13px;
                              font-weight:600; cursor:pointer;">
                 {{ 'dashboard.viewAll' | translate }}

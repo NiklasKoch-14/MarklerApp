@@ -4,6 +4,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/rou
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { AuthService, Agent } from '../../core/auth/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
 
@@ -17,7 +18,7 @@ interface NavItem {
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, TranslateModule],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, TranslateModule, DragDropModule],
   template: `
     <div class="app-shell">
 
@@ -36,16 +37,42 @@ interface NavItem {
         </div>
 
         <!-- Nav -->
-        <nav class="sidebar-nav">
-          @for (item of navItems; track item.route) {
+        <nav class="sidebar-nav"
+             cdkDropList
+             (cdkDropListDropped)="onNavDrop($event)"
+             style="padding:0;">
+          <div *ngFor="let item of navItems; trackBy: trackByRoute"
+               cdkDrag
+               [cdkDragLockAxis]="'y'"
+               class="sidebar-nav-drag-item"
+               (mouseenter)="item['_hover'] = true"
+               (mouseleave)="item['_hover'] = false">
+            <!-- Drag placeholder -->
+            <div *cdkDragPlaceholder
+                 style="height:44px; margin:2px 8px; border-radius:8px; background:rgba(255,255,255,0.08); border:1px dashed rgba(255,255,255,0.2);"></div>
+            <!-- Drag preview (clone while dragging) -->
+            <div *cdkDragPreview
+                 style="display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:8px;
+                        background:#22333a; color:#fff; font-size:14px; font-weight:500;
+                        box-shadow:0 8px 24px rgba(0,0,0,0.3); width:200px;">
+              <i [class]="item.icon" style="font-size:18px; width:20px; text-align:center;"></i>
+              <span>{{ item.labelKey | translate }}</span>
+            </div>
             <a [routerLink]="item.route"
                routerLinkActive="active"
                [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
-               class="sidebar-nav-item">
+               class="sidebar-nav-item"
+               style="position:relative;">
               <i [class]="item.icon" style="font-size:19px; width:22px; text-align:center;"></i>
               <span style="flex:1; text-align:left;">{{ item.labelKey | translate }}</span>
+              <!-- Drag handle — visible on hover -->
+              <i cdkDragHandle
+                 class="ph ph-dots-six-vertical"
+                 *ngIf="item['_hover']"
+                 style="font-size:16px; color:rgba(255,255,255,0.35); cursor:grab; margin-left:4px;"
+                 (mousedown)="$event.preventDefault()"></i>
             </a>
-          }
+          </div>
         </nav>
 
         <!-- User -->
@@ -93,11 +120,6 @@ interface NavItem {
             <span class="notification-dot"></span>
           </button>
 
-          <!-- New Note CTA -->
-          <button class="topbar-cta-btn" [routerLink]="['/call-notes/new']">
-            <i class="ph-bold ph-plus" style="font-size:15px;"></i>
-            <span>{{ 'navigation.newNote' | translate }}</span>
-          </button>
         </header>
 
         <!-- Page content -->
@@ -110,14 +132,15 @@ interface NavItem {
   `
 })
 export class MainLayoutComponent implements OnInit, OnDestroy {
-  navItems: NavItem[] = [
+  private readonly defaultNavItems: NavItem[] = [
     { route: '/dashboard',      icon: 'ph-fill ph-squares-four',  labelKey: 'navigation.dashboard',      exact: true },
-    { route: '/call-notes',     icon: 'ph-fill ph-chats-circle',  labelKey: 'navigation.callNotes'                   },
     { route: '/clients',        icon: 'ph-fill ph-users',         labelKey: 'navigation.clients'                     },
     { route: '/properties',     icon: 'ph-fill ph-buildings',     labelKey: 'navigation.properties'                  },
     { route: '/matching',       icon: 'ph-fill ph-shuffle',       labelKey: 'navigation.matching'                    },
     { route: '/notifications',  icon: 'ph-fill ph-bell',          labelKey: 'navigation.notifications'               },
   ];
+
+  navItems: NavItem[] = [...this.defaultNavItems];
 
   userInitials = '?';
   userName = '';
@@ -142,6 +165,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       .subscribe(theme => this.isDark = theme === 'dark');
 
     this.currentLang = this.translate.currentLang || this.translate.defaultLang || 'de';
+    this.loadNavOrder();
   }
 
   ngOnDestroy(): void {
@@ -157,6 +181,30 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.userInitials = '?';
       this.userName = '';
     }
+  }
+
+  private loadNavOrder(): void {
+    try {
+      const saved = localStorage.getItem('nav-order');
+      if (!saved) return;
+      const order: string[] = JSON.parse(saved);
+      const ordered = order
+        .map(route => this.defaultNavItems.find(n => n.route === route))
+        .filter((n): n is NavItem => !!n);
+      const newItems = this.defaultNavItems.filter(n => !order.includes(n.route));
+      this.navItems = [...ordered, ...newItems];
+    } catch {
+      // corrupted localStorage — use default
+    }
+  }
+
+  onNavDrop(event: CdkDragDrop<NavItem[]>): void {
+    moveItemInArray(this.navItems, event.previousIndex, event.currentIndex);
+    localStorage.setItem('nav-order', JSON.stringify(this.navItems.map(n => n.route)));
+  }
+
+  trackByRoute(_: number, item: NavItem): string {
+    return item.route;
   }
 
   logout(): void {

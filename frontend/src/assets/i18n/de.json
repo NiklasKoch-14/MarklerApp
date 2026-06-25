@@ -141,7 +141,6 @@
     "dashboard": "Dashboard",
     "clients": "Kunden",
     "properties": "Immobilien",
-    "callNotes": "Gesprächsnotizen",
     "settings": "Einstellungen",
     "profile": "Profil",
     "help": "Hilfe",
@@ -149,7 +148,6 @@
     "tagline": "Immobilien CRM",
     "role": "Makler",
     "search": "Kunden, Notizen suchen...",
-    "newNote": "Neue Notiz",
     "toggleTheme": "Design wechseln",
     "matching": "Matching",
     "notifications": "Benachrichtigungen"

@@ -160,16 +160,6 @@ import { FileAttachmentManagerComponent } from '../../../../shared/components/fi
           <div class="card mt-8">
             <div class="card-header flex items-center justify-between">
               <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ 'clients.recentCallNotes' | translate }}</h3>
-              <div class="flex items-center space-x-2">
-                <a [routerLink]="['/call-notes/client', client.id, 'summary']"
-                   class="btn btn-outline btn-sm">
-                  {{ 'clients.viewSummary' | translate }}
-                </a>
-                <a [routerLink]="['/call-notes/client', client.id, 'new']"
-                   class="btn btn-primary btn-sm">
-                  {{ 'clients.addCallNote' | translate }}
-                </a>
-              </div>
             </div>
             <div class="card-body">
               <!-- Call Notes Summary Stats -->
@@ -194,8 +184,7 @@ import { FileAttachmentManagerComponent } from '../../../../shared/components/fi
               <div *ngIf="recentCallNotes.length > 0">
                 <div class="space-y-4">
                   <div *ngFor="let note of recentCallNotes"
-                       class="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors cursor-pointer"
-                       [routerLink]="['/call-notes', note.id]">
+                       class="border border-gray-200 rounded-lg p-4">
                     <div class="flex items-start justify-between">
                       <div class="flex-1">
                         <div class="flex items-center space-x-2">
@@ -220,16 +209,6 @@ import { FileAttachmentManagerComponent } from '../../../../shared/components/fi
                   </div>
                 </div>
 
-                <!-- View All Link -->
-                <div class="mt-4 text-center">
-                  <a [routerLink]="['/call-notes/client', client.id]"
-                     class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
-                    {{ 'clients.viewAllCallNotes' | translate }} ({{ callNotesSummary?.totalCallNotes || 0 }})
-                    <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                  </a>
-                </div>
               </div>
 
               <!-- No Call Notes -->
@@ -240,12 +219,6 @@ import { FileAttachmentManagerComponent } from '../../../../shared/components/fi
                 </svg>
                 <h4 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">{{ 'clients.noCallNotes' | translate }}</h4>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ 'clients.callNotesDescription' | translate }}</p>
-                <div class="mt-4">
-                  <a [routerLink]="['/call-notes/client', client.id, 'new']"
-                     class="btn btn-primary">
-                    {{ 'clients.addFirstCallNote' | translate }}
-                  </a>
-                </div>
               </div>
 
               <!-- Loading Call Notes -->

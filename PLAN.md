@@ -78,6 +78,27 @@
 
 ---
 
+## Geplant: E-Mail an Kunden (kontextbezogene Vorlagen)
+
+> Voraussetzung: SMTP-Infrastruktur (spring-boot-starter-mail wurde 2026-06-22 entfernt).
+> Auslöser: Makler soll direkt aus dem Kunden-Profil eine vorbereitete E-Mail versenden können — z.B. nach einem fälligen Follow-up.
+
+- [ ] **Backend:** `spring-boot-starter-mail` wieder aktivieren — per `@ConditionalOnProperty(name="app.mail.enabled")` absichern, sodass fehlende SMTP-Config keinen Health-Check-Fail verursacht
+- [ ] **Backend:** `EmailService` mit personalisierten Vorlagen (Thymeleaf oder einfache String-Templates):
+  - `follow_up_reminder` — Erinnerung mit Kundenname, Gesprächsthema, Datum
+  - `expose_request` — Exposé-Versand mit Objekttitel und Link
+  - `first_contact` — Erstkontakt-Vorlage
+  - `deal_closing` — Abschluss-Bestätigung
+- [ ] **Backend:** `POST /api/v1/clients/{id}/send-email` — Vorlage + optionaler Freitext
+- [ ] **Frontend:** E-Mail-Modal-Komponente auf der Kunden-Detailseite
+  - Vorlage auswählen (Dropdown)
+  - Felder auto-befüllt aus Kontext: Kundenname, letztes Follow-up-Thema, Fälligkeitsdatum
+  - Freitext-Ergänzung möglich
+  - Vorschau vor dem Absenden
+- [ ] **Frontend:** "E-Mail senden"-Button auf Kunden-Detailseite (neben den bestehenden Kunden-Infos)
+
+---
+
 ## Phase 2 — Multi-Tenancy (Fundament fürs Abrechnen)
 
 > **Defer-Entscheidung (2026-06-24):** Erst umsetzen wenn der erste externe Makler sagt "ich will einen Kollegen hinzufügen".

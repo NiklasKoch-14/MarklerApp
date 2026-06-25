@@ -1,16 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { Router } from '@angular/router';
+import { CallNotesService, FollowUpReminder } from '../call-notes/services/call-notes.service';
 
 interface Notification {
   id: string;
-  type: 'followup' | 'match' | 'note';
+  type: 'followup';
+  clientId: string;
   title: string;
   text: string;
   time: string;
   unread: boolean;
   icon: string;
   iconColor: string;
+  isOverdue: boolean;
+  followUpDate: string;
 }
 
 @Component({
@@ -42,134 +47,184 @@ interface Notification {
           <i class="ph ph-calendar" style="font-size:15px;"></i>
           {{ 'notifications.followUps' | translate }}
         </button>
-        <button class="view-tab" [class.active]="activeFilter === 'match'" (click)="setFilter('match')">
-          <i class="ph ph-shuffle" style="font-size:15px;"></i>
-          {{ 'notifications.matches' | translate }}
-        </button>
-        <button class="view-tab" [class.active]="activeFilter === 'note'" (click)="setFilter('note')">
-          <i class="ph ph-chats-circle" style="font-size:15px;"></i>
-          {{ 'notifications.notes' | translate }}
-        </button>
       </div>
 
-      <!-- Today -->
-      <div *ngIf="todayItems.length > 0" style="margin-bottom:24px;">
-        <p style="font-size:12px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:0.06em; margin:0 0 10px;">{{ 'notifications.today' | translate }}</p>
-        <div class="widget-card">
-          <div *ngFor="let item of todayItems; let last = last">
-            <div [style.background]="item.unread ? 'var(--accent-soft)' : 'transparent'"
-                 style="display:flex; align-items:flex-start; gap:14px; padding:16px 18px; cursor:default;"
-                 [style.border-bottom]="last ? 'none' : '1px solid var(--border)'">
-              <div style="width:40px; height:40px; border-radius:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0;"
-                   [style.background]="item.iconColor + '1a'">
-                <i [class]="item.icon" [style.color]="item.iconColor" style="font-size:19px;"></i>
-              </div>
-              <div style="flex:1; min-width:0;">
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
-                  <p style="margin:0; font-size:14px; font-weight:600; color:var(--text);">{{ item.title }}</p>
-                  <span *ngIf="item.unread"
-                    style="width:7px; height:7px; border-radius:50%; background:var(--primary); flex-shrink:0;"></span>
+      <!-- Loading -->
+      <div *ngIf="isLoading" class="widget-card" style="text-align:center; padding:48px 24px;">
+        <div class="inline-block animate-spin rounded-full" style="width:28px; height:28px; border:3px solid var(--border); border-top-color:var(--primary); border-radius:50%;"></div>
+      </div>
+
+      <ng-container *ngIf="!isLoading">
+
+        <!-- Heute & Überfällig -->
+        <div *ngIf="todayItems.length > 0" style="margin-bottom:24px;">
+          <p style="font-size:12px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:0.06em; margin:0 0 10px;">{{ 'notifications.today' | translate }}</p>
+          <div class="widget-card" style="overflow:hidden;">
+            <div *ngFor="let item of todayItems; let last = last">
+              <div style="display:flex; align-items:flex-start; gap:14px; padding:16px 18px; cursor:pointer; transition:background 0.15s;"
+                   [style.background]="item['_hover'] ? 'rgba(0,0,0,0.05)' : (item.unread ? 'var(--surface, #fff)' : 'rgba(0,0,0,0.04)')"
+                   [style.border-left]="item.unread ? '3px solid ' + item.iconColor : '3px solid transparent'"
+                   [style.border-bottom]="last ? 'none' : '1px solid var(--border)'"
+                   (click)="onNotificationClick(item)"
+                   (mouseenter)="item['_hover'] = true" (mouseleave)="item['_hover'] = false">
+                <div style="width:40px; height:40px; border-radius:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0;"
+                     [style.background]="item.unread ? (item.iconColor + '1a') : 'rgba(0,0,0,0.06)'"
+                     [style.opacity]="item.unread ? '1' : '0.7'">
+                  <i [class]="item.icon" [style.color]="item.unread ? item.iconColor : 'var(--text-3)'" style="font-size:19px;"></i>
                 </div>
-                <p style="margin:0; font-size:13px; color:var(--text-2); line-height:1.4;">{{ item.text }}</p>
+                <div style="flex:1; min-width:0;">
+                  <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
+                    <p style="margin:0; font-size:14px; font-weight:600;"
+                       [style.color]="item.unread ? 'var(--text)' : 'var(--text-2)'">{{ item.title }}</p>
+                    <span *ngIf="item.unread"
+                      style="width:7px; height:7px; border-radius:50%; background:var(--primary); flex-shrink:0;"></span>
+                  </div>
+                  <p style="margin:0; font-size:13px; line-height:1.4;"
+                     [style.color]="item.unread ? 'var(--text-2)' : 'var(--text-3)'">{{ item.text }}</p>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
+                  <span style="font-size:12px; color:var(--text-3); white-space:nowrap; margin-top:2px;">{{ item.time }}</span>
+                  <i class="ph ph-arrow-right" style="font-size:14px;"
+                     [style.color]="item.unread ? 'var(--primary)' : 'var(--text-3)'"></i>
+                </div>
               </div>
-              <span style="font-size:12px; color:var(--text-3); white-space:nowrap; flex-shrink:0; margin-top:2px;">{{ item.time }}</span>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- This week -->
-      <div *ngIf="weekItems.length > 0" style="margin-bottom:24px;">
-        <p style="font-size:12px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:0.06em; margin:0 0 10px;">{{ 'notifications.thisWeek' | translate }}</p>
-        <div class="widget-card">
-          <div *ngFor="let item of weekItems; let last = last">
-            <div style="display:flex; align-items:flex-start; gap:14px; padding:16px 18px; cursor:default;"
-                 [style.border-bottom]="last ? 'none' : '1px solid var(--border)'">
-              <div style="width:40px; height:40px; border-radius:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0;"
-                   [style.background]="item.iconColor + '1a'">
-                <i [class]="item.icon" [style.color]="item.iconColor" style="font-size:19px;"></i>
+        <!-- Diese Woche -->
+        <div *ngIf="weekItems.length > 0" style="margin-bottom:24px;">
+          <p style="font-size:12px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:0.06em; margin:0 0 10px;">{{ 'notifications.thisWeek' | translate }}</p>
+          <div class="widget-card" style="overflow:hidden;">
+            <div *ngFor="let item of weekItems; let last = last">
+              <div style="display:flex; align-items:flex-start; gap:14px; padding:16px 18px; cursor:pointer; transition:background 0.15s;"
+                   [style.background]="item['_hover'] ? 'rgba(0,0,0,0.05)' : (item.unread ? 'var(--surface, #fff)' : 'rgba(0,0,0,0.04)')"
+                   [style.border-left]="item.unread ? '3px solid ' + item.iconColor : '3px solid transparent'"
+                   [style.border-bottom]="last ? 'none' : '1px solid var(--border)'"
+                   (click)="onNotificationClick(item)"
+                   (mouseenter)="item['_hover'] = true" (mouseleave)="item['_hover'] = false">
+                <div style="width:40px; height:40px; border-radius:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0;"
+                     [style.background]="item.unread ? (item.iconColor + '1a') : 'rgba(0,0,0,0.06)'"
+                     [style.opacity]="item.unread ? '1' : '0.7'">
+                  <i [class]="item.icon" [style.color]="item.unread ? item.iconColor : 'var(--text-3)'" style="font-size:19px;"></i>
+                </div>
+                <div style="flex:1; min-width:0;">
+                  <p style="margin:0 0 3px; font-size:14px; font-weight:600;"
+                     [style.color]="item.unread ? 'var(--text)' : 'var(--text-2)'">{{ item.title }}</p>
+                  <p style="margin:0; font-size:13px; line-height:1.4;"
+                     [style.color]="item.unread ? 'var(--text-2)' : 'var(--text-3)'">{{ item.text }}</p>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
+                  <span style="font-size:12px; color:var(--text-3); white-space:nowrap; margin-top:2px;">{{ item.time }}</span>
+                  <i class="ph ph-arrow-right" style="font-size:14px;"
+                     [style.color]="item.unread ? 'var(--primary)' : 'var(--text-3)'"></i>
+                </div>
               </div>
-              <div style="flex:1; min-width:0;">
-                <p style="margin:0 0 3px; font-size:14px; font-weight:600; color:var(--text);">{{ item.title }}</p>
-                <p style="margin:0; font-size:13px; color:var(--text-2); line-height:1.4;">{{ item.text }}</p>
-              </div>
-              <span style="font-size:12px; color:var(--text-3); white-space:nowrap; flex-shrink:0; margin-top:2px;">{{ item.time }}</span>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Empty state -->
-      <div *ngIf="filteredItems.length === 0" class="widget-card" style="text-align:center; padding:48px 24px;">
-        <i class="ph ph-bell-slash" style="font-size:40px; color:var(--text-3);"></i>
-        <p style="margin:12px 0 0; font-size:15px; font-weight:600; color:var(--text);">{{ 'notifications.empty' | translate }}</p>
-      </div>
+        <!-- Empty state -->
+        <div *ngIf="filteredItems.length === 0" class="widget-card" style="text-align:center; padding:48px 24px;">
+          <i class="ph ph-bell-slash" style="font-size:40px; color:var(--text-3);"></i>
+          <p style="margin:12px 0 0; font-size:15px; font-weight:600; color:var(--text);">{{ 'notifications.empty' | translate }}</p>
+        </div>
+
+      </ng-container>
     </div>
   `
 })
-export class NotificationsComponent {
-  activeFilter: 'all' | 'followup' | 'match' | 'note' = 'all';
+export class NotificationsComponent implements OnInit {
+  activeFilter: 'all' | 'followup' = 'all';
+  isLoading = true;
 
-  private allNotifications: Notification[] = [
-    {
-      id: '1', type: 'followup',
-      title: 'Follow-up fällig — Müller, Thomas',
-      text: 'Rückruf geplant für heute 14:00 Uhr — Besichtigung Schillerstraße 12',
-      time: 'vor 18 Min.', unread: true,
-      icon: 'ph-fill ph-calendar-check', iconColor: '#c07a1e'
-    },
-    {
-      id: '2', type: 'match',
-      title: '3 neue Matches — Weber, Anna',
-      text: 'Neue Immobilien entsprechen den Suchkriterien (80–100 m², bis 350.000 €)',
-      time: 'vor 1 Std.', unread: true,
-      icon: 'ph-fill ph-shuffle', iconColor: '#2f6b7a'
-    },
-    {
-      id: '3', type: 'note',
-      title: 'Gesprächsnotiz erstellt',
-      text: 'Neue Notiz zu Schmidt, Klaus — Telefonat vom Vormittag protokolliert',
-      time: 'vor 3 Std.', unread: false,
-      icon: 'ph-fill ph-chats-circle', iconColor: '#9f5aaa'
-    },
-    {
-      id: '4', type: 'followup',
-      title: 'Follow-up fällig — Bauer, Maria',
-      text: 'Nachfrage zu Besichtigung Hauptstraße 7 — keine Rückmeldung seit 3 Tagen',
-      time: 'Mo, 09:00', unread: false,
-      icon: 'ph-fill ph-calendar-check', iconColor: '#c07a1e'
-    },
-    {
-      id: '5', type: 'match',
-      title: '1 neues Match — Hofmann, Peter',
-      text: 'Neubau in Schwabing entspricht Suchprofil (4 Zimmer, Garten)',
-      time: 'So, 14:23', unread: false,
-      icon: 'ph-fill ph-shuffle', iconColor: '#2f6b7a'
-    },
-  ];
+  private allNotifications: Notification[] = [];
+
+  constructor(
+    private callNotesService: CallNotesService,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    this.callNotesService.getFollowUpReminders().subscribe({
+      next: (reminders) => {
+        this.allNotifications = reminders.map(r => this.toNotification(r));
+        this.isLoading = false;
+      },
+      error: () => { this.isLoading = false; }
+    });
+  }
+
+  private toNotification(r: FollowUpReminder): Notification {
+    return {
+      id: r.id,
+      type: 'followup',
+      clientId: r.clientId,
+      title: `Follow-up — ${r.clientName}`,
+      text: r.subject + this.formatDueText(r),
+      time: this.formatTime(r.followUpDate, r.isOverdue),
+      unread: r.isOverdue || this.isDueToday(r.followUpDate),
+      icon: r.isOverdue ? 'ph-fill ph-warning' : 'ph-fill ph-calendar-check',
+      iconColor: r.isOverdue ? '#d9534f' : '#c07a1e',
+      isOverdue: r.isOverdue,
+      followUpDate: r.followUpDate
+    };
+  }
+
+  private isDueToday(dateStr: string): boolean {
+    const d = new Date(dateStr);
+    const today = new Date();
+    return d.getFullYear() === today.getFullYear()
+      && d.getMonth() === today.getMonth()
+      && d.getDate() === today.getDate();
+  }
+
+  private formatDueText(r: FollowUpReminder): string {
+    if (r.isOverdue) return ` · ${Math.abs(r.daysUntilDue)} Tag${Math.abs(r.daysUntilDue) === 1 ? '' : 'e'} überfällig`;
+    if (r.daysUntilDue === 0) return ' · Heute fällig';
+    if (r.daysUntilDue === 1) return ' · Morgen fällig';
+    return ` · Fällig in ${r.daysUntilDue} Tagen`;
+  }
+
+  private formatTime(dateStr: string, isOverdue: boolean): string {
+    if (isOverdue) return 'Überfällig';
+    const d = new Date(dateStr);
+    const today = new Date();
+    const diffDays = Math.round(
+      (new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+       - new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime())
+      / 86400000
+    );
+    if (diffDays === 0) return 'Heute';
+    if (diffDays === 1) return 'Morgen';
+    return d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' });
+  }
 
   get filteredItems(): Notification[] {
-    if (this.activeFilter === 'all') return this.allNotifications;
-    return this.allNotifications.filter(n => n.type === this.activeFilter);
+    return this.allNotifications;
   }
 
   get todayItems(): Notification[] {
-    return this.filteredItems.slice(0, 3);
+    return this.filteredItems.filter(n => n.isOverdue || this.isDueToday(n.followUpDate));
   }
 
   get weekItems(): Notification[] {
-    return this.filteredItems.slice(3);
+    return this.filteredItems.filter(n => !n.isOverdue && !this.isDueToday(n.followUpDate));
   }
 
   get unreadCount(): number {
     return this.allNotifications.filter(n => n.unread).length;
   }
 
-  setFilter(filter: 'all' | 'followup' | 'match' | 'note'): void {
+  setFilter(filter: 'all' | 'followup'): void {
     this.activeFilter = filter;
   }
 
   markAllRead(): void {
     this.allNotifications.forEach(n => n.unread = false);
+  }
+
+  onNotificationClick(item: Notification): void {
+    this.router.navigate(['/clients', item.clientId]);
   }
 }

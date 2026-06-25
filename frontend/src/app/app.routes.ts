@@ -51,10 +51,6 @@ export const routes: Routes = [
         loadChildren: () => import('./features/property-management/property-management.routes').then(r => r.propertyRoutes)
       },
       {
-        path: 'call-notes',
-        loadChildren: () => import('./features/call-notes/call-notes.routes').then(r => r.callNotesRoutes)
-      },
-      {
         path: 'notifications',
         loadComponent: () => import('./features/notifications/notifications.component').then(c => c.NotificationsComponent)
       },
