@@ -19,16 +19,25 @@ import { ClientService } from '../../services/client.service';
       </div>
 
       <form [formGroup]="clientForm" (ngSubmit)="onSubmit()">
-        <div style="display:flex; gap:24px; align-items:flex-start;">
+        <div style="display:flex; flex-direction:column; gap:20px;">
 
-          <!-- Left: form sections -->
-          <div style="flex:2; min-width:0; display:flex; flex-direction:column; gap:20px;">
+          <div style="max-width:720px; display:flex; flex-direction:column; gap:20px;">
 
             <!-- Kontaktdaten -->
             <div class="widget-card">
               <div class="widget-header">
                 <i class="ph-fill ph-user" style="font-size:18px; color:var(--primary);"></i>
                 <h3 class="widget-title">{{ 'clients.contactData' | translate }}</h3>
+                <div style="position:relative; margin-left:auto;">
+                  <button type="button" (click)="toggleHint('contact')"
+                    style="width:22px; height:22px; border-radius:50%; border:1.5px solid var(--text-3); background:none; color:var(--text-3); font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; flex-shrink:0; transition:border-color 0.15s, color 0.15s;"
+                    [style.border-color]="activeHint === 'contact' ? 'var(--primary)' : 'var(--text-3)'"
+                    [style.color]="activeHint === 'contact' ? 'var(--primary)' : 'var(--text-3)'">?</button>
+                  <div *ngIf="activeHint === 'contact'"
+                    style="position:absolute; right:0; top:30px; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:0 4px 16px rgba(20,40,45,0.12); padding:12px 14px; width:280px; z-index:100;">
+                    <p style="margin:0; font-size:13px; color:var(--text-2); line-height:1.5;">{{ 'clients.hints.gdpr' | translate }}</p>
+                  </div>
+                </div>
               </div>
               <div style="padding:20px; display:flex; flex-direction:column; gap:16px;">
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
@@ -97,6 +106,16 @@ import { ClientService } from '../../services/client.service';
                 style="width:100%; display:flex; align-items:center; gap:10px; padding:15px 18px; background:none; border:none; border-bottom:1px solid var(--border); cursor:pointer; text-align:left;">
                 <i class="ph-fill ph-magnifying-glass" style="font-size:18px; color:var(--primary);"></i>
                 <h3 class="widget-title" style="margin:0; flex:1;">{{ 'clients.propertySearchCriteria' | translate }}</h3>
+                <div style="position:relative;" (click)="$event.stopPropagation()">
+                  <button type="button" (click)="toggleHint('search')"
+                    style="width:22px; height:22px; border-radius:50%; border:1.5px solid var(--text-3); background:none; color:var(--text-3); font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; transition:border-color 0.15s, color 0.15s;"
+                    [style.border-color]="activeHint === 'search' ? 'var(--primary)' : 'var(--text-3)'"
+                    [style.color]="activeHint === 'search' ? 'var(--primary)' : 'var(--text-3)'">?</button>
+                  <div *ngIf="activeHint === 'search'"
+                    style="position:absolute; right:0; top:30px; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:0 4px 16px rgba(20,40,45,0.12); padding:12px 14px; width:280px; z-index:100;">
+                    <p style="margin:0; font-size:13px; color:var(--text-2); line-height:1.5;">{{ 'clients.hints.searchCriteria' | translate }}</p>
+                  </div>
+                </div>
                 <i [class]="'ph ph-caret-' + (searchCriteriaExpanded ? 'up' : 'down')"
                    style="font-size:16px; color:var(--text-3);"></i>
               </button>
@@ -178,6 +197,16 @@ import { ClientService } from '../../services/client.service';
               <div class="widget-header">
                 <i class="ph-fill ph-shield-check" style="font-size:18px; color:var(--primary);"></i>
                 <h3 class="widget-title">DSGVO</h3>
+                <div style="position:relative; margin-left:auto;">
+                  <button type="button" (click)="toggleHint('dsgvo')"
+                    style="width:22px; height:22px; border-radius:50%; border:1.5px solid var(--text-3); background:none; color:var(--text-3); font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; transition:border-color 0.15s, color 0.15s;"
+                    [style.border-color]="activeHint === 'dsgvo' ? 'var(--primary)' : 'var(--text-3)'"
+                    [style.color]="activeHint === 'dsgvo' ? 'var(--primary)' : 'var(--text-3)'">?</button>
+                  <div *ngIf="activeHint === 'dsgvo'"
+                    style="position:absolute; right:0; top:30px; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:0 4px 16px rgba(20,40,45,0.12); padding:12px 14px; width:280px; z-index:100;">
+                    <p style="margin:0; font-size:13px; color:var(--text-2); line-height:1.5;">{{ 'clients.hints.matching' | translate }}</p>
+                  </div>
+                </div>
               </div>
               <div style="padding:20px;">
                 <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer;">
@@ -208,30 +237,6 @@ import { ClientService } from '../../services/client.service';
 
           </div>
 
-          <!-- Right: hints -->
-          <div style="width:300px; flex-shrink:0;">
-            <div class="widget-card" style="position:sticky; top:20px;">
-              <div class="widget-header">
-                <i class="ph-fill ph-lightbulb" style="font-size:18px; color:#c07a1e;"></i>
-                <h3 class="widget-title">{{ 'clients.hints.title' | translate }}</h3>
-              </div>
-              <div style="padding:18px; display:flex; flex-direction:column; gap:14px;">
-                <div style="display:flex; gap:10px; align-items:flex-start;">
-                  <i class="ph ph-check-circle" style="color:#1f8a5b; font-size:18px; flex-shrink:0; margin-top:1px;"></i>
-                  <p style="margin:0; font-size:13px; color:var(--text-2); line-height:1.5;">{{ 'clients.hints.gdpr' | translate }}</p>
-                </div>
-                <div style="display:flex; gap:10px; align-items:flex-start;">
-                  <i class="ph ph-check-circle" style="color:#1f8a5b; font-size:18px; flex-shrink:0; margin-top:1px;"></i>
-                  <p style="margin:0; font-size:13px; color:var(--text-2); line-height:1.5;">{{ 'clients.hints.searchCriteria' | translate }}</p>
-                </div>
-                <div style="display:flex; gap:10px; align-items:flex-start;">
-                  <i class="ph ph-check-circle" style="color:#1f8a5b; font-size:18px; flex-shrink:0; margin-top:1px;"></i>
-                  <p style="margin:0; font-size:13px; color:var(--text-2); line-height:1.5;">{{ 'clients.hints.matching' | translate }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
         </div>
       </form>
     </div>
@@ -245,6 +250,7 @@ export class ClientFormComponent implements OnInit {
   clientId: string | null = null;
 
   searchCriteriaExpanded = false;
+  activeHint: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -415,6 +421,10 @@ export class ClientFormComponent implements OnInit {
 
   toggleSearchCriteria(): void {
     this.searchCriteriaExpanded = !this.searchCriteriaExpanded;
+  }
+
+  toggleHint(key: string): void {
+    this.activeHint = this.activeHint === key ? null : key;
   }
 
   get searchCriteriaGroup() {
