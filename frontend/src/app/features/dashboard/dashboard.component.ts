@@ -6,6 +6,7 @@ import { forkJoin, of, Subject } from 'rxjs';
 import { catchError, takeUntil } from 'rxjs/operators';
 
 import { ClientService } from '../client-management/services/client.service';
+import { PropertyService } from '../property-management/services/property.service';
 import {
   CallNotesService,
   CallNoteSummary,
@@ -255,6 +256,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private clientService: ClientService,
+    private propertyService: PropertyService,
     private callNotesService: CallNotesService,
     private translate: TranslateService,
     private router: Router,
@@ -288,23 +290,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
       clientStats:  this.clientService.getClientStats().pipe(catchError(() => of({ totalClients: 0 }))),
       notes:        this.callNotesService.getCallNotesByAgent(0, 10).pipe(catchError(() => of({ content: [], totalElements: 0 }))),
       followUps:    this.callNotesService.getFollowUpReminders().pipe(catchError(() => of([]))),
+      properties:   this.propertyService.getProperties(0, 1).pipe(catchError(() => of({ content: [], totalElements: 0 }))),
     })
     .pipe(takeUntil(this.destroy$))
-    .subscribe(({ clientStats, notes, followUps }) => {
+    .subscribe(({ clientStats, notes, followUps, properties }) => {
       this.loading = false;
 
-      const totalClients = clientStats.totalClients;
-      const totalNotes   = (notes as any).totalElements ?? 0;
-      const overdueCount = (followUps as FollowUpReminder[]).filter(f => f.isOverdue).length;
+      const totalClients     = clientStats.totalClients;
+      const totalNotes       = (notes as any).totalElements ?? 0;
+      const totalProperties  = (properties as any).totalElements ?? 0;
 
-      this.buildStatCards(totalClients, totalNotes, (followUps as FollowUpReminder[]).length);
+      this.buildStatCards(totalClients, totalNotes, totalProperties, (followUps as FollowUpReminder[]).length);
       this.buildFollowUps(followUps as FollowUpReminder[]);
       this.buildActivity((notes as any).content ?? []);
       this.buildPipeline((notes as any).content ?? []);
     });
   }
 
-  private buildStatCards(clients: number, notes: number, followups: number): void {
+  private buildStatCards(clients: number, notes: number, properties: number, followups: number): void {
     this.translate.get([
       'dashboard.stats.clients',
       'dashboard.stats.notes',
@@ -337,7 +340,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           icon: 'ph-fill ph-buildings',
           iconBg: 'color-mix(in srgb,#1f8a5b 12%,var(--surface))',
           iconColor: '#1f8a5b',
-          value: '–',
+          value: String(properties),
           label: t['dashboard.stats.properties'],
           caption: '',
           capColor: 'var(--text-3)',

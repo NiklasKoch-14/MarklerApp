@@ -218,50 +218,25 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ 'clients.phone' | translate }}</dt>
                     <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.phone }}</dd>
                   </div>
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ 'clients.gdprConsent' | translate }}</dt>
-                    <dd class="mt-1">
-                      <span *ngIf="client.gdprConsentGiven" class="badge badge-success">✓ {{ 'clients.gdprConsentGiven' | translate }}</span>
-                      <span *ngIf="!client.gdprConsentGiven" class="badge badge-error">✗ {{ 'common.no' | translate }} {{ 'clients.consent' | translate }}</span>
-                    </dd>
-                  </div>
-                  <div *ngIf="client.gdprConsentDate">
-                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ 'clients.consentDate' | translate }}</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.gdprConsentDate | date:'medium' }}</dd>
+                  <div *ngIf="hasAddress()">
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ 'clients.address' | translate }}</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ getAddressSummary() }}</dd>
                   </div>
                 </dl>
-              </div>
-            </div>
-
-            <!-- Address Information -->
-            <div class="card">
-              <div class="card-header">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ 'clients.address' | translate }}</h3>
-              </div>
-              <div class="card-body">
-                <div *ngIf="hasAddress(); else noAddress">
-                  <dl class="space-y-4">
-                    <div *ngIf="client.addressStreet">
-                      <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ 'clients.street' | translate }}</dt>
-                      <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.addressStreet }}</dd>
-                    </div>
-                    <div *ngIf="client.addressCity">
-                      <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ 'clients.city' | translate }}</dt>
-                      <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.addressCity }}</dd>
-                    </div>
-                    <div *ngIf="client.addressPostalCode">
-                      <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ 'clients.postalCode' | translate }}</dt>
-                      <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.addressPostalCode }}</dd>
-                    </div>
-                    <div *ngIf="client.addressCountry">
-                      <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ 'clients.country' | translate }}</dt>
-                      <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.addressCountry }}</dd>
-                    </div>
-                  </dl>
+                <!-- GDPR compliance indicator -->
+                <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border);
+                            display:flex; align-items:center; gap:6px;">
+                  <i [class]="client.gdprConsentGiven ? 'ph ph-shield-check' : 'ph ph-shield-warning'"
+                     [style.color]="client.gdprConsentGiven ? '#1f8a5b' : '#b23a55'"
+                     style="font-size:13px; flex-shrink:0;"></i>
+                  <span style="font-size:11px; color:var(--text-3);">
+                    DSGVO
+                    {{ client.gdprConsentGiven ? 'Einwilligung erteilt' : 'Kein Einverständnis' }}
+                    <ng-container *ngIf="client.gdprConsentGiven && client.gdprConsentDate">
+                      · {{ client.gdprConsentDate | date:'dd.MM.yy' }}
+                    </ng-container>
+                  </span>
                 </div>
-                <ng-template #noAddress>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">{{ 'clients.noAddress' | translate }}</p>
-                </ng-template>
               </div>
             </div>
 
@@ -549,6 +524,12 @@ export class ClientDetailComponent implements OnInit {
   hasAddress(): boolean {
     return !!(this.client?.addressStreet || this.client?.addressCity ||
               this.client?.addressPostalCode || this.client?.addressCountry);
+  }
+
+  getAddressSummary(): string {
+    if (!this.client) return '';
+    const parts = [this.client.addressCity, this.client.addressPostalCode].filter(Boolean);
+    return parts.length ? parts.join(', ') : (this.client.addressStreet ?? '');
   }
 
   getCallTypeIcon(callType: CallType): string {

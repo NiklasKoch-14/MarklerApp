@@ -90,6 +90,45 @@
 
 ---
 
+## Makler-Workflow-Verbesserungen (aus Anforderungsanalyse 2026-06-25)
+
+> Vollständige Analyse: `C:\Users\Niklas\.claude\plans\happy-imagining-lake.md`
+
+### ✅ Sofort-Wins (erledigt 2026-06-25)
+- [x] Adresse auf Kunden-Detailseite kollabiert → nur Stadt + PLZ als einzeilige Zeile
+- [x] GDPR aus Hauptkarte → kleiner Compliance-Badge mit Icon + Datum
+- [x] Properties-Stat auf Dashboard repariert (war hartcodiertes "–")
+
+### Kurzfristig (halber Tag je)
+- [ ] `pipelineStage`-Enum an Client: PROSPECT | ACTIVE_SEARCH | VIEWING | OFFER | CLOSED | INACTIVE
+  — Flyway-Migration + Frontend Klick-Dropdown direkt im Kunden-Header (kein Formular)
+- [ ] `clientType` (BUYER / RENTER / SELLER) am Kunden — steuert Ansicht
+- [ ] `financingStatus` (UNKNOWN | SELF_FINANCED | BANK_PRE_APPROVED | NEEDS_FINANCING) + `moveInTimeline`
+  in Kunden-Profil-Karte
+- [ ] Dashboard-Kanban auf `pipelineStage` umstellen (statt fragiler CallOutcome-Ableitung)
+- [ ] "Kunden ohne Kontakt >30 Tage"-Widget auf Dashboard
+- [ ] Listing-Datum + "X Tage am Markt" im Immobilien-Header
+- [ ] Eigentümer-Kontaktdaten (Name, Tel, Email) als interne Felder bei Immobilien
+
+### Mittelfristig (>1 Tag je)
+- [ ] **Besichtigungs-Feature** (Kunde ↔ Immobilie mit Feedback):
+  - Backend: `viewings`-Tabelle + Flyway-Migration + POST/GET API
+  - Frontend: Quick-Add-Dialog von Kunden- und Immobilien-Detailseite
+  - Besichtigungs-Tab bei Kunde und bei Immobilie
+- [ ] Interne Notiz-Karte bei Immobilien (wie Call Notes, nicht im Exposé)
+- [ ] Automatischer Pipeline-Stage-Vorschlag: Besichtigung erfasst → "Stage auf VIEWING setzen?"
+- [ ] "Heutige Besichtigungen"-Widget auf Dashboard
+- [ ] Verkäufer-spezifische Kunden-Ansicht (andere Karte statt Suchkriterien)
+
+### Langfristig
+- [ ] `source`-Tracking (Woher kam der Kunde: Empfehlung/Website/Portal/Walk-in)
+- [ ] Provision + Angebotshistorie bei Immobilien
+- [ ] "Neu passende Objekte für aktive Kunden"-Benachrichtigung (cron-basiert)
+- [ ] KI-Kundenprofil via Claude API (→ separater Eintrag oben)
+- [ ] Selbstregistrierung / Onboarding (→ Phase 5 unten)
+
+---
+
 ## Geplant: E-Mail an Kunden (kontextbezogene Vorlagen)
 
 > Voraussetzung: SMTP-Infrastruktur (spring-boot-starter-mail wurde 2026-06-22 entfernt).
