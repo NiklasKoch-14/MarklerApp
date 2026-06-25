@@ -10,11 +10,14 @@ import {
   PropertyStatus
 } from '../../services/property.service';
 import { FileAttachmentManagerComponent } from '../../../../shared/components/file-attachment-manager/file-attachment-manager.component';
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { ViewingService, ViewingSummary, ViewingStatus } from '../../../viewing-management/services/viewing.service';
+import { ViewingAddDialogComponent } from '../../../viewing-management/components/viewing-add-dialog/viewing-add-dialog.component';
 
 @Component({
   selector: 'app-property-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule, TranslateEnumPipe, FileAttachmentManagerComponent],
+  imports: [CommonModule, RouterLink, TranslateModule, TranslateEnumPipe, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent],
   templateUrl: './property-detail.component.html',
   styleUrls: ['./property-detail.component.scss']
 })
@@ -26,16 +29,22 @@ export class PropertyDetailComponent implements OnInit {
   selectedImage: PropertyImage | null = null;
   selectedImageIndex = 0;
 
+  viewings: ViewingSummary[] = [];
+  isLoadingViewings = false;
+  showViewingDialog = false;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    public propertyService: PropertyService
+    public propertyService: PropertyService,
+    private viewingService: ViewingService
   ) {}
 
   ngOnInit(): void {
     const propertyId = this.route.snapshot.paramMap.get('id');
     if (propertyId) {
       this.loadProperty(propertyId);
+      this.loadViewings(propertyId);
     }
   }
 
@@ -56,6 +65,41 @@ export class PropertyDetailComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  private loadViewings(propertyId: string): void {
+    this.isLoadingViewings = true;
+    this.viewingService.getViewingsByProperty(propertyId).subscribe({
+      next: (viewings) => {
+        this.viewings = viewings;
+        this.isLoadingViewings = false;
+      },
+      error: () => {
+        this.isLoadingViewings = false;
+      }
+    });
+  }
+
+  onViewingCreated(): void {
+    this.showViewingDialog = false;
+    const propertyId = this.route.snapshot.paramMap.get('id');
+    if (propertyId) this.loadViewings(propertyId);
+  }
+
+  getViewingStatusBg(status: ViewingStatus): string {
+    switch (status) {
+      case ViewingStatus.COMPLETED: return 'rgba(22,163,74,0.12)';
+      case ViewingStatus.CANCELLED: return 'rgba(220,38,38,0.1)';
+      default: return 'rgba(37,99,235,0.1)';
+    }
+  }
+
+  getViewingStatusColor(status: ViewingStatus): string {
+    switch (status) {
+      case ViewingStatus.COMPLETED: return '#16a34a';
+      case ViewingStatus.CANCELLED: return '#dc2626';
+      default: return '#2563eb';
+    }
   }
 
   deleteProperty(): void {

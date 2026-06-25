@@ -5,6 +5,8 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { ClientService, Client } from '../../services/client.service';
 import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse, CallNoteCreateRequest, CallType, CallOutcome } from '../../../call-notes/services/call-notes.service';
+import { ViewingService, ViewingSummary, ViewingFeedback, ViewingStatus } from '../../../viewing-management/services/viewing.service';
+import { ViewingAddDialogComponent } from '../../../viewing-management/components/viewing-add-dialog/viewing-add-dialog.component';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 import { FileAttachmentManagerComponent } from '../../../../shared/components/file-attachment-manager/file-attachment-manager.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
@@ -12,7 +14,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, TranslateEnumPipe, FileAttachmentManagerComponent, LoadingSpinnerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, TranslateEnumPipe, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent],
   template: `
     <div class="p-6">
       <div *ngIf="isLoading" class="text-center py-8">
@@ -370,6 +372,63 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
             </div>
           </div>
 
+          <!-- Besichtigungen Section -->
+          <div class="card mt-8">
+            <div class="card-header flex items-center justify-between">
+              <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100" style="display:flex;align-items:center;gap:8px;">
+                <i class="ph ph-house" style="color:var(--primary);"></i>
+                Besichtigungen
+                <span *ngIf="viewings.length > 0"
+                      style="font-size:12px;font-weight:600;padding:2px 8px;background:rgba(47,107,122,0.12);color:var(--primary);border-radius:10px;">
+                  {{ viewings.length }}
+                </span>
+              </h3>
+              <button (click)="showViewingDialog = true"
+                      style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
+                <i class="ph ph-plus"></i>
+                Besichtigung erfassen
+              </button>
+            </div>
+            <div class="card-body">
+              <app-loading-spinner *ngIf="isLoadingViewings" size="sm"></app-loading-spinner>
+
+              <div *ngIf="!isLoadingViewings && viewings.length > 0" style="display:flex;flex-direction:column;gap:10px;">
+                <div *ngFor="let v of viewings"
+                     style="display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);">
+                  <!-- Date block -->
+                  <div style="min-width:48px;text-align:center;background:var(--surface-2);border-radius:8px;padding:6px 4px;">
+                    <div style="font-size:18px;font-weight:700;color:var(--text-1);line-height:1;">{{ v.viewingDate | date:'dd' }}</div>
+                    <div style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;">{{ v.viewingDate | date:'MMM' }}</div>
+                  </div>
+                  <!-- Property info -->
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:14px;font-weight:600;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                      {{ v.propertyTitle }}
+                    </div>
+                    <div style="font-size:12px;color:var(--text-3);margin-top:2px;">{{ v.propertyAddress }}</div>
+                  </div>
+                  <!-- Feedback -->
+                  <div *ngIf="v.feedback" style="font-size:18px;" [title]="v.feedback">
+                    {{ v.feedback === 'LIKED' ? '👍' : v.feedback === 'DISLIKED' ? '👎' : '🤷' }}
+                  </div>
+                  <!-- Status badge -->
+                  <span [style.background]="getViewingStatusBg(v.status)"
+                        [style.color]="getViewingStatusColor(v.status)"
+                        style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:10px;white-space:nowrap;flex-shrink:0;">
+                    {{ v.status === 'SCHEDULED' ? 'Geplant' : v.status === 'COMPLETED' ? 'Abgeschlossen' : 'Abgesagt' }}
+                  </span>
+                </div>
+              </div>
+
+              <div *ngIf="!isLoadingViewings && viewings.length === 0"
+                   style="text-align:center;padding:24px 0;color:var(--text-3);">
+                <i class="ph ph-house" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+                <div style="font-size:14px;">Noch keine Besichtigungen erfasst</div>
+                <div style="font-size:12px;margin-top:4px;">Klicke auf "Besichtigung erfassen" um die erste hinzuzufügen.</div>
+              </div>
+            </div>
+          </div>
+
           <!-- File Attachments Section -->
           <div class="card mt-8">
             <div class="card-header">
@@ -404,6 +463,16 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
         <a routerLink="/clients" class="text-primary-600 hover:text-primary-900 text-sm font-medium">{{ 'clients.backToClients' | translate }}</a>
       </div>
     </div>
+
+    <!-- Viewing Add Dialog -->
+    <app-viewing-add-dialog
+      *ngIf="showViewingDialog && client"
+      mode="from-client"
+      [preselectedClientId]="client.id"
+      [preselectedClientName]="client.firstName + ' ' + client.lastName"
+      (viewingCreated)="onViewingCreated()"
+      (cancelled)="showViewingDialog = false">
+    </app-viewing-add-dialog>
   `
 })
 export class ClientDetailComponent implements OnInit {
@@ -424,11 +493,17 @@ export class ClientDetailComponent implements OnInit {
   callNotesSummary: BulkSummary | null = null;
   isLoadingCallNotes = false;
 
+  // Viewings
+  viewings: ViewingSummary[] = [];
+  isLoadingViewings = false;
+  showViewingDialog = false;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private clientService: ClientService,
-    public callNotesService: CallNotesService
+    public callNotesService: CallNotesService,
+    private viewingService: ViewingService
   ) {}
 
   ngOnInit(): void {
@@ -436,6 +511,7 @@ export class ClientDetailComponent implements OnInit {
     if (clientId) {
       this.loadClient(clientId);
       this.loadCallNotes(clientId);
+      this.loadViewings(clientId);
     }
 
     const action = this.route.snapshot.queryParamMap.get('action');
@@ -519,6 +595,41 @@ export class ClientDetailComponent implements OnInit {
         this.isSavingNote = false;
       }
     });
+  }
+
+  private loadViewings(clientId: string): void {
+    this.isLoadingViewings = true;
+    this.viewingService.getViewingsByClient(clientId).subscribe({
+      next: (viewings) => {
+        this.viewings = viewings;
+        this.isLoadingViewings = false;
+      },
+      error: () => {
+        this.isLoadingViewings = false;
+      }
+    });
+  }
+
+  onViewingCreated(): void {
+    this.showViewingDialog = false;
+    const clientId = this.route.snapshot.paramMap.get('id');
+    if (clientId) this.loadViewings(clientId);
+  }
+
+  getViewingStatusBg(status: ViewingStatus): string {
+    switch (status) {
+      case ViewingStatus.COMPLETED: return 'rgba(22,163,74,0.12)';
+      case ViewingStatus.CANCELLED: return 'rgba(220,38,38,0.1)';
+      default: return 'rgba(37,99,235,0.1)';
+    }
+  }
+
+  getViewingStatusColor(status: ViewingStatus): string {
+    switch (status) {
+      case ViewingStatus.COMPLETED: return '#16a34a';
+      case ViewingStatus.CANCELLED: return '#dc2626';
+      default: return '#2563eb';
+    }
   }
 
   hasAddress(): boolean {

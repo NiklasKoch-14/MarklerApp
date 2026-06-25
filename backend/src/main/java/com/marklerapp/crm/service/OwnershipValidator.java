@@ -3,6 +3,7 @@ package com.marklerapp.crm.service;
 import com.marklerapp.crm.entity.CallNote;
 import com.marklerapp.crm.entity.Client;
 import com.marklerapp.crm.entity.Property;
+import com.marklerapp.crm.entity.Viewing;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
@@ -122,5 +123,24 @@ public class OwnershipValidator {
         }
 
         log.debug("Ownership validated: Call note {} belongs to agent {}", callNote.getId(), agentId);
+    }
+
+    public void validateViewingOwnership(Viewing viewing, UUID agentId) {
+        if (viewing == null) {
+            throw new IllegalArgumentException("Viewing cannot be null");
+        }
+        if (agentId == null) {
+            throw new IllegalArgumentException("Agent ID cannot be null");
+        }
+
+        if (!viewing.getAgent().getId().equals(agentId)) {
+            log.warn("Access denied: Agent {} attempted to access viewing {} owned by agent {}",
+                    agentId, viewing.getId(), viewing.getAgent().getId());
+            throw new AccessDeniedException(
+                    String.format("You don't have permission to access this viewing (ID: %s)", viewing.getId())
+            );
+        }
+
+        log.debug("Ownership validated: Viewing {} belongs to agent {}", viewing.getId(), agentId);
     }
 }

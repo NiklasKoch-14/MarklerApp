@@ -1,6 +1,6 @@
 <div class="p-6">
   <div *ngIf="isLoading" class="text-center py-8">
-    <div class="spinner h-8 w-8 mx-auto"></div>
+    <app-loading-spinner size="lg"></app-loading-spinner>
     <p class="mt-2 text-sm text-gray-500">{{ 'properties.loadingProperties' | translate }}</p>
   </div>
 
@@ -441,6 +441,56 @@
       </div>
     </div>
 
+    <!-- Besichtigungen Section -->
+    <div class="mt-8 card">
+      <div class="card-header flex items-center justify-between">
+        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100" style="display:flex;align-items:center;gap:8px;">
+          <i class="ph ph-users" style="color:var(--primary);"></i>
+          Besichtigungen
+          <span *ngIf="viewings.length > 0"
+                style="font-size:12px;font-weight:600;padding:2px 8px;background:rgba(47,107,122,0.12);color:var(--primary);border-radius:10px;">
+            {{ viewings.length }}
+          </span>
+        </h3>
+        <button (click)="showViewingDialog = true"
+                style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
+          <i class="ph ph-plus"></i>
+          Besichtigung erfassen
+        </button>
+      </div>
+      <div class="card-body">
+        <app-loading-spinner *ngIf="isLoadingViewings" size="sm"></app-loading-spinner>
+
+        <div *ngIf="!isLoadingViewings && viewings.length > 0" style="display:flex;flex-direction:column;gap:10px;">
+          <div *ngFor="let v of viewings"
+               style="display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;">
+            <div style="min-width:48px;text-align:center;background:var(--surface-2);border-radius:8px;padding:6px 4px;">
+              <div style="font-size:18px;font-weight:700;color:var(--text-1);line-height:1;">{{ v.viewingDate | date:'dd' }}</div>
+              <div style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;">{{ v.viewingDate | date:'MMM' }}</div>
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:14px;font-weight:600;color:var(--text-1);">{{ v.clientName }}</div>
+              <div style="font-size:12px;color:var(--text-3);margin-top:2px;">{{ v.viewingDate | date:'HH:mm' }} Uhr</div>
+            </div>
+            <div *ngIf="v.feedback" style="font-size:18px;" [title]="v.feedback">
+              {{ v.feedback === 'LIKED' ? '👍' : v.feedback === 'DISLIKED' ? '👎' : '🤷' }}
+            </div>
+            <span [style.background]="getViewingStatusBg(v.status)"
+                  [style.color]="getViewingStatusColor(v.status)"
+                  style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:10px;white-space:nowrap;flex-shrink:0;">
+              {{ v.status === 'SCHEDULED' ? 'Geplant' : v.status === 'COMPLETED' ? 'Abgeschlossen' : 'Abgesagt' }}
+            </span>
+          </div>
+        </div>
+
+        <div *ngIf="!isLoadingViewings && viewings.length === 0"
+             style="text-align:center;padding:24px 0;color:var(--text-3);">
+          <i class="ph ph-users" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+          <div style="font-size:14px;">Noch keine Besichtigungen erfasst</div>
+        </div>
+      </div>
+    </div>
+
     <!-- File Attachments Section -->
     <div class="mt-8 card">
       <div class="card-header">
@@ -476,3 +526,13 @@
     </a>
   </div>
 </div>
+
+<!-- Viewing Add Dialog -->
+<app-viewing-add-dialog
+  *ngIf="showViewingDialog && property"
+  mode="from-property"
+  [preselectedPropertyId]="property.id"
+  [preselectedPropertyTitle]="property.title"
+  (viewingCreated)="onViewingCreated()"
+  (cancelled)="showViewingDialog = false">
+</app-viewing-add-dialog>
