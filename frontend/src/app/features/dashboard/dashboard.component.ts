@@ -14,6 +14,7 @@ import {
   CallType,
   CallOutcome,
 } from '../call-notes/services/call-notes.service';
+import { ViewingService, ViewingSummary, ViewingFeedback, ViewingStatus } from '../viewing-management/services/viewing.service';
 
 interface StatCard {
   icon: string;
@@ -45,6 +46,18 @@ interface ActivityRow {
   customerName: string;
   dateFmt: string;
   resultColor: string;
+}
+
+interface ViewingRow {
+  id: string;
+  clientId: string;
+  clientName: string;
+  initials: string;
+  propertyLabel: string;
+  timeFmt: string;
+  statusLabel: string;
+  statusBg: string;
+  statusColor: string;
 }
 
 @Component({
@@ -195,6 +208,58 @@ interface ActivityRow {
           </div>
 
         </div>
+
+        <!-- Heutige Besichtigungen Widget -->
+        <div class="widget-card" style="margin-top:20px;">
+          <div class="widget-header">
+            <i class="ph-fill ph-door-open" style="color:#7c3aed; font-size:18px;"></i>
+            <h3 class="widget-title">Heutige Besichtigungen</h3>
+            <span style="background:color-mix(in srgb,#7c3aed 14%,var(--surface)); color:#7c3aed;
+                         font-size:12px; font-weight:700; padding:3px 9px; border-radius:20px;
+                         font-variant-numeric:tabular-nums;">{{ todayViewingRows.length }}</span>
+          </div>
+
+          @if (todayViewingRows.length === 0 && !loading) {
+            <div style="padding:32px 18px; text-align:center; color:var(--text-3);">
+              <i class="ph ph-calendar-blank" style="font-size:28px;"></i>
+              <div style="margin-top:8px; font-size:14px; font-weight:500;">Keine Besichtigungen heute</div>
+            </div>
+          }
+
+          @if (todayViewingRows.length > 0) {
+            <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px; padding:14px 18px 16px;">
+              @for (v of todayViewingRows; track v.id) {
+                <div [routerLink]="['/clients', v.clientId]"
+                     style="background:var(--surface-2); border:1px solid var(--border); border-radius:10px;
+                            padding:12px 14px; cursor:pointer; transition:box-shadow .15s;">
+                  <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                    <div style="width:28px; height:28px; border-radius:50%; background:color-mix(in srgb,#7c3aed 12%,var(--surface));
+                                color:#7c3aed; display:flex; align-items:center; justify-content:center;
+                                font-weight:700; font-size:11px; flex-shrink:0;">
+                      {{ v.initials }}
+                    </div>
+                    <span style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ v.clientName }}</span>
+                  </div>
+                  <div style="font-size:12px; color:var(--text-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:4px;">
+                    <i class="ph ph-buildings" style="font-size:11px;"></i>
+                    {{ v.propertyLabel }}
+                  </div>
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-top:6px;">
+                    <span style="font-size:11px; color:var(--text-3); font-variant-numeric:tabular-nums;">
+                      <i class="ph ph-clock" style="font-size:11px;"></i>
+                      {{ v.timeFmt }} Uhr
+                    </span>
+                    <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px;"
+                          [style.background]="v.statusBg" [style.color]="v.statusColor">
+                      {{ v.statusLabel }}
+                    </span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
       }
 
       <!-- Pipeline view -->
@@ -246,6 +311,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   statCards: StatCard[] = [];
   followUps: FollowUpRow[] = [];
   recentActivity: ActivityRow[] = [];
+  todayViewingRows: ViewingRow[] = [];
 
   pipelineCols: { label: string; color: string; items: any[] }[] = [];
 
@@ -258,6 +324,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private clientService: ClientService,
     private propertyService: PropertyService,
     private callNotesService: CallNotesService,
+    private viewingService: ViewingService,
     private translate: TranslateService,
     private router: Router,
   ) {}
@@ -287,19 +354,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private loadData(): void {
     forkJoin({
-      clientStats:  this.clientService.getClientStats().pipe(catchError(() => of({ totalClients: 0 }))),
-      notes:        this.callNotesService.getCallNotesByAgent(0, 10).pipe(catchError(() => of({ content: [], totalElements: 0 }))),
-      followUps:    this.callNotesService.getFollowUpReminders().pipe(catchError(() => of([]))),
-      properties:   this.propertyService.getProperties(0, 1).pipe(catchError(() => of({ content: [], totalElements: 0 }))),
+      clientStats:    this.clientService.getClientStats().pipe(catchError(() => of({ totalClients: 0 }))),
+      notes:          this.callNotesService.getCallNotesByAgent(0, 10).pipe(catchError(() => of({ content: [], totalElements: 0 }))),
+      followUps:      this.callNotesService.getFollowUpReminders().pipe(catchError(() => of([]))),
+      properties:     this.propertyService.getProperties(0, 1).pipe(catchError(() => of({ content: [], totalElements: 0 }))),
+      todayViewings:  this.viewingService.getTodaysViewings().pipe(catchError(() => of([]))),
     })
     .pipe(takeUntil(this.destroy$))
-    .subscribe(({ clientStats, notes, followUps, properties }) => {
+    .subscribe(({ clientStats, notes, followUps, properties, todayViewings }) => {
       this.loading = false;
 
-      const totalClients     = clientStats.totalClients;
-      const totalNotes       = (notes as any).totalElements ?? 0;
-      const totalProperties  = (properties as any).totalElements ?? 0;
+      const totalClients    = clientStats.totalClients;
+      const totalNotes      = (notes as any).totalElements ?? 0;
+      const totalProperties = (properties as any).totalElements ?? 0;
 
+      this.buildTodayViewings(todayViewings as ViewingSummary[]);
       this.buildStatCards(totalClients, totalNotes, totalProperties, (followUps as FollowUpReminder[]).length);
       this.buildFollowUps(followUps as FollowUpReminder[]);
       this.buildActivity((notes as any).content ?? []);
@@ -432,6 +501,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     this.pipelineCols = cols;
+  }
+
+  private buildTodayViewings(viewings: ViewingSummary[]): void {
+    const lang = this.translate.currentLang || 'de';
+    const locale = lang === 'de' ? 'de-DE' : 'en-US';
+    this.todayViewingRows = viewings.map(v => {
+      const parts = v.clientName.split(' ');
+      const initials = parts.slice(0, 2).map(p => p.charAt(0).toUpperCase()).join('');
+      const timeFmt = new Date(v.viewingDate).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+      const statusLabel = v.status === 'COMPLETED' ? 'Erledigt' : v.status === 'CANCELLED' ? 'Abgesagt' : 'Geplant';
+      const statusBg    = v.status === 'COMPLETED' ? 'rgba(31,138,91,.12)' : v.status === 'CANCELLED' ? 'rgba(178,58,85,.1)' : 'rgba(124,58,237,.1)';
+      const statusColor = v.status === 'COMPLETED' ? '#1f8a5b' : v.status === 'CANCELLED' ? '#b23a55' : '#7c3aed';
+      return { id: v.id, clientId: v.clientId, clientName: v.clientName, initials, propertyLabel: v.propertyTitle || v.propertyAddress, timeFmt, statusLabel, statusBg, statusColor };
+    });
   }
 
   private typeIcon(type: CallType): string {
