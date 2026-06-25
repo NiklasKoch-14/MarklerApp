@@ -777,24 +777,22 @@
       </div>
 
       <!-- Form Actions -->
-      <div class="flex justify-between items-center pt-6 border-t border-gray-200 dark:border-gray-700">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding-top:20px; border-top:1px solid var(--border); margin-top:8px;">
         <button
           type="button"
           (click)="cancel()"
-          class="btn btn-outline">
+          class="btn-secondary">
           {{ 'common.cancel' | translate }}
         </button>
 
-        <div class="flex space-x-3">
-          <button
-            type="submit"
-            [disabled]="!propertyForm.valid || isLoading"
-            class="btn btn-primary">
-            <ng-container *ngIf="isLoading">{{ 'common.saving' | translate }}</ng-container>
-            <ng-container *ngIf="!isLoading && isEditMode">{{ 'properties.update' | translate }}</ng-container>
-            <ng-container *ngIf="!isLoading && !isEditMode">{{ 'properties.create' | translate }}</ng-container>
-          </button>
-        </div>
+        <button
+          type="submit"
+          [disabled]="!propertyForm.valid || isLoading"
+          class="btn-primary">
+          <ng-container *ngIf="isLoading">{{ 'common.saving' | translate }}</ng-container>
+          <ng-container *ngIf="!isLoading && isEditMode">{{ 'properties.update' | translate }}</ng-container>
+          <ng-container *ngIf="!isLoading && !isEditMode">{{ 'properties.create' | translate }}</ng-container>
+        </button>
       </div>
     </form>
   </div>

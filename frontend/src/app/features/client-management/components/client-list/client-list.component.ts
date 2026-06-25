@@ -17,7 +17,8 @@ import { ClientService, Client, PagedResponse } from '../../services/client.serv
         </div>
         <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
           <a routerLink="/clients/new"
-             class="btn btn-primary">
+             class="btn-primary">
+            <i class="ph ph-user-plus"></i>
             {{ 'clients.addClient' | translate }}
           </a>
         </div>

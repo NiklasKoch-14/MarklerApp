@@ -18,10 +18,8 @@
         {{ 'common.filters' | translate }}
       </button>
       -->
-      <a routerLink="/properties/new" class="btn btn-primary">
-        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-        </svg>
+      <a routerLink="/properties/new" class="btn-primary">
+        <i class="ph ph-plus"></i>
         {{ 'properties.add' | translate }}
       </a>
     </div>
@@ -42,18 +40,15 @@
       <p class="mt-2 text-sm text-gray-500">{{ 'properties.loadingProperties' | translate }}</p>
     </div>
 
-    <div *ngIf="!isLoading && properties.length === 0" class="text-center py-12 card">
-      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-      </svg>
-      <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">{{ 'properties.noPropertiesFound' | translate }}</h3>
-      <p class="mt-1 text-sm text-gray-500">{{ 'properties.add' | translate }}</p>
-      <div class="mt-6">
-        <a routerLink="/properties/new" class="btn btn-primary">
-          {{ 'properties.add' | translate }}
-        </a>
-      </div>
+    <div *ngIf="!isLoading && properties.length === 0"
+      style="text-align:center; padding:48px 24px; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow);">
+      <i class="ph ph-house" style="font-size:48px; color:var(--text-3); display:block; margin-bottom:12px;"></i>
+      <h3 style="font-size:15px; font-weight:600; color:var(--text); margin:0 0 6px;">{{ 'properties.noPropertiesFound' | translate }}</h3>
+      <p style="font-size:13px; color:var(--text-2); margin:0 0 20px;">{{ 'properties.noPropertiesHint' | translate }}</p>
+      <a routerLink="/properties/new" class="btn-primary" style="display:inline-flex;">
+        <i class="ph ph-plus"></i>
+        {{ 'properties.add' | translate }}
+      </a>
     </div>
 
     <div *ngIf="!isLoading && properties.length > 0"

@@ -13,301 +13,182 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
   standalone: true,
   imports: [CommonModule, RouterLink, ReactiveFormsModule, FormsModule, TranslateModule, TranslateEnumPipe],
   template: `
-    <div class="p-6 max-w-7xl mx-auto">
-      <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Property-Client Matching</h1>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Find the best property matches for your clients
-        </p>
+    <div style="padding:28px 32px; max-width:900px;">
+      <!-- Page Header -->
+      <div class="page-header" style="margin-bottom:24px;">
+        <div>
+          <h1 class="page-title">{{ 'properties.matching.title' | translate }}</h1>
+          <p style="font-size:14px; color:var(--text-2); margin-top:4px;">{{ 'properties.matching.subtitle' | translate }}</p>
+        </div>
       </div>
 
-      <!-- Matching Form -->
-      <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
+      <!-- Matching Form Card -->
+      <div class="widget-card" style="margin-bottom:20px;">
         <form [formGroup]="matchingForm" (ngSubmit)="onMatch()">
-          <!-- Match Mode Selection -->
-          <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Matching Mode
-            </label>
-            <div class="flex gap-4">
-              <label class="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="matchMode"
-                  value="client"
-                  [(ngModel)]="matchMode"
-                  [ngModelOptions]="{standalone: true}"
-                  class="radio radio-primary mr-2"
-                />
-                <span>Find Properties for Client</span>
-              </label>
-              <label class="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="matchMode"
-                  value="property"
-                  [(ngModel)]="matchMode"
-                  [ngModelOptions]="{standalone: true}"
-                  class="radio radio-primary mr-2"
-                />
-                <span>Find Clients for Property</span>
-              </label>
-            </div>
-          </div>
 
-          <!-- Client ID Input -->
-          <div *ngIf="matchMode === 'client'" class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Client ID
-            </label>
-            <input
-              type="text"
-              formControlName="clientId"
-              class="input input-bordered w-full"
-              placeholder="Enter client ID..."
-            />
-          </div>
-
-          <!-- Property ID Input -->
-          <div *ngIf="matchMode === 'property'" class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Property ID
-            </label>
-            <input
-              type="text"
-              formControlName="propertyId"
-              class="input input-bordered w-full"
-              placeholder="Enter property ID..."
-            />
-          </div>
-
-          <!-- Matching Parameters -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Match Threshold (0-100)
-              </label>
-              <input
-                type="number"
-                formControlName="matchThreshold"
-                class="input input-bordered w-full"
-                min="0"
-                max="100"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Max Results
-              </label>
-              <input
-                type="number"
-                formControlName="maxResults"
-                class="input input-bordered w-full"
-                min="1"
-                max="500"
-              />
-            </div>
-          </div>
-
-          <!-- Matching Options -->
-          <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Matching Options
-            </label>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label class="flex items-center">
-                <input
-                  type="checkbox"
-                  formControlName="exactLocationMatch"
-                  class="checkbox checkbox-primary mr-2"
-                />
-                <span class="text-sm">Exact Location Match</span>
-              </label>
-              <label class="flex items-center">
-                <input
-                  type="checkbox"
-                  formControlName="allowBudgetFlexibility"
-                  class="checkbox checkbox-primary mr-2"
-                />
-                <span class="text-sm">Allow Budget Flexibility (+10%)</span>
-              </label>
-              <label class="flex items-center">
-                <input
-                  type="checkbox"
-                  formControlName="allowFeatureFlexibility"
-                  class="checkbox checkbox-primary mr-2"
-                />
-                <span class="text-sm">Allow Feature Flexibility</span>
-              </label>
-              <label class="flex items-center">
-                <input
-                  type="checkbox"
-                  formControlName="includeContacted"
-                  class="checkbox checkbox-primary mr-2"
-                />
-                <span class="text-sm">Include Already Contacted</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Weight Configuration (Advanced) -->
-          <div class="mb-6">
-            <div class="flex items-center justify-between mb-2">
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Matching Weights
-              </label>
-              <button
-                type="button"
-                (click)="showAdvanced = !showAdvanced"
-                class="text-sm text-primary hover:underline"
-              >
-                {{ showAdvanced ? 'Hide' : 'Show' }} Advanced
+          <!-- Mode Tabs -->
+          <div style="padding:16px 20px 0;">
+            <label class="form-label">{{ 'properties.matching.matchingMode' | translate }}</label>
+            <div class="view-tabs" style="margin-top:8px;">
+              <button type="button" class="view-tab" [class.active]="matchMode === 'client'"
+                (click)="matchMode = 'client'">
+                <i class="ph ph-user"></i>
+                {{ 'properties.matching.clientToProperties' | translate }}
+              </button>
+              <button type="button" class="view-tab" [class.active]="matchMode === 'property'"
+                (click)="matchMode = 'property'">
+                <i class="ph ph-buildings"></i>
+                {{ 'properties.matching.propertyToClients' | translate }}
               </button>
             </div>
-
-            <div *ngIf="showAdvanced" class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 dark:bg-gray-900 rounded">
-              <div>
-                <label class="text-sm">Price Weight</label>
-                <input type="number" formControlName="priceWeight" class="input input-sm w-full" min="0" max="100" />
-              </div>
-              <div>
-                <label class="text-sm">Location Weight</label>
-                <input type="number" formControlName="locationWeight" class="input input-sm w-full" min="0" max="100" />
-              </div>
-              <div>
-                <label class="text-sm">Area Weight</label>
-                <input type="number" formControlName="areaWeight" class="input input-sm w-full" min="0" max="100" />
-              </div>
-              <div>
-                <label class="text-sm">Room Weight</label>
-                <input type="number" formControlName="roomWeight" class="input input-sm w-full" min="0" max="100" />
-              </div>
-              <div>
-                <label class="text-sm">Feature Weight</label>
-                <input type="number" formControlName="featureWeight" class="input input-sm w-full" min="0" max="100" />
-              </div>
-            </div>
           </div>
 
-          <!-- Actions -->
-          <div class="flex gap-4">
-            <button type="submit" class="btn btn-primary" [disabled]="isLoading || matchingForm.invalid">
-              <span *ngIf="isLoading" class="loading loading-spinner"></span>
-              Find Matches
-            </button>
-            <button type="button" (click)="onReset()" class="btn btn-ghost">
-              Reset
-            </button>
-            <a routerLink="/properties" class="btn btn-ghost">
-              Back to Properties
-            </a>
+          <div style="padding:16px 20px; display:flex; flex-direction:column; gap:16px;">
+
+            <!-- ID Input -->
+            <div *ngIf="matchMode === 'client'">
+              <label class="form-label">{{ 'properties.matching.clientId' | translate }}</label>
+              <input type="text" formControlName="clientId" class="form-input"
+                [placeholder]="'properties.matching.clientIdPlaceholder' | translate" />
+            </div>
+            <div *ngIf="matchMode === 'property'">
+              <label class="form-label">{{ 'properties.matching.propertyId' | translate }}</label>
+              <input type="text" formControlName="propertyId" class="form-input"
+                [placeholder]="'properties.matching.propertyIdPlaceholder' | translate" />
+            </div>
+
+            <!-- Threshold + Max Results -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div>
+                <label class="form-label">{{ 'properties.matching.matchThreshold' | translate }}</label>
+                <input type="number" formControlName="matchThreshold" class="form-input" min="0" max="100" />
+              </div>
+              <div>
+                <label class="form-label">{{ 'properties.matching.maxResults' | translate }}</label>
+                <input type="number" formControlName="maxResults" class="form-input" min="1" max="500" />
+              </div>
+            </div>
+
+            <!-- Options -->
+            <div>
+              <label class="form-label" style="margin-bottom:10px;">{{ 'properties.matching.matchingOptions' | translate }}</label>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px; color:var(--text);">
+                  <input type="checkbox" formControlName="exactLocationMatch" style="accent-color:var(--primary); width:15px; height:15px;" />
+                  {{ 'properties.matching.locationExactness' | translate }}
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px; color:var(--text);">
+                  <input type="checkbox" formControlName="allowBudgetFlexibility" style="accent-color:var(--primary); width:15px; height:15px;" />
+                  {{ 'properties.matching.budgetFlexibility' | translate }}
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px; color:var(--text);">
+                  <input type="checkbox" formControlName="allowFeatureFlexibility" style="accent-color:var(--primary); width:15px; height:15px;" />
+                  {{ 'properties.matching.featureFlexibility' | translate }}
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px; color:var(--text);">
+                  <input type="checkbox" formControlName="includeContacted" style="accent-color:var(--primary); width:15px; height:15px;" />
+                  {{ 'properties.matching.includeContacted' | translate }}
+                </label>
+              </div>
+            </div>
+
+            <!-- Advanced Weights -->
+            <div>
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                <label class="form-label" style="margin:0;">{{ 'properties.matching.advancedWeights' | translate }}</label>
+                <button type="button" (click)="showAdvanced = !showAdvanced"
+                  style="font-size:13px; color:var(--primary); background:none; border:none; cursor:pointer; padding:0;">
+                  {{ (showAdvanced ? 'properties.matching.hideAdvanced' : 'properties.matching.showAdvanced') | translate }}
+                </button>
+              </div>
+              <div *ngIf="showAdvanced"
+                style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:14px;">
+                <div *ngFor="let w of weightFields">
+                  <label class="form-label" style="font-size:12px;">{{ ('properties.matching.' + w.key) | translate }}</label>
+                  <input type="number" [formControlName]="w.ctrl" class="form-input" style="padding:7px 10px;" min="0" max="100" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div style="display:flex; gap:10px; align-items:center; padding-top:4px;">
+              <button type="submit" class="btn-primary" [disabled]="isLoading || matchingForm.invalid">
+                <i class="ph ph-shuffle"></i>
+                {{ (isLoading ? 'properties.matching.findingMatches' : 'properties.matching.findMatches') | translate }}
+              </button>
+              <button type="button" class="btn-secondary" (click)="onReset()">
+                {{ 'properties.matching.reset' | translate }}
+              </button>
+              <a routerLink="/properties" class="btn-secondary">
+                {{ 'properties.backToProperties' | translate }}
+              </a>
+            </div>
           </div>
         </form>
       </div>
 
-      <!-- Matching Results -->
-      <div *ngIf="matchResponse" class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-        <div class="flex justify-between items-center mb-4">
-          <div>
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-              Match Results
-            </h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              Found {{ matchResponse.totalMatches }} matches (showing {{ matchResponse.returnedMatches }})
-              • Execution time: {{ matchResponse.executionTimeMs }}ms
-            </p>
-          </div>
+      <!-- Results -->
+      <div *ngIf="matchResponse" class="widget-card">
+        <div class="widget-header">
+          <span class="widget-title">{{ 'properties.matching.matchResults' | translate }}</span>
+          <span style="font-size:13px; color:var(--text-2); margin-left:auto;" *ngIf="matchResponse.totalMatches">
+            {{ matchResponse.totalMatches }} Treffer · {{ matchResponse.executionTimeMs }}ms
+          </span>
         </div>
 
-        <!-- Loading State -->
-        <div *ngIf="isLoading" class="text-center py-12">
-          <div class="loading loading-spinner loading-lg"></div>
-          <p class="mt-4 text-gray-600 dark:text-gray-400">Finding matches...</p>
-        </div>
+        <div style="padding:16px 20px;">
+          <!-- No Results -->
+          <p *ngIf="!isLoading && (!matchResponse.properties || matchResponse.properties.length === 0)"
+            style="text-align:center; color:var(--text-3); font-size:14px; padding:24px 0;">
+            {{ 'properties.matching.noMatches' | translate }}
+          </p>
 
-        <!-- No Results -->
-        <div *ngIf="!isLoading && (!matchResponse.properties || matchResponse.properties.length === 0)" class="text-center py-12">
-          <p class="text-gray-600 dark:text-gray-400">No matches found.</p>
-        </div>
+          <!-- Match Items -->
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div *ngFor="let match of matchResponse.properties"
+              style="border:1px solid var(--border); border-radius:12px; padding:16px; transition:box-shadow 0.15s;"
+              [style.border-left]="'3px solid ' + getScoreColor(match.matchScore)">
 
-        <!-- Property Match Results -->
-        <div *ngIf="!isLoading && matchResponse.properties && matchResponse.properties.length > 0" class="space-y-4">
-          <div
-            *ngFor="let match of matchResponse.properties"
-            class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-lg transition-shadow"
-          >
-            <div class="flex justify-between items-start">
-              <div class="flex-1">
-                <div class="flex items-center gap-3 mb-2">
-                  <h3 class="text-lg font-semibold">{{ match.property.title }}</h3>
-                  <span
-                    class="badge badge-lg"
-                    [ngClass]="matchingService.getMatchScoreColorClass(match.matchScore)"
-                  >
-                    {{ match.matchScore }}% Match
-                  </span>
-                </div>
-
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  {{ match.property.addressCity }} • {{ match.property.rooms }} rooms • {{ match.property.livingAreaSqm }} m²
-                </p>
-
-                <div class="flex gap-2 mb-3">
-                  <span class="badge badge-sm">
-                    {{ match.property.listingType | translateEnum:'listingType' }}
-                  </span>
-                  <span class="badge badge-sm">
-                    {{ match.property.propertyType | translateEnum:'propertyType' }}
-                  </span>
-                </div>
-
-                <!-- Match Reasons -->
-                <div *ngIf="match.matchReasons && match.matchReasons.length > 0" class="mb-2">
-                  <p class="text-sm font-medium text-green-700 dark:text-green-400">Why it matches:</p>
-                  <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-400">
-                    <li *ngFor="let reason of match.matchReasons">{{ reason }}</li>
-                  </ul>
-                </div>
-
-                <!-- Score Breakdown -->
-                <div *ngIf="match.scoreBreakdown" class="grid grid-cols-3 md:grid-cols-6 gap-2 text-xs">
-                  <div class="text-center p-2 bg-gray-100 dark:bg-gray-900 rounded">
-                    <div class="font-semibold">Price</div>
-                    <div>{{ match.scoreBreakdown.priceScore }}%</div>
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
+                <div style="flex:1;">
+                  <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+                    <h3 style="font-size:15px; font-weight:600; color:var(--text); margin:0;">{{ match.property.title }}</h3>
+                    <span style="font-size:12px; font-weight:700; padding:3px 10px; border-radius:20px;"
+                      [style.background]="getScoreBg(match.matchScore)"
+                      [style.color]="getScoreColor(match.matchScore)">
+                      {{ match.matchScore }}%
+                    </span>
                   </div>
-                  <div class="text-center p-2 bg-gray-100 dark:bg-gray-900 rounded">
-                    <div class="font-semibold">Location</div>
-                    <div>{{ match.scoreBreakdown.locationScore }}%</div>
+                  <p style="font-size:13px; color:var(--text-2); margin:0 0 8px;">
+                    {{ match.property.addressCity }}
+                    <span *ngIf="match.property.rooms"> · {{ match.property.rooms }} Zi.</span>
+                    <span *ngIf="match.property.livingAreaSqm"> · {{ match.property.livingAreaSqm }} m²</span>
+                  </p>
+
+                  <div *ngIf="match.matchReasons && match.matchReasons.length > 0" style="margin-bottom:10px;">
+                    <p style="font-size:12px; font-weight:600; color:#1f8a5b; margin:0 0 4px;">{{ 'properties.matching.whyMatches' | translate }}</p>
+                    <ul style="margin:0; padding-left:16px; font-size:12px; color:var(--text-2);">
+                      <li *ngFor="let reason of match.matchReasons">{{ reason }}</li>
+                    </ul>
                   </div>
-                  <div class="text-center p-2 bg-gray-100 dark:bg-gray-900 rounded">
-                    <div class="font-semibold">Area</div>
-                    <div>{{ match.scoreBreakdown.areaScore }}%</div>
-                  </div>
-                  <div class="text-center p-2 bg-gray-100 dark:bg-gray-900 rounded">
-                    <div class="font-semibold">Rooms</div>
-                    <div>{{ match.scoreBreakdown.roomScore }}%</div>
-                  </div>
-                  <div class="text-center p-2 bg-gray-100 dark:bg-gray-900 rounded">
-                    <div class="font-semibold">Features</div>
-                    <div>{{ match.scoreBreakdown.featureScore }}%</div>
-                  </div>
-                  <div class="text-center p-2 bg-gray-100 dark:bg-gray-900 rounded">
-                    <div class="font-semibold">Type</div>
-                    <div>{{ match.scoreBreakdown.typeScore }}%</div>
+
+                  <div *ngIf="match.scoreBreakdown"
+                    style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <span *ngFor="let s of getScoreItems(match.scoreBreakdown)"
+                      style="font-size:11px; background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:2px 8px; color:var(--text-2);">
+                      {{ s.label }}: {{ s.val }}%
+                    </span>
                   </div>
                 </div>
-              </div>
 
-              <div class="flex flex-col gap-2 ml-4">
-                <div class="text-right">
-                  <div class="text-2xl font-bold text-primary">
+                <div style="text-align:right; flex-shrink:0;">
+                  <div style="font-size:18px; font-weight:700; color:var(--primary); margin-bottom:8px;">
                     {{ propertyService.formatPrice(match.property.price, match.property.listingType) }}
                   </div>
+                  <a [routerLink]="['/properties', match.property.id]" class="btn-secondary" style="font-size:13px; padding:6px 14px;">
+                    {{ 'properties.matching.viewDetails' | translate }}
+                  </a>
                 </div>
-                <a [routerLink]="['/properties', match.property.id]" class="btn btn-primary btn-sm">
-                  View Details
-                </a>
               </div>
             </div>
           </div>
@@ -315,12 +196,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
       </div>
     </div>
   `,
-  styles: [`
-    .radio:checked {
-      background-color: var(--primary);
-      border-color: var(--primary);
-    }
-  `]
+  styles: []
 })
 export class PropertyMatchingComponent implements OnInit {
   matchingForm: FormGroup;
@@ -328,7 +204,14 @@ export class PropertyMatchingComponent implements OnInit {
   matchResponse: PropertyMatchResponse | null = null;
   isLoading = false;
   showAdvanced = false;
-  currentLanguage = 'en';
+
+  weightFields = [
+    { key: 'priceWeight', ctrl: 'priceWeight' },
+    { key: 'locationWeight', ctrl: 'locationWeight' },
+    { key: 'areaWeight', ctrl: 'areaWeight' },
+    { key: 'roomWeight', ctrl: 'roomWeight' },
+    { key: 'featureWeight', ctrl: 'featureWeight' },
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -407,6 +290,31 @@ export class PropertyMatchingComponent implements OnInit {
         }
       });
     }
+  }
+
+  getScoreColor(score: number): string {
+    if (score >= 80) return '#1f8a5b';
+    if (score >= 60) return '#2f6b7a';
+    if (score >= 40) return '#c07a1e';
+    return '#b23a55';
+  }
+
+  getScoreBg(score: number): string {
+    if (score >= 80) return '#e6f4ed';
+    if (score >= 60) return '#e9f1f2';
+    if (score >= 40) return '#fef3e2';
+    return '#fce8ed';
+  }
+
+  getScoreItems(breakdown: any): { label: string; val: number }[] {
+    return [
+      { label: 'Preis', val: breakdown.priceScore },
+      { label: 'Standort', val: breakdown.locationScore },
+      { label: 'Fläche', val: breakdown.areaScore },
+      { label: 'Zimmer', val: breakdown.roomScore },
+      { label: 'Ausst.', val: breakdown.featureScore },
+      { label: 'Typ', val: breakdown.typeScore },
+    ].filter(s => s.val != null);
   }
 
   onReset(): void {
