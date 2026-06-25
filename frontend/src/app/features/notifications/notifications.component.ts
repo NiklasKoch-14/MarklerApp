@@ -17,6 +17,7 @@ interface Notification {
   iconColor: string;
   isOverdue: boolean;
   followUpDate: string;
+  _hover?: boolean;
 }
 
 @Component({

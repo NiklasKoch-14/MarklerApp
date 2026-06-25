@@ -13,6 +13,7 @@ interface NavItem {
   icon: string;
   labelKey: string;
   exact?: boolean;
+  _hover?: boolean;
 }
 
 @Component({
