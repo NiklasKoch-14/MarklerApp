@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -258,6 +259,35 @@ public class ClientService {
         return recentClients.stream()
                 .map(clientMapper::toDto)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Get active clients grouped by pipeline stage for Kanban dashboard view
+     */
+    @Transactional(readOnly = true)
+    public Map<Client.PipelineStage, List<ClientDto>> getClientsByStage(UUID agentId) {
+        Agent agent = getAgentById(agentId);
+        List<Client> clients = clientRepository.findActiveClientsByAgent(agent);
+        Map<Client.PipelineStage, List<ClientDto>> result = new java.util.LinkedHashMap<>();
+        for (Client.PipelineStage stage : Client.PipelineStage.values()) {
+            if (stage == Client.PipelineStage.CLOSED || stage == Client.PipelineStage.INACTIVE) continue;
+            result.put(stage, new java.util.ArrayList<>());
+        }
+        for (Client c : clients) {
+            result.get(c.getPipelineStage()).add(clientMapper.toDto(c));
+        }
+        return result;
+    }
+
+    /**
+     * Get clients without recent contact (for "Kunden ohne Kontakt" widget)
+     */
+    @Transactional(readOnly = true)
+    public List<ClientDto> getClientsWithoutRecentContact(UUID agentId, int days) {
+        Agent agent = getAgentById(agentId);
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(days);
+        return clientRepository.findClientsWithoutRecentContact(agent, cutoff)
+                .stream().map(clientMapper::toDto).collect(Collectors.toList());
     }
 
     /**

@@ -5,7 +5,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { forkJoin, of, Subject } from 'rxjs';
 import { catchError, takeUntil } from 'rxjs/operators';
 
-import { ClientService } from '../client-management/services/client.service';
+import { ClientService, PipelineStage } from '../client-management/services/client.service';
 import { PropertyService } from '../property-management/services/property.service';
 import {
   CallNotesService,
@@ -260,6 +260,50 @@ interface ViewingRow {
           }
         </div>
 
+        <!-- Kunden ohne Kontakt >30 Tage -->
+        <div class="widget-card" style="margin-top:20px;">
+          <div class="widget-header">
+            <i class="ph-fill ph-user-minus" style="color:var(--color-warning); font-size:18px;"></i>
+            <h3 class="widget-title">Kunden ohne Kontakt &gt;30 Tage</h3>
+            <span style="background:color-mix(in srgb,var(--color-warning) 14%,var(--surface)); color:var(--color-warning);
+                         font-size:12px; font-weight:700; padding:3px 9px; border-radius:20px;
+                         font-variant-numeric:tabular-nums;">{{ staleClientRows.length }}</span>
+          </div>
+
+          @if (staleClientRows.length === 0 && !loading) {
+            <div style="padding:32px 18px; text-align:center; color:var(--text-3);">
+              <i class="ph ph-check-circle" style="font-size:28px; color:var(--color-success);"></i>
+              <div style="margin-top:8px; font-size:14px; font-weight:500;">Alle Kunden aktuell kontaktiert</div>
+            </div>
+          }
+
+          @if (staleClientRows.length > 0) {
+            <div style="padding:0 0 8px;">
+              @for (c of staleClientRows; track c.id) {
+                <div [routerLink]="['/clients', c.id]"
+                     style="display:flex; align-items:center; gap:12px; padding:11px 18px;
+                            border-bottom:1px solid var(--border); cursor:pointer;">
+                  <div style="width:32px; height:32px; border-radius:50%;
+                              background:color-mix(in srgb,var(--color-warning) 12%,var(--surface));
+                              color:var(--color-warning); display:flex; align-items:center; justify-content:center;
+                              font-weight:700; font-size:12px; flex-shrink:0;">
+                    {{ c.initials }}
+                  </div>
+                  <div style="flex:1; min-width:0;">
+                    <div style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                      {{ c.name }}
+                    </div>
+                  </div>
+                  <div style="font-size:12px; font-weight:700; color:var(--color-warning); flex-shrink:0;">
+                    {{ c.daysSince }}
+                  </div>
+                  <i class="ph ph-arrow-right" style="color:var(--text-3); font-size:14px; flex-shrink:0;"></i>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
       }
 
       <!-- Pipeline view -->
@@ -312,6 +356,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   followUps: FollowUpRow[] = [];
   recentActivity: ActivityRow[] = [];
   todayViewingRows: ViewingRow[] = [];
+  staleClientRows: { id: string; name: string; initials: string; daysSince: string }[] = [];
 
   pipelineCols: { label: string; color: string; items: any[] }[] = [];
 
@@ -359,9 +404,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       followUps:      this.callNotesService.getFollowUpReminders().pipe(catchError(() => of([]))),
       properties:     this.propertyService.getProperties(0, 1).pipe(catchError(() => of({ content: [], totalElements: 0 }))),
       todayViewings:  this.viewingService.getTodaysViewings().pipe(catchError(() => of([]))),
+      clientsByStage: this.clientService.getClientsByStage().pipe(catchError(() => of({}))),
+      staleClients:   this.clientService.getClientsWithoutRecentContact(30).pipe(catchError(() => of([]))),
     })
     .pipe(takeUntil(this.destroy$))
-    .subscribe(({ clientStats, notes, followUps, properties, todayViewings }) => {
+    .subscribe(({ clientStats, notes, followUps, properties, todayViewings, clientsByStage, staleClients }) => {
       this.loading = false;
 
       const totalClients    = clientStats.totalClients;
@@ -369,10 +416,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const totalProperties = (properties as any).totalElements ?? 0;
 
       this.buildTodayViewings(todayViewings as ViewingSummary[]);
+      this.buildStaleClients(staleClients as any[]);
       this.buildStatCards(totalClients, totalNotes, totalProperties, (followUps as FollowUpReminder[]).length);
       this.buildFollowUps(followUps as FollowUpReminder[]);
       this.buildActivity((notes as any).content ?? []);
-      this.buildPipeline((notes as any).content ?? []);
+      this.buildPipelineFromStages(clientsByStage as Record<PipelineStage, any[]>);
     });
   }
 
@@ -470,37 +518,44 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }));
   }
 
-  private buildPipeline(notes: CallNoteSummary[]): void {
-    const lang = this.translate.currentLang || 'de';
-    const locale = lang === 'de' ? 'de-DE' : 'en-US';
+  private buildStaleClients(clients: any[]): void {
+    const now = Date.now();
+    this.staleClientRows = clients.slice(0, 8).map(c => {
+      const nameParts = ((c.firstName ?? '') + ' ' + (c.lastName ?? '')).trim().split(' ');
+      const initials = nameParts.slice(0, 2).map((p: string) => p.charAt(0).toUpperCase()).join('');
+      const updatedMs = c.updatedAt ? new Date(c.updatedAt).getTime() : 0;
+      const days = Math.floor((now - updatedMs) / 86400000);
+      return { id: c.id, name: (c.firstName ?? '') + ' ' + (c.lastName ?? ''), initials, daysSince: days + ' Tage' };
+    });
+  }
 
-    const cols = [
-      { outcome: CallOutcome.INTERESTED,        label: 'Interessiert', color: 'var(--primary)',         items: [] as any[] },
-      { outcome: CallOutcome.SCHEDULED_VIEWING, label: 'Besichtigung', color: 'var(--color-viewing)',   items: [] as any[] },
-      { outcome: CallOutcome.OFFER_MADE,        label: 'Angebot',      color: 'var(--color-offer)',     items: [] as any[] },
-      { outcome: CallOutcome.DEAL_CLOSED,       label: 'Abschluss',    color: 'var(--color-closed)',    items: [] as any[] },
+  private buildPipelineFromStages(clientsByStage: Record<PipelineStage, any[]>): void {
+    const stageMeta: { stage: PipelineStage; label: string; color: string }[] = [
+      { stage: PipelineStage.PROSPECT,      label: 'Interessent',    color: 'var(--stage-prospect)' },
+      { stage: PipelineStage.ACTIVE_SEARCH, label: 'Aktive Suche',   color: 'var(--stage-active-search)' },
+      { stage: PipelineStage.VIEWING,       label: 'Besichtigung',   color: 'var(--stage-viewing)' },
+      { stage: PipelineStage.OFFER,         label: 'Angebot',        color: 'var(--stage-offer)' },
     ];
 
-    for (const n of notes) {
-      const col = cols.find(c => c.outcome === n.outcome);
-      if (col) {
-        const initials = (n.clientName ?? '?')
-          .split(' ')
-          .map(p => p.charAt(0).toUpperCase())
-          .slice(0, 2)
-          .join('');
-        col.items.push({
-          clientId: n.clientId,
-          customerName: n.clientName ?? '',
-          initials,
-          subject: n.subject,
-          typeIcon: this.typeIcon(n.callType),
-          dateFmt: new Date(n.callDate).toLocaleDateString(locale, { day: '2-digit', month: 'short' }),
-        });
-      }
-    }
-
-    this.pipelineCols = cols;
+    this.pipelineCols = stageMeta.map(meta => {
+      const clients = clientsByStage[meta.stage] ?? [];
+      return {
+        label: meta.label,
+        color: meta.color,
+        items: clients.map((c: any) => {
+          const nameParts = ((c.firstName ?? '') + ' ' + (c.lastName ?? '')).trim().split(' ');
+          const initials = nameParts.slice(0, 2).map((p: string) => p.charAt(0).toUpperCase()).join('');
+          return {
+            clientId: c.id,
+            customerName: (c.firstName ?? '') + ' ' + (c.lastName ?? ''),
+            initials,
+            subject: c.searchCriteria?.additionalRequirements ?? (c.addressCity ? c.addressCity : ''),
+            typeIcon: 'ph ph-user',
+            dateFmt: c.updatedAt ? new Date(c.updatedAt).toLocaleDateString('de-DE', { day: '2-digit', month: 'short' }) : '',
+          };
+        }),
+      };
+    });
   }
 
   private buildTodayViewings(viewings: ViewingSummary[]): void {

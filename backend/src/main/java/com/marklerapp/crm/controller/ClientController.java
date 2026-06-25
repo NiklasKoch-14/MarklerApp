@@ -20,6 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -165,6 +166,28 @@ public class ClientController extends BaseController {
                 .build();
 
         return ResponseEntity.ok(stats);
+    }
+
+    /**
+     * Get clients grouped by pipeline stage (for Kanban dashboard)
+     */
+    @GetMapping("/by-stage")
+    @Operation(summary = "Get clients by pipeline stage", description = "Returns active clients grouped by pipeline stage for Kanban view")
+    public ResponseEntity<Map<Client.PipelineStage, List<ClientDto>>> getClientsByStage(Authentication authentication) {
+        UUID agentId = getAgentIdFromAuth(authentication);
+        return ResponseEntity.ok(clientService.getClientsByStage(agentId));
+    }
+
+    /**
+     * Get clients without recent contact
+     */
+    @GetMapping("/without-recent-contact")
+    @Operation(summary = "Get clients without recent contact", description = "Returns active clients not updated in the last N days")
+    public ResponseEntity<List<ClientDto>> getClientsWithoutRecentContact(
+            @RequestParam(defaultValue = "30") int days,
+            Authentication authentication) {
+        UUID agentId = getAgentIdFromAuth(authentication);
+        return ResponseEntity.ok(clientService.getClientsWithoutRecentContact(agentId, days));
     }
 
     /**

@@ -129,6 +129,25 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
                                          @Param("thirtyDaysAgo") LocalDateTime thirtyDaysAgo);
 
     /**
+     * Find active clients (non-INACTIVE, non-CLOSED) grouped by pipeline stage for Kanban view
+     */
+    @Query("SELECT c FROM Client c " +
+           "LEFT JOIN FETCH c.searchCriteria " +
+           "WHERE c.agent = :agent AND c.pipelineStage NOT IN ('CLOSED', 'INACTIVE') " +
+           "ORDER BY c.updatedAt DESC")
+    List<Client> findActiveClientsByAgent(@Param("agent") Agent agent);
+
+    /**
+     * Find clients without recent contact (no call notes in X days)
+     */
+    @Query("SELECT c FROM Client c WHERE c.agent = :agent " +
+           "AND c.pipelineStage NOT IN ('CLOSED', 'INACTIVE') " +
+           "AND c.updatedAt < :cutoff " +
+           "ORDER BY c.updatedAt ASC")
+    List<Client> findClientsWithoutRecentContact(@Param("agent") Agent agent,
+                                                 @Param("cutoff") LocalDateTime cutoff);
+
+    /**
      * Find clients by postal code pattern
      * Uses JOIN FETCH to prevent N+1 query problem
      */

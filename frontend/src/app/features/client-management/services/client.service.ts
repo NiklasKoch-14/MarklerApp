@@ -159,6 +159,19 @@ export class ClientService {
     );
   }
 
+  getClientsByStage(): Observable<Record<PipelineStage, Client[]>> {
+    return this.http.get<Record<PipelineStage, Client[]>>(`${this.apiUrl}/by-stage`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
+
+  getClientsWithoutRecentContact(days: number = 30): Observable<Client[]> {
+    const params = new HttpParams().set('days', days.toString());
+    return this.http.get<Client[]>(`${this.apiUrl}/without-recent-contact`, { params }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
+
   updatePipelineStage(id: string, stage: PipelineStage): Observable<Client> {
     const params = new HttpParams().set('stage', stage);
     return this.http.patch<Client>(`${this.apiUrl}/${id}/pipeline-stage`, null, { params }).pipe(
