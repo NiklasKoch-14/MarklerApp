@@ -1,13 +1,11 @@
 <div class="p-6">
   <!-- Header -->
-  <div class="sm:flex sm:items-center sm:justify-between">
-    <div class="sm:flex-auto">
-      <h1 class="text-xl font-semibold text-gray-900 dark:text-white">{{ 'properties.title' | translate }}</h1>
-      <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">
-        {{ 'properties.management' | translate }}
-      </p>
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ 'properties.title' | translate }}</h1>
+      <p style="font-size:14px; color:var(--text-2); margin-top:4px;">{{ 'properties.management' | translate }}</p>
     </div>
-    <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none flex space-x-3">
+    <div style="display:flex; gap:10px;">
       <!-- Filters temporarily disabled -->
       <!--
       <button (click)="toggleFilters()" class="btn btn-outline">
@@ -26,10 +24,10 @@
   </div>
 
   <!-- Results Count -->
-  <div class="mt-6 flex items-center justify-between">
-    <p class="text-sm text-gray-700 dark:text-gray-300">
-      {{ 'common.showing' | translate }} <span class="font-medium">{{ properties.length }}</span> {{ 'common.of' | translate }}
-      <span class="font-medium">{{ totalElements }}</span> {{ 'properties.title' | translate | lowercase }}
+  <div style="margin-top:16px;">
+    <p style="font-size:13px; color:var(--text-2);">
+      {{ 'common.showing' | translate }} <strong>{{ properties.length }}</strong> {{ 'common.of' | translate }}
+      <strong>{{ totalElements }}</strong> {{ 'properties.title' | translate | lowercase }}
     </p>
   </div>
 

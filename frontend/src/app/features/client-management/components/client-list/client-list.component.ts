@@ -10,18 +10,15 @@ import { ClientService, Client, PagedResponse } from '../../services/client.serv
   imports: [CommonModule, RouterLink, TranslateModule],
   template: `
     <div class="p-6">
-      <div class="sm:flex sm:items-center">
-        <div class="sm:flex-auto">
-          <h1 class="text-xl font-semibold text-gray-900 dark:text-white">{{ 'clients.title' | translate }}</h1>
-          <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">{{ 'clients.listDescription' | translate }}</p>
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">{{ 'clients.title' | translate }}</h1>
+          <p style="font-size:14px; color:var(--text-2); margin-top:4px;">{{ 'clients.listDescription' | translate }}</p>
         </div>
-        <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-          <a routerLink="/clients/new"
-             class="btn-primary">
-            <i class="ph ph-user-plus"></i>
-            {{ 'clients.addClient' | translate }}
-          </a>
-        </div>
+        <a routerLink="/clients/new" class="btn-primary">
+          <i class="ph ph-user-plus"></i>
+          {{ 'clients.addClient' | translate }}
+        </a>
       </div>
 
       <div class="mt-8 flow-root">
