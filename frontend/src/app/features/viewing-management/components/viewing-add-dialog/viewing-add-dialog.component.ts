@@ -5,7 +5,7 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil, of } from 'rxjs
 import { switchMap, catchError } from 'rxjs/operators';
 import { ViewingService, ViewingResponse, ViewingFeedback } from '../../services/viewing.service';
 import { ClientService, Client, PipelineStage } from '../../../client-management/services/client.service';
-import { PropertyService } from '../../../property-management/services/property.service';
+import { PropertyService, Property, ListingType } from '../../../property-management/services/property.service';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
@@ -54,42 +54,104 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
             </div>
           </div>
 
-          <!-- Property search (when opened from client) -->
+          <!-- Property picker (when opened from client) — card dialog -->
           <div *ngIf="mode === 'from-client'" style="margin-bottom:20px;">
             <label style="font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px;">
               Immobilie <span style="color:var(--error);">*</span>
             </label>
-            <div *ngIf="!selectedProperty" style="position:relative;">
-              <input type="text" [formControl]="propertySearch"
-                     placeholder="Immobilie suchen..."
-                     style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--surface);color:var(--text-1);outline:none;box-sizing:border-box;"
-                     (focus)="showPropertyDropdown = true">
-              <div *ngIf="showPropertyDropdown && propertyResults.length > 0"
-                   style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:10;max-height:200px;overflow-y:auto;margin-top:4px;">
-                <button type="button" *ngFor="let prop of propertyResults"
-                        (click)="selectProperty(prop)"
-                        style="width:100%;text-align:left;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:14px;color:var(--text-1);"
-                        class="property-option">
-                  <div style="font-weight:500;">{{ prop.title }}</div>
-                  <div style="font-size:12px;color:var(--text-3);">{{ prop.addressCity }}</div>
-                </button>
-              </div>
-              <div *ngIf="searchingProperties" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);">
-                <app-loading-spinner size="xs" [centered]="false"></app-loading-spinner>
-              </div>
-            </div>
+
+            <!-- Selected state -->
             <div *ngIf="selectedProperty"
-                 style="padding:10px 14px;background:var(--surface-2);border-radius:8px;border:1px solid var(--primary);font-size:14px;color:var(--text-1);display:flex;align-items:center;justify-content:space-between;">
-              <div style="display:flex;align-items:center;gap:8px;">
-                <i class="ph ph-house" style="color:var(--primary);"></i>
-                <div>
-                  <div style="font-weight:500;">{{ selectedProperty.title }}</div>
-                  <div style="font-size:12px;color:var(--text-3);">{{ selectedProperty.addressCity }}</div>
+                 style="padding:12px 14px;background:var(--surface-2);border-radius:10px;border:1.5px solid var(--primary);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+              <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+                <div style="width:36px;height:36px;border-radius:8px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <i class="ph-fill ph-buildings" style="color:var(--primary);font-size:18px;"></i>
+                </div>
+                <div style="min-width:0;">
+                  <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ selectedProperty.title }}</div>
+                  <div style="font-size:12px;color:var(--text-3);">{{ selectedProperty.addressCity }} · {{ formatPropertyPrice(selectedProperty) }}</div>
                 </div>
               </div>
-              <button type="button" (click)="clearProperty()" style="border:none;background:none;cursor:pointer;color:var(--text-3);font-size:16px;">
-                <i class="ph ph-x"></i>
-              </button>
+              <button type="button" (click)="clearProperty()" style="border:none;background:none;cursor:pointer;color:var(--text-3);font-size:18px;flex-shrink:0;"><i class="ph ph-x"></i></button>
+            </div>
+
+            <!-- Picker trigger button -->
+            <button *ngIf="!selectedProperty" type="button" (click)="openPropertyPicker()"
+                    style="width:100%;padding:12px 14px;border:1.5px dashed var(--border);border-radius:10px;
+                           background:none;cursor:pointer;display:flex;align-items:center;gap:10px;color:var(--text-2);
+                           transition:border-color .15s,color .15s;">
+              <i class="ph ph-buildings" style="font-size:20px;color:var(--text-3);"></i>
+              <span style="font-size:14px;">Immobilie auswählen...</span>
+              <i class="ph ph-caret-right" style="margin-left:auto;font-size:14px;color:var(--text-3);"></i>
+            </button>
+          </div>
+
+          <!-- ── Property Picker Dialog ──────────────────────────────── -->
+          <div *ngIf="showPropertyPicker"
+               style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;"
+               (click)="closePropertyPicker()">
+            <div style="background:var(--surface);border-radius:14px;width:600px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.3);"
+                 (click)="$event.stopPropagation()">
+
+              <!-- Header -->
+              <div style="padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;">
+                <i class="ph-fill ph-buildings" style="color:var(--primary);font-size:20px;"></i>
+                <span style="font-size:16px;font-weight:700;color:var(--text);flex:1;">Immobilie auswählen</span>
+                <button type="button" (click)="closePropertyPicker()" style="border:none;background:none;cursor:pointer;color:var(--text-3);font-size:20px;line-height:1;"><i class="ph ph-x"></i></button>
+              </div>
+
+              <!-- Search -->
+              <div style="padding:14px 20px;border-bottom:1px solid var(--border);">
+                <div style="position:relative;">
+                  <i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:15px;"></i>
+                  <input type="text" [(ngModel)]="propertyPickerSearch" (input)="onPropertyPickerSearch()"
+                         placeholder="Titel, Ort oder Typ suchen..."
+                         autofocus
+                         style="width:100%;padding:9px 14px 9px 36px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--surface-2);color:var(--text-1);outline:none;box-sizing:border-box;">
+                  <div *ngIf="searchingProperties" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);">
+                    <app-loading-spinner size="xs" [centered]="false"></app-loading-spinner>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Property cards -->
+              <div style="overflow-y:auto;padding:14px 20px;display:flex;flex-direction:column;gap:10px;">
+                <div *ngIf="pickerPropertyList.length === 0 && !searchingProperties"
+                     style="text-align:center;padding:32px;color:var(--text-3);font-size:13px;">
+                  <i class="ph ph-house-simple" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+                  Keine Immobilien gefunden
+                </div>
+
+                <button type="button" *ngFor="let p of pickerPropertyList"
+                        (click)="selectPropertyFromPicker(p)"
+                        style="width:100%;text-align:left;padding:14px;border:1.5px solid var(--border);border-radius:12px;
+                               background:var(--surface);cursor:pointer;display:flex;align-items:center;gap:14px;
+                               transition:border-color .12s,box-shadow .12s;"
+                        class="property-picker-card">
+                  <!-- Icon / Type -->
+                  <div style="width:44px;height:44px;border-radius:10px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i [class]="getPropertyTypeIcon(p)" style="font-size:22px;color:var(--primary);"></i>
+                  </div>
+                  <!-- Info -->
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;">{{ p.title }}</div>
+                    <div style="font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                      <span><i class="ph ph-map-pin" style="font-size:11px;"></i> {{ p.addressCity }}{{ p.addressPostalCode ? ' ' + p.addressPostalCode : '' }}</span>
+                      <span *ngIf="p.rooms">· {{ p.rooms }} Zi.</span>
+                      <span *ngIf="p.livingAreaSqm">· {{ p.livingAreaSqm }} m²</span>
+                    </div>
+                  </div>
+                  <!-- Price + status -->
+                  <div style="text-align:right;flex-shrink:0;">
+                    <div style="font-size:13px;font-weight:700;color:var(--primary);">{{ formatPropertyPrice(p) }}</div>
+                    <span [style.background]="getPropertyStatusBg(p.status)"
+                          [style.color]="getPropertyStatusColor(p.status)"
+                          style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:8px;white-space:nowrap;">
+                      {{ getPropertyStatusLabel(p.status) }}
+                    </span>
+                  </div>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -267,6 +329,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
   styles: [`
     .property-option:hover { background: var(--surface-2) !important; }
     .client-list-opt:hover { background: var(--surface-2) !important; }
+    .property-picker-card:hover { border-color: var(--primary) !important; box-shadow: 0 2px 12px rgba(47,107,122,.12) !important; }
   `]
 })
 export class ViewingAddDialogComponent implements OnInit, OnDestroy {
@@ -293,6 +356,12 @@ export class ViewingAddDialogComponent implements OnInit, OnDestroy {
   hotLeadClients: Client[] = [];
   otherClients: Client[] = [];
   clientListDisplay: Client[] = [];
+
+  // Property picker dialog state
+  showPropertyPicker = false;
+  propertyPickerSearch = '';
+  pickerPropertyList: Property[] = [];
+  allProperties: Property[] = [];
 
   showPropertyDropdown = false;
   showClientDropdown = false;
@@ -364,6 +433,17 @@ export class ViewingAddDialogComponent implements OnInit, OnDestroy {
       if (result) this.clientResults = result.content || [];
     });
 
+    // Pre-load properties for the card picker (from-client mode)
+    if (this.mode === 'from-client') {
+      this.propertyService.getProperties(0, 100).pipe(
+        catchError(() => of({ content: [] })),
+        takeUntil(this.destroy$)
+      ).subscribe((result: any) => {
+        this.allProperties = result.content || [];
+        this.pickerPropertyList = this.allProperties;
+      });
+    }
+
     // Pre-load clients for the new list picker (from-property mode)
     if (this.mode === 'from-property') {
       this.clientService.getClients(0, 100).pipe(
@@ -398,6 +478,81 @@ export class ViewingAddDialogComponent implements OnInit, OnDestroy {
   clearProperty(): void {
     this.selectedProperty = null;
     this.propertySearch.setValue('');
+    this.propertyPickerSearch = '';
+    this.pickerPropertyList = this.allProperties;
+  }
+
+  openPropertyPicker(): void {
+    this.propertyPickerSearch = '';
+    this.pickerPropertyList = this.allProperties;
+    this.showPropertyPicker = true;
+  }
+
+  closePropertyPicker(): void {
+    this.showPropertyPicker = false;
+  }
+
+  selectPropertyFromPicker(prop: Property): void {
+    this.selectedProperty = prop;
+    this.showPropertyPicker = false;
+  }
+
+  onPropertyPickerSearch(): void {
+    const q = this.propertyPickerSearch.toLowerCase().trim();
+    if (!q) {
+      this.pickerPropertyList = this.allProperties;
+      return;
+    }
+    this.pickerPropertyList = this.allProperties.filter(p =>
+      p.title?.toLowerCase().includes(q) ||
+      p.addressCity?.toLowerCase().includes(q) ||
+      p.addressPostalCode?.toLowerCase().includes(q) ||
+      p.propertyType?.toLowerCase().includes(q)
+    );
+  }
+
+  formatPropertyPrice(prop: Property): string {
+    if (!prop.price) return '—';
+    const fmt = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(prop.price);
+    return prop.listingType === ListingType.RENT ? fmt + '/Mo' : fmt;
+  }
+
+  getPropertyTypeIcon(prop: Property): string {
+    switch (prop.propertyType) {
+      case 'APARTMENT':  return 'ph-fill ph-buildings';
+      case 'HOUSE':      return 'ph-fill ph-house';
+      case 'TOWNHOUSE':  return 'ph-fill ph-house-line';
+      case 'PENTHOUSE':  return 'ph-fill ph-building-apartment';
+      default:           return 'ph-fill ph-buildings';
+    }
+  }
+
+  getPropertyStatusLabel(status?: string): string {
+    switch (status) {
+      case 'AVAILABLE':  return 'Verfügbar';
+      case 'RESERVED':   return 'Reserviert';
+      case 'SOLD':       return 'Verkauft';
+      case 'RENTED':     return 'Vermietet';
+      default:           return status ?? '—';
+    }
+  }
+
+  getPropertyStatusBg(status?: string): string {
+    switch (status) {
+      case 'AVAILABLE': return 'color-mix(in srgb,var(--color-success) 14%,var(--surface))';
+      case 'RESERVED':  return 'color-mix(in srgb,var(--color-warning) 14%,var(--surface))';
+      default:          return 'var(--surface-2)';
+    }
+  }
+
+  getPropertyStatusColor(status?: string): string {
+    switch (status) {
+      case 'AVAILABLE': return 'var(--color-success)';
+      case 'RESERVED':  return 'var(--color-warning)';
+      case 'SOLD':      return 'var(--text-3)';
+      case 'RENTED':    return 'var(--text-3)';
+      default:          return 'var(--text-3)';
+    }
   }
 
   selectClient(client: Client): void {
