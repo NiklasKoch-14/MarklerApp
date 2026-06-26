@@ -34,6 +34,10 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
     .at-viewing:hover { border-color:var(--color-purple); background:color-mix(in srgb,var(--color-purple) 14%,var(--surface)); }
     .at-disabled { opacity:0.35; cursor:not-allowed; pointer-events:none; }
     .stage-option:hover { background:var(--surface-2) !important; }
+    .qm-item { display:flex; align-items:center; gap:10px; width:100%; padding:10px 14px; border:none; background:none; cursor:pointer; font-size:13px; font-weight:500; color:var(--text); text-align:left; font-family:inherit; transition:background 0.1s; }
+    .qm-item:hover { background:var(--surface-2); }
+    .qm-item.danger { color:var(--color-error); }
+    .qm-item.danger:hover { background:var(--color-error-soft); }
     .note-form-enter { animation:slideDown .18s ease; }
     @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
     .info-row { display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid var(--border); }
@@ -109,12 +113,39 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
               </div>
             </div>
 
-            <!-- Edit -->
-            <a [routerLink]="['/clients', client.id, 'edit']"
-               style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;flex-shrink:0;">
-              <i class="ph ph-pencil-simple" style="font-size:14px;"></i>
-              Bearbeiten
-            </a>
+            <!-- Header right: Edit + Quick-Menu -->
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+              <a [routerLink]="['/clients', client.id, 'edit']"
+                 style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;">
+                <i class="ph ph-pencil-simple" style="font-size:14px;"></i>
+                Bearbeiten
+              </a>
+
+              <!-- ⋯ Quick-action menu -->
+              <div style="position:relative;">
+                <button (click)="showQuickMenu = !showQuickMenu"
+                        style="width:36px;height:36px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);transition:border-color 0.15s;"
+                        title="Weitere Aktionen">
+                  <i class="ph ph-dots-three" style="font-size:20px;"></i>
+                </button>
+                <!-- Backdrop -->
+                <div *ngIf="showQuickMenu" (click)="showQuickMenu = false"
+                     style="position:fixed;inset:0;z-index:199;"></div>
+                <!-- Dropdown -->
+                <div *ngIf="showQuickMenu"
+                     style="position:absolute;top:calc(100% + 6px);right:0;min-width:210px;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.14);z-index:200;overflow:hidden;">
+                  <button class="qm-item" (click)="showAttachmentsDialog = true; showQuickMenu = false">
+                    <i class="ph ph-paperclip" style="font-size:16px;color:var(--text-3);"></i>
+                    Dokumente &amp; Anhänge
+                  </button>
+                  <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+                  <button class="qm-item danger" (click)="deleteClient(); showQuickMenu = false" [disabled]="isDeleting">
+                    <i class="ph ph-trash" style="font-size:16px;"></i>
+                    {{ isDeleting ? 'Wird gelöscht…' : 'Kunde löschen' }}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- ── Action Tiles ─────────────────────────────────── -->
@@ -429,27 +460,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
               </div>
             </div>
 
-            <!-- Anhänge Mini-Button -->
-            <button (click)="showAttachmentsDialog = true"
-                    style="display:flex;align-items:center;gap:10px;width:100%;padding:12px 16px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;cursor:pointer;text-align:left;transition:border-color 0.15s,box-shadow 0.15s;"
-                    onmouseenter="this.style.borderColor='var(--primary)';this.style.boxShadow='0 2px 10px rgba(47,107,122,.12)'"
-                    onmouseleave="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
-              <div style="width:34px;height:34px;border-radius:9px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <i class="ph ph-paperclip" style="font-size:16px;color:var(--text-3);"></i>
-              </div>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:13px;font-weight:600;color:var(--text);">{{ 'attachments.sectionTitle' | translate }}</div>
-                <div style="font-size:11px;color:var(--text-3);margin-top:1px;">Dokumente hochladen &amp; verwalten</div>
-              </div>
-              <i class="ph ph-arrow-right" style="font-size:15px;color:var(--text-3);flex-shrink:0;"></i>
-            </button>
 
-            <!-- Delete -->
-            <div style="display:flex;justify-content:flex-end;">
-              <button (click)="deleteClient()" class="btn btn-danger" [disabled]="isDeleting">
-                {{ isDeleting ? ('clients.deleting' | translate) : ('clients.delete' | translate) }}
-              </button>
-            </div>
           </div>
 
         </div><!-- end two-col -->
@@ -561,6 +572,7 @@ export class ClientDetailComponent implements OnInit {
 
   // Pipeline Stage
   stageDropdownOpen = false;
+  showQuickMenu = false;
   showStageUpgradeHint = false;
   pipelineStages = [
     { value: PipelineStage.PROSPECT,      label: 'Interessent',    color: 'var(--stage-prospect)',      bg: 'var(--stage-prospect-bg)' },
