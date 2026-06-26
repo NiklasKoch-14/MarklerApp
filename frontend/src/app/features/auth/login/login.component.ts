@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
@@ -28,6 +28,7 @@ import { LoadingSpinnerComponent } from '../../../shared/components/loading-spin
             <div>
               <label for="email" class="sr-only">{{ 'auth.login.email' | translate }}</label>
               <input
+                #emailInput
                 id="email"
                 name="email"
                 type="email"
@@ -107,7 +108,9 @@ import { LoadingSpinnerComponent } from '../../../shared/components/loading-spin
     </div>
   `
 })
-export class LoginComponent {
+export class LoginComponent implements AfterViewInit {
+  @ViewChild('emailInput') emailInput!: ElementRef<HTMLInputElement>;
+
   loginForm: FormGroup;
   isLoading = false;
   errorMessage = '';
@@ -122,6 +125,10 @@ export class LoginComponent {
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(8)]]
     });
+  }
+
+  ngAfterViewInit(): void {
+    this.emailInput.nativeElement.focus();
   }
 
   onSubmit(): void {

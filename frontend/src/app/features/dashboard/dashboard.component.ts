@@ -85,16 +85,52 @@ interface ViewingRow {
         </div>
       </div>
 
-      <!-- Stat cards -->
-      <div class="stat-grid">
-        @for (s of statCards; track s.label) {
-          <div class="stat-card">
-            <div class="stat-icon-wrap" [style.background]="s.iconBg">
-              <i [class]="s.icon" [style.color]="s.iconColor"></i>
-            </div>
-            <div class="stat-value">{{ s.value }}</div>
-            <div class="stat-label">{{ s.label }}</div>
-            <div class="stat-caption" [style.color]="s.capColor">{{ s.caption }}</div>
+      <!-- Heutige Besichtigungen — Tagesagenda, immer als erstes sichtbar -->
+      <div class="widget-card" style="margin-bottom:20px;">
+        <div class="widget-header">
+          <i class="ph-fill ph-door-open" style="color:#7c3aed; font-size:18px;"></i>
+          <h3 class="widget-title">Heutige Besichtigungen</h3>
+          @if (todayViewingRows.length > 0) {
+            <span style="background:color-mix(in srgb,#7c3aed 14%,var(--surface)); color:#7c3aed;
+                         font-size:12px; font-weight:700; padding:3px 9px; border-radius:20px;
+                         font-variant-numeric:tabular-nums;">{{ todayViewingRows.length }}</span>
+          }
+        </div>
+
+        @if (todayViewingRows.length === 0 && !loading) {
+          <div style="padding:11px 18px 13px; display:flex; align-items:center; gap:10px; color:var(--text-3); font-size:13px;">
+            <i class="ph ph-calendar-blank" style="font-size:16px;"></i>
+            <span>Keine Besichtigungen heute geplant</span>
+          </div>
+        }
+
+        @if (todayViewingRows.length > 0) {
+          <div style="display:flex; gap:12px; padding:4px 18px 16px; overflow-x:auto;">
+            @for (v of todayViewingRows; track v.id) {
+              <div [routerLink]="['/clients', v.clientId]"
+                   style="min-width:210px; background:var(--surface-2); border:1px solid var(--border);
+                          border-radius:10px; padding:12px 14px; cursor:pointer; transition:box-shadow .15s; flex-shrink:0;">
+                <div style="font-size:20px; font-weight:800; color:#7c3aed; font-variant-numeric:tabular-nums; line-height:1; margin-bottom:8px;">
+                  {{ v.timeFmt }}
+                </div>
+                <div style="display:flex; align-items:center; gap:7px; margin-bottom:5px;">
+                  <div style="width:26px; height:26px; border-radius:50%; background:color-mix(in srgb,#7c3aed 12%,var(--surface));
+                              color:#7c3aed; display:flex; align-items:center; justify-content:center;
+                              font-weight:700; font-size:11px; flex-shrink:0;">
+                    {{ v.initials }}
+                  </div>
+                  <span style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ v.clientName }}</span>
+                </div>
+                <div style="font-size:12px; color:var(--text-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:8px;">
+                  <i class="ph ph-buildings" style="font-size:11px;"></i>
+                  {{ v.propertyLabel }}
+                </div>
+                <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px;"
+                      [style.background]="v.statusBg" [style.color]="v.statusColor">
+                  {{ v.statusLabel }}
+                </span>
+              </div>
+            }
           </div>
         }
       </div>
@@ -209,57 +245,6 @@ interface ViewingRow {
 
         </div>
 
-        <!-- Heutige Besichtigungen Widget -->
-        <div class="widget-card" style="margin-top:20px;">
-          <div class="widget-header">
-            <i class="ph-fill ph-door-open" style="color:#7c3aed; font-size:18px;"></i>
-            <h3 class="widget-title">Heutige Besichtigungen</h3>
-            <span style="background:color-mix(in srgb,#7c3aed 14%,var(--surface)); color:#7c3aed;
-                         font-size:12px; font-weight:700; padding:3px 9px; border-radius:20px;
-                         font-variant-numeric:tabular-nums;">{{ todayViewingRows.length }}</span>
-          </div>
-
-          @if (todayViewingRows.length === 0 && !loading) {
-            <div style="padding:32px 18px; text-align:center; color:var(--text-3);">
-              <i class="ph ph-calendar-blank" style="font-size:28px;"></i>
-              <div style="margin-top:8px; font-size:14px; font-weight:500;">Keine Besichtigungen heute</div>
-            </div>
-          }
-
-          @if (todayViewingRows.length > 0) {
-            <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px; padding:14px 18px 16px;">
-              @for (v of todayViewingRows; track v.id) {
-                <div [routerLink]="['/clients', v.clientId]"
-                     style="background:var(--surface-2); border:1px solid var(--border); border-radius:10px;
-                            padding:12px 14px; cursor:pointer; transition:box-shadow .15s;">
-                  <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                    <div style="width:28px; height:28px; border-radius:50%; background:color-mix(in srgb,#7c3aed 12%,var(--surface));
-                                color:#7c3aed; display:flex; align-items:center; justify-content:center;
-                                font-weight:700; font-size:11px; flex-shrink:0;">
-                      {{ v.initials }}
-                    </div>
-                    <span style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ v.clientName }}</span>
-                  </div>
-                  <div style="font-size:12px; color:var(--text-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:4px;">
-                    <i class="ph ph-buildings" style="font-size:11px;"></i>
-                    {{ v.propertyLabel }}
-                  </div>
-                  <div style="display:flex; align-items:center; justify-content:space-between; margin-top:6px;">
-                    <span style="font-size:11px; color:var(--text-3); font-variant-numeric:tabular-nums;">
-                      <i class="ph ph-clock" style="font-size:11px;"></i>
-                      {{ v.timeFmt }} Uhr
-                    </span>
-                    <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px;"
-                          [style.background]="v.statusBg" [style.color]="v.statusColor">
-                      {{ v.statusLabel }}
-                    </span>
-                  </div>
-                </div>
-              }
-            </div>
-          }
-        </div>
-
         <!-- Kunden ohne Kontakt >30 Tage -->
         <div class="widget-card" style="margin-top:20px;">
           <div class="widget-header">
@@ -344,6 +329,26 @@ interface ViewingRow {
           }
         </div>
       }
+
+      <!-- Statistiken — Auswertungsdaten, bewusst am Ende der Seite -->
+      <div style="margin-top:32px; margin-bottom:6px; display:flex; align-items:center; gap:8px;">
+        <span style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-3);">
+          Statistiken
+        </span>
+        <div style="flex:1; height:1px; background:var(--border);"></div>
+      </div>
+      <div class="stat-grid" style="margin-bottom:32px;">
+        @for (s of statCards; track s.label) {
+          <div class="stat-card">
+            <div class="stat-icon-wrap" [style.background]="s.iconBg">
+              <i [class]="s.icon" [style.color]="s.iconColor"></i>
+            </div>
+            <div class="stat-value">{{ s.value }}</div>
+            <div class="stat-label">{{ s.label }}</div>
+            <div class="stat-caption" [style.color]="s.capColor">{{ s.caption }}</div>
+          </div>
+        }
+      </div>
 
     </div>
   `
