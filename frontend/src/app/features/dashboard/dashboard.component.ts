@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { forkJoin, of, Subject } from 'rxjs';
@@ -13,6 +14,7 @@ import {
   FollowUpReminder,
   CallType,
   CallOutcome,
+  CallNoteCreateRequest,
 } from '../call-notes/services/call-notes.service';
 import { ViewingService, ViewingSummary, ViewingFeedback, ViewingStatus } from '../viewing-management/services/viewing.service';
 
@@ -54,6 +56,8 @@ interface ViewingRow {
   clientName: string;
   initials: string;
   propertyLabel: string;
+  viewingDate: string;
+  viewingStatus: ViewingStatus;
   timeFmt: string;
   statusLabel: string;
   statusBg: string;
@@ -63,7 +67,7 @@ interface ViewingRow {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule, DatePipe],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, DatePipe],
   template: `
     <div style="max-width:1180px; margin:0 auto;">
 
@@ -107,28 +111,43 @@ interface ViewingRow {
         @if (todayViewingRows.length > 0) {
           <div style="display:flex; gap:12px; padding:4px 18px 16px; overflow-x:auto;">
             @for (v of todayViewingRows; track v.id) {
-              <div [routerLink]="['/clients', v.clientId]"
-                   style="min-width:210px; background:var(--surface-2); border:1px solid var(--border);
-                          border-radius:10px; padding:12px 14px; cursor:pointer; transition:box-shadow .15s; flex-shrink:0;">
-                <div style="font-size:20px; font-weight:800; color:#7c3aed; font-variant-numeric:tabular-nums; line-height:1; margin-bottom:8px;">
-                  {{ v.timeFmt }}
-                </div>
-                <div style="display:flex; align-items:center; gap:7px; margin-bottom:5px;">
-                  <div style="width:26px; height:26px; border-radius:50%; background:color-mix(in srgb,#7c3aed 12%,var(--surface));
-                              color:#7c3aed; display:flex; align-items:center; justify-content:center;
-                              font-weight:700; font-size:11px; flex-shrink:0;">
-                    {{ v.initials }}
+              <div style="min-width:210px; background:var(--surface-2); border:1px solid var(--border);
+                          border-radius:10px; padding:12px 14px; transition:box-shadow .15s; flex-shrink:0; display:flex; flex-direction:column; gap:0;">
+                <div [routerLink]="['/clients', v.clientId]" style="cursor:pointer;">
+                  <div style="font-size:20px; font-weight:800; color:#7c3aed; font-variant-numeric:tabular-nums; line-height:1; margin-bottom:8px;">
+                    {{ v.timeFmt }}
                   </div>
-                  <span style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ v.clientName }}</span>
+                  <div style="display:flex; align-items:center; gap:7px; margin-bottom:5px;">
+                    <div style="width:26px; height:26px; border-radius:50%; background:color-mix(in srgb,#7c3aed 12%,var(--surface));
+                                color:#7c3aed; display:flex; align-items:center; justify-content:center;
+                                font-weight:700; font-size:11px; flex-shrink:0;">
+                      {{ v.initials }}
+                    </div>
+                    <span style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ v.clientName }}</span>
+                  </div>
+                  <div style="font-size:12px; color:var(--text-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:8px;">
+                    <i class="ph ph-buildings" style="font-size:11px;"></i>
+                    {{ v.propertyLabel }}
+                  </div>
+                  <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px;"
+                        [style.background]="v.statusBg" [style.color]="v.statusColor">
+                    {{ v.statusLabel }}
+                  </span>
                 </div>
-                <div style="font-size:12px; color:var(--text-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:8px;">
-                  <i class="ph ph-buildings" style="font-size:11px;"></i>
-                  {{ v.propertyLabel }}
-                </div>
-                <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px;"
-                      [style.background]="v.statusBg" [style.color]="v.statusColor">
-                  {{ v.statusLabel }}
-                </span>
+                @if (v.viewingStatus === 'SCHEDULED') {
+                  <div style="display:flex; gap:6px; margin-top:10px;" (click)="$event.stopPropagation()">
+                    <button (click)="openViewingDone(v)"
+                            style="flex:1; padding:5px 8px; border:1.5px solid var(--color-success); border-radius:7px;
+                                   background:none; color:var(--color-success); font-size:12px; font-weight:600; cursor:pointer;">
+                      ✓ Erledigt
+                    </button>
+                    <button (click)="quickCancelViewing(v, $event)"
+                            style="padding:5px 10px; border:1.5px solid var(--border); border-radius:7px;
+                                   background:none; color:var(--text-3); font-size:12px; cursor:pointer;" title="Absagen">
+                      ✗
+                    </button>
+                  </div>
+                }
               </div>
             }
           </div>
@@ -183,6 +202,12 @@ interface ViewingRow {
                     {{ f.followupFmt }}
                   </div>
                 </div>
+                <button (click)="openFollowUpDone(f, $event)"
+                        style="padding:4px 10px; border:1.5px solid var(--color-success); border-radius:7px;
+                               background:none; color:var(--color-success); font-size:12px; font-weight:600;
+                               cursor:pointer; white-space:nowrap; flex-shrink:0;">
+                  ✓ Erledigt
+                </button>
                 <button class="btn-icon" [routerLink]="['/clients', f.clientId]"
                         title="{{ 'dashboard.openCustomer' | translate }}">
                   <i class="ph ph-arrow-right"></i>
@@ -265,24 +290,40 @@ interface ViewingRow {
           @if (staleClientRows.length > 0) {
             <div style="padding:0 0 8px;">
               @for (c of staleClientRows; track c.id) {
-                <div [routerLink]="['/clients', c.id]"
-                     style="display:flex; align-items:center; gap:12px; padding:11px 18px;
-                            border-bottom:1px solid var(--border); cursor:pointer;">
-                  <div style="width:32px; height:32px; border-radius:50%;
-                              background:color-mix(in srgb,var(--color-warning) 12%,var(--surface));
-                              color:var(--color-warning); display:flex; align-items:center; justify-content:center;
-                              font-weight:700; font-size:12px; flex-shrink:0;">
-                    {{ c.initials }}
-                  </div>
-                  <div style="flex:1; min-width:0;">
-                    <div style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                      {{ c.name }}
+                <div style="display:flex; align-items:center; gap:10px; padding:10px 18px;
+                            border-bottom:1px solid var(--border);">
+                  <div [routerLink]="['/clients', c.id]" style="cursor:pointer; display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                    <div style="width:32px; height:32px; border-radius:50%;
+                                background:color-mix(in srgb,var(--color-warning) 12%,var(--surface));
+                                color:var(--color-warning); display:flex; align-items:center; justify-content:center;
+                                font-weight:700; font-size:12px; flex-shrink:0;">
+                      {{ c.initials }}
+                    </div>
+                    <div style="flex:1; min-width:0;">
+                      <div style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        {{ c.name }}
+                      </div>
+                    </div>
+                    <div style="font-size:12px; font-weight:700; color:var(--color-warning); flex-shrink:0;">
+                      {{ c.daysSince }}
                     </div>
                   </div>
-                  <div style="font-size:12px; font-weight:700; color:var(--color-warning); flex-shrink:0;">
-                    {{ c.daysSince }}
+                  <div style="display:flex; gap:6px; flex-shrink:0;" (click)="$event.stopPropagation()">
+                    @if (c.phone) {
+                      <a [href]="'tel:' + c.phone"
+                         style="width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+                                border:1.5px solid var(--primary); border-radius:7px; color:var(--primary);
+                                font-size:14px; text-decoration:none;" title="Anrufen">
+                        <i class="ph ph-phone"></i>
+                      </a>
+                    }
+                    <button (click)="setClientInactive(c.id, $event)"
+                            style="width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+                                   border:1.5px solid var(--border); border-radius:7px; background:none;
+                                   color:var(--text-3); font-size:14px; cursor:pointer;" title="Als inaktiv markieren">
+                      <i class="ph ph-user-minus"></i>
+                    </button>
                   </div>
-                  <i class="ph ph-arrow-right" style="color:var(--text-3); font-size:14px; flex-shrink:0;"></i>
                 </div>
               }
             </div>
@@ -351,6 +392,106 @@ interface ViewingRow {
       </div>
 
     </div>
+
+    <!-- ── Follow-up Erledigt Popover ──────────────────────────── -->
+    @if (activeFollowUp !== null) {
+      <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;"
+           (click)="closeFollowUpPopover()">
+        <div style="background:var(--surface);border-radius:14px;width:380px;max-width:95vw;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3);"
+             (click)="$event.stopPropagation()">
+          <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px;">Follow-up abschließen</div>
+          <div style="font-size:13px;color:var(--text-3);margin-bottom:18px;">
+            {{ activeFollowUp.customerName }} · {{ activeFollowUp.subject }}
+          </div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Ergebnis</div>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px;">
+            @for (o of followUpOutcomeOptions; track o.value) {
+              <button (click)="followUpOutcome = followUpOutcome === o.value ? null : o.value"
+                      [style.background]="followUpOutcome === o.value ? 'color-mix(in srgb,' + o.color + ' 14%,var(--surface))' : 'var(--surface-2)'"
+                      [style.border-color]="followUpOutcome === o.value ? o.color : 'var(--border)'"
+                      [style.color]="followUpOutcome === o.value ? o.color : 'var(--text-2)'"
+                      style="padding:7px 12px;border-radius:8px;border:1.5px solid;cursor:pointer;font-size:13px;font-weight:500;">
+                {{ o.label }}
+              </button>
+            }
+          </div>
+          <textarea [(ngModel)]="followUpNoteText" placeholder="Kurze Notiz zum Gespräch..." rows="2"
+                    style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;
+                           font-size:13px;color:var(--text);background:var(--surface);resize:none;
+                           box-sizing:border-box;font-family:inherit;margin-bottom:16px;outline:none;"></textarea>
+          <div style="display:flex;gap:10px;">
+            <button (click)="closeFollowUpPopover()"
+                    style="flex:1;padding:9px;border:1px solid var(--border);border-radius:8px;
+                           background:var(--surface-2);color:var(--text-2);font-size:13px;cursor:pointer;">
+              Abbrechen
+            </button>
+            <button (click)="submitFollowUpDone()"
+                    [disabled]="isSubmittingFollowUp"
+                    style="flex:2;padding:9px;border:none;border-radius:8px;background:var(--color-success);
+                           color:#fff;font-size:13px;font-weight:600;cursor:pointer;"
+                    [style.opacity]="isSubmittingFollowUp ? '0.6' : '1'">
+              {{ isSubmittingFollowUp ? 'Speichern...' : '✓ Als erledigt speichern' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── Viewing Erledigt Popover ─────────────────────────────── -->
+    @if (activeViewingRow !== null) {
+      <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;"
+           (click)="closeViewingPopover()">
+        <div style="background:var(--surface);border-radius:14px;width:360px;max-width:95vw;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3);"
+             (click)="$event.stopPropagation()">
+          <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px;">Besichtigung abschließen</div>
+          <div style="font-size:13px;color:var(--text-3);margin-bottom:18px;">
+            {{ activeViewingRow.clientName }} · {{ activeViewingRow.propertyLabel }}
+          </div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Kundenfeedback</div>
+          <div style="display:flex;gap:8px;margin-bottom:16px;">
+            <button (click)="viewingPopoverFeedback = viewingPopoverFeedback === 'LIKED' ? null : 'LIKED'"
+                    [style.background]="viewingPopoverFeedback === 'LIKED' ? '#f0fdf4' : 'var(--surface-2)'"
+                    [style.border-color]="viewingPopoverFeedback === 'LIKED' ? '#16a34a' : 'var(--border)'"
+                    [style.color]="viewingPopoverFeedback === 'LIKED' ? '#16a34a' : 'var(--text-2)'"
+                    style="flex:1;padding:8px 10px;border-radius:8px;border:1.5px solid;cursor:pointer;font-size:13px;font-weight:500;">
+              👍 Gefällt
+            </button>
+            <button (click)="viewingPopoverFeedback = viewingPopoverFeedback === 'NEUTRAL' ? null : 'NEUTRAL'"
+                    [style.background]="viewingPopoverFeedback === 'NEUTRAL' ? '#fffbeb' : 'var(--surface-2)'"
+                    [style.border-color]="viewingPopoverFeedback === 'NEUTRAL' ? '#d97706' : 'var(--border)'"
+                    [style.color]="viewingPopoverFeedback === 'NEUTRAL' ? '#d97706' : 'var(--text-2)'"
+                    style="flex:1;padding:8px 10px;border-radius:8px;border:1.5px solid;cursor:pointer;font-size:13px;font-weight:500;">
+              🤷 Neutral
+            </button>
+            <button (click)="viewingPopoverFeedback = viewingPopoverFeedback === 'DISLIKED' ? null : 'DISLIKED'"
+                    [style.background]="viewingPopoverFeedback === 'DISLIKED' ? '#fef2f2' : 'var(--surface-2)'"
+                    [style.border-color]="viewingPopoverFeedback === 'DISLIKED' ? '#dc2626' : 'var(--border)'"
+                    [style.color]="viewingPopoverFeedback === 'DISLIKED' ? '#dc2626' : 'var(--text-2)'"
+                    style="flex:1;padding:8px 10px;border-radius:8px;border:1.5px solid;cursor:pointer;font-size:13px;font-weight:500;">
+              👎 Nicht
+            </button>
+          </div>
+          <textarea [(ngModel)]="viewingPopoverNote" placeholder="Notiz zur Besichtigung..." rows="2"
+                    style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;
+                           font-size:13px;color:var(--text);background:var(--surface);resize:none;
+                           box-sizing:border-box;font-family:inherit;margin-bottom:16px;outline:none;"></textarea>
+          <div style="display:flex;gap:10px;">
+            <button (click)="closeViewingPopover()"
+                    style="flex:1;padding:9px;border:1px solid var(--border);border-radius:8px;
+                           background:var(--surface-2);color:var(--text-2);font-size:13px;cursor:pointer;">
+              Abbrechen
+            </button>
+            <button (click)="setViewingStatus(activeViewingRow, 'COMPLETED')"
+                    [disabled]="isUpdatingViewing"
+                    style="flex:2;padding:9px;border:none;border-radius:8px;background:var(--color-success);
+                           color:#fff;font-size:13px;font-weight:600;cursor:pointer;"
+                    [style.opacity]="isUpdatingViewing ? '0.6' : '1'">
+              {{ isUpdatingViewing ? 'Speichern...' : '✓ Als erledigt speichern' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `
 })
 export class DashboardComponent implements OnInit, OnDestroy {
@@ -361,9 +502,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
   followUps: FollowUpRow[] = [];
   recentActivity: ActivityRow[] = [];
   todayViewingRows: ViewingRow[] = [];
-  staleClientRows: { id: string; name: string; initials: string; daysSince: string }[] = [];
+  staleClientRows: { id: string; name: string; initials: string; daysSince: string; phone?: string }[] = [];
 
   pipelineCols: { label: string; color: string; items: any[] }[] = [];
+
+  // Follow-up popover
+  activeFollowUp: FollowUpRow | null = null;
+  followUpNoteText = '';
+  followUpOutcome: CallOutcome | null = null;
+  isSubmittingFollowUp = false;
+
+  // Viewing status popover
+  activeViewingRow: ViewingRow | null = null;
+  viewingPopoverFeedback: ViewingFeedback | null = null;
+  viewingPopoverNote = '';
+  isUpdatingViewing = false;
+
+  readonly followUpOutcomeOptions = [
+    { value: CallOutcome.INTERESTED,        label: 'Interessiert',   color: 'var(--color-success)' },
+    { value: CallOutcome.SCHEDULED_VIEWING, label: 'Besichtigung',   color: 'var(--color-viewing)' },
+    { value: CallOutcome.OFFER_MADE,        label: 'Angebot gemacht', color: 'var(--color-offer)' },
+    { value: CallOutcome.NOT_INTERESTED,    label: 'Kein Interesse', color: 'var(--color-error)' },
+  ];
 
   todayLabel = '';
   greeting = '';
@@ -530,7 +690,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const initials = nameParts.slice(0, 2).map((p: string) => p.charAt(0).toUpperCase()).join('');
       const updatedMs = c.updatedAt ? new Date(c.updatedAt).getTime() : 0;
       const days = Math.floor((now - updatedMs) / 86400000);
-      return { id: c.id, name: (c.firstName ?? '') + ' ' + (c.lastName ?? ''), initials, daysSince: days + ' Tage' };
+      return { id: c.id, name: (c.firstName ?? '') + ' ' + (c.lastName ?? ''), initials, daysSince: days + ' Tage', phone: c.phone ?? undefined };
     });
   }
 
@@ -573,7 +733,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const statusLabel = v.status === 'COMPLETED' ? 'Erledigt' : v.status === 'CANCELLED' ? 'Abgesagt' : 'Geplant';
       const statusBg    = v.status === 'COMPLETED' ? 'var(--color-success-soft)' : v.status === 'CANCELLED' ? 'var(--color-error-soft)' : 'var(--stage-viewing-bg)';
       const statusColor = v.status === 'COMPLETED' ? 'var(--color-success)' : v.status === 'CANCELLED' ? 'var(--color-error)' : 'var(--stage-viewing)';
-      return { id: v.id, clientId: v.clientId, clientName: v.clientName, initials, propertyLabel: v.propertyTitle || v.propertyAddress, timeFmt, statusLabel, statusBg, statusColor };
+      return { id: v.id, clientId: v.clientId, clientName: v.clientName, initials, propertyLabel: v.propertyTitle || v.propertyAddress, viewingDate: v.viewingDate, viewingStatus: v.status as ViewingStatus, timeFmt, statusLabel, statusBg, statusColor };
     });
   }
 
@@ -606,5 +766,98 @@ export class DashboardComponent implements OnInit, OnDestroy {
       case CallOutcome.NOT_INTERESTED:    return 'var(--color-not-interested)';
       default:                            return 'var(--text-3)';
     }
+  }
+
+  // ── Follow-up popover ─────────────────────────────────────────
+
+  openFollowUpDone(followUp: FollowUpRow, event: MouseEvent): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.activeFollowUp = followUp;
+    this.followUpNoteText = '';
+    this.followUpOutcome = null;
+  }
+
+  closeFollowUpPopover(): void {
+    this.activeFollowUp = null;
+    this.followUpNoteText = '';
+    this.followUpOutcome = null;
+  }
+
+  submitFollowUpDone(): void {
+    if (this.isSubmittingFollowUp || !this.activeFollowUp) return;
+    this.isSubmittingFollowUp = true;
+    const note: CallNoteCreateRequest = {
+      clientId: this.activeFollowUp.clientId,
+      callDate: new Date().toISOString(),
+      callType: CallType.PHONE_OUTBOUND,
+      subject: 'Follow-up: ' + this.activeFollowUp.subject,
+      notes: this.followUpNoteText || 'Erledigt',
+      outcome: this.followUpOutcome ?? undefined,
+      followUpRequired: false,
+    };
+    this.callNotesService.createCallNote(note).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.isSubmittingFollowUp = false;
+        this.closeFollowUpPopover();
+        this.loadData();
+      },
+      error: () => { this.isSubmittingFollowUp = false; }
+    });
+  }
+
+  // ── Viewing status popover ────────────────────────────────────
+
+  openViewingDone(viewing: ViewingRow): void {
+    this.activeViewingRow = viewing;
+    this.viewingPopoverFeedback = null;
+    this.viewingPopoverNote = '';
+  }
+
+  closeViewingPopover(): void {
+    this.activeViewingRow = null;
+    this.viewingPopoverFeedback = null;
+    this.viewingPopoverNote = '';
+  }
+
+  setViewingStatus(viewing: ViewingRow, status: string): void {
+    if (this.isUpdatingViewing) return;
+    this.isUpdatingViewing = true;
+    this.viewingService.updateViewing(viewing.id, {
+      viewingDate: viewing.viewingDate,
+      status: status as ViewingStatus,
+      feedback: (this.viewingPopoverFeedback as ViewingFeedback) ?? undefined,
+      clientNotes: this.viewingPopoverNote || undefined,
+    }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.isUpdatingViewing = false;
+        this.closeViewingPopover();
+        this.loadData();
+      },
+      error: () => { this.isUpdatingViewing = false; }
+    });
+  }
+
+  quickCancelViewing(viewing: ViewingRow, event: MouseEvent): void {
+    event.stopPropagation();
+    if (this.isUpdatingViewing) return;
+    this.isUpdatingViewing = true;
+    this.viewingService.updateViewing(viewing.id, {
+      viewingDate: viewing.viewingDate,
+      status: ViewingStatus.CANCELLED,
+    }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => { this.isUpdatingViewing = false; this.loadData(); },
+      error: () => { this.isUpdatingViewing = false; }
+    });
+  }
+
+  // ── Stale clients ─────────────────────────────────────────────
+
+  setClientInactive(clientId: string, event: MouseEvent): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.clientService.updatePipelineStage(clientId, PipelineStage.INACTIVE).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => this.loadData());
   }
 }

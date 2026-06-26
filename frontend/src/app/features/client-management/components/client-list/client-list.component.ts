@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { ClientService, Client, PagedResponse } from '../../services/client.service';
+import { ClientService, Client, PagedResponse, PipelineStage } from '../../services/client.service';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
@@ -12,6 +12,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
   styles: [`
     .client-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow); cursor:pointer; transition:box-shadow 0.15s, border-color 0.15s; display:flex; flex-direction:column; }
     .client-card:hover { border-color:var(--primary); box-shadow:0 4px 16px rgba(20,40,45,0.12); }
+    .stage-opt:hover { background:var(--surface-2) !important; }
   `],
   template: `
     <div style="padding:28px 32px;">
@@ -82,11 +83,30 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
             </div>
           </div>
 
-          <!-- Footer: DSGVO -->
-          <div style="padding:10px 16px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
-            <span style="font-size:12px; color:var(--text-3);">
-              {{ client.addressCountry || 'DE' }}
-            </span>
+          <!-- Footer: Stage + DSGVO -->
+          <div style="padding:10px 16px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <!-- Stage badge with dropdown -->
+            <div style="position:relative;" (click)="$event.stopPropagation(); $event.preventDefault()">
+              <button (click)="toggleStagePicker(client.id!, $event)"
+                      [style.background]="getStageBg(client.pipelineStage)"
+                      [style.color]="getStageColor(client.pipelineStage)"
+                      style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;border:none;cursor:pointer;font-size:11px;font-weight:600;">
+                {{ getStageLabel(client.pipelineStage) }}
+                <i class="ph ph-caret-down" style="font-size:10px;"></i>
+              </button>
+              <div *ngIf="activeStagePicker === client.id"
+                   style="position:absolute;bottom:100%;left:0;margin-bottom:4px;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);z-index:100;min-width:170px;overflow:hidden;">
+                <div *ngIf="activeStagePicker === client.id" (click)="activeStagePicker = null"
+                     style="position:fixed;inset:0;z-index:99;"></div>
+                <button *ngFor="let s of stageOptions"
+                        (click)="setStage(client.id!, s.value, $event)"
+                        class="stage-opt"
+                        style="width:100%;text-align:left;padding:8px 13px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:500;position:relative;z-index:100;"
+                        [style.color]="getStageColor(s.value)">
+                  {{ s.label }}
+                </button>
+              </div>
+            </div>
             <span *ngIf="client.gdprConsentGiven"
               style="display:flex; align-items:center; gap:4px; font-size:12px; font-weight:600; color:#1f8a5b;">
               <i class="ph ph-shield-check"></i>
@@ -106,6 +126,16 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
 export class ClientListComponent implements OnInit {
   clients: Client[] = [];
   isLoading = false;
+  activeStagePicker: string | null = null;
+
+  readonly stageOptions = [
+    { value: PipelineStage.PROSPECT,      label: 'Interessent' },
+    { value: PipelineStage.ACTIVE_SEARCH, label: 'Aktive Suche' },
+    { value: PipelineStage.VIEWING,       label: 'Besichtigung' },
+    { value: PipelineStage.OFFER,         label: 'Angebot' },
+    { value: PipelineStage.CLOSED,        label: 'Abgeschlossen' },
+    { value: PipelineStage.INACTIVE,      label: 'Inaktiv' },
+  ];
 
   constructor(private clientService: ClientService) {}
 
@@ -140,6 +170,51 @@ export class ClientListComponent implements OnInit {
     if (c.propertyTypes?.length) parts.push(c.propertyTypes[0]);
     if (c.maxBudget) parts.push(new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(c.maxBudget));
     return parts.join(' · ');
+  }
+
+  toggleStagePicker(clientId: string, event: MouseEvent): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.activeStagePicker = this.activeStagePicker === clientId ? null : clientId;
+  }
+
+  setStage(clientId: string, stage: PipelineStage, event: MouseEvent): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.activeStagePicker = null;
+    const client = this.clients.find(c => c.id === clientId);
+    if (client) client.pipelineStage = stage;
+    this.clientService.updatePipelineStage(clientId, stage).subscribe({
+      error: () => { if (client) client.pipelineStage = undefined; }
+    });
+  }
+
+  getStageBg(stage?: PipelineStage): string {
+    switch (stage) {
+      case PipelineStage.PROSPECT:      return 'color-mix(in srgb,var(--stage-prospect) 14%,var(--surface))';
+      case PipelineStage.ACTIVE_SEARCH: return 'color-mix(in srgb,var(--stage-active-search) 14%,var(--surface))';
+      case PipelineStage.VIEWING:       return 'color-mix(in srgb,var(--stage-viewing) 14%,var(--surface))';
+      case PipelineStage.OFFER:         return 'color-mix(in srgb,var(--stage-offer) 14%,var(--surface))';
+      case PipelineStage.CLOSED:        return 'color-mix(in srgb,var(--color-success) 14%,var(--surface))';
+      case PipelineStage.INACTIVE:      return 'var(--surface-2)';
+      default:                          return 'var(--surface-2)';
+    }
+  }
+
+  getStageColor(stage?: PipelineStage): string {
+    switch (stage) {
+      case PipelineStage.PROSPECT:      return 'var(--stage-prospect)';
+      case PipelineStage.ACTIVE_SEARCH: return 'var(--stage-active-search)';
+      case PipelineStage.VIEWING:       return 'var(--stage-viewing)';
+      case PipelineStage.OFFER:         return 'var(--stage-offer)';
+      case PipelineStage.CLOSED:        return 'var(--color-success)';
+      case PipelineStage.INACTIVE:      return 'var(--text-3)';
+      default:                          return 'var(--text-3)';
+    }
+  }
+
+  getStageLabel(stage?: PipelineStage): string {
+    return this.stageOptions.find(s => s.value === stage)?.label ?? 'Kein Stage';
   }
 
   trackById(index: number, item: Client): string | undefined {
