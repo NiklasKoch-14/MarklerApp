@@ -89,5 +89,8 @@ nginx/ssl/dhparam.pem
 .claude/skills/
 skills-lock.json
 
+# Graphify output (auto-generated, not part of the project)
+graphify-out/
+
 # Docker env files with credentials
 .env.docker

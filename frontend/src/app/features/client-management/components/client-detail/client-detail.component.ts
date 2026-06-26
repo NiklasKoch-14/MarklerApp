@@ -32,12 +32,22 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
     .at-note.active { border-color:var(--color-amber)!important; box-shadow:0 4px 16px rgba(217,119,6,.22)!important; transform:translateY(-2px); }
     .at-viewing { background:var(--color-purple-soft); color:var(--color-purple); }
     .at-viewing:hover { border-color:var(--color-purple); background:color-mix(in srgb,var(--color-purple) 14%,var(--surface)); }
+    .at-viewing.active { border-color:var(--color-purple)!important; box-shadow:0 4px 16px rgba(147,51,234,.22)!important; transform:translateY(-2px); }
     .at-disabled { opacity:0.35; cursor:not-allowed; pointer-events:none; }
     .stage-option:hover { background:var(--surface-2) !important; }
     .qm-item { display:flex; align-items:center; gap:10px; width:100%; padding:10px 14px; border:none; background:none; cursor:pointer; font-size:13px; font-weight:500; color:var(--text); text-align:left; font-family:inherit; transition:background 0.1s; }
     .qm-item:hover { background:var(--surface-2); }
     .qm-item.danger { color:var(--color-error); }
     .qm-item.danger:hover { background:var(--color-error-soft); }
+    .hdr-icon { width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; text-decoration:none; font-family:inherit; cursor:pointer; transition:all 0.15s; border:none; flex-shrink:0; position:relative; }
+    .hdr-icon[data-tooltip]::after { content:attr(data-tooltip); position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--text); color:var(--surface); padding:4px 9px; border-radius:6px; font-size:11px; font-weight:500; white-space:nowrap; pointer-events:none; z-index:200; opacity:0; transition:opacity .15s; }
+    .hdr-icon[data-tooltip]:hover::after { opacity:1; }
+    .hdr-icon-call { background:var(--accent-soft); color:var(--primary); }
+    .hdr-icon-call:hover { background:var(--primary); color:#fff; }
+    .hdr-icon-email { background:var(--color-blue-soft); color:var(--color-blue); }
+    .hdr-icon-email:hover { background:var(--color-blue); color:#fff; }
+    .hdr-icon-bell { background:var(--color-amber-soft); color:var(--color-amber); }
+    .hdr-icon-bell:hover { background:var(--color-amber); color:#fff; }
     .note-form-enter { animation:slideDown .18s ease; }
     @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
     .info-row { display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid var(--border); }
@@ -74,6 +84,13 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
                 <h1 style="font-size:22px;font-weight:800;color:var(--text);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                   {{ client.firstName }} {{ client.lastName }}
                 </h1>
+                <!-- Quick-contact icons -->
+                <a *ngIf="client.phone" [href]="'tel:' + client.phone" class="hdr-icon hdr-icon-call" [attr.data-tooltip]="client.phone">
+                  <i class="ph-bold ph-phone" style="font-size:16px;"></i>
+                </a>
+                <a *ngIf="client.email" [href]="'mailto:' + client.email" class="hdr-icon hdr-icon-email" [attr.data-tooltip]="client.email">
+                  <i class="ph-bold ph-envelope" style="font-size:16px;"></i>
+                </a>
                 <!-- Stage dropdown -->
                 <div style="position:relative;" *ngIf="client.id">
                   <button (click)="stageDropdownOpen = !stageDropdownOpen"
@@ -105,21 +122,30 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
                 </span>
                 <span *ngIf="!callNotesSummary?.lastCallDate"
                       style="font-size:12px;color:var(--text-3);">Noch kein Kontakt</span>
-                <span *ngIf="callNotesSummary && callNotesSummary.pendingFollowUps > 0"
-                      style="font-size:12px;font-weight:600;color:var(--color-amber);display:flex;align-items:center;gap:4px;padding:2px 8px;background:var(--color-amber-soft);border-radius:20px;">
-                  <i class="ph-fill ph-bell-ringing" style="font-size:12px;"></i>
-                  {{ callNotesSummary.pendingFollowUps }} Follow-up{{ callNotesSummary.pendingFollowUps > 1 ? 's' : '' }} offen
-                </span>
               </div>
             </div>
 
-            <!-- Header right: Edit + Quick-Menu -->
+            <!-- Header right: Edit + Bell + Quick-Menu -->
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
               <a [routerLink]="['/clients', client.id, 'edit']"
                  style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;">
                 <i class="ph ph-pencil-simple" style="font-size:14px;"></i>
                 Bearbeiten
               </a>
+
+              <!-- Follow-up / Notiz icon button -->
+              <button class="hdr-icon hdr-icon-bell"
+                      (click)="showQuickNoteForm = !showQuickNoteForm"
+                      [attr.data-tooltip]="(callNotesSummary?.pendingFollowUps || 0) > 0
+                        ? callNotesSummary!.pendingFollowUps + ' Follow-up' + (callNotesSummary!.pendingFollowUps > 1 ? 's' : '') + ' offen'
+                        : 'Gesprächsnotiz'">
+                <i [class]="(callNotesSummary?.pendingFollowUps || 0) > 0 ? 'ph-bold ph-bell-ringing' : 'ph-bold ph-bell'"
+                   style="font-size:16px;"></i>
+                <span *ngIf="(callNotesSummary?.pendingFollowUps || 0) > 0"
+                      style="position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;background:var(--color-amber);color:#fff;border-radius:8px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1;">
+                  {{ callNotesSummary!.pendingFollowUps }}
+                </span>
+              </button>
 
               <!-- ⋯ Quick-action menu -->
               <div style="position:relative;">
@@ -149,31 +175,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
           </div>
 
           <!-- ── Action Tiles ─────────────────────────────────── -->
-          <div style="border-top:1px solid var(--border); margin-top:20px; padding-top:20px; display:grid; grid-template-columns:repeat(4,1fr); gap:12px;">
-
-            <!-- Anrufen -->
-            <a *ngIf="client.phone" [href]="'tel:' + client.phone" class="action-tile at-call">
-              <i class="ph-bold ph-phone" style="font-size:26px;"></i>
-              <span style="font-size:13px;font-weight:700;text-align:center;">Anrufen</span>
-              <span style="font-size:11px;opacity:0.7;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">{{ client.phone }}</span>
-            </a>
-            <div *ngIf="!client.phone" class="action-tile at-call at-disabled">
-              <i class="ph-bold ph-phone" style="font-size:26px;"></i>
-              <span style="font-size:13px;font-weight:700;">Anrufen</span>
-              <span style="font-size:11px;opacity:0.6;">Keine Nummer</span>
-            </div>
-
-            <!-- E-Mail -->
-            <a *ngIf="client.email" [href]="'mailto:' + client.email" class="action-tile at-email">
-              <i class="ph-bold ph-envelope" style="font-size:26px;"></i>
-              <span style="font-size:13px;font-weight:700;">E-Mail</span>
-              <span style="font-size:11px;opacity:0.7;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">{{ client.email }}</span>
-            </a>
-            <div *ngIf="!client.email" class="action-tile at-email at-disabled">
-              <i class="ph-bold ph-envelope" style="font-size:26px;"></i>
-              <span style="font-size:13px;font-weight:700;">E-Mail</span>
-              <span style="font-size:11px;opacity:0.6;">Keine E-Mail</span>
-            </div>
+          <div style="border-top:1px solid var(--border); margin-top:20px; padding-top:20px; display:grid; grid-template-columns:repeat(2,1fr); gap:12px;">
 
             <!-- Notiz -->
             <button (click)="showQuickNoteForm = !showQuickNoteForm"
@@ -185,7 +187,9 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
             </button>
 
             <!-- Besichtigung -->
-            <button (click)="showViewingDialog = true" class="action-tile at-viewing">
+            <button (click)="showViewingForm = !showViewingForm"
+                    class="action-tile at-viewing"
+                    [class.active]="showViewingForm">
               <i class="ph-bold ph-door-open" style="font-size:26px;"></i>
               <span style="font-size:13px;font-weight:700;">Besichtigung</span>
               <span style="font-size:11px;opacity:0.7;">Termin planen</span>
@@ -242,6 +246,17 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
             </button>
           </div>
         </div>
+
+        <!-- ── Inline Besichtigungs-Formular ───────────────────────── -->
+        <app-viewing-add-dialog
+          *ngIf="showViewingForm && client"
+          [inline]="true"
+          mode="from-client"
+          [preselectedClientId]="client.id"
+          [preselectedClientName]="client.firstName + ' ' + client.lastName"
+          (viewingCreated)="onViewingCreated()"
+          (cancelled)="showViewingForm = false">
+        </app-viewing-add-dialog>
 
         <!-- ── Follow-up Alert ──────────────────────────────────── -->
         <div *ngIf="showContactPanel"
@@ -505,16 +520,6 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
       </div>
     </div>
 
-    <!-- Viewing Add Dialog -->
-    <app-viewing-add-dialog
-      *ngIf="showViewingDialog && client"
-      mode="from-client"
-      [preselectedClientId]="client.id"
-      [preselectedClientName]="client.firstName + ' ' + client.lastName"
-      (viewingCreated)="onViewingCreated()"
-      (cancelled)="showViewingDialog = false">
-    </app-viewing-add-dialog>
-
     <!-- Stage Upgrade Hint -->
     <div *ngIf="showStageUpgradeHint"
          style="position:fixed;bottom:24px;right:24px;background:var(--surface);border:1.5px solid var(--primary);border-radius:12px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,.15);z-index:500;max-width:320px;">
@@ -565,7 +570,7 @@ export class ClientDetailComponent implements OnInit {
   // Viewings
   viewings: ViewingSummary[] = [];
   isLoadingViewings = false;
-  showViewingDialog = false;
+  showViewingForm = false;
 
   // Attachments dialog
   showAttachmentsDialog = false;
@@ -701,7 +706,7 @@ export class ClientDetailComponent implements OnInit {
   }
 
   onViewingCreated(): void {
-    this.showViewingDialog = false;
+    this.showViewingForm = false;
     const clientId = this.route.snapshot.paramMap.get('id');
     if (clientId) this.loadViewings(clientId);
 
