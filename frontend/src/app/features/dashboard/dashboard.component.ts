@@ -514,7 +514,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Viewing status popover
   activeViewingRow: ViewingRow | null = null;
-  viewingPopoverFeedback: ViewingFeedback | null = null;
+  viewingPopoverFeedback: string | null = null;
   viewingPopoverNote = '';
   isUpdatingViewing = false;
 
@@ -826,7 +826,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.viewingService.updateViewing(viewing.id, {
       viewingDate: viewing.viewingDate,
       status: status as ViewingStatus,
-      feedback: (this.viewingPopoverFeedback as ViewingFeedback) ?? undefined,
+      feedback: (this.viewingPopoverFeedback as ViewingFeedback | undefined) ?? undefined,
       clientNotes: this.viewingPopoverNote || undefined,
     }).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
