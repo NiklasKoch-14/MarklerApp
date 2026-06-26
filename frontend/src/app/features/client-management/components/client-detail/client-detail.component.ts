@@ -15,429 +15,440 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
   selector: 'app-client-detail',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, TranslateModule, TranslateEnumPipe, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent],
+  styles: [`
+    .action-tile {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:7px; padding:20px 10px; border-radius:14px; cursor:pointer;
+      border:2px solid transparent; text-decoration:none; transition:all 0.18s ease;
+      font-family:inherit; background:none; flex:1; min-width:0;
+    }
+    .action-tile:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,.12); }
+    .at-call    { background:var(--accent-soft); color:var(--primary); }
+    .at-call:hover  { border-color:var(--primary); background:color-mix(in srgb,var(--primary) 14%,var(--surface)); }
+    .at-email   { background:var(--color-blue-soft); color:var(--color-blue); }
+    .at-email:hover { border-color:var(--color-blue); background:color-mix(in srgb,var(--color-blue) 14%,var(--surface)); }
+    .at-note    { background:var(--color-amber-soft); color:var(--color-amber); }
+    .at-note:hover  { border-color:var(--color-amber); background:color-mix(in srgb,var(--color-amber) 14%,var(--surface)); }
+    .at-note.active { border-color:var(--color-amber)!important; box-shadow:0 4px 16px rgba(217,119,6,.22)!important; transform:translateY(-2px); }
+    .at-viewing { background:var(--color-purple-soft); color:var(--color-purple); }
+    .at-viewing:hover { border-color:var(--color-purple); background:color-mix(in srgb,var(--color-purple) 14%,var(--surface)); }
+    .at-disabled { opacity:0.35; cursor:not-allowed; pointer-events:none; }
+    .stage-option:hover { background:var(--surface-2) !important; }
+    .note-form-enter { animation:slideDown .18s ease; }
+    @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+    .info-row { display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid var(--border); }
+    .info-row:last-child { border-bottom:none; }
+    .tl-row { display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+    .tl-row:last-child { border-bottom:none; }
+  `],
   template: `
-    <div style="padding:24px 28px; max-width:860px;">
-      <div *ngIf="isLoading" class="text-center py-8">
+    <div style="padding:28px 36px;">
+      <div *ngIf="isLoading" style="text-align:center;padding:48px 0;">
         <app-loading-spinner size="lg"></app-loading-spinner>
       </div>
 
       <div *ngIf="!isLoading && client">
 
-        <!-- ══ ZONE 1: Header ══════════════════════════════════════ -->
-        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:20px;">
-          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-width:0;">
-            <a routerLink="/clients" style="color:var(--text-3); font-size:13px; text-decoration:none; display:flex; align-items:center; gap:4px; flex-shrink:0;">
-              <i class="ph ph-caret-left" style="font-size:14px;"></i>
+        <!-- ══ HERO CARD ══════════════════════════════════════════ -->
+        <div style="background:var(--surface); border:1.5px solid var(--border); border-radius:18px; padding:24px 28px; margin-bottom:16px;">
+
+          <!-- Identity row -->
+          <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+            <a routerLink="/clients"
+               style="width:34px;height:34px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-3);text-decoration:none;flex-shrink:0;">
+              <i class="ph ph-arrow-left" style="font-size:16px;"></i>
             </a>
-            <h1 style="font-size:22px; font-weight:800; color:var(--text); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-              {{ client.firstName }} {{ client.lastName }}
-            </h1>
-            <!-- Pipeline Stage Dropdown -->
-            <div style="position:relative;" *ngIf="client.id">
-              <button (click)="stageDropdownOpen = !stageDropdownOpen"
-                      [style.background]="getStageBg(client.pipelineStage)"
-                      [style.color]="getStageColor(client.pipelineStage)"
-                      style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:600;">
-                {{ getStageLabel(client.pipelineStage) }}
-                <i class="ph ph-caret-down" style="font-size:11px;"></i>
-              </button>
-              <div *ngIf="stageDropdownOpen" (click)="stageDropdownOpen = false"
-                   style="position:fixed;inset:0;z-index:99;"></div>
-              <div *ngIf="stageDropdownOpen"
-                   style="position:absolute;top:100%;left:0;margin-top:4px;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:100;min-width:160px;overflow:hidden;">
-                <button *ngFor="let s of pipelineStages"
-                        (click)="setStage(s.value)"
-                        style="width:100%;text-align:left;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:500;"
-                        [style.color]="getStageColor(s.value)"
-                        class="stage-option">
-                  {{ s.label }}
-                </button>
+
+            <!-- Avatar -->
+            <div style="width:52px;height:52px;border-radius:50%;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:var(--primary);flex-shrink:0;letter-spacing:0.5px;">
+              {{ getInitials() }}
+            </div>
+
+            <!-- Name + Stage + chips -->
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                <h1 style="font-size:22px;font-weight:800;color:var(--text);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  {{ client.firstName }} {{ client.lastName }}
+                </h1>
+                <!-- Stage dropdown -->
+                <div style="position:relative;" *ngIf="client.id">
+                  <button (click)="stageDropdownOpen = !stageDropdownOpen"
+                          [style.background]="getStageBg(client.pipelineStage)"
+                          [style.color]="getStageColor(client.pipelineStage)"
+                          style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:600;">
+                    {{ getStageLabel(client.pipelineStage) }}
+                    <i class="ph ph-caret-down" style="font-size:11px;"></i>
+                  </button>
+                  <div *ngIf="stageDropdownOpen" (click)="stageDropdownOpen = false"
+                       style="position:fixed;inset:0;z-index:99;"></div>
+                  <div *ngIf="stageDropdownOpen"
+                       style="position:absolute;top:100%;left:0;margin-top:4px;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:100;min-width:160px;overflow:hidden;">
+                    <button *ngFor="let s of pipelineStages" (click)="setStage(s.value)"
+                            class="stage-option"
+                            style="width:100%;text-align:left;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:500;"
+                            [style.color]="getStageColor(s.value)">
+                      {{ s.label }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <!-- Context chips -->
+              <div style="display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap;">
+                <span *ngIf="callNotesSummary?.lastCallDate"
+                      style="font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:4px;">
+                  <i class="ph ph-clock" style="font-size:12px;"></i>
+                  Letzter Kontakt {{ callNotesSummary!.lastCallDate | date:'dd.MM.yy' }}
+                </span>
+                <span *ngIf="!callNotesSummary?.lastCallDate"
+                      style="font-size:12px;color:var(--text-3);">Noch kein Kontakt</span>
+                <span *ngIf="callNotesSummary && callNotesSummary.pendingFollowUps > 0"
+                      style="font-size:12px;font-weight:600;color:var(--color-amber);display:flex;align-items:center;gap:4px;padding:2px 8px;background:var(--color-amber-soft);border-radius:20px;">
+                  <i class="ph-fill ph-bell-ringing" style="font-size:12px;"></i>
+                  {{ callNotesSummary.pendingFollowUps }} Follow-up{{ callNotesSummary.pendingFollowUps > 1 ? 's' : '' }} offen
+                </span>
               </div>
             </div>
-            <!-- Context chips -->
-            <span *ngIf="callNotesSummary?.lastCallDate"
-                  style="font-size:12px; color:var(--text-3); display:flex; align-items:center; gap:4px;">
-              <i class="ph ph-clock" style="font-size:12px;"></i>
-              {{ callNotesSummary!.lastCallDate | date:'dd.MM.yy' }}
-            </span>
-            <span *ngIf="callNotesSummary && callNotesSummary.pendingFollowUps > 0"
-                  style="font-size:12px; font-weight:600; color:#c07a1e; display:flex; align-items:center; gap:4px;">
-              <i class="ph-fill ph-bell-ringing" style="font-size:12px;"></i>
-              {{ callNotesSummary.pendingFollowUps }} Follow-up{{ callNotesSummary.pendingFollowUps > 1 ? 's' : '' }}
-            </span>
+
+            <!-- Edit -->
+            <a [routerLink]="['/clients', client.id, 'edit']"
+               style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;flex-shrink:0;">
+              <i class="ph ph-pencil-simple" style="font-size:14px;"></i>
+              Bearbeiten
+            </a>
           </div>
-          <a [routerLink]="['/clients', client.id, 'edit']"
-             style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;flex-shrink:0;">
-            <i class="ph ph-pencil-simple" style="font-size:14px;"></i>
-            Bearbeiten
-          </a>
+
+          <!-- ── Action Tiles ─────────────────────────────────── -->
+          <div style="border-top:1px solid var(--border); margin-top:20px; padding-top:20px; display:grid; grid-template-columns:repeat(4,1fr); gap:12px;">
+
+            <!-- Anrufen -->
+            <a *ngIf="client.phone" [href]="'tel:' + client.phone" class="action-tile at-call">
+              <i class="ph-bold ph-phone" style="font-size:26px;"></i>
+              <span style="font-size:13px;font-weight:700;text-align:center;">Anrufen</span>
+              <span style="font-size:11px;opacity:0.7;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">{{ client.phone }}</span>
+            </a>
+            <div *ngIf="!client.phone" class="action-tile at-call at-disabled">
+              <i class="ph-bold ph-phone" style="font-size:26px;"></i>
+              <span style="font-size:13px;font-weight:700;">Anrufen</span>
+              <span style="font-size:11px;opacity:0.6;">Keine Nummer</span>
+            </div>
+
+            <!-- E-Mail -->
+            <a *ngIf="client.email" [href]="'mailto:' + client.email" class="action-tile at-email">
+              <i class="ph-bold ph-envelope" style="font-size:26px;"></i>
+              <span style="font-size:13px;font-weight:700;">E-Mail</span>
+              <span style="font-size:11px;opacity:0.7;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">{{ client.email }}</span>
+            </a>
+            <div *ngIf="!client.email" class="action-tile at-email at-disabled">
+              <i class="ph-bold ph-envelope" style="font-size:26px;"></i>
+              <span style="font-size:13px;font-weight:700;">E-Mail</span>
+              <span style="font-size:11px;opacity:0.6;">Keine E-Mail</span>
+            </div>
+
+            <!-- Notiz -->
+            <button (click)="showQuickNoteForm = !showQuickNoteForm"
+                    class="action-tile at-note"
+                    [class.active]="showQuickNoteForm">
+              <i class="ph-bold ph-note-pencil" style="font-size:26px;"></i>
+              <span style="font-size:13px;font-weight:700;">Notiz</span>
+              <span style="font-size:11px;opacity:0.7;">Gespräch notieren</span>
+            </button>
+
+            <!-- Besichtigung -->
+            <button (click)="showViewingDialog = true" class="action-tile at-viewing">
+              <i class="ph-bold ph-door-open" style="font-size:26px;"></i>
+              <span style="font-size:13px;font-weight:700;">Besichtigung</span>
+              <span style="font-size:11px;opacity:0.7;">Termin planen</span>
+            </button>
+          </div>
         </div>
 
-        <!-- ══ ZONE 2: Follow-up Alert ════════════════════════════ -->
+        <!-- ── Inline Notiz-Formular ────────────────────────────── -->
+        <div *ngIf="showQuickNoteForm" class="note-form-enter"
+             style="background:var(--surface);border:2px solid var(--color-amber);border-radius:14px;padding:20px 24px;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+            <i class="ph-fill ph-note-pencil" style="font-size:16px;color:var(--color-amber);"></i>
+            <span style="font-size:14px;font-weight:700;color:var(--text);">Gesprächsnotiz</span>
+            <button (click)="showQuickNoteForm = false"
+                    style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text-3);font-size:18px;line-height:1;">
+              <i class="ph ph-x"></i>
+            </button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">Betreff</label>
+              <input type="text" [(ngModel)]="quickNoteSubject" placeholder="Worum ging es?"
+                     style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);outline:none;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">Kontaktart</label>
+              <select [(ngModel)]="quickNoteType"
+                      style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
+                <option value="PHONE_OUTBOUND">📞 Anruf (ausgehend)</option>
+                <option value="PHONE_INBOUND">📞 Anruf (eingehend)</option>
+                <option value="EMAIL">✉ E-Mail</option>
+                <option value="MEETING">🤝 Meeting</option>
+              </select>
+            </div>
+          </div>
+          <textarea [(ngModel)]="quickNoteText" placeholder="Was wurde besprochen?" rows="3"
+                    style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);resize:vertical;font-family:inherit;margin-bottom:12px;box-sizing:border-box;outline:none;">
+          </textarea>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <select [(ngModel)]="quickNoteOutcome"
+                    style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
+              <option value="">Ergebnis wählen…</option>
+              <option value="INTERESTED">Interessiert</option>
+              <option value="NOT_INTERESTED">Kein Interesse</option>
+              <option value="SCHEDULED_VIEWING">Besichtigung vereinbart</option>
+              <option value="OFFER_MADE">Angebot gemacht</option>
+              <option value="DEAL_CLOSED">Abschluss</option>
+            </select>
+            <button (click)="saveQuickNote()" [disabled]="isSavingNote || !quickNoteText.trim()"
+                    style="padding:9px 20px;background:var(--color-amber);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.15s;"
+                    [style.opacity]="(isSavingNote || !quickNoteText.trim()) ? '0.45' : '1'">
+              <i class="ph ph-check" style="margin-right:5px;"></i>
+              {{ isSavingNote ? 'Speichern…' : 'Notiz speichern' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Follow-up Alert ──────────────────────────────────── -->
         <div *ngIf="showContactPanel"
-             style="border-left:4px solid #d9534f; background:color-mix(in srgb,#d9534f 6%,var(--surface));
-                    border-radius:10px; padding:14px 18px; margin-bottom:16px;
-                    display:flex; align-items:center; gap:12px;">
-          <i class="ph-fill ph-warning" style="color:#d9534f; font-size:20px; flex-shrink:0;"></i>
-          <div style="flex:1; min-width:0;">
-            <div style="font-size:11px; font-weight:700; color:#d9534f; text-transform:uppercase; letter-spacing:0.05em;">Follow-up fällig</div>
-            <div style="font-size:14px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ followUpSubject }}</div>
+             style="border-left:4px solid var(--color-error);background:var(--color-error-soft);border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+          <i class="ph-fill ph-warning" style="color:var(--color-error);font-size:20px;flex-shrink:0;"></i>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:11px;font-weight:700;color:var(--color-error);text-transform:uppercase;letter-spacing:.05em;">Follow-up fällig</div>
+            <div style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ followUpSubject }}</div>
           </div>
           <button (click)="dismissContactPanel()"
-                  style="background:none; border:none; cursor:pointer; color:var(--text-3); font-size:18px; line-height:1; flex-shrink:0;">
+                  style="background:none;border:none;cursor:pointer;color:var(--text-3);font-size:18px;line-height:1;flex-shrink:0;">
             <i class="ph ph-x"></i>
           </button>
         </div>
 
-        <!-- ══ ZONE 3: Action Strip ═══════════════════════════════ -->
-        <div style="background:var(--surface); border:1.5px solid var(--border); border-radius:14px; padding:18px 20px; margin-bottom:20px;">
+        <!-- ══ TWO-COLUMN BODY ════════════════════════════════════ -->
+        <div style="display:grid; grid-template-columns:minmax(0,3fr) minmax(0,2fr); gap:20px; align-items:start;">
 
-          <!-- Contact buttons -->
-          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
-            <a *ngIf="client.phone" [href]="'tel:' + client.phone"
-               style="display:inline-flex; align-items:center; gap:8px; padding:10px 20px;
-                      background:var(--primary); color:#fff; border-radius:9px;
-                      font-size:14px; font-weight:600; text-decoration:none;">
-              <i class="ph-bold ph-phone" style="font-size:16px;"></i>
-              {{ client.phone }}
-            </a>
-            <a *ngIf="client.email" [href]="'mailto:' + client.email"
-               style="display:inline-flex; align-items:center; gap:8px; padding:10px 20px;
-                      background:transparent; color:var(--primary);
-                      border:1.5px solid var(--primary); border-radius:9px;
-                      font-size:14px; font-weight:600; text-decoration:none;">
-              <i class="ph-bold ph-envelope" style="font-size:16px;"></i>
-              E-Mail
-            </a>
-            <span *ngIf="!client.phone && !client.email"
-                  style="font-size:13px; color:var(--text-3); align-self:center;">
-              Keine Kontaktdaten —
-              <a [routerLink]="['/clients', client.id, 'edit']" style="color:var(--primary);">Jetzt ergänzen</a>
-            </span>
-          </div>
+          <!-- LEFT: Activity stream -->
+          <div style="display:flex;flex-direction:column;gap:16px;">
 
-          <!-- Action buttons -->
-          <div style="display:flex; gap:8px; flex-wrap:wrap; padding-top:12px; border-top:1px solid var(--border);">
-            <button (click)="showQuickNoteForm = !showQuickNoteForm"
-                    [style.background]="showQuickNoteForm ? 'var(--accent-soft)' : 'var(--surface-2)'"
-                    [style.border-color]="showQuickNoteForm ? 'var(--primary)' : 'var(--border)'"
-                    [style.color]="showQuickNoteForm ? 'var(--primary)' : 'var(--text-2)'"
-                    style="display:inline-flex; align-items:center; gap:7px; padding:8px 16px;
-                           border:1.5px solid; border-radius:9px; font-size:13px; font-weight:600; cursor:pointer;">
-              <i class="ph-bold ph-note-pencil" style="font-size:15px;"></i>
-              Notiz hinzufügen
-            </button>
-            <button (click)="showViewingDialog = true"
-                    style="display:inline-flex; align-items:center; gap:7px; padding:8px 16px;
-                           background:var(--surface-2); border:1.5px solid var(--border); border-radius:9px;
-                           font-size:13px; font-weight:600; color:var(--text-2); cursor:pointer;">
-              <i class="ph-bold ph-door-open" style="font-size:15px;"></i>
-              Besichtigung planen
-            </button>
-          </div>
-
-          <!-- ── Inline Notiz-Formular ──────────────────────────── -->
-          <div *ngIf="showQuickNoteForm"
-               style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-              <div>
-                <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">Betreff</label>
-                <input type="text" [(ngModel)]="quickNoteSubject"
-                       placeholder="Worum ging es?"
-                       style="width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);outline:none;box-sizing:border-box;">
+            <!-- Kontakthistorie -->
+            <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                <i class="ph-fill ph-chat-circle-text" style="font-size:17px;color:var(--primary);"></i>
+                <span style="font-size:15px;font-weight:700;color:var(--text);">Kontakthistorie</span>
+                <span *ngIf="callNotesSummary"
+                      style="font-size:12px;font-weight:700;color:var(--primary);background:var(--accent-soft);padding:2px 8px;border-radius:10px;">
+                  {{ callNotesSummary.totalCallNotes }}
+                </span>
               </div>
-              <div>
-                <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">Typ</label>
-                <select [(ngModel)]="quickNoteType"
-                        style="width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
-                  <option value="PHONE_OUTBOUND">📞 Anruf (ausgehend)</option>
-                  <option value="PHONE_INBOUND">📞 Anruf (eingehend)</option>
-                  <option value="EMAIL">✉ E-Mail</option>
-                  <option value="MEETING">🤝 Meeting</option>
-                </select>
-              </div>
-            </div>
-            <textarea [(ngModel)]="quickNoteText"
-                      placeholder="Was wurde besprochen?"
-                      rows="3"
-                      style="width:100%; padding:9px 11px; border:1.5px solid var(--border);
-                             border-radius:8px; font-size:13px; color:var(--text);
-                             background:var(--surface-2); resize:vertical;
-                             font-family:inherit; margin-bottom:10px; box-sizing:border-box; outline:none;">
-            </textarea>
-            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-              <select [(ngModel)]="quickNoteOutcome"
-                      style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px;
-                             font-size:13px; color:var(--text); background:var(--surface-2); cursor:pointer;">
-                <option value="">Ergebnis wählen…</option>
-                <option value="INTERESTED">Interessiert</option>
-                <option value="NOT_INTERESTED">Kein Interesse</option>
-                <option value="SCHEDULED_VIEWING">Besichtigung vereinbart</option>
-                <option value="OFFER_MADE">Angebot gemacht</option>
-                <option value="DEAL_CLOSED">Abschluss</option>
-              </select>
-              <button (click)="saveQuickNote()"
-                      [disabled]="isSavingNote || !quickNoteText.trim()"
-                      style="padding:8px 18px; background:var(--primary); color:#fff;
-                             border:none; border-radius:8px; font-size:13px; font-weight:600;
-                             cursor:pointer; transition:opacity 0.15s;"
-                      [style.opacity]="(isSavingNote || !quickNoteText.trim()) ? '0.5' : '1'">
-                <i class="ph ph-check" style="margin-right:4px;"></i>
-                {{ isSavingNote ? 'Speichern…' : 'Notiz speichern' }}
-              </button>
-              <button (click)="showQuickNoteForm = false"
-                      style="padding:8px 14px; background:none; border:1px solid var(--border); border-radius:8px; font-size:13px; color:var(--text-3); cursor:pointer;">
-                Abbrechen
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- ══ ZONE 4: Kontakthistorie ════════════════════════════ -->
-        <div style="background:var(--surface); border:1.5px solid var(--border); border-radius:14px; padding:18px 20px; margin-bottom:20px;">
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
-            <i class="ph-fill ph-chat-circle-text" style="font-size:17px; color:var(--primary);"></i>
-            <span style="font-size:15px; font-weight:700; color:var(--text);">Kontakthistorie</span>
-            <span *ngIf="callNotesSummary"
-                  style="font-size:12px; font-weight:700; color:var(--primary); background:var(--accent-soft); padding:2px 8px; border-radius:10px;">
-              {{ callNotesSummary.totalCallNotes }}
-            </span>
-          </div>
-
-          <app-loading-spinner *ngIf="isLoadingCallNotes && !callNotesSummary" size="sm"></app-loading-spinner>
-
-          <!-- Notes timeline -->
-          <div *ngIf="recentCallNotes.length > 0" style="display:flex; flex-direction:column; gap:2px;">
-            <div *ngFor="let note of recentCallNotes"
-                 style="display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid var(--border);">
-              <div style="width:30px; height:30px; border-radius:8px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px;">
-                <i [class]="getCallTypeIcon(note.callType)" style="font-size:14px; color:var(--text-3);"></i>
-              </div>
-              <div style="flex:1; min-width:0;">
-                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                  <span style="font-size:13px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ note.subject }}</span>
-                  <span *ngIf="note.outcome"
-                        [ngClass]="getOutcomeClass(note.outcome)"
-                        style="font-size:11px; font-weight:600; padding:1px 7px; border-radius:8px; white-space:nowrap; flex-shrink:0;">
-                    {{ note.outcome | translateEnum:'callOutcome' }}
-                  </span>
-                  <span *ngIf="note.followUpRequired"
-                        style="font-size:11px; font-weight:600; padding:1px 7px; border-radius:8px; background:#fffbeb; color:#d97706; white-space:nowrap; flex-shrink:0;">
-                    Follow-up
-                  </span>
-                </div>
-                <div style="font-size:11px; color:var(--text-3); margin-top:2px;">
-                  {{ note.callDate | date:'dd.MM.yy · HH:mm' }}
-                  <span *ngIf="note.followUpDate"> · Follow-up: {{ note.followUpDate | date:'dd.MM.yy' }}</span>
+              <app-loading-spinner *ngIf="isLoadingCallNotes && !callNotesSummary" size="sm"></app-loading-spinner>
+              <div *ngIf="recentCallNotes.length > 0">
+                <div *ngFor="let note of recentCallNotes" class="tl-row">
+                  <div style="width:32px;height:32px;border-radius:9px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">
+                    <i [class]="getCallTypeIcon(note.callType)" style="font-size:14px;color:var(--text-3);"></i>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                      <span style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ note.subject }}</span>
+                      <span *ngIf="note.outcome" [ngClass]="getOutcomeClass(note.outcome)"
+                            style="font-size:11px;font-weight:600;padding:1px 7px;border-radius:8px;white-space:nowrap;flex-shrink:0;">
+                        {{ note.outcome | translateEnum:'callOutcome' }}
+                      </span>
+                      <span *ngIf="note.followUpRequired"
+                            style="font-size:11px;font-weight:600;padding:1px 7px;border-radius:8px;background:var(--color-amber-soft);color:var(--color-amber);white-space:nowrap;flex-shrink:0;">
+                        Follow-up
+                      </span>
+                    </div>
+                    <div style="font-size:11px;color:var(--text-3);margin-top:2px;">
+                      {{ note.callDate | date:'dd.MM.yy · HH:mm' }}
+                      <span *ngIf="note.followUpDate"> · Follow-up: {{ note.followUpDate | date:'dd.MM.yy' }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div *ngIf="!isLoadingCallNotes && recentCallNotes.length === 0"
-               style="text-align:center; padding:24px 0; color:var(--text-3);">
-            <i class="ph ph-chats-circle" style="font-size:28px; display:block; margin-bottom:8px;"></i>
-            <div style="font-size:13px;">Noch keine Notizen vorhanden</div>
-          </div>
-        </div>
-
-        <!-- ══ ZONE 5: Besichtigungen ═════════════════════════════ -->
-        <div style="background:var(--surface); border:1.5px solid var(--border); border-radius:14px; padding:18px 20px; margin-bottom:20px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <i class="ph-fill ph-door-open" style="font-size:17px; color:#7c3aed;"></i>
-              <span style="font-size:15px; font-weight:700; color:var(--text);">Besichtigungen</span>
-              <span *ngIf="viewings.length > 0"
-                    style="font-size:12px;font-weight:700;color:#7c3aed;background:color-mix(in srgb,#7c3aed 12%,var(--surface));padding:2px 8px;border-radius:10px;">
-                {{ viewings.length }}
-              </span>
-            </div>
-          </div>
-
-          <app-loading-spinner *ngIf="isLoadingViewings" size="sm"></app-loading-spinner>
-
-          <div *ngIf="!isLoadingViewings && viewings.length > 0" style="display:flex;flex-direction:column;gap:8px;">
-            <div *ngFor="let v of viewings"
-                 style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);">
-              <div style="min-width:44px;text-align:center;background:var(--surface);border-radius:8px;padding:5px 4px;border:1px solid var(--border);">
-                <div style="font-size:16px;font-weight:700;color:var(--text);line-height:1;">{{ v.viewingDate | date:'dd' }}</div>
-                <div style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;">{{ v.viewingDate | date:'MMM' }}</div>
+              <div *ngIf="!isLoadingCallNotes && recentCallNotes.length === 0"
+                   style="text-align:center;padding:20px 0;color:var(--text-3);">
+                <i class="ph ph-chats-circle" style="font-size:28px;display:block;margin-bottom:6px;"></i>
+                <div style="font-size:13px;">Noch keine Notizen</div>
               </div>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ v.propertyTitle }}</div>
-                <div style="font-size:11px;color:var(--text-3);">{{ v.viewingDate | date:'HH:mm' }} Uhr · {{ v.propertyAddress }}</div>
+            </div>
+
+            <!-- Besichtigungen -->
+            <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                <i class="ph-fill ph-door-open" style="font-size:17px;color:var(--color-purple);"></i>
+                <span style="font-size:15px;font-weight:700;color:var(--text);">Besichtigungen</span>
+                <span *ngIf="viewings.length > 0"
+                      style="font-size:12px;font-weight:700;color:var(--color-purple);background:var(--color-purple-soft);padding:2px 8px;border-radius:10px;">
+                  {{ viewings.length }}
+                </span>
               </div>
-              <div *ngIf="v.feedback" style="font-size:16px;" [title]="v.feedback">
-                {{ v.feedback === 'LIKED' ? '👍' : v.feedback === 'DISLIKED' ? '👎' : '🤷' }}
+              <app-loading-spinner *ngIf="isLoadingViewings" size="sm"></app-loading-spinner>
+              <div *ngIf="!isLoadingViewings && viewings.length > 0" style="display:flex;flex-direction:column;gap:8px;">
+                <div *ngFor="let v of viewings"
+                     style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);">
+                  <div style="min-width:44px;text-align:center;background:var(--surface);border-radius:8px;padding:5px 4px;border:1px solid var(--border);">
+                    <div style="font-size:16px;font-weight:700;color:var(--text);line-height:1;">{{ v.viewingDate | date:'dd' }}</div>
+                    <div style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;">{{ v.viewingDate | date:'MMM' }}</div>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ v.propertyTitle }}</div>
+                    <div style="font-size:11px;color:var(--text-3);">{{ v.viewingDate | date:'HH:mm' }} Uhr · {{ v.propertyAddress }}</div>
+                  </div>
+                  <div *ngIf="v.feedback" style="font-size:16px;" [title]="v.feedback">
+                    {{ v.feedback === 'LIKED' ? '👍' : v.feedback === 'DISLIKED' ? '👎' : '🤷' }}
+                  </div>
+                  <span [style.background]="getViewingStatusBg(v.status)"
+                        [style.color]="getViewingStatusColor(v.status)"
+                        style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:8px;white-space:nowrap;flex-shrink:0;">
+                    {{ v.status === 'SCHEDULED' ? 'Geplant' : v.status === 'COMPLETED' ? 'Erledigt' : 'Abgesagt' }}
+                  </span>
+                </div>
               </div>
-              <span [style.background]="getViewingStatusBg(v.status)"
-                    [style.color]="getViewingStatusColor(v.status)"
-                    style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:8px;white-space:nowrap;flex-shrink:0;">
-                {{ v.status === 'SCHEDULED' ? 'Geplant' : v.status === 'COMPLETED' ? 'Erledigt' : 'Abgesagt' }}
-              </span>
+              <div *ngIf="!isLoadingViewings && viewings.length === 0"
+                   style="text-align:center;padding:20px 0;color:var(--text-3);">
+                <i class="ph ph-door-open" style="font-size:28px;display:block;margin-bottom:6px;"></i>
+                <div style="font-size:13px;">Noch keine Besichtigungen geplant</div>
+              </div>
             </div>
           </div>
 
-          <div *ngIf="!isLoadingViewings && viewings.length === 0"
-               style="text-align:center;padding:20px 0;color:var(--text-3);">
-            <i class="ph ph-door-open" style="font-size:28px;display:block;margin-bottom:8px;"></i>
-            <div style="font-size:13px;">Noch keine Besichtigungen geplant</div>
-          </div>
-        </div>
+          <!-- RIGHT: Info sidebar -->
+          <div style="display:flex;flex-direction:column;gap:16px;">
 
-        <!-- ══ ZONE 6: Sekundäre Infos (weiter unten) ════════════ -->
-        <div style="margin-top:8px; margin-bottom:6px; display:flex; align-items:center; gap:8px;">
-          <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-3);">Weitere Infos</span>
-          <div style="flex:1; height:1px; background:var(--border);"></div>
-        </div>
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
-          <!-- Personal Information -->
-          <div class="card">
-            <div class="card-header" style="display:flex;align-items:center;gap:8px;">
-              <i class="ph ph-user-circle" style="font-size:15px;color:var(--text-3);"></i>
-              <h3 class="text-base font-medium text-gray-900 dark:text-gray-100">{{ 'clients.personalInformation' | translate }}</h3>
-            </div>
-            <div class="card-body">
-              <dl class="space-y-3">
-                <div *ngIf="client.email" style="display:flex;align-items:center;gap:8px;">
+            <!-- Persönliche Daten -->
+            <div class="card">
+              <div class="card-header" style="display:flex;align-items:center;gap:8px;">
+                <i class="ph ph-user-circle" style="font-size:15px;color:var(--text-3);"></i>
+                <h3 class="text-base font-medium text-gray-900 dark:text-gray-100">{{ 'clients.personalInformation' | translate }}</h3>
+              </div>
+              <div class="card-body" style="padding-top:4px;">
+                <div class="info-row" *ngIf="client.email">
                   <i class="ph ph-envelope" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
-                  <span style="font-size:13px;color:var(--text-2);">{{ client.email }}</span>
+                  <span style="font-size:13px;color:var(--text-2);word-break:break-all;">{{ client.email }}</span>
                 </div>
-                <div *ngIf="client.phone" style="display:flex;align-items:center;gap:8px;">
+                <div class="info-row" *ngIf="client.phone">
                   <i class="ph ph-phone" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
                   <span style="font-size:13px;color:var(--text-2);">{{ client.phone }}</span>
                 </div>
-                <div *ngIf="hasAddress()" style="display:flex;align-items:center;gap:8px;">
+                <div class="info-row" *ngIf="hasAddress()">
                   <i class="ph ph-map-pin" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
                   <span style="font-size:13px;color:var(--text-2);">{{ getAddressSummary() }}</span>
                 </div>
-              </dl>
-              <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:flex;align-items:center;gap:6px;">
-                <i [class]="client.gdprConsentGiven ? 'ph ph-shield-check' : 'ph ph-shield-warning'"
-                   [style.color]="client.gdprConsentGiven ? 'var(--color-success)' : 'var(--color-error)'"
-                   style="font-size:13px;"></i>
-                <span style="font-size:11px;color:var(--text-3);">
-                  DSGVO {{ client.gdprConsentGiven ? 'Einwilligung erteilt' : 'ausstehend' }}
-                  <ng-container *ngIf="client.gdprConsentGiven && client.gdprConsentDate">
-                    · {{ client.gdprConsentDate | date:'dd.MM.yy' }}
-                  </ng-container>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Kunden-Profil -->
-          <div class="card">
-            <div class="card-header" style="display:flex;align-items:center;gap:8px;">
-              <i class="ph-fill ph-user-gear" style="font-size:15px;color:var(--primary);"></i>
-              <h3 class="text-base font-medium text-gray-900 dark:text-gray-100">Kunden-Profil</h3>
-            </div>
-            <div class="card-body">
-              <dl class="space-y-3">
-                <div>
-                  <dt class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Kundentyp</dt>
-                  <select [(ngModel)]="client.clientType" (change)="onClientProfileChange()"
-                          style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
-                    <option value="BUYER">Käufer</option>
-                    <option value="RENTER">Mieter</option>
-                    <option value="SELLER">Verkäufer</option>
-                  </select>
+                <div style="display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);">
+                  <i [class]="client.gdprConsentGiven ? 'ph ph-shield-check' : 'ph ph-shield-warning'"
+                     [style.color]="client.gdprConsentGiven ? 'var(--color-success)' : 'var(--color-error)'"
+                     style="font-size:13px;"></i>
+                  <span style="font-size:11px;color:var(--text-3);">
+                    DSGVO {{ client.gdprConsentGiven ? 'Einwilligung erteilt' : 'ausstehend' }}
+                    <ng-container *ngIf="client.gdprConsentGiven && client.gdprConsentDate">
+                      · {{ client.gdprConsentDate | date:'dd.MM.yy' }}
+                    </ng-container>
+                  </span>
                 </div>
-                <div *ngIf="client.clientType !== 'SELLER'">
-                  <dt class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Finanzierung</dt>
-                  <select [(ngModel)]="client.financingStatus" (change)="onClientProfileChange()"
-                          style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
-                    <option value="UNKNOWN">Unbekannt</option>
-                    <option value="SELF_FINANCED">Eigenfinanzierung</option>
-                    <option value="BANK_PRE_APPROVED">Bank-Vorabzusage</option>
-                    <option value="NEEDS_FINANCING">Finanzierung nötig</option>
-                  </select>
+              </div>
+            </div>
+
+            <!-- Kunden-Profil -->
+            <div class="card">
+              <div class="card-header" style="display:flex;align-items:center;gap:8px;">
+                <i class="ph-fill ph-user-gear" style="font-size:15px;color:var(--primary);"></i>
+                <h3 class="text-base font-medium text-gray-900 dark:text-gray-100">Kunden-Profil</h3>
+              </div>
+              <div class="card-body">
+                <dl class="space-y-3">
+                  <div>
+                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Kundentyp</dt>
+                    <select [(ngModel)]="client.clientType" (change)="onClientProfileChange()"
+                            style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
+                      <option value="BUYER">Käufer</option>
+                      <option value="RENTER">Mieter</option>
+                      <option value="SELLER">Verkäufer</option>
+                    </select>
+                  </div>
+                  <div *ngIf="client.clientType !== 'SELLER'">
+                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Finanzierung</dt>
+                    <select [(ngModel)]="client.financingStatus" (change)="onClientProfileChange()"
+                            style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
+                      <option value="UNKNOWN">Unbekannt</option>
+                      <option value="SELF_FINANCED">Eigenfinanzierung</option>
+                      <option value="BANK_PRE_APPROVED">Bank-Vorabzusage</option>
+                      <option value="NEEDS_FINANCING">Finanzierung nötig</option>
+                    </select>
+                  </div>
+                  <div *ngIf="client.clientType !== 'SELLER'">
+                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Einzugs-Zeitraum</dt>
+                    <select [(ngModel)]="client.moveInTimeline" (change)="onClientProfileChange()"
+                            style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
+                      <option value="IMMEDIATE">Sofort</option>
+                      <option value="THREE_MONTHS">In 3 Monaten</option>
+                      <option value="SIX_MONTHS">In 6 Monaten</option>
+                      <option value="ONE_YEAR">In 1 Jahr</option>
+                      <option value="FLEXIBLE">Flexibel</option>
+                    </select>
+                  </div>
+                </dl>
+              </div>
+            </div>
+
+            <!-- Suchkriterien -->
+            <div class="card" *ngIf="client.searchCriteria">
+              <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <i class="ph ph-magnifying-glass" style="font-size:15px;color:var(--text-3);"></i>
+                  <h3 class="text-base font-medium text-gray-900 dark:text-gray-100">{{ 'clients.propertySearchCriteria' | translate }}</h3>
                 </div>
-                <div *ngIf="client.clientType !== 'SELLER'">
-                  <dt class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Einzugs-Zeitraum</dt>
-                  <select [(ngModel)]="client.moveInTimeline" (change)="onClientProfileChange()"
-                          style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
-                    <option value="IMMEDIATE">Sofort</option>
-                    <option value="THREE_MONTHS">In 3 Monaten</option>
-                    <option value="SIX_MONTHS">In 6 Monaten</option>
-                    <option value="ONE_YEAR">In 1 Jahr</option>
-                    <option value="FLEXIBLE">Flexibel</option>
-                  </select>
-                </div>
-              </dl>
+                <a [routerLink]="['/clients', client.id, 'edit']" class="btn btn-outline btn-sm">Bearbeiten</a>
+              </div>
+              <div class="card-body">
+                <dl class="space-y-3">
+                  <div *ngIf="client.searchCriteria.minSquareMeters || client.searchCriteria.maxSquareMeters">
+                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.sizeSqm' | translate }}</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.searchCriteria.minSquareMeters || '—' }} – {{ client.searchCriteria.maxSquareMeters || '—' }} m²</dd>
+                  </div>
+                  <div *ngIf="client.searchCriteria.minRooms || client.searchCriteria.maxRooms">
+                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.rooms' | translate }}</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.searchCriteria.minRooms || '—' }} – {{ client.searchCriteria.maxRooms || '—' }} Zi.</dd>
+                  </div>
+                  <div *ngIf="client.searchCriteria.minBudget || client.searchCriteria.maxBudget">
+                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.budgetEur' | translate }}</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.searchCriteria.minBudget || '—' }} – {{ client.searchCriteria.maxBudget || '—' }} €</dd>
+                  </div>
+                  <div *ngIf="client.searchCriteria.preferredLocations?.length">
+                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.preferredLocations' | translate }}</dt>
+                    <dd class="mt-1 flex flex-wrap gap-1">
+                      <span *ngFor="let location of client.searchCriteria.preferredLocations" class="badge badge-primary">{{ location }}</span>
+                    </dd>
+                  </div>
+                  <div *ngIf="client.searchCriteria.additionalRequirements">
+                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.additionalRequirements' | translate }}</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.searchCriteria.additionalRequirements }}</dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+
+            <!-- Anhänge -->
+            <div class="card">
+              <div class="card-header" style="display:flex;align-items:center;gap:8px;">
+                <i class="ph ph-paperclip" style="font-size:15px;color:var(--text-3);"></i>
+                <h3 class="text-base font-medium text-gray-900 dark:text-white">{{ 'attachments.sectionTitle' | translate }}</h3>
+              </div>
+              <div class="card-body">
+                <app-file-attachment-manager entityType="client" [entityId]="client.id!"></app-file-attachment-manager>
+              </div>
+            </div>
+
+            <!-- Delete -->
+            <div style="display:flex;justify-content:flex-end;">
+              <button (click)="deleteClient()" class="btn btn-danger" [disabled]="isDeleting">
+                {{ isDeleting ? ('clients.deleting' | translate) : ('clients.delete' | translate) }}
+              </button>
             </div>
           </div>
-        </div>
 
-        <!-- Search Criteria -->
-        <div class="card" *ngIf="client.searchCriteria" style="margin-bottom:16px;">
-          <div class="card-header flex items-center justify-between">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <i class="ph ph-magnifying-glass" style="font-size:15px;color:var(--text-3);"></i>
-              <h3 class="text-base font-medium text-gray-900 dark:text-gray-100">{{ 'clients.propertySearchCriteria' | translate }}</h3>
-            </div>
-            <a [routerLink]="['/clients', client.id, 'edit']" class="btn btn-outline btn-sm">
-              {{ 'clients.editSearchCriteria' | translate }}
-            </a>
-          </div>
-          <div class="card-body">
-            <dl class="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div *ngIf="client.searchCriteria.minSquareMeters || client.searchCriteria.maxSquareMeters">
-                <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.sizeSqm' | translate }}</dt>
-                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                  {{ client.searchCriteria.minSquareMeters || '—' }} – {{ client.searchCriteria.maxSquareMeters || '—' }} m²
-                </dd>
-              </div>
-              <div *ngIf="client.searchCriteria.minRooms || client.searchCriteria.maxRooms">
-                <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.rooms' | translate }}</dt>
-                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                  {{ client.searchCriteria.minRooms || '—' }} – {{ client.searchCriteria.maxRooms || '—' }} Zi.
-                </dd>
-              </div>
-              <div *ngIf="client.searchCriteria.minBudget || client.searchCriteria.maxBudget">
-                <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.budgetEur' | translate }}</dt>
-                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                  {{ client.searchCriteria.minBudget || '—' }} – {{ client.searchCriteria.maxBudget || '—' }} €
-                </dd>
-              </div>
-              <div *ngIf="client.searchCriteria.preferredLocations?.length" class="col-span-2">
-                <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.preferredLocations' | translate }}</dt>
-                <dd class="mt-1 flex flex-wrap gap-1">
-                  <span *ngFor="let location of client.searchCriteria.preferredLocations" class="badge badge-primary">{{ location }}</span>
-                </dd>
-              </div>
-              <div *ngIf="client.searchCriteria.propertyTypes?.length">
-                <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.propertyTypes' | translate }}</dt>
-                <dd class="mt-1 flex flex-wrap gap-1">
-                  <span *ngFor="let type of client.searchCriteria.propertyTypes" class="badge badge-primary">{{ type }}</span>
-                </dd>
-              </div>
-              <div *ngIf="client.searchCriteria.additionalRequirements" class="col-span-3">
-                <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.additionalRequirements' | translate }}</dt>
-                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.searchCriteria.additionalRequirements }}</dd>
-              </div>
-            </dl>
-          </div>
-        </div>
-
-        <!-- File Attachments -->
-        <div class="card" style="margin-bottom:24px;">
-          <div class="card-header" style="display:flex;align-items:center;gap:8px;">
-            <i class="ph ph-paperclip" style="font-size:15px;color:var(--text-3);"></i>
-            <h3 class="text-base font-medium text-gray-900 dark:text-white">{{ 'attachments.sectionTitle' | translate }}</h3>
-          </div>
-          <div class="card-body">
-            <app-file-attachment-manager entityType="client" [entityId]="client.id!"></app-file-attachment-manager>
-          </div>
-        </div>
-
-        <!-- Footer actions -->
-        <div style="display:flex; justify-content:flex-end;">
-          <button (click)="deleteClient()" class="btn btn-danger" [disabled]="isDeleting">
-            {{ isDeleting ? ('clients.deleting' | translate) : ('clients.delete' | translate) }}
-          </button>
-        </div>
+        </div><!-- end two-col -->
       </div>
 
       <div *ngIf="!isLoading && !client" class="text-center py-8">
@@ -694,6 +705,12 @@ export class ClientDetailComponent implements OnInit {
       case ViewingStatus.CANCELLED: return 'var(--color-error)';
       default: return 'var(--stage-viewing)';
     }
+  }
+
+  getInitials(): string {
+    const f = this.client?.firstName?.charAt(0)?.toUpperCase() ?? '';
+    const l = this.client?.lastName?.charAt(0)?.toUpperCase() ?? '';
+    return f + l;
   }
 
   hasAddress(): boolean {
