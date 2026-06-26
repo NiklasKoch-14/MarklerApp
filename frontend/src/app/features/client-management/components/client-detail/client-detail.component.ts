@@ -429,16 +429,20 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
               </div>
             </div>
 
-            <!-- Anhänge -->
-            <div class="card">
-              <div class="card-header" style="display:flex;align-items:center;gap:8px;">
-                <i class="ph ph-paperclip" style="font-size:15px;color:var(--text-3);"></i>
-                <h3 class="text-base font-medium text-gray-900 dark:text-white">{{ 'attachments.sectionTitle' | translate }}</h3>
+            <!-- Anhänge Mini-Button -->
+            <button (click)="showAttachmentsDialog = true"
+                    style="display:flex;align-items:center;gap:10px;width:100%;padding:12px 16px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;cursor:pointer;text-align:left;transition:border-color 0.15s,box-shadow 0.15s;"
+                    onmouseenter="this.style.borderColor='var(--primary)';this.style.boxShadow='0 2px 10px rgba(47,107,122,.12)'"
+                    onmouseleave="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
+              <div style="width:34px;height:34px;border-radius:9px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="ph ph-paperclip" style="font-size:16px;color:var(--text-3);"></i>
               </div>
-              <div class="card-body">
-                <app-file-attachment-manager entityType="client" [entityId]="client.id!"></app-file-attachment-manager>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:13px;font-weight:600;color:var(--text);">{{ 'attachments.sectionTitle' | translate }}</div>
+                <div style="font-size:11px;color:var(--text-3);margin-top:1px;">Dokumente hochladen &amp; verwalten</div>
               </div>
-            </div>
+              <i class="ph ph-arrow-right" style="font-size:15px;color:var(--text-3);flex-shrink:0;"></i>
+            </button>
 
             <!-- Delete -->
             <div style="display:flex;justify-content:flex-end;">
@@ -454,6 +458,39 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
       <div *ngIf="!isLoading && !client" class="text-center py-8">
         <p class="text-sm text-gray-500 dark:text-gray-400">{{ 'clients.notFound' | translate }}</p>
         <a routerLink="/clients" class="text-primary-600 hover:text-primary-900 text-sm font-medium">{{ 'clients.backToClients' | translate }}</a>
+      </div>
+    </div>
+
+    <!-- Attachments Dialog -->
+    <div *ngIf="showAttachmentsDialog && client"
+         style="position:fixed;inset:0;z-index:600;display:flex;align-items:flex-start;justify-content:center;padding:48px 20px 20px;"
+         (click)="showAttachmentsDialog = false">
+      <!-- Backdrop -->
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);"></div>
+      <!-- Dialog panel -->
+      <div style="position:relative;width:100%;max-width:680px;background:var(--surface);border-radius:18px;box-shadow:0 24px 64px rgba(0,0,0,.22);overflow:hidden;max-height:calc(100vh - 80px);display:flex;flex-direction:column;"
+           (click)="$event.stopPropagation()">
+        <!-- Header -->
+        <div style="display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid var(--border);flex-shrink:0;">
+          <div style="width:34px;height:34px;border-radius:9px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;">
+            <i class="ph ph-paperclip" style="font-size:16px;color:var(--text-3);"></i>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:16px;font-weight:700;color:var(--text);">{{ 'attachments.sectionTitle' | translate }}</div>
+            <div style="font-size:12px;color:var(--text-3);">{{ client.firstName }} {{ client.lastName }}</div>
+          </div>
+          <button (click)="showAttachmentsDialog = false"
+                  style="width:32px;height:32px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-3);font-size:16px;">
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+        <!-- Content: full manager -->
+        <div style="overflow-y:auto;flex:1;padding:20px 22px;">
+          <app-file-attachment-manager
+            entityType="client"
+            [entityId]="client.id!">
+          </app-file-attachment-manager>
+        </div>
       </div>
     </div>
 
@@ -518,6 +555,9 @@ export class ClientDetailComponent implements OnInit {
   viewings: ViewingSummary[] = [];
   isLoadingViewings = false;
   showViewingDialog = false;
+
+  // Attachments dialog
+  showAttachmentsDialog = false;
 
   // Pipeline Stage
   stageDropdownOpen = false;
