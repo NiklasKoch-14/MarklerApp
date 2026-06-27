@@ -46,11 +46,6 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
               <i class="ph ph-arrow-left" style="font-size:16px;"></i>
             </a>
 
-            <!-- Avatar -->
-            <div style="width:52px;height:52px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <span style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.5px;">{{ getInitials() }}</span>
-            </div>
-
             <!-- Name + contact + stage -->
             <div style="flex:1;min-width:0;">
               <h1 style="font-size:22px;font-weight:800;color:var(--text);margin:0 0 8px;line-height:1.2;">
@@ -773,11 +768,6 @@ export class ClientDetailComponent implements OnInit {
     this.clientService.updatePipelineStage(this.client.id, stage).subscribe({
       next: (updated) => { this.client = updated; }
     });
-  }
-
-  getInitials(): string {
-    if (!this.client) return '';
-    return ((this.client.firstName?.charAt(0) ?? '') + (this.client.lastName?.charAt(0) ?? '')).toUpperCase();
   }
 
   getStageLabel(stage?: PipelineStage): string {
