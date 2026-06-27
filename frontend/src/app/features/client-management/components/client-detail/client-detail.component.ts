@@ -5,37 +5,28 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { ClientService, Client, PipelineStage, ClientType, FinancingStatus, MoveInTimeline } from '../../services/client.service';
 import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse, CallNoteCreateRequest, CallType, CallOutcome } from '../../../call-notes/services/call-notes.service';
-import { ViewingService, ViewingSummary, ViewingFeedback, ViewingStatus } from '../../../viewing-management/services/viewing.service';
+import { ViewingService, ViewingSummary, ViewingStatus } from '../../../viewing-management/services/viewing.service';
 import { ViewingAddDialogComponent } from '../../../viewing-management/components/viewing-add-dialog/viewing-add-dialog.component';
-import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 import { FileAttachmentManagerComponent } from '../../../../shared/components/file-attachment-manager/file-attachment-manager.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { PropertyMatchingService } from '../../../property-management/services/property-matching.service';
+import { PropertyMatchResult } from '../../../property-management/models/property-match.model';
 
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, TranslateEnumPipe, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent],
   styles: [`
     .stage-option:hover { background:var(--surface-2) !important; }
     .qm-item { display:flex; align-items:center; gap:10px; width:100%; padding:10px 14px; border:none; background:none; cursor:pointer; font-size:13px; font-weight:500; color:var(--text); text-align:left; font-family:inherit; transition:background 0.1s; }
     .qm-item:hover { background:var(--surface-2); }
     .qm-item.danger { color:var(--color-error); }
     .qm-item.danger:hover { background:var(--color-error-soft); }
-    .hdr-icon { width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; text-decoration:none; font-family:inherit; cursor:pointer; transition:all 0.15s; border:none; flex-shrink:0; position:relative; }
-    .hdr-icon[data-tooltip]::after { content:attr(data-tooltip); position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--text); color:var(--surface); padding:4px 9px; border-radius:6px; font-size:11px; font-weight:500; white-space:nowrap; pointer-events:none; z-index:200; opacity:0; transition:opacity .15s; }
-    .hdr-icon[data-tooltip]:hover::after { opacity:1; }
-    .hdr-icon-call { background:var(--accent-soft); color:var(--primary); }
-    .hdr-icon-call:hover { background:var(--primary); color:#fff; }
-    .hdr-icon-email { background:var(--color-blue-soft); color:var(--color-blue); }
-    .hdr-icon-email:hover { background:var(--color-blue); color:#fff; }
-    .hdr-icon-bell { background:var(--color-amber-soft); color:var(--color-amber); }
-    .hdr-icon-bell:hover { background:var(--color-amber); color:#fff; }
     .note-form-enter { animation:slideDown .18s ease; }
     @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
-    .info-row { display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid var(--border); }
-    .info-row:last-child { border-bottom:none; }
-    .tl-row { display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+    .tl-row { display:flex; align-items:flex-start; gap:12px; padding:14px 0; border-bottom:1px solid var(--border); }
     .tl-row:last-child { border-bottom:none; }
+    .match-link:hover { background:var(--surface) !important; }
   `],
   template: `
     <div style="padding:28px 36px;">
@@ -46,34 +37,50 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
       <div *ngIf="!isLoading && client">
 
         <!-- ══ HERO CARD ══════════════════════════════════════════ -->
-        <div style="background:var(--surface); border:1.5px solid var(--border); border-radius:18px; padding:24px 28px; margin-bottom:16px;">
+        <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:24px 28px;margin-bottom:16px;">
+          <div style="display:flex;align-items:flex-start;gap:16px;">
 
-          <!-- Identity row -->
-          <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+            <!-- Back arrow -->
             <a routerLink="/clients"
-               style="width:34px;height:34px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-3);text-decoration:none;flex-shrink:0;">
+               style="width:34px;height:34px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-3);text-decoration:none;flex-shrink:0;margin-top:8px;">
               <i class="ph ph-arrow-left" style="font-size:16px;"></i>
             </a>
 
-            <!-- Name + Stage + chips -->
+            <!-- Avatar -->
+            <div style="width:52px;height:52px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <span style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.5px;">{{ getInitials() }}</span>
+            </div>
+
+            <!-- Name + contact + stage -->
             <div style="flex:1;min-width:0;">
-              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                <h1 style="font-size:22px;font-weight:800;color:var(--text);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                  {{ client.firstName }} {{ client.lastName }}
-                </h1>
-                <!-- Quick-contact icons -->
-                <a *ngIf="client.phone" [href]="'tel:' + client.phone" class="hdr-icon hdr-icon-call" [attr.data-tooltip]="client.phone">
-                  <i class="ph-bold ph-phone" style="font-size:16px;"></i>
+              <h1 style="font-size:22px;font-weight:800;color:var(--text);margin:0 0 8px;line-height:1.2;">
+                {{ client.firstName }} {{ client.lastName }}
+              </h1>
+              <!-- Inline contact row -->
+              <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+                <a *ngIf="client.phone" [href]="'tel:' + client.phone"
+                   style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text-2);text-decoration:none;">
+                  <i class="ph ph-phone" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
+                  {{ client.phone }}
                 </a>
-                <a *ngIf="client.email" [href]="'mailto:' + client.email" class="hdr-icon hdr-icon-email" [attr.data-tooltip]="client.email">
-                  <i class="ph-bold ph-envelope" style="font-size:16px;"></i>
+                <a *ngIf="client.email" [href]="'mailto:' + client.email"
+                   style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text-2);text-decoration:none;">
+                  <i class="ph ph-envelope" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
+                  {{ client.email }}
                 </a>
-                <!-- Stage dropdown -->
-                <div style="position:relative;" *ngIf="client.id">
+                <span *ngIf="client.addressCity"
+                      style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text-2);">
+                  <i class="ph ph-map-pin" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
+                  <span>{{ client.addressStreet ? client.addressStreet + ', ' : '' }}{{ client.addressCity }}</span>
+                </span>
+              </div>
+              <!-- Stage + last contact -->
+              <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;">
+                <div *ngIf="client.id" style="position:relative;">
                   <button (click)="stageDropdownOpen = !stageDropdownOpen"
                           [style.background]="getStageBg(client.pipelineStage)"
                           [style.color]="getStageColor(client.pipelineStage)"
-                          style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:600;">
+                          style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;">
                     {{ getStageLabel(client.pipelineStage) }}
                     <i class="ph ph-caret-down" style="font-size:11px;"></i>
                   </button>
@@ -89,9 +96,6 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
                     </button>
                   </div>
                 </div>
-              </div>
-              <!-- Context chips -->
-              <div style="display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap;">
                 <span *ngIf="callNotesSummary?.lastCallDate"
                       style="font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:4px;">
                   <i class="ph ph-clock" style="font-size:12px;"></i>
@@ -102,39 +106,40 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
               </div>
             </div>
 
-            <!-- Header right: Edit + Bell + Quick-Menu -->
+            <!-- Right: action buttons -->
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+              <!-- Follow-up button (only if pending) -->
+              <button *ngIf="(callNotesSummary?.pendingFollowUps || 0) > 0"
+                      (click)="showFollowUpPanel = !showFollowUpPanel; showQuickNoteForm = false"
+                      style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--color-amber);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;position:relative;">
+                <i class="ph-bold ph-bell-ringing" style="font-size:14px;"></i>
+                Follow-up
+                <span style="background:rgba(0,0,0,.2);border-radius:8px;font-size:11px;padding:1px 6px;line-height:1.4;">{{ callNotesSummary!.pendingFollowUps }}</span>
+              </button>
+
+              <!-- Neue Notiz -->
+              <button (click)="showQuickNoteForm = !showQuickNoteForm; showFollowUpPanel = false"
+                      style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">
+                <i class="ph-bold ph-note-pencil" style="font-size:14px;"></i>
+                + Neue Notiz
+              </button>
+
+              <!-- Bearbeiten -->
               <a [routerLink]="['/clients', client.id, 'edit']"
-                 style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;">
+                 style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;">
                 <i class="ph ph-pencil-simple" style="font-size:14px;"></i>
                 Bearbeiten
               </a>
 
-              <!-- Follow-up / Notiz icon button -->
-              <button class="hdr-icon hdr-icon-bell"
-                      (click)="toggleFollowUp()"
-                      [attr.data-tooltip]="(callNotesSummary?.pendingFollowUps || 0) > 0
-                        ? callNotesSummary!.pendingFollowUps + ' Follow-up' + (callNotesSummary!.pendingFollowUps > 1 ? 's' : '') + ' offen'
-                        : 'Gesprächsnotiz'">
-                <i [class]="(callNotesSummary?.pendingFollowUps || 0) > 0 ? 'ph-bold ph-bell-ringing' : 'ph-bold ph-bell'"
-                   style="font-size:16px;"></i>
-                <span *ngIf="(callNotesSummary?.pendingFollowUps || 0) > 0"
-                      style="position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;background:var(--color-amber);color:#fff;border-radius:8px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px;line-height:1;">
-                  {{ callNotesSummary!.pendingFollowUps }}
-                </span>
-              </button>
-
               <!-- ⋯ Quick-action menu -->
               <div style="position:relative;">
                 <button (click)="showQuickMenu = !showQuickMenu"
-                        style="width:36px;height:36px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);transition:border-color 0.15s;"
+                        style="width:38px;height:38px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);"
                         title="Weitere Aktionen">
                   <i class="ph ph-dots-three" style="font-size:20px;"></i>
                 </button>
-                <!-- Backdrop -->
                 <div *ngIf="showQuickMenu" (click)="showQuickMenu = false"
                      style="position:fixed;inset:0;z-index:199;"></div>
-                <!-- Dropdown -->
                 <div *ngIf="showQuickMenu"
                      style="position:absolute;top:calc(100% + 6px);right:0;min-width:210px;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.14);z-index:200;overflow:hidden;">
                   <button class="qm-item" (click)="showAttachmentsDialog = true; showQuickMenu = false">
@@ -149,32 +154,15 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- ── Action Bar (kompakt) ────────────────────────── -->
-          <div style="border-top:1px solid var(--border); margin-top:16px; padding-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
-            <button (click)="showQuickNoteForm = !showQuickNoteForm; showFollowUpPanel = false"
-                    [style.background]="showQuickNoteForm ? 'color-mix(in srgb,var(--color-amber) 14%,var(--surface))' : 'var(--color-amber-soft)'"
-                    [style.border-color]="showQuickNoteForm ? 'var(--color-amber)' : 'transparent'"
-                    style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;border:1.5px solid transparent;cursor:pointer;font-size:13px;font-weight:600;color:var(--color-amber);font-family:inherit;transition:background .15s,border-color .15s;">
-              <i class="ph-bold ph-note-pencil" style="font-size:14px;"></i>
-              Notiz
-            </button>
-            <button (click)="showViewingForm = !showViewingForm; showFollowUpPanel = false"
-                    [style.background]="showViewingForm ? 'color-mix(in srgb,var(--color-purple) 14%,var(--surface))' : 'var(--color-purple-soft)'"
-                    [style.border-color]="showViewingForm ? 'var(--color-purple)' : 'transparent'"
-                    style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;border:1.5px solid transparent;cursor:pointer;font-size:13px;font-weight:600;color:var(--color-purple);font-family:inherit;transition:background .15s,border-color .15s;">
-              <i class="ph-bold ph-door-open" style="font-size:14px;"></i>
-              Besichtigung
-            </button>
           </div>
         </div>
 
         <!-- ── Inline Notiz-Formular ────────────────────────────── -->
         <div *ngIf="showQuickNoteForm" class="note-form-enter"
-             style="background:var(--surface);border:2px solid var(--color-amber);border-radius:14px;padding:20px 24px;margin-bottom:16px;">
+             style="background:var(--surface);border:2px solid var(--primary);border-radius:14px;padding:20px 24px;margin-bottom:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
-            <i class="ph-fill ph-note-pencil" style="font-size:16px;color:var(--color-amber);"></i>
+            <i class="ph-fill ph-note-pencil" style="font-size:16px;color:var(--primary);"></i>
             <span style="font-size:14px;font-weight:700;color:var(--text);">Gesprächsnotiz</span>
             <button (click)="showQuickNoteForm = false"
                     style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text-3);font-size:18px;line-height:1;">
@@ -212,7 +200,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
               <option value="DEAL_CLOSED">Abschluss</option>
             </select>
             <button (click)="saveQuickNote()" [disabled]="isSavingNote || !quickNoteText.trim()"
-                    style="padding:9px 20px;background:var(--color-amber);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.15s;"
+                    style="padding:9px 20px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;"
                     [style.opacity]="(isSavingNote || !quickNoteText.trim()) ? '0.45' : '1'">
               <i class="ph ph-check" style="margin-right:5px;"></i>
               {{ isSavingNote ? 'Speichern…' : 'Notiz speichern' }}
@@ -274,7 +262,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
               <option value="DEAL_CLOSED">Abschluss</option>
             </select>
             <button (click)="saveFollowUp()" [disabled]="isSavingNote || !quickNoteText.trim()"
-                    style="padding:9px 20px;background:var(--color-amber);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.15s;"
+                    style="padding:9px 20px;background:var(--color-amber);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;"
                     [style.opacity]="(isSavingNote || !quickNoteText.trim()) ? '0.45' : '1'">
               <i class="ph ph-check" style="margin-right:5px;"></i>
               {{ isSavingNote ? 'Speichern…' : 'Follow-up erledigt · Notiz speichern' }}
@@ -294,7 +282,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
         </app-viewing-add-dialog>
 
         <!-- ══ TWO-COLUMN BODY ════════════════════════════════════ -->
-        <div style="display:grid; grid-template-columns:minmax(0,3fr) minmax(0,2fr); gap:20px; align-items:start;">
+        <div style="display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:20px;align-items:start;">
 
           <!-- LEFT: Activity stream -->
           <div style="display:flex;flex-direction:column;gap:16px;">
@@ -303,11 +291,16 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
             <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
                 <i class="ph-fill ph-door-open" style="font-size:17px;color:var(--color-purple);"></i>
-                <span style="font-size:15px;font-weight:700;color:var(--text);">Besichtigungen</span>
+                <span style="font-size:15px;font-weight:700;color:var(--text);flex:1;">Besichtigungen</span>
                 <span *ngIf="viewings.length > 0"
                       style="font-size:12px;font-weight:700;color:var(--color-purple);background:var(--color-purple-soft);padding:2px 8px;border-radius:10px;">
                   {{ viewings.length }}
                 </span>
+                <button (click)="showViewingForm = !showViewingForm"
+                        style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--color-purple-soft);color:var(--color-purple);border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
+                  <i class="ph-bold ph-plus" style="font-size:12px;"></i>
+                  Besichtigung
+                </button>
               </div>
               <app-loading-spinner *ngIf="isLoadingViewings" size="sm"></app-loading-spinner>
               <div *ngIf="!isLoadingViewings && viewings.length > 0" style="display:flex;flex-direction:column;gap:8px;">
@@ -345,7 +338,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
             <!-- Kontakthistorie -->
             <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-                <i class="ph-fill ph-chat-circle-text" style="font-size:17px;color:var(--primary);"></i>
+                <i class="ph ph-chat-circle-text" style="font-size:17px;color:var(--primary);"></i>
                 <span style="font-size:15px;font-weight:700;color:var(--text);">Kontakthistorie</span>
                 <span *ngIf="callNotesSummary"
                       style="font-size:12px;font-weight:700;color:var(--primary);background:var(--accent-soft);padding:2px 8px;border-radius:10px;">
@@ -355,24 +348,54 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
               <app-loading-spinner *ngIf="isLoadingCallNotes && !callNotesSummary" size="sm"></app-loading-spinner>
               <div *ngIf="recentCallNotes.length > 0">
                 <div *ngFor="let note of recentCallNotes" class="tl-row">
-                  <div style="width:32px;height:32px;border-radius:9px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">
-                    <i [class]="getCallTypeIcon(note.callType)" style="font-size:14px;color:var(--text-3);"></i>
+                  <!-- Icon -->
+                  <div style="width:36px;height:36px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">
+                    <i [class]="getCallTypeIcon(note.callType)" style="font-size:15px;color:var(--text-3);"></i>
                   </div>
+                  <!-- Content -->
                   <div style="flex:1;min-width:0;">
-                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                      <span style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ note.subject }}</span>
-                      <span *ngIf="note.outcome" [ngClass]="getOutcomeClass(note.outcome)"
-                            style="font-size:11px;font-weight:600;padding:1px 7px;border-radius:8px;white-space:nowrap;flex-shrink:0;">
-                        {{ note.outcome | translateEnum:'callOutcome' }}
-                      </span>
-                      <span *ngIf="note.followUpRequired"
-                            style="font-size:11px;font-weight:600;padding:1px 7px;border-radius:8px;background:var(--color-amber-soft);color:var(--color-amber);white-space:nowrap;flex-shrink:0;">
-                        Follow-up
+                    <!-- Title + date -->
+                    <div style="display:flex;align-items:baseline;gap:8px;justify-content:space-between;">
+                      <span style="font-size:14px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;">{{ note.subject }}</span>
+                      <span style="font-size:11px;color:var(--text-3);white-space:nowrap;flex-shrink:0;margin-left:8px;">
+                        {{ note.callDate | date:'dd.MM.yyyy · HH:mm' }}
                       </span>
                     </div>
-                    <div style="font-size:11px;color:var(--text-3);margin-top:2px;">
-                      {{ note.callDate | date:'dd.MM.yy · HH:mm' }}
-                      <span *ngIf="note.followUpDate"> · Follow-up: {{ note.followUpDate | date:'dd.MM.yy' }}</span>
+                    <!-- Description -->
+                    <div *ngIf="note.notesSummary"
+                         style="font-size:13px;color:var(--text-2);margin-top:4px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                      {{ note.notesSummary }}
+                    </div>
+                    <!-- Meta chips -->
+                    <div style="display:flex;align-items:center;gap:6px;margin-top:7px;flex-wrap:wrap;">
+                      <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--text-3);">
+                        <i [class]="getCallTypeIcon(note.callType)" style="font-size:11px;"></i>
+                        {{ getCallTypeLabel(note.callType) }}
+                      </span>
+                      <ng-container *ngIf="note.followUpRequired">
+                        <span style="color:var(--border);font-size:10px;">·</span>
+                        <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--color-amber-soft);color:var(--color-amber);">
+                          <span style="width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block;flex-shrink:0;"></span>
+                          Follow-up nötig
+                        </span>
+                      </ng-container>
+                      <ng-container *ngIf="note.outcome">
+                        <span style="color:var(--border);font-size:10px;">·</span>
+                        <span [style.background]="getOutcomeBg(note.outcome)"
+                              [style.color]="getOutcomeColor(note.outcome)"
+                              style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;">
+                          <span style="width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block;flex-shrink:0;"></span>
+                          {{ getOutcomeLabel(note.outcome) }}
+                        </span>
+                      </ng-container>
+                      <ng-container *ngIf="note.propertyTitle">
+                        <span style="color:var(--border);font-size:10px;">·</span>
+                        <a [routerLink]="['/properties', note.propertyId]"
+                           style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--text-3);background:var(--surface-2);padding:2px 8px;border-radius:10px;text-decoration:none;">
+                          <i class="ph ph-house" style="font-size:11px;flex-shrink:0;"></i>
+                          {{ note.propertyTitle }}
+                        </a>
+                      </ng-container>
                     </div>
                   </div>
                 </div>
@@ -383,120 +406,119 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
                 <div style="font-size:13px;">Noch keine Notizen</div>
               </div>
             </div>
+
           </div>
 
           <!-- RIGHT: Info sidebar -->
           <div style="display:flex;flex-direction:column;gap:16px;">
 
-            <!-- Suchkriterien -->
-            <div class="card" *ngIf="client.searchCriteria">
-              <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+            <!-- Suchprofil -->
+            <div *ngIf="client.searchCriteria || client.clientType"
+                 style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
                 <div style="display:flex;align-items:center;gap:8px;">
                   <i class="ph ph-magnifying-glass" style="font-size:15px;color:var(--text-3);"></i>
-                  <h3 class="text-base font-medium text-gray-900 dark:text-gray-100">{{ 'clients.propertySearchCriteria' | translate }}</h3>
+                  <span style="font-size:15px;font-weight:700;color:var(--text);">Suchprofil</span>
                 </div>
-                <a [routerLink]="['/clients', client.id, 'edit']" class="btn btn-outline btn-sm">Bearbeiten</a>
+                <a [routerLink]="['/clients', client.id, 'edit']"
+                   style="font-size:12px;font-weight:600;color:var(--primary);text-decoration:none;">Bearbeiten</a>
               </div>
-              <div class="card-body">
-                <dl class="space-y-3">
-                  <div *ngIf="client.searchCriteria.minSquareMeters || client.searchCriteria.maxSquareMeters">
-                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.sizeSqm' | translate }}</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.searchCriteria.minSquareMeters || '—' }} – {{ client.searchCriteria.maxSquareMeters || '—' }} m²</dd>
-                  </div>
-                  <div *ngIf="client.searchCriteria.minRooms || client.searchCriteria.maxRooms">
-                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.rooms' | translate }}</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.searchCriteria.minRooms || '—' }} – {{ client.searchCriteria.maxRooms || '—' }} Zi.</dd>
-                  </div>
-                  <div *ngIf="client.searchCriteria.minBudget || client.searchCriteria.maxBudget">
-                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.budgetEur' | translate }}</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.searchCriteria.minBudget || '—' }} – {{ client.searchCriteria.maxBudget || '—' }} €</dd>
-                  </div>
-                  <div *ngIf="client.searchCriteria.preferredLocations?.length">
-                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.preferredLocations' | translate }}</dt>
-                    <dd class="mt-1 flex flex-wrap gap-1">
-                      <span *ngFor="let location of client.searchCriteria.preferredLocations" class="badge badge-primary">{{ location }}</span>
-                    </dd>
-                  </div>
-                  <div *ngIf="client.searchCriteria.additionalRequirements">
-                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.additionalRequirements' | translate }}</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.searchCriteria.additionalRequirements }}</dd>
-                  </div>
-                </dl>
+              <!-- Key-value rows -->
+              <div>
+                <div *ngIf="client.clientType"
+                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
+                  <span style="font-size:12px;color:var(--text-3);">Angebotsart</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ getAngebotsart() }}</span>
+                </div>
+                <div *ngIf="client.searchCriteria?.propertyTypes?.length"
+                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
+                  <span style="font-size:12px;color:var(--text-3);">Objekttyp</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ client.searchCriteria!.propertyTypes!.join(', ') }}</span>
+                </div>
+                <div *ngIf="client.searchCriteria?.minBudget || client.searchCriteria?.maxBudget"
+                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
+                  <span style="font-size:12px;color:var(--text-3);">Budget</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ formatBudget() }}</span>
+                </div>
+                <div *ngIf="client.searchCriteria?.minSquareMeters || client.searchCriteria?.maxSquareMeters"
+                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
+                  <span style="font-size:12px;color:var(--text-3);">Wohnfläche</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ formatSqm() }}</span>
+                </div>
+                <div *ngIf="client.searchCriteria?.minRooms || client.searchCriteria?.maxRooms"
+                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
+                  <span style="font-size:12px;color:var(--text-3);">Zimmer</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ formatRooms() }}</span>
+                </div>
+                <div *ngIf="client.searchCriteria?.preferredLocations?.length"
+                     style="display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border);">
+                  <span style="font-size:12px;color:var(--text-3);">Lage</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--text);text-align:right;max-width:60%;">{{ client.searchCriteria!.preferredLocations!.join(', ') }}</span>
+                </div>
+                <div *ngIf="client.financingStatus && client.clientType !== ClientType.SELLER"
+                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
+                  <span style="font-size:12px;color:var(--text-3);">Finanzierung</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ getFinancingLabel() }}</span>
+                </div>
+                <div *ngIf="client.moveInTimeline && client.clientType !== ClientType.SELLER"
+                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;">
+                  <span style="font-size:12px;color:var(--text-3);">Einzug</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ getMoveInLabel() }}</span>
+                </div>
               </div>
             </div>
 
-            <!-- Persönliche Daten -->
-            <div class="card">
-              <div class="card-header" style="display:flex;align-items:center;gap:8px;">
-                <i class="ph ph-user-circle" style="font-size:15px;color:var(--text-3);"></i>
-                <h3 class="text-base font-medium text-gray-900 dark:text-gray-100">{{ 'clients.personalInformation' | translate }}</h3>
+            <!-- Passende Objekte -->
+            <div *ngIf="client.searchCriteria"
+                 style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                <i class="ph-fill ph-shuffle" style="font-size:15px;color:var(--primary);"></i>
+                <span style="font-size:15px;font-weight:700;color:var(--text);flex:1;">Passende Objekte</span>
+                <span *ngIf="!isLoadingMatches && matchingProperties.length > 0"
+                      style="font-size:12px;font-weight:700;color:var(--primary);background:var(--accent-soft);padding:2px 8px;border-radius:10px;">
+                  {{ matchingProperties.length }}
+                </span>
               </div>
-              <div class="card-body" style="padding-top:4px;">
-                <div class="info-row" *ngIf="client.email">
-                  <i class="ph ph-envelope" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
-                  <span style="font-size:13px;color:var(--text-2);word-break:break-all;">{{ client.email }}</span>
-                </div>
-                <div class="info-row" *ngIf="client.phone">
-                  <i class="ph ph-phone" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
-                  <span style="font-size:13px;color:var(--text-2);">{{ client.phone }}</span>
-                </div>
-                <div class="info-row" *ngIf="hasAddress()">
-                  <i class="ph ph-map-pin" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
-                  <span style="font-size:13px;color:var(--text-2);">{{ getAddressSummary() }}</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);">
+              <app-loading-spinner *ngIf="isLoadingMatches" size="sm"></app-loading-spinner>
+              <div *ngIf="!isLoadingMatches && matchingProperties.length > 0" style="display:flex;flex-direction:column;gap:8px;">
+                <a *ngFor="let match of matchingProperties"
+                   [routerLink]="['/properties', match.property.id]"
+                   class="match-link"
+                   style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);text-decoration:none;transition:background 0.1s;">
+                  <span [style.background]="getMatchScoreBg(match.matchScore)"
+                        [style.color]="getMatchScoreColor(match.matchScore)"
+                        style="font-size:11px;font-weight:800;padding:4px 8px;border-radius:8px;flex-shrink:0;min-width:36px;text-align:center;">
+                    {{ (match.matchScore * 100).toFixed(0) }}%
+                  </span>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ match.property.title }}</div>
+                    <div style="font-size:11px;color:var(--text-3);">{{ match.property.addressCity }}</div>
+                  </div>
+                  <i class="ph ph-arrow-right" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
+                </a>
+              </div>
+              <div *ngIf="!isLoadingMatches && matchingProperties.length === 0"
+                   style="text-align:center;padding:16px 0;color:var(--text-3);">
+                <i class="ph ph-house-line" style="font-size:24px;display:block;margin-bottom:6px;"></i>
+                <div style="font-size:13px;">Keine passenden Objekte gefunden</div>
+              </div>
+            </div>
+
+            <!-- DSGVO-Einwilligung -->
+            <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:16px 20px;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
+                     [style.background]="client.gdprConsentGiven ? 'var(--color-success-soft)' : 'var(--color-error-soft)'">
                   <i [class]="client.gdprConsentGiven ? 'ph ph-shield-check' : 'ph ph-shield-warning'"
                      [style.color]="client.gdprConsentGiven ? 'var(--color-success)' : 'var(--color-error)'"
-                     style="font-size:13px;"></i>
-                  <span style="font-size:11px;color:var(--text-3);">
-                    DSGVO {{ client.gdprConsentGiven ? 'Einwilligung erteilt' : 'ausstehend' }}
-                    <ng-container *ngIf="client.gdprConsentGiven && client.gdprConsentDate">
-                      · {{ client.gdprConsentDate | date:'dd.MM.yy' }}
-                    </ng-container>
-                  </span>
+                     style="font-size:17px;"></i>
                 </div>
-              </div>
-            </div>
-
-            <!-- Kunden-Profil -->
-            <div class="card">
-              <div class="card-header" style="display:flex;align-items:center;gap:8px;">
-                <i class="ph-fill ph-user-gear" style="font-size:15px;color:var(--primary);"></i>
-                <h3 class="text-base font-medium text-gray-900 dark:text-gray-100">Kunden-Profil</h3>
-              </div>
-              <div class="card-body">
-                <dl class="space-y-3">
-                  <div>
-                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Kundentyp</dt>
-                    <select [(ngModel)]="client.clientType" (change)="onClientProfileChange()"
-                            style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
-                      <option value="BUYER">Käufer</option>
-                      <option value="RENTER">Mieter</option>
-                      <option value="SELLER">Verkäufer</option>
-                    </select>
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:var(--text);">DSGVO-Einwilligung</div>
+                  <div style="font-size:12px;color:var(--text-3);margin-top:1px;">
+                    {{ client.gdprConsentGiven ? 'Erteilt' : 'Ausstehend' }}<ng-container *ngIf="client.gdprConsentGiven && client.gdprConsentDate"> · {{ client.gdprConsentDate | date:'dd.MM.yyyy' }}</ng-container>
                   </div>
-                  <div *ngIf="client.clientType !== 'SELLER'">
-                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Finanzierung</dt>
-                    <select [(ngModel)]="client.financingStatus" (change)="onClientProfileChange()"
-                            style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
-                      <option value="UNKNOWN">Unbekannt</option>
-                      <option value="SELF_FINANCED">Eigenfinanzierung</option>
-                      <option value="BANK_PRE_APPROVED">Bank-Vorabzusage</option>
-                      <option value="NEEDS_FINANCING">Finanzierung nötig</option>
-                    </select>
-                  </div>
-                  <div *ngIf="client.clientType !== 'SELLER'">
-                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Einzugs-Zeitraum</dt>
-                    <select [(ngModel)]="client.moveInTimeline" (change)="onClientProfileChange()"
-                            style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
-                      <option value="IMMEDIATE">Sofort</option>
-                      <option value="THREE_MONTHS">In 3 Monaten</option>
-                      <option value="SIX_MONTHS">In 6 Monaten</option>
-                      <option value="ONE_YEAR">In 1 Jahr</option>
-                      <option value="FLEXIBLE">Flexibel</option>
-                    </select>
-                  </div>
-                </dl>
+                </div>
               </div>
             </div>
 
@@ -505,9 +527,9 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
         </div><!-- end two-col -->
       </div>
 
-      <div *ngIf="!isLoading && !client" class="text-center py-8">
-        <p class="text-sm text-gray-500 dark:text-gray-400">{{ 'clients.notFound' | translate }}</p>
-        <a routerLink="/clients" class="text-primary-600 hover:text-primary-900 text-sm font-medium">{{ 'clients.backToClients' | translate }}</a>
+      <div *ngIf="!isLoading && !client" style="text-align:center;padding:48px 0;">
+        <p style="font-size:14px;color:var(--text-3);">{{ 'clients.notFound' | translate }}</p>
+        <a routerLink="/clients" style="font-size:13px;color:var(--primary);">{{ 'clients.backToClients' | translate }}</a>
       </div>
     </div>
 
@@ -515,12 +537,9 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
     <div *ngIf="showAttachmentsDialog && client"
          style="position:fixed;inset:0;z-index:600;display:flex;align-items:flex-start;justify-content:center;padding:48px 20px 20px;"
          (click)="showAttachmentsDialog = false">
-      <!-- Backdrop -->
       <div style="position:absolute;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);"></div>
-      <!-- Dialog panel -->
       <div style="position:relative;width:100%;max-width:680px;background:var(--surface);border-radius:18px;box-shadow:0 24px 64px rgba(0,0,0,.22);overflow:hidden;max-height:calc(100vh - 80px);display:flex;flex-direction:column;"
            (click)="$event.stopPropagation()">
-        <!-- Header -->
         <div style="display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid var(--border);flex-shrink:0;">
           <div style="width:34px;height:34px;border-radius:9px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;">
             <i class="ph ph-paperclip" style="font-size:16px;color:var(--text-3);"></i>
@@ -534,7 +553,6 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
             <i class="ph ph-x"></i>
           </button>
         </div>
-        <!-- Content: full manager -->
         <div style="overflow-y:auto;flex:1;padding:20px 22px;">
           <app-file-attachment-manager
             entityType="client"
@@ -550,7 +568,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
       <div style="display:flex;align-items:flex-start;gap:10px;">
         <i class="ph ph-info" style="color:var(--primary);font-size:20px;flex-shrink:0;margin-top:1px;"></i>
         <div style="flex:1;">
-          <div style="font-size:13px;font-weight:600;color:var(--text-1);margin-bottom:4px;">Pipeline-Stage aktualisieren?</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Pipeline-Stage aktualisieren?</div>
           <div style="font-size:12px;color:var(--text-2);margin-bottom:12px;">Besichtigung erfasst — soll der Stage auf "Besichtigungen" gesetzt werden?</div>
           <div style="display:flex;gap:8px;">
             <button (click)="setStage(PipelineStage.VIEWING); showStageUpgradeHint = false"
@@ -569,11 +587,12 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
 })
 export class ClientDetailComponent implements OnInit {
   readonly PipelineStage = PipelineStage;
+  readonly ClientType = ClientType;
+
   client: Client | null = null;
   isLoading = false;
   isDeleting = false;
 
-  // Quick note form (inline action strip)
   showQuickNoteForm = false;
   showFollowUpPanel = false;
   quickNoteSubject = '';
@@ -582,24 +601,22 @@ export class ClientDetailComponent implements OnInit {
   quickNoteOutcome = '';
   isSavingNote = false;
 
-  // Call Notes
   recentCallNotes: CallNoteSummary[] = [];
-  previewCallNotes: CallNoteSummary[] = [];
   callNotesSummary: BulkSummary | null = null;
   isLoadingCallNotes = false;
 
-  // Viewings
   viewings: ViewingSummary[] = [];
   isLoadingViewings = false;
   showViewingForm = false;
 
-  // Attachments dialog
-  showAttachmentsDialog = false;
+  matchingProperties: PropertyMatchResult[] = [];
+  isLoadingMatches = false;
 
-  // Pipeline Stage
+  showAttachmentsDialog = false;
   stageDropdownOpen = false;
   showQuickMenu = false;
   showStageUpgradeHint = false;
+
   pipelineStages = [
     { value: PipelineStage.PROSPECT,      label: 'Interessent',    color: 'var(--stage-prospect)',      bg: 'var(--stage-prospect-bg)' },
     { value: PipelineStage.ACTIVE_SEARCH, label: 'Aktive Suche',   color: 'var(--stage-active-search)', bg: 'var(--stage-active-search-bg)' },
@@ -614,7 +631,8 @@ export class ClientDetailComponent implements OnInit {
     private router: Router,
     private clientService: ClientService,
     public callNotesService: CallNotesService,
-    private viewingService: ViewingService
+    private viewingService: ViewingService,
+    private propertyMatchingService: PropertyMatchingService
   ) {}
 
   ngOnInit(): void {
@@ -632,9 +650,11 @@ export class ClientDetailComponent implements OnInit {
       next: (client) => {
         this.client = client;
         this.isLoading = false;
+        if (client.searchCriteria && client.id) {
+          this.loadMatchingProperties(client.id);
+        }
       },
-      error: (error) => {
-        console.error('Error loading client:', error);
+      error: () => {
         this.isLoading = false;
       }
     });
@@ -642,98 +662,20 @@ export class ClientDetailComponent implements OnInit {
 
   private loadCallNotes(clientId: string): void {
     this.isLoadingCallNotes = true;
-
-    // Load recent call notes (last 5)
     this.callNotesService.getCallNotesByClient(clientId, 0, 5).subscribe({
       next: (response: PagedResponse<CallNoteSummary>) => {
         this.recentCallNotes = response.content;
-        this.previewCallNotes = response.content.slice(0, 3);
         this.isLoadingCallNotes = false;
       },
-      error: (error) => {
-        console.error('Error loading call notes:', error);
+      error: () => {
         this.isLoadingCallNotes = false;
       }
     });
-
-    // Load call notes summary
     this.callNotesService.getClientCallNotesSummary(clientId).subscribe({
       next: (summary: BulkSummary) => {
         this.callNotesSummary = summary;
       },
-      error: (error) => {
-        console.error('Error loading call notes summary:', error);
-      }
-    });
-  }
-
-  toggleFollowUp(): void {
-    if ((this.callNotesSummary?.pendingFollowUps || 0) > 0) {
-      this.showFollowUpPanel = !this.showFollowUpPanel;
-      this.showQuickNoteForm = false;
-    } else {
-      this.showQuickNoteForm = !this.showQuickNoteForm;
-      this.showFollowUpPanel = false;
-    }
-  }
-
-  saveFollowUp(): void {
-    if (!this.client?.id || !this.quickNoteText.trim()) return;
-    this.isSavingNote = true;
-
-    const request: CallNoteCreateRequest = {
-      clientId: this.client.id,
-      callDate: new Date().toISOString(),
-      callType: (this.quickNoteType as CallType) || CallType.PHONE_OUTBOUND,
-      subject: this.quickNoteSubject.trim() || this.callNotesSummary?.mostRecentSubject || 'Follow-up erledigt',
-      notes: this.quickNoteText.trim(),
-      followUpRequired: false,
-      outcome: (this.quickNoteOutcome as CallOutcome) || undefined
-    };
-
-    this.callNotesService.createCallNote(request).subscribe({
-      next: () => {
-        this.isSavingNote = false;
-        this.showFollowUpPanel = false;
-        this.quickNoteSubject = '';
-        this.quickNoteText = '';
-        this.quickNoteOutcome = '';
-        this.quickNoteType = 'PHONE_OUTBOUND';
-        this.loadCallNotes(this.client!.id!);
-      },
-      error: () => {
-        this.isSavingNote = false;
-      }
-    });
-  }
-
-  saveQuickNote(): void {
-    if (!this.client?.id || !this.quickNoteText.trim()) return;
-    this.isSavingNote = true;
-
-    const request: CallNoteCreateRequest = {
-      clientId: this.client.id,
-      callDate: new Date().toISOString(),
-      callType: (this.quickNoteType as CallType) || CallType.PHONE_OUTBOUND,
-      subject: this.quickNoteSubject.trim() || 'Gesprächsnotiz',
-      notes: this.quickNoteText.trim(),
-      followUpRequired: false,
-      outcome: (this.quickNoteOutcome as CallOutcome) || undefined
-    };
-
-    this.callNotesService.createCallNote(request).subscribe({
-      next: () => {
-        this.isSavingNote = false;
-        this.showQuickNoteForm = false;
-        this.quickNoteSubject = '';
-        this.quickNoteText = '';
-        this.quickNoteOutcome = '';
-        this.quickNoteType = 'PHONE_OUTBOUND';
-        this.loadCallNotes(this.client!.id!);
-      },
-      error: () => {
-        this.isSavingNote = false;
-      }
+      error: () => {}
     });
   }
 
@@ -750,12 +692,75 @@ export class ClientDetailComponent implements OnInit {
     });
   }
 
+  private loadMatchingProperties(clientId: string): void {
+    this.isLoadingMatches = true;
+    this.propertyMatchingService.findMatchingPropertiesForClient(clientId, { maxResults: 3, matchThreshold: 0 }).subscribe({
+      next: (response) => {
+        this.matchingProperties = response.properties?.slice(0, 3) ?? [];
+        this.isLoadingMatches = false;
+      },
+      error: () => {
+        this.isLoadingMatches = false;
+      }
+    });
+  }
+
+  saveFollowUp(): void {
+    if (!this.client?.id || !this.quickNoteText.trim()) return;
+    this.isSavingNote = true;
+    const request: CallNoteCreateRequest = {
+      clientId: this.client.id,
+      callDate: new Date().toISOString(),
+      callType: (this.quickNoteType as CallType) || CallType.PHONE_OUTBOUND,
+      subject: this.quickNoteSubject.trim() || this.callNotesSummary?.mostRecentSubject || 'Follow-up erledigt',
+      notes: this.quickNoteText.trim(),
+      followUpRequired: false,
+      outcome: (this.quickNoteOutcome as CallOutcome) || undefined
+    };
+    this.callNotesService.createCallNote(request).subscribe({
+      next: () => {
+        this.isSavingNote = false;
+        this.showFollowUpPanel = false;
+        this.quickNoteSubject = '';
+        this.quickNoteText = '';
+        this.quickNoteOutcome = '';
+        this.quickNoteType = 'PHONE_OUTBOUND';
+        this.loadCallNotes(this.client!.id!);
+      },
+      error: () => { this.isSavingNote = false; }
+    });
+  }
+
+  saveQuickNote(): void {
+    if (!this.client?.id || !this.quickNoteText.trim()) return;
+    this.isSavingNote = true;
+    const request: CallNoteCreateRequest = {
+      clientId: this.client.id,
+      callDate: new Date().toISOString(),
+      callType: (this.quickNoteType as CallType) || CallType.PHONE_OUTBOUND,
+      subject: this.quickNoteSubject.trim() || 'Gesprächsnotiz',
+      notes: this.quickNoteText.trim(),
+      followUpRequired: false,
+      outcome: (this.quickNoteOutcome as CallOutcome) || undefined
+    };
+    this.callNotesService.createCallNote(request).subscribe({
+      next: () => {
+        this.isSavingNote = false;
+        this.showQuickNoteForm = false;
+        this.quickNoteSubject = '';
+        this.quickNoteText = '';
+        this.quickNoteOutcome = '';
+        this.quickNoteType = 'PHONE_OUTBOUND';
+        this.loadCallNotes(this.client!.id!);
+      },
+      error: () => { this.isSavingNote = false; }
+    });
+  }
+
   onViewingCreated(): void {
     this.showViewingForm = false;
     const clientId = this.route.snapshot.paramMap.get('id');
     if (clientId) this.loadViewings(clientId);
-
-    // Suggest stage upgrade if client is not yet in VIEWING stage
     const stageOrder = [PipelineStage.PROSPECT, PipelineStage.ACTIVE_SEARCH];
     if (this.client?.id && this.client.pipelineStage && stageOrder.includes(this.client.pipelineStage)) {
       this.showStageUpgradeHint = true;
@@ -766,19 +771,13 @@ export class ClientDetailComponent implements OnInit {
     if (!this.client?.id) return;
     this.stageDropdownOpen = false;
     this.clientService.updatePipelineStage(this.client.id, stage).subscribe({
-      next: (updated) => {
-        this.client = updated;
-      }
+      next: (updated) => { this.client = updated; }
     });
   }
 
-  onClientProfileChange(): void {
-    if (!this.client?.id) return;
-    this.clientService.updateClient(this.client.id, this.client).subscribe({
-      next: (updated) => {
-        this.client = updated;
-      }
-    });
+  getInitials(): string {
+    if (!this.client) return '';
+    return ((this.client.firstName?.charAt(0) ?? '') + (this.client.lastName?.charAt(0) ?? '')).toUpperCase();
   }
 
   getStageLabel(stage?: PipelineStage): string {
@@ -809,17 +808,6 @@ export class ClientDetailComponent implements OnInit {
     }
   }
 
-  hasAddress(): boolean {
-    return !!(this.client?.addressStreet || this.client?.addressCity ||
-              this.client?.addressPostalCode || this.client?.addressCountry);
-  }
-
-  getAddressSummary(): string {
-    if (!this.client) return '';
-    const parts = [this.client.addressCity, this.client.addressPostalCode].filter(Boolean);
-    return parts.length ? parts.join(', ') : (this.client.addressStreet ?? '');
-  }
-
   getCallTypeIcon(callType: CallType): string {
     switch (callType) {
       case CallType.PHONE_INBOUND:  return 'ph ph-phone-incoming';
@@ -830,46 +818,129 @@ export class ClientDetailComponent implements OnInit {
     }
   }
 
-  getOutcomeClass(outcome: string): string {
-    switch (outcome) {
-      case 'INTERESTED':
-        return 'bg-green-100 text-green-800';
-      case 'NOT_INTERESTED':
-        return 'bg-red-100 text-red-800';
-      case 'SCHEDULED_VIEWING':
-        return 'bg-blue-100 text-blue-800';
-      case 'OFFER_MADE':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'DEAL_CLOSED':
-        return 'bg-purple-100 text-purple-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  getCallTypeLabel(callType: CallType): string {
+    switch (callType) {
+      case CallType.PHONE_INBOUND:  return 'Anruf (eingehend)';
+      case CallType.PHONE_OUTBOUND: return 'Anruf (ausgehend)';
+      case CallType.EMAIL:          return 'E-Mail';
+      case CallType.MEETING:        return 'Meeting';
+      default:                      return 'Kontakt';
     }
   }
 
+  getOutcomeBg(outcome: string): string {
+    switch (outcome) {
+      case 'INTERESTED':        return 'var(--color-success-soft)';
+      case 'NOT_INTERESTED':    return 'var(--color-error-soft)';
+      case 'SCHEDULED_VIEWING': return 'var(--color-blue-soft)';
+      case 'OFFER_MADE':        return 'var(--color-amber-soft)';
+      case 'DEAL_CLOSED':       return 'var(--color-purple-soft)';
+      default:                  return 'var(--surface-2)';
+    }
+  }
+
+  getOutcomeColor(outcome: string): string {
+    switch (outcome) {
+      case 'INTERESTED':        return 'var(--color-success)';
+      case 'NOT_INTERESTED':    return 'var(--color-error)';
+      case 'SCHEDULED_VIEWING': return 'var(--color-blue)';
+      case 'OFFER_MADE':        return 'var(--color-amber)';
+      case 'DEAL_CLOSED':       return 'var(--color-purple)';
+      default:                  return 'var(--text-3)';
+    }
+  }
+
+  getOutcomeLabel(outcome: string): string {
+    switch (outcome) {
+      case 'INTERESTED':        return 'Interessiert';
+      case 'NOT_INTERESTED':    return 'Kein Interesse';
+      case 'SCHEDULED_VIEWING': return 'Besichtigung vereinbart';
+      case 'OFFER_MADE':        return 'Angebot gemacht';
+      case 'DEAL_CLOSED':       return 'Abschluss';
+      default:                  return outcome;
+    }
+  }
+
+  getAngebotsart(): string {
+    switch (this.client?.clientType) {
+      case ClientType.BUYER:  return 'Kauf';
+      case ClientType.RENTER: return 'Miete';
+      case ClientType.SELLER: return 'Verkauf';
+      default:                return '–';
+    }
+  }
+
+  getFinancingLabel(): string {
+    switch (this.client?.financingStatus) {
+      case FinancingStatus.SELF_FINANCED:    return 'Eigenfinanzierung';
+      case FinancingStatus.BANK_PRE_APPROVED: return 'Vorabzusage';
+      case FinancingStatus.NEEDS_FINANCING:  return 'Finanzierung nötig';
+      default:                               return 'Unbekannt';
+    }
+  }
+
+  getMoveInLabel(): string {
+    switch (this.client?.moveInTimeline) {
+      case MoveInTimeline.IMMEDIATE:    return 'Sofort';
+      case MoveInTimeline.THREE_MONTHS: return 'In 3 Monaten';
+      case MoveInTimeline.SIX_MONTHS:  return 'In 6 Monaten';
+      case MoveInTimeline.ONE_YEAR:    return 'In 1 Jahr';
+      case MoveInTimeline.FLEXIBLE:    return 'Flexibel';
+      default:                         return '–';
+    }
+  }
+
+  getMatchScoreBg(score: number): string {
+    if (score >= 0.75) return 'var(--accent-soft)';
+    if (score >= 0.5)  return 'var(--color-amber-soft)';
+    return 'var(--surface-2)';
+  }
+
+  getMatchScoreColor(score: number): string {
+    if (score >= 0.75) return 'var(--primary)';
+    if (score >= 0.5)  return 'var(--color-amber)';
+    return 'var(--text-3)';
+  }
+
+  formatBudget(): string {
+    const sc = this.client?.searchCriteria;
+    if (!sc) return '';
+    const fmt = (n: number) => n.toLocaleString('de-DE') + ' €';
+    if (sc.minBudget && sc.maxBudget) return `${fmt(sc.minBudget)} – ${fmt(sc.maxBudget)}`;
+    if (sc.minBudget)  return `ab ${fmt(sc.minBudget)}`;
+    if (sc.maxBudget)  return `bis ${fmt(sc.maxBudget)}`;
+    return '';
+  }
+
+  formatSqm(): string {
+    const sc = this.client?.searchCriteria;
+    if (!sc) return '';
+    if (sc.minSquareMeters && sc.maxSquareMeters) return `${sc.minSquareMeters} – ${sc.maxSquareMeters} m²`;
+    if (sc.minSquareMeters) return `ab ${sc.minSquareMeters} m²`;
+    if (sc.maxSquareMeters) return `bis ${sc.maxSquareMeters} m²`;
+    return '';
+  }
+
+  formatRooms(): string {
+    const sc = this.client?.searchCriteria;
+    if (!sc) return '';
+    if (sc.minRooms && sc.maxRooms) return `${sc.minRooms} – ${sc.maxRooms} Zi.`;
+    if (sc.minRooms) return `ab ${sc.minRooms} Zi.`;
+    if (sc.maxRooms) return `bis ${sc.maxRooms} Zi.`;
+    return '';
+  }
+
   deleteClient(): void {
-    if (this.client && confirm(this.getTranslation('clients.deleteConfirm'))) {
+    if (this.client && confirm('Diesen Kunden wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) {
       this.isDeleting = true;
       this.clientService.deleteClient(this.client.id!).subscribe({
         next: () => {
           this.router.navigate(['/clients']);
         },
-        error: (error) => {
-          console.error('Error deleting client:', error);
+        error: () => {
           this.isDeleting = false;
-          alert(this.getTranslation('clients.deleteError'));
         }
       });
     }
-  }
-
-  private getTranslation(key: string): string {
-    // This is a simple helper - in production you'd inject TranslateService
-    // For now, return English fallback
-    const translations: Record<string, string> = {
-      'clients.deleteConfirm': 'Are you sure you want to delete this client? This action cannot be undone.',
-      'clients.deleteError': 'Failed to delete client. Please try again.'
-    };
-    return translations[key] || key;
   }
 }
