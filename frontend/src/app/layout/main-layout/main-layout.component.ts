@@ -78,7 +78,6 @@ interface NavItem {
 
         <!-- User -->
         <div class="sidebar-user">
-          <div class="sidebar-avatar">{{ userInitials }}</div>
           <div style="min-width:0; flex:1;">
             <div class="sidebar-user-name">{{ userName }}</div>
             <div class="sidebar-user-role">{{ 'navigation.role' | translate }}</div>

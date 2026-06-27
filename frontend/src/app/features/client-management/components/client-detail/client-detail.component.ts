@@ -16,24 +16,6 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, TranslateModule, TranslateEnumPipe, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent],
   styles: [`
-    .action-tile {
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      gap:7px; padding:20px 10px; border-radius:14px; cursor:pointer;
-      border:2px solid transparent; text-decoration:none; transition:all 0.18s ease;
-      font-family:inherit; background:none; flex:1; min-width:0;
-    }
-    .action-tile:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,.12); }
-    .at-call    { background:var(--accent-soft); color:var(--primary); }
-    .at-call:hover  { border-color:var(--primary); background:color-mix(in srgb,var(--primary) 14%,var(--surface)); }
-    .at-email   { background:var(--color-blue-soft); color:var(--color-blue); }
-    .at-email:hover { border-color:var(--color-blue); background:color-mix(in srgb,var(--color-blue) 14%,var(--surface)); }
-    .at-note    { background:var(--color-amber-soft); color:var(--color-amber); }
-    .at-note:hover  { border-color:var(--color-amber); background:color-mix(in srgb,var(--color-amber) 14%,var(--surface)); }
-    .at-note.active { border-color:var(--color-amber)!important; box-shadow:0 4px 16px rgba(217,119,6,.22)!important; transform:translateY(-2px); }
-    .at-viewing { background:var(--color-purple-soft); color:var(--color-purple); }
-    .at-viewing:hover { border-color:var(--color-purple); background:color-mix(in srgb,var(--color-purple) 14%,var(--surface)); }
-    .at-viewing.active { border-color:var(--color-purple)!important; box-shadow:0 4px 16px rgba(147,51,234,.22)!important; transform:translateY(-2px); }
-    .at-disabled { opacity:0.35; cursor:not-allowed; pointer-events:none; }
     .stage-option:hover { background:var(--surface-2) !important; }
     .qm-item { display:flex; align-items:center; gap:10px; width:100%; padding:10px 14px; border:none; background:none; cursor:pointer; font-size:13px; font-weight:500; color:var(--text); text-align:left; font-family:inherit; transition:background 0.1s; }
     .qm-item:hover { background:var(--surface-2); }
@@ -72,11 +54,6 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
                style="width:34px;height:34px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-3);text-decoration:none;flex-shrink:0;">
               <i class="ph ph-arrow-left" style="font-size:16px;"></i>
             </a>
-
-            <!-- Avatar -->
-            <div style="width:52px;height:52px;border-radius:50%;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:var(--primary);flex-shrink:0;letter-spacing:0.5px;">
-              {{ getInitials() }}
-            </div>
 
             <!-- Name + Stage + chips -->
             <div style="flex:1;min-width:0;">
@@ -135,7 +112,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
 
               <!-- Follow-up / Notiz icon button -->
               <button class="hdr-icon hdr-icon-bell"
-                      (click)="showQuickNoteForm = !showQuickNoteForm"
+                      (click)="toggleFollowUp()"
                       [attr.data-tooltip]="(callNotesSummary?.pendingFollowUps || 0) > 0
                         ? callNotesSummary!.pendingFollowUps + ' Follow-up' + (callNotesSummary!.pendingFollowUps > 1 ? 's' : '') + ' offen'
                         : 'Gesprächsnotiz'">
@@ -174,25 +151,21 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
             </div>
           </div>
 
-          <!-- ── Action Tiles ─────────────────────────────────── -->
-          <div style="border-top:1px solid var(--border); margin-top:20px; padding-top:20px; display:grid; grid-template-columns:repeat(2,1fr); gap:12px;">
-
-            <!-- Notiz -->
-            <button (click)="showQuickNoteForm = !showQuickNoteForm"
-                    class="action-tile at-note"
-                    [class.active]="showQuickNoteForm">
-              <i class="ph-bold ph-note-pencil" style="font-size:26px;"></i>
-              <span style="font-size:13px;font-weight:700;">Notiz</span>
-              <span style="font-size:11px;opacity:0.7;">Gespräch notieren</span>
+          <!-- ── Action Bar (kompakt) ────────────────────────── -->
+          <div style="border-top:1px solid var(--border); margin-top:16px; padding-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button (click)="showQuickNoteForm = !showQuickNoteForm; showFollowUpPanel = false"
+                    [style.background]="showQuickNoteForm ? 'color-mix(in srgb,var(--color-amber) 14%,var(--surface))' : 'var(--color-amber-soft)'"
+                    [style.border-color]="showQuickNoteForm ? 'var(--color-amber)' : 'transparent'"
+                    style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;border:1.5px solid transparent;cursor:pointer;font-size:13px;font-weight:600;color:var(--color-amber);font-family:inherit;transition:background .15s,border-color .15s;">
+              <i class="ph-bold ph-note-pencil" style="font-size:14px;"></i>
+              Notiz
             </button>
-
-            <!-- Besichtigung -->
-            <button (click)="showViewingForm = !showViewingForm"
-                    class="action-tile at-viewing"
-                    [class.active]="showViewingForm">
-              <i class="ph-bold ph-door-open" style="font-size:26px;"></i>
-              <span style="font-size:13px;font-weight:700;">Besichtigung</span>
-              <span style="font-size:11px;opacity:0.7;">Termin planen</span>
+            <button (click)="showViewingForm = !showViewingForm; showFollowUpPanel = false"
+                    [style.background]="showViewingForm ? 'color-mix(in srgb,var(--color-purple) 14%,var(--surface))' : 'var(--color-purple-soft)'"
+                    [style.border-color]="showViewingForm ? 'var(--color-purple)' : 'transparent'"
+                    style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;border:1.5px solid transparent;cursor:pointer;font-size:13px;font-weight:600;color:var(--color-purple);font-family:inherit;transition:background .15s,border-color .15s;">
+              <i class="ph-bold ph-door-open" style="font-size:14px;"></i>
+              Besichtigung
             </button>
           </div>
         </div>
@@ -247,6 +220,68 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
           </div>
         </div>
 
+        <!-- ── Guided Follow-up Panel ──────────────────────────── -->
+        <div *ngIf="showFollowUpPanel" class="note-form-enter"
+             style="background:var(--surface);border:2px solid var(--color-amber);border-radius:14px;padding:20px 24px;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+            <i class="ph-fill ph-bell-ringing" style="font-size:16px;color:var(--color-amber);"></i>
+            <span style="font-size:14px;font-weight:700;color:var(--text);">Follow-up abschließen</span>
+            <span style="font-size:12px;font-weight:600;color:var(--color-amber);background:var(--color-amber-soft);padding:2px 8px;border-radius:10px;">
+              {{ callNotesSummary?.pendingFollowUps }} offen
+            </span>
+            <button (click)="showFollowUpPanel = false"
+                    style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text-3);font-size:18px;line-height:1;">
+              <i class="ph ph-x"></i>
+            </button>
+          </div>
+          <div *ngIf="callNotesSummary?.mostRecentSubject"
+               style="background:var(--surface-2);border-radius:8px;padding:10px 14px;margin-bottom:14px;border-left:3px solid var(--color-amber);">
+            <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Geplanter Follow-up</div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);">{{ callNotesSummary!.mostRecentSubject }}</div>
+          </div>
+          <div style="font-size:13px;color:var(--text-2);margin-bottom:14px;">
+            Was ist beim Follow-up passiert? Trag kurz ein, was besprochen wurde.
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">Betreff</label>
+              <input type="text" [(ngModel)]="quickNoteSubject"
+                     [placeholder]="callNotesSummary?.mostRecentSubject || 'Worum ging es?'"
+                     style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);outline:none;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">Kontaktart</label>
+              <select [(ngModel)]="quickNoteType"
+                      style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
+                <option value="PHONE_OUTBOUND">📞 Anruf (ausgehend)</option>
+                <option value="PHONE_INBOUND">📞 Anruf (eingehend)</option>
+                <option value="EMAIL">✉ E-Mail</option>
+                <option value="MEETING">🤝 Meeting</option>
+              </select>
+            </div>
+          </div>
+          <textarea [(ngModel)]="quickNoteText" placeholder="Was wurde besprochen?" rows="3"
+                    style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);resize:vertical;font-family:inherit;margin-bottom:12px;box-sizing:border-box;outline:none;">
+          </textarea>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <select [(ngModel)]="quickNoteOutcome"
+                    style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
+              <option value="">Ergebnis wählen…</option>
+              <option value="INTERESTED">Interessiert</option>
+              <option value="NOT_INTERESTED">Kein Interesse</option>
+              <option value="SCHEDULED_VIEWING">Besichtigung vereinbart</option>
+              <option value="OFFER_MADE">Angebot gemacht</option>
+              <option value="DEAL_CLOSED">Abschluss</option>
+            </select>
+            <button (click)="saveFollowUp()" [disabled]="isSavingNote || !quickNoteText.trim()"
+                    style="padding:9px 20px;background:var(--color-amber);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.15s;"
+                    [style.opacity]="(isSavingNote || !quickNoteText.trim()) ? '0.45' : '1'">
+              <i class="ph ph-check" style="margin-right:5px;"></i>
+              {{ isSavingNote ? 'Speichern…' : 'Follow-up erledigt · Notiz speichern' }}
+            </button>
+          </div>
+        </div>
+
         <!-- ── Inline Besichtigungs-Formular ───────────────────────── -->
         <app-viewing-add-dialog
           *ngIf="showViewingForm && client"
@@ -258,25 +293,54 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
           (cancelled)="showViewingForm = false">
         </app-viewing-add-dialog>
 
-        <!-- ── Follow-up Alert ──────────────────────────────────── -->
-        <div *ngIf="showContactPanel"
-             style="border-left:4px solid var(--color-error);background:var(--color-error-soft);border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
-          <i class="ph-fill ph-warning" style="color:var(--color-error);font-size:20px;flex-shrink:0;"></i>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:11px;font-weight:700;color:var(--color-error);text-transform:uppercase;letter-spacing:.05em;">Follow-up fällig</div>
-            <div style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ followUpSubject }}</div>
-          </div>
-          <button (click)="dismissContactPanel()"
-                  style="background:none;border:none;cursor:pointer;color:var(--text-3);font-size:18px;line-height:1;flex-shrink:0;">
-            <i class="ph ph-x"></i>
-          </button>
-        </div>
-
         <!-- ══ TWO-COLUMN BODY ════════════════════════════════════ -->
         <div style="display:grid; grid-template-columns:minmax(0,3fr) minmax(0,2fr); gap:20px; align-items:start;">
 
           <!-- LEFT: Activity stream -->
           <div style="display:flex;flex-direction:column;gap:16px;">
+
+            <!-- Besichtigungen -->
+            <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                <i class="ph-fill ph-door-open" style="font-size:17px;color:var(--color-purple);"></i>
+                <span style="font-size:15px;font-weight:700;color:var(--text);">Besichtigungen</span>
+                <span *ngIf="viewings.length > 0"
+                      style="font-size:12px;font-weight:700;color:var(--color-purple);background:var(--color-purple-soft);padding:2px 8px;border-radius:10px;">
+                  {{ viewings.length }}
+                </span>
+              </div>
+              <app-loading-spinner *ngIf="isLoadingViewings" size="sm"></app-loading-spinner>
+              <div *ngIf="!isLoadingViewings && viewings.length > 0" style="display:flex;flex-direction:column;gap:8px;">
+                <div *ngFor="let v of viewings"
+                     style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);">
+                  <div style="min-width:44px;text-align:center;background:var(--surface);border-radius:8px;padding:5px 4px;border:1px solid var(--border);">
+                    <div style="font-size:16px;font-weight:700;color:var(--text);line-height:1;">{{ v.viewingDate | date:'dd' }}</div>
+                    <div style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;">{{ v.viewingDate | date:'MMM' }}</div>
+                  </div>
+                  <div style="flex:1;min-width:0;">
+                    <a [routerLink]="['/properties', v.propertyId]"
+                       style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px;text-decoration:none;">
+                      <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ v.propertyTitle }}</span>
+                      <i class="ph ph-arrow-square-out" style="font-size:11px;color:var(--text-3);flex-shrink:0;"></i>
+                    </a>
+                    <div style="font-size:11px;color:var(--text-3);">{{ v.viewingDate | date:'HH:mm' }} Uhr · {{ v.propertyAddress }}</div>
+                  </div>
+                  <div *ngIf="v.feedback" style="font-size:16px;" [title]="v.feedback">
+                    {{ v.feedback === 'LIKED' ? '👍' : v.feedback === 'DISLIKED' ? '👎' : '🤷' }}
+                  </div>
+                  <span [style.background]="getViewingStatusBg(v.status)"
+                        [style.color]="getViewingStatusColor(v.status)"
+                        style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:8px;white-space:nowrap;flex-shrink:0;">
+                    {{ v.status === 'SCHEDULED' ? 'Geplant' : v.status === 'COMPLETED' ? 'Erledigt' : 'Abgesagt' }}
+                  </span>
+                </div>
+              </div>
+              <div *ngIf="!isLoadingViewings && viewings.length === 0"
+                   style="text-align:center;padding:20px 0;color:var(--text-3);">
+                <i class="ph ph-door-open" style="font-size:28px;display:block;margin-bottom:6px;"></i>
+                <div style="font-size:13px;">Noch keine Besichtigungen geplant</div>
+              </div>
+            </div>
 
             <!-- Kontakthistorie -->
             <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
@@ -319,49 +383,47 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
                 <div style="font-size:13px;">Noch keine Notizen</div>
               </div>
             </div>
-
-            <!-- Besichtigungen -->
-            <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-                <i class="ph-fill ph-door-open" style="font-size:17px;color:var(--color-purple);"></i>
-                <span style="font-size:15px;font-weight:700;color:var(--text);">Besichtigungen</span>
-                <span *ngIf="viewings.length > 0"
-                      style="font-size:12px;font-weight:700;color:var(--color-purple);background:var(--color-purple-soft);padding:2px 8px;border-radius:10px;">
-                  {{ viewings.length }}
-                </span>
-              </div>
-              <app-loading-spinner *ngIf="isLoadingViewings" size="sm"></app-loading-spinner>
-              <div *ngIf="!isLoadingViewings && viewings.length > 0" style="display:flex;flex-direction:column;gap:8px;">
-                <div *ngFor="let v of viewings"
-                     style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);">
-                  <div style="min-width:44px;text-align:center;background:var(--surface);border-radius:8px;padding:5px 4px;border:1px solid var(--border);">
-                    <div style="font-size:16px;font-weight:700;color:var(--text);line-height:1;">{{ v.viewingDate | date:'dd' }}</div>
-                    <div style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;">{{ v.viewingDate | date:'MMM' }}</div>
-                  </div>
-                  <div style="flex:1;min-width:0;">
-                    <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ v.propertyTitle }}</div>
-                    <div style="font-size:11px;color:var(--text-3);">{{ v.viewingDate | date:'HH:mm' }} Uhr · {{ v.propertyAddress }}</div>
-                  </div>
-                  <div *ngIf="v.feedback" style="font-size:16px;" [title]="v.feedback">
-                    {{ v.feedback === 'LIKED' ? '👍' : v.feedback === 'DISLIKED' ? '👎' : '🤷' }}
-                  </div>
-                  <span [style.background]="getViewingStatusBg(v.status)"
-                        [style.color]="getViewingStatusColor(v.status)"
-                        style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:8px;white-space:nowrap;flex-shrink:0;">
-                    {{ v.status === 'SCHEDULED' ? 'Geplant' : v.status === 'COMPLETED' ? 'Erledigt' : 'Abgesagt' }}
-                  </span>
-                </div>
-              </div>
-              <div *ngIf="!isLoadingViewings && viewings.length === 0"
-                   style="text-align:center;padding:20px 0;color:var(--text-3);">
-                <i class="ph ph-door-open" style="font-size:28px;display:block;margin-bottom:6px;"></i>
-                <div style="font-size:13px;">Noch keine Besichtigungen geplant</div>
-              </div>
-            </div>
           </div>
 
           <!-- RIGHT: Info sidebar -->
           <div style="display:flex;flex-direction:column;gap:16px;">
+
+            <!-- Suchkriterien -->
+            <div class="card" *ngIf="client.searchCriteria">
+              <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <i class="ph ph-magnifying-glass" style="font-size:15px;color:var(--text-3);"></i>
+                  <h3 class="text-base font-medium text-gray-900 dark:text-gray-100">{{ 'clients.propertySearchCriteria' | translate }}</h3>
+                </div>
+                <a [routerLink]="['/clients', client.id, 'edit']" class="btn btn-outline btn-sm">Bearbeiten</a>
+              </div>
+              <div class="card-body">
+                <dl class="space-y-3">
+                  <div *ngIf="client.searchCriteria.minSquareMeters || client.searchCriteria.maxSquareMeters">
+                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.sizeSqm' | translate }}</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.searchCriteria.minSquareMeters || '—' }} – {{ client.searchCriteria.maxSquareMeters || '—' }} m²</dd>
+                  </div>
+                  <div *ngIf="client.searchCriteria.minRooms || client.searchCriteria.maxRooms">
+                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.rooms' | translate }}</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.searchCriteria.minRooms || '—' }} – {{ client.searchCriteria.maxRooms || '—' }} Zi.</dd>
+                  </div>
+                  <div *ngIf="client.searchCriteria.minBudget || client.searchCriteria.maxBudget">
+                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.budgetEur' | translate }}</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.searchCriteria.minBudget || '—' }} – {{ client.searchCriteria.maxBudget || '—' }} €</dd>
+                  </div>
+                  <div *ngIf="client.searchCriteria.preferredLocations?.length">
+                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.preferredLocations' | translate }}</dt>
+                    <dd class="mt-1 flex flex-wrap gap-1">
+                      <span *ngFor="let location of client.searchCriteria.preferredLocations" class="badge badge-primary">{{ location }}</span>
+                    </dd>
+                  </div>
+                  <div *ngIf="client.searchCriteria.additionalRequirements">
+                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.additionalRequirements' | translate }}</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.searchCriteria.additionalRequirements }}</dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
 
             <!-- Persönliche Daten -->
             <div class="card">
@@ -438,44 +500,6 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
               </div>
             </div>
 
-            <!-- Suchkriterien -->
-            <div class="card" *ngIf="client.searchCriteria">
-              <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
-                <div style="display:flex;align-items:center;gap:8px;">
-                  <i class="ph ph-magnifying-glass" style="font-size:15px;color:var(--text-3);"></i>
-                  <h3 class="text-base font-medium text-gray-900 dark:text-gray-100">{{ 'clients.propertySearchCriteria' | translate }}</h3>
-                </div>
-                <a [routerLink]="['/clients', client.id, 'edit']" class="btn btn-outline btn-sm">Bearbeiten</a>
-              </div>
-              <div class="card-body">
-                <dl class="space-y-3">
-                  <div *ngIf="client.searchCriteria.minSquareMeters || client.searchCriteria.maxSquareMeters">
-                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.sizeSqm' | translate }}</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.searchCriteria.minSquareMeters || '—' }} – {{ client.searchCriteria.maxSquareMeters || '—' }} m²</dd>
-                  </div>
-                  <div *ngIf="client.searchCriteria.minRooms || client.searchCriteria.maxRooms">
-                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.rooms' | translate }}</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.searchCriteria.minRooms || '—' }} – {{ client.searchCriteria.maxRooms || '—' }} Zi.</dd>
-                  </div>
-                  <div *ngIf="client.searchCriteria.minBudget || client.searchCriteria.maxBudget">
-                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.budgetEur' | translate }}</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.searchCriteria.minBudget || '—' }} – {{ client.searchCriteria.maxBudget || '—' }} €</dd>
-                  </div>
-                  <div *ngIf="client.searchCriteria.preferredLocations?.length">
-                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.preferredLocations' | translate }}</dt>
-                    <dd class="mt-1 flex flex-wrap gap-1">
-                      <span *ngFor="let location of client.searchCriteria.preferredLocations" class="badge badge-primary">{{ location }}</span>
-                    </dd>
-                  </div>
-                  <div *ngIf="client.searchCriteria.additionalRequirements">
-                    <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ 'clients.additionalRequirements' | translate }}</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ client.searchCriteria.additionalRequirements }}</dd>
-                  </div>
-                </dl>
-              </div>
-            </div>
-
-
           </div>
 
         </div><!-- end two-col -->
@@ -549,12 +573,9 @@ export class ClientDetailComponent implements OnInit {
   isLoading = false;
   isDeleting = false;
 
-  // Follow-up contact panel
-  showContactPanel = false;
-  followUpSubject = '';
-
   // Quick note form (inline action strip)
   showQuickNoteForm = false;
+  showFollowUpPanel = false;
   quickNoteSubject = '';
   quickNoteType = 'PHONE_OUTBOUND';
   quickNoteText = '';
@@ -603,12 +624,6 @@ export class ClientDetailComponent implements OnInit {
       this.loadCallNotes(clientId);
       this.loadViewings(clientId);
     }
-
-    const action = this.route.snapshot.queryParamMap.get('action');
-    if (action === 'contact') {
-      this.showContactPanel = true;
-      this.followUpSubject = this.route.snapshot.queryParamMap.get('subject') ?? '';
-    }
   }
 
   private loadClient(id: string): void {
@@ -652,12 +667,43 @@ export class ClientDetailComponent implements OnInit {
     });
   }
 
-  dismissContactPanel(): void {
-    this.showContactPanel = false;
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: {},
-      replaceUrl: true
+  toggleFollowUp(): void {
+    if ((this.callNotesSummary?.pendingFollowUps || 0) > 0) {
+      this.showFollowUpPanel = !this.showFollowUpPanel;
+      this.showQuickNoteForm = false;
+    } else {
+      this.showQuickNoteForm = !this.showQuickNoteForm;
+      this.showFollowUpPanel = false;
+    }
+  }
+
+  saveFollowUp(): void {
+    if (!this.client?.id || !this.quickNoteText.trim()) return;
+    this.isSavingNote = true;
+
+    const request: CallNoteCreateRequest = {
+      clientId: this.client.id,
+      callDate: new Date().toISOString(),
+      callType: (this.quickNoteType as CallType) || CallType.PHONE_OUTBOUND,
+      subject: this.quickNoteSubject.trim() || this.callNotesSummary?.mostRecentSubject || 'Follow-up erledigt',
+      notes: this.quickNoteText.trim(),
+      followUpRequired: false,
+      outcome: (this.quickNoteOutcome as CallOutcome) || undefined
+    };
+
+    this.callNotesService.createCallNote(request).subscribe({
+      next: () => {
+        this.isSavingNote = false;
+        this.showFollowUpPanel = false;
+        this.quickNoteSubject = '';
+        this.quickNoteText = '';
+        this.quickNoteOutcome = '';
+        this.quickNoteType = 'PHONE_OUTBOUND';
+        this.loadCallNotes(this.client!.id!);
+      },
+      error: () => {
+        this.isSavingNote = false;
+      }
     });
   }
 
@@ -669,7 +715,7 @@ export class ClientDetailComponent implements OnInit {
       clientId: this.client.id,
       callDate: new Date().toISOString(),
       callType: (this.quickNoteType as CallType) || CallType.PHONE_OUTBOUND,
-      subject: this.quickNoteSubject.trim() || this.followUpSubject || 'Gesprächsnotiz',
+      subject: this.quickNoteSubject.trim() || 'Gesprächsnotiz',
       notes: this.quickNoteText.trim(),
       followUpRequired: false,
       outcome: (this.quickNoteOutcome as CallOutcome) || undefined
@@ -684,7 +730,6 @@ export class ClientDetailComponent implements OnInit {
         this.quickNoteOutcome = '';
         this.quickNoteType = 'PHONE_OUTBOUND';
         this.loadCallNotes(this.client!.id!);
-        if (this.showContactPanel) this.dismissContactPanel();
       },
       error: () => {
         this.isSavingNote = false;
@@ -762,12 +807,6 @@ export class ClientDetailComponent implements OnInit {
       case ViewingStatus.CANCELLED: return 'var(--color-error)';
       default: return 'var(--stage-viewing)';
     }
-  }
-
-  getInitials(): string {
-    const f = this.client?.firstName?.charAt(0)?.toUpperCase() ?? '';
-    const l = this.client?.lastName?.charAt(0)?.toUpperCase() ?? '';
-    return f + l;
   }
 
   hasAddress(): boolean {
