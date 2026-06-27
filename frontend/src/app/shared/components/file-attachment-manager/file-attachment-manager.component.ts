@@ -252,6 +252,33 @@ export class FileAttachmentManagerComponent implements OnInit, OnDestroy {
     return this.fileAttachmentService.getFileColorClass(attachment);
   }
 
+  getPhosphorIcon(attachment: FileAttachmentDto): string {
+    if (attachment.isPdf) return 'ph ph-file-pdf';
+    if (attachment.isImage) return 'ph ph-image';
+    const ext = attachment.fileExtension?.toLowerCase();
+    if (ext === 'doc' || ext === 'docx') return 'ph ph-microsoft-word-logo';
+    if (ext === 'xls' || ext === 'xlsx') return 'ph ph-microsoft-excel-logo';
+    return 'ph ph-file';
+  }
+
+  getFileTypeBg(attachment: FileAttachmentDto): string {
+    if (attachment.isPdf) return 'rgba(178,58,85,0.1)';
+    if (attachment.isImage) return 'rgba(37,99,235,0.1)';
+    const ext = attachment.fileExtension?.toLowerCase();
+    if (ext === 'doc' || ext === 'docx') return 'rgba(37,99,235,0.1)';
+    if (ext === 'xls' || ext === 'xlsx') return 'rgba(22,163,74,0.1)';
+    return 'var(--surface-2)';
+  }
+
+  getFileTypeColor(attachment: FileAttachmentDto): string {
+    if (attachment.isPdf) return '#b23a55';
+    if (attachment.isImage) return '#2563eb';
+    const ext = attachment.fileExtension?.toLowerCase();
+    if (ext === 'doc' || ext === 'docx') return '#3b82f6';
+    if (ext === 'xls' || ext === 'xlsx') return '#16a34a';
+    return 'var(--text-3)';
+  }
+
   /**
    * Get file type metadata
    */

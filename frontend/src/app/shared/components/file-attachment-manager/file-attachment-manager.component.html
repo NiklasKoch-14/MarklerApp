@@ -1,164 +1,109 @@
-<div class="file-attachment-manager">
-  <!-- Upload Section -->
-  <div class="mb-4">
-    <!-- Drag & Drop Zone -->
-    <div
-      class="border-2 border-dashed rounded-lg p-3 text-center transition-colors cursor-pointer"
-      [class.border-blue-500]="isDragOver"
-      [class.bg-blue-50]="isDragOver"
-      [class.dark:bg-blue-900]="isDragOver"
-      [class.border-gray-300]="!isDragOver"
-      [class.dark:border-gray-600]="!isDragOver"
-      (dragover)="onDragOver($event)"
-      (dragleave)="onDragLeave($event)"
-      (drop)="onDrop($event)"
-      (click)="fileInput.click()"
-    >
-      <div class="flex items-center justify-center space-x-3">
-        <svg
-          class="w-6 h-6 text-gray-400 dark:text-gray-500"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-          />
-        </svg>
-        <div class="text-left">
-          <p class="text-sm text-gray-700 dark:text-gray-300">
-            <span class="font-semibold">{{ 'attachments.clickToUpload' | translate }}</span>
-            {{ 'attachments.orDragAndDrop' | translate }}
-          </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">
-            PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, GIF ({{ 'attachments.maxFileSize' | translate }}: 10 MB)
-          </p>
-        </div>
+<div>
+  <!-- Drop Zone -->
+  <div style="border:2px dashed;border-radius:12px;padding:16px;text-align:center;cursor:pointer;transition:border-color 0.15s,background 0.15s;"
+       [style.border-color]="isDragOver ? 'var(--primary)' : 'var(--border)'"
+       [style.background]="isDragOver ? 'var(--accent-soft)' : 'var(--surface-2)'"
+       (dragover)="onDragOver($event)"
+       (dragleave)="onDragLeave($event)"
+       (drop)="onDrop($event)"
+       (click)="fileInput.click()">
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;">
+      <i class="ph ph-upload-simple" style="font-size:24px;" [style.color]="isDragOver ? 'var(--primary)' : 'var(--text-3)'"></i>
+      <div style="text-align:left;">
+        <p style="font-size:13px;color:var(--text-2);margin:0;">
+          <span style="font-weight:700;">{{ 'attachments.clickToUpload' | translate }}</span>
+          {{ 'attachments.orDragAndDrop' | translate }}
+        </p>
+        <p style="font-size:11px;color:var(--text-3);margin:3px 0 0;">PDF, DOC, XLS, JPG, PNG (max 10 MB)</p>
       </div>
-      <input
-        type="file"
-        class="hidden"
-        #fileInput
-        (change)="onFileSelected($event)"
-        multiple
-        accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
-      />
     </div>
+    <input type="file" style="display:none;" #fileInput
+           (change)="onFileSelected($event)" multiple
+           accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif">
+  </div>
 
-    <!-- Upload Progress -->
-    <div *ngIf="uploadStates.length > 0" class="mt-3 space-y-2">
-      <div *ngFor="let state of uploadStates" class="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
-        <div class="flex items-center justify-between mb-1">
-          <span class="text-xs font-medium text-gray-700 dark:text-gray-300 truncate mr-2">{{ state.file.name }}</span>
-          <span class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
-            {{ fileAttachmentService.formatFileSize(state.file.size) }}
-          </span>
-        </div>
-        <div *ngIf="state.uploading" class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-          <div
-            class="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
-            [style.width.%]="state.progress"
-          ></div>
-        </div>
-        <div *ngIf="state.error" class="text-xs text-red-600 dark:text-red-400 mt-1">
-          {{ state.error }}
-        </div>
-        <div *ngIf="!state.uploading && !state.error" class="text-xs text-green-600 dark:text-green-400 mt-1">
-          {{ 'attachments.uploadSuccess' | translate }}
-        </div>
+  <!-- Upload Progress -->
+  <div *ngIf="uploadStates.length > 0" style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
+    <div *ngFor="let state of uploadStates"
+         style="background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:8px;">
+        <span style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ state.file.name }}</span>
+        <span style="font-size:11px;color:var(--text-3);flex-shrink:0;">{{ fileAttachmentService.formatFileSize(state.file.size) }}</span>
+      </div>
+      <div *ngIf="state.uploading" style="background:var(--border);border-radius:4px;height:3px;overflow:hidden;">
+        <div style="background:var(--primary);height:100%;border-radius:4px;transition:width 0.3s;" [style.width.%]="state.progress"></div>
+      </div>
+      <div *ngIf="state.error" style="font-size:11px;color:var(--color-error);margin-top:3px;">{{ state.error }}</div>
+      <div *ngIf="!state.uploading && !state.error" style="font-size:11px;color:var(--color-success);margin-top:3px;">
+        <i class="ph ph-check-circle"></i> {{ 'attachments.uploadSuccess' | translate }}
       </div>
     </div>
   </div>
 
   <!-- Attachments List -->
-  <div>
-    <h3 class="text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">
-      {{ 'attachments.listTitle' | translate }}
-      <span class="text-sm font-normal text-gray-500 dark:text-gray-400">({{ attachments.length }})</span>
-    </h3>
-
-    <!-- Loading State -->
-    <div *ngIf="isLoading" class="text-center py-8">
-      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ 'common.loading' | translate }}</p>
+  <div style="margin-top:16px;">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+      <span style="font-size:13px;font-weight:700;color:var(--text);">{{ 'attachments.listTitle' | translate }}</span>
+      <span style="font-size:12px;color:var(--text-3);">({{ attachments.length }})</span>
     </div>
 
-    <!-- Empty State -->
-    <div
-      *ngIf="!isLoading && attachments.length === 0"
-      class="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg"
-    >
-      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-        />
-      </svg>
-      <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">{{ 'attachments.noDocuments' | translate }}</p>
+    <!-- Loading -->
+    <div *ngIf="isLoading" style="text-align:center;padding:20px 0;">
+      <div style="width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;"></div>
     </div>
 
-    <!-- Attachments Gallery (Horizontal) -->
-    <div *ngIf="!isLoading && attachments.length > 0" class="relative">
-      <div class="flex gap-3 overflow-x-auto pb-4" style="scroll-behavior: smooth;">
-        <div
-          *ngFor="let attachment of attachments"
-          class="flex-shrink-0 w-24 relative border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
-          (click)="downloadAttachment(attachment)"
-          (contextmenu)="onContextMenu($event, attachment)"
-          [title]="attachment.originalFileName"
-        >
-          <!-- File Type Icon (Upper Half) -->
-          <div
-            class="h-16 flex items-center justify-center"
-            [ngClass]="{
-              'bg-red-100 dark:bg-red-900': attachment.isPdf,
-              'bg-blue-100 dark:bg-blue-900': attachment.isImage,
-              'bg-indigo-100 dark:bg-indigo-900': attachment.isDocument,
-              'bg-gray-100 dark:bg-gray-700': !attachment.isPdf && !attachment.isImage && !attachment.isDocument
-            }"
-          >
-            <span class="material-icons text-4xl" [ngClass]="getFileColorClass(attachment)">
-              {{ getFileIcon(attachment) }}
-            </span>
+    <!-- Empty -->
+    <div *ngIf="!isLoading && attachments.length === 0"
+         style="text-align:center;padding:20px;background:var(--surface-2);border-radius:10px;">
+      <i class="ph ph-file-x" style="font-size:28px;color:var(--text-3);display:block;margin-bottom:8px;"></i>
+      <p style="font-size:13px;color:var(--text-3);margin:0;">{{ 'attachments.noDocuments' | translate }}</p>
+    </div>
+
+    <!-- Gallery -->
+    <div *ngIf="!isLoading && attachments.length > 0"
+         style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;">
+      <div *ngFor="let attachment of attachments"
+           style="flex-shrink:0;width:88px;border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:box-shadow 0.15s,border-color 0.15s;"
+           (click)="downloadAttachment(attachment)"
+           (contextmenu)="onContextMenu($event, attachment)"
+           [title]="attachment.originalFileName"
+           class="attach-card">
+
+        <!-- Icon area -->
+        <div style="height:56px;display:flex;align-items:center;justify-content:center;"
+             [style.background]="getFileTypeBg(attachment)">
+          <i [class]="getPhosphorIcon(attachment)" style="font-size:24px;" [style.color]="getFileTypeColor(attachment)"></i>
+        </div>
+
+        <!-- Name + size -->
+        <div style="padding:6px 8px;background:var(--surface);">
+          <div style="font-size:11px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" [title]="attachment.originalFileName">
+            {{ attachment.originalFileName }}
           </div>
-
-          <!-- File Info (Lower Half) -->
-          <div class="p-2 bg-white dark:bg-gray-800">
-            <h4 class="text-xs font-medium text-gray-900 dark:text-gray-100 truncate" [title]="attachment.originalFileName">
-              {{ attachment.originalFileName }}
-            </h4>
-            <div class="text-xs text-gray-500 dark:text-gray-400 truncate">
-              {{ attachment.formattedFileSize || fileAttachmentService.formatFileSize(attachment.fileSize) }}
-            </div>
+          <div style="font-size:10px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            {{ attachment.formattedFileSize || fileAttachmentService.formatFileSize(attachment.fileSize) }}
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Context Menu -->
-    <div
-      *ngIf="contextMenuVisible"
-      class="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-50 min-w-[120px]"
-      [style.left.px]="contextMenuX"
-      [style.top.px]="contextMenuY"
-    >
-      <button
-        (click)="downloadAttachment(contextMenuAttachment!); closeContextMenu()"
-        class="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-      >
-        {{ 'common.download' | translate }}
-      </button>
-      <button
-        (click)="deleteAttachment(contextMenuAttachment!); closeContextMenu()"
-        class="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-      >
-        {{ 'common.delete' | translate }}
-      </button>
-    </div>
+  <!-- Context Menu -->
+  <div *ngIf="contextMenuVisible"
+       style="position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);z-index:50;min-width:130px;overflow:hidden;"
+       [style.left.px]="contextMenuX"
+       [style.top.px]="contextMenuY">
+    <button (click)="downloadAttachment(contextMenuAttachment!); closeContextMenu()"
+            style="width:100%;text-align:left;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:13px;color:var(--text-2);font-family:inherit;display:flex;align-items:center;gap:8px;"
+            class="ctx-btn">
+      <i class="ph ph-download-simple" style="font-size:14px;"></i>
+      {{ 'common.download' | translate }}
+    </button>
+    <button (click)="deleteAttachment(contextMenuAttachment!); closeContextMenu()"
+            style="width:100%;text-align:left;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:13px;color:var(--color-error);font-family:inherit;display:flex;align-items:center;gap:8px;"
+            class="ctx-btn">
+      <i class="ph ph-trash" style="font-size:14px;"></i>
+      {{ 'common.delete' | translate }}
+    </button>
   </div>
 </div>
