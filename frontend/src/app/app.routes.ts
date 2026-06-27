@@ -58,6 +58,10 @@ export const routes: Routes = [
         path: 'matching',
         redirectTo: '/properties/match',
         pathMatch: 'full'
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('./features/settings/settings.component').then(c => c.SettingsComponent)
       }
     ]
   },

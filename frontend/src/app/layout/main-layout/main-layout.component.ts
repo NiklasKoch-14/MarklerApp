@@ -1,12 +1,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { AuthService, Agent } from '../../core/auth/auth.service';
-import { ThemeService } from '../../core/services/theme.service';
 
 interface NavItem {
   route: string;
@@ -77,12 +76,14 @@ interface NavItem {
         </nav>
 
         <!-- User -->
-        <div class="sidebar-user">
+        <div class="sidebar-user" style="cursor:pointer;" [routerLink]="['/settings']">
           <div style="min-width:0; flex:1;">
             <div class="sidebar-user-name">{{ userName }}</div>
             <div class="sidebar-user-role">{{ 'navigation.role' | translate }}</div>
           </div>
-          <button class="sidebar-icon-btn" (click)="logout()" [title]="'auth.logout' | translate">
+          <button class="sidebar-icon-btn"
+                  (click)="$event.stopPropagation(); logout()"
+                  [title]="'auth.logout' | translate">
             <i class="ph ph-sign-out" style="font-size:17px;"></i>
           </button>
         </div>
@@ -91,36 +92,6 @@ interface NavItem {
 
       <!-- ── Content area ────────────────────────────── -->
       <div class="content-area">
-
-        <!-- Topbar -->
-        <header class="topbar">
-          <div class="topbar-search-wrap">
-            <i class="ph ph-magnifying-glass topbar-search-icon"></i>
-            <input class="topbar-search-input"
-                   type="text"
-                   [placeholder]="'navigation.search' | translate" />
-          </div>
-
-          <div class="topbar-spacer"></div>
-
-          <!-- Language toggle -->
-          <div class="lang-toggle">
-            <button class="lang-btn" [class.active]="currentLang === 'de'" (click)="setLang('de')">DE</button>
-            <button class="lang-btn" [class.active]="currentLang === 'en'" (click)="setLang('en')">EN</button>
-          </div>
-
-          <!-- Theme toggle -->
-          <button class="topbar-icon-btn" (click)="toggleTheme()" [title]="'navigation.toggleTheme' | translate">
-            <i [class]="isDark ? 'ph ph-sun' : 'ph ph-moon'" style="font-size:17px;"></i>
-          </button>
-
-          <!-- Notifications -->
-          <button class="topbar-icon-btn" [routerLink]="['/notifications']">
-            <i class="ph ph-bell" style="font-size:17px;"></i>
-            <span class="notification-dot"></span>
-          </button>
-
-        </header>
 
         <!-- Page content -->
         <main class="page-content">
@@ -142,17 +113,12 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   navItems: NavItem[] = [...this.defaultNavItems];
 
-  userInitials = '?';
   userName = '';
-  currentLang = 'de';
-  isDark = false;
 
   private destroy$ = new Subject<void>();
 
   constructor(
     private authService: AuthService,
-    private themeService: ThemeService,
-    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -160,11 +126,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(user => this.updateUser(user));
 
-    this.themeService.theme$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(theme => this.isDark = theme === 'dark');
-
-    this.currentLang = this.translate.currentLang || this.translate.defaultLang || 'de';
     this.loadNavOrder();
   }
 
@@ -174,13 +135,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   }
 
   private updateUser(user: Agent | null): void {
-    if (user) {
-      this.userInitials = `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
-      this.userName = `${user.firstName} ${user.lastName}`;
-    } else {
-      this.userInitials = '?';
-      this.userName = '';
-    }
+    this.userName = user ? `${user.firstName} ${user.lastName}` : '';
   }
 
   private loadNavOrder(): void {
@@ -209,15 +164,5 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   logout(): void {
     this.authService.logout();
-  }
-
-  setLang(lang: string): void {
-    this.currentLang = lang;
-    this.translate.use(lang);
-    localStorage.setItem('lang', lang);
-  }
-
-  toggleTheme(): void {
-    this.themeService.toggleTheme();
   }
 }
