@@ -1,235 +1,150 @@
-<div class="p-6">
+<div style="padding:28px 32px;">
+
   <!-- Header -->
-  <div class="page-header">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
     <div>
-      <h1 class="page-title">{{ 'properties.title' | translate }}</h1>
-      <p style="font-size:14px; color:var(--text-2); margin-top:4px;">{{ 'properties.management' | translate }}</p>
+      <h1 style="font-size:24px;font-weight:800;color:var(--text);margin:0;">{{ 'properties.title' | translate }}</h1>
+      <p style="font-size:14px;color:var(--text-2);margin-top:4px;">{{ 'properties.management' | translate }}</p>
     </div>
-    <div style="display:flex; gap:10px;">
-      <!-- Filters temporarily disabled -->
-      <!--
-      <button (click)="toggleFilters()" class="btn btn-outline">
-        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-        </svg>
-        {{ 'common.filters' | translate }}
-      </button>
-      -->
-      <a routerLink="/properties/new" class="btn-primary">
-        <i class="ph ph-plus"></i>
-        {{ 'properties.add' | translate }}
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <!-- Status filter -->
+      <select [(ngModel)]="selectedStatus" (change)="onFilterChange()"
+              style="padding:8px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;outline:none;">
+        <option value="">Alle Status</option>
+        <option value="AVAILABLE">Verfügbar</option>
+        <option value="RESERVED">Reserviert</option>
+        <option value="SOLD">Verkauft</option>
+        <option value="RENTED">Vermietet</option>
+        <option value="WITHDRAWN">Zurückgezogen</option>
+      </select>
+      <!-- Type filter -->
+      <select [(ngModel)]="selectedType" (change)="onFilterChange()"
+              style="padding:8px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;outline:none;">
+        <option value="">Alle Typen</option>
+        <option value="HOUSE">Haus</option>
+        <option value="APARTMENT">Wohnung</option>
+        <option value="TOWNHOUSE">Reihenhaus</option>
+        <option value="VILLA">Villa</option>
+        <option value="OFFICE">Büro</option>
+        <option value="LAND">Grundstück</option>
+        <option value="GARAGE">Garage</option>
+        <option value="OTHER">Sonstige</option>
+      </select>
+      <!-- Add button -->
+      <a routerLink="/properties/new"
+         style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;">
+        <i class="ph ph-plus" style="font-size:14px;"></i>
+        + Neues Objekt
       </a>
     </div>
   </div>
 
-  <!-- Results Count -->
-  <div style="margin-top:16px;">
-    <p style="font-size:13px; color:var(--text-2);">
-      {{ 'common.showing' | translate }} <strong>{{ properties.length }}</strong> {{ 'common.of' | translate }}
-      <strong>{{ totalElements }}</strong> {{ 'properties.title' | translate | lowercase }}
-    </p>
+  <!-- Loading -->
+  <div *ngIf="isLoading" style="text-align:center;padding:64px 0;color:var(--text-3);">
+    <div style="width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;"></div>
   </div>
 
-  <!-- Property Grid -->
-  <div class="mt-6">
-    <div *ngIf="isLoading" class="text-center py-12">
-      <div class="spinner h-8 w-8 mx-auto"></div>
-      <p class="mt-2 text-sm text-gray-500">{{ 'properties.loadingProperties' | translate }}</p>
-    </div>
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && properties.length === 0"
+       style="text-align:center;padding:56px 24px;background:var(--surface);border:1px solid var(--border);border-radius:14px;">
+    <i class="ph ph-house" style="font-size:48px;color:var(--text-3);display:block;margin-bottom:12px;"></i>
+    <h3 style="font-size:15px;font-weight:600;color:var(--text);margin:0 0 6px;">{{ 'properties.noPropertiesFound' | translate }}</h3>
+    <p style="font-size:13px;color:var(--text-2);margin:0 0 20px;">{{ 'properties.noPropertiesHint' | translate }}</p>
+    <a routerLink="/properties/new"
+       style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--primary);color:#fff;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;">
+      <i class="ph ph-plus"></i>
+      {{ 'properties.add' | translate }}
+    </a>
+  </div>
 
-    <div *ngIf="!isLoading && properties.length === 0"
-      style="text-align:center; padding:48px 24px; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow);">
-      <i class="ph ph-house" style="font-size:48px; color:var(--text-3); display:block; margin-bottom:12px;"></i>
-      <h3 style="font-size:15px; font-weight:600; color:var(--text); margin:0 0 6px;">{{ 'properties.noPropertiesFound' | translate }}</h3>
-      <p style="font-size:13px; color:var(--text-2); margin:0 0 20px;">{{ 'properties.noPropertiesHint' | translate }}</p>
-      <a routerLink="/properties/new" class="btn-primary" style="display:inline-flex;">
-        <i class="ph ph-plus"></i>
-        {{ 'properties.add' | translate }}
-      </a>
-    </div>
+  <!-- Card Grid -->
+  <div *ngIf="!isLoading && properties.length > 0"
+       style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
 
-    <div *ngIf="!isLoading && properties.length > 0"
-         class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      <div *ngFor="let property of properties; trackBy: trackById"
-           [routerLink]="['/properties', property.id]"
-           class="card overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
-        <!-- Property Image -->
-        <div class="relative h-48 overflow-hidden bg-gray-200 dark:bg-gray-700">
-          <img *ngIf="getPrimaryImage(property)"
-               [src]="getPrimaryImage(property)"
-               [alt]="property.title"
-               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-          <!-- Default House Icon when no image -->
-          <div *ngIf="!getPrimaryImage(property)"
-               class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800">
-            <svg class="w-20 h-20 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-            </svg>
-          </div>
-          <!-- Status Badge -->
-          <div class="absolute top-2 right-2">
-            <span [ngClass]="getStatusBadgeClass(property.status)"
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
-              {{ property.status | translateEnum:'propertyStatus' }}
-            </span>
-          </div>
-          <!-- Listing Type Badge -->
-          <div class="absolute top-2 left-2">
-            <span [ngClass]="getListingTypeBadgeClass(property.listingType)"
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
-              {{ property.listingType | translateEnum:'listingType' }}
-            </span>
-          </div>
+    <div *ngFor="let property of properties; trackBy: trackById"
+         [routerLink]="['/properties', property.id]"
+         class="prop-card">
+
+      <!-- Photo area -->
+      <div style="position:relative;height:180px;overflow:hidden;border-radius:14px 14px 0 0;">
+
+        <!-- Real image -->
+        <img *ngIf="getPrimaryImage(property)"
+             [src]="getPrimaryImage(property)"
+             [alt]="property.title"
+             class="prop-img">
+
+        <!-- Placeholder (hatched) -->
+        <div *ngIf="!getPrimaryImage(property)" class="prop-placeholder">
+          <span style="font-size:12px;color:var(--text-3);">objektfoto</span>
         </div>
 
-        <!-- Property Details -->
-        <div class="p-4">
-          <!-- Price -->
-          <div class="text-lg font-bold text-primary-600 dark:text-primary-400">
+        <!-- Status badge overlay -->
+        <div style="position:absolute;top:10px;left:10px;">
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;"
+                [style.background]="getStatusBg(property.status)"
+                [style.color]="getStatusColor(property.status)">
+            <span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;flex-shrink:0;"></span>
+            {{ getStatusLabel(property.status) }}
+          </span>
+        </div>
+
+      </div>
+
+      <!-- Card body -->
+      <div style="padding:14px 16px 16px;">
+
+        <!-- Type chips -->
+        <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+          <span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:6px;background:var(--surface-2);color:var(--text-2);">
+            {{ getPropertyTypeLabel(property.propertyType) }}
+          </span>
+          <span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:6px;background:var(--surface-2);color:var(--text-2);">
+            {{ getListingTypeLabel(property.listingType) }}
+          </span>
+        </div>
+
+        <!-- Title -->
+        <div class="prop-title">{{ property.title }}</div>
+
+        <!-- Location -->
+        <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-3);margin-bottom:14px;">
+          <i class="ph ph-map-pin" style="font-size:12px;flex-shrink:0;"></i>
+          <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            <ng-container *ngIf="property.addressDistrict">{{ property.addressDistrict }}, </ng-container>{{ property.addressCity }}
+          </span>
+        </div>
+
+        <!-- Footer: price + specs -->
+        <div style="display:flex;align-items:baseline;justify-content:space-between;border-top:1px solid var(--border);padding-top:10px;">
+          <div style="font-size:16px;font-weight:800;color:var(--text);">
             {{ propertyService.formatPrice(property.price, property.listingType) }}
           </div>
-
-          <!-- Title -->
-          <h3 class="mt-2 text-sm font-semibold text-gray-900 dark:text-white line-clamp-2">
-            {{ property.title }}
-          </h3>
-
-          <!-- Location -->
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
-            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-            </svg>
-            {{ property.addressCity }}, {{ property.addressPostalCode }}
-          </p>
-
-          <!-- Property Type -->
-          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            {{ property.propertyType | translateEnum:'propertyType' }}
-          </p>
-
-          <!-- Specifications -->
-          <div class="mt-3 flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-            <div *ngIf="property.livingAreaSqm" class="flex items-center">
-              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7H4V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7h-6V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z"></path>
-              </svg>
-              {{ property.livingAreaSqm }} m²
-            </div>
-            <div *ngIf="property.rooms" class="flex items-center">
-              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-              </svg>
-              {{ property.rooms }} {{ 'common.rooms' | translate }}
-            </div>
-            <div *ngIf="property.bedrooms" class="flex items-center">
-              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-              </svg>
-              {{ property.bedrooms }} {{ 'common.bed' | translate }}
-            </div>
-          </div>
-
-          <!-- Features Icons -->
-          <div class="mt-3 flex items-center space-x-2">
-            <span *ngIf="property.exposeFileName"
-                  class="text-xs text-red-600 dark:text-red-400"
-                  [title]="'properties.expose.title' | translate">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
-              </svg>
-            </span>
-            <span *ngIf="property.hasElevator" class="text-xs text-gray-500" title="Elevator">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 3.5l4 4h-3v4H9v-4H6l4-4z"></path>
-              </svg>
-            </span>
-            <span *ngIf="property.hasBalcony" class="text-xs text-gray-500" title="Balcony">🏡</span>
-            <span *ngIf="property.hasGarden" class="text-xs text-gray-500" title="Garden">🌳</span>
-            <span *ngIf="property.hasParking" class="text-xs text-gray-500" title="Parking">🅿️</span>
-            <span *ngIf="property.petsAllowed" class="text-xs text-gray-500" title="Pets Allowed">🐾</span>
-          </div>
-
-          <!-- Action Buttons (for properties with expose) -->
-          <div *ngIf="property.exposeFileName && property.id" class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700 flex space-x-2">
-            <button
-              (click)="previewExpose($event, property.id!)"
-              class="flex-1 inline-flex justify-center items-center px-3 py-2 text-xs font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              [title]="'properties.expose.preview' | translate">
-              <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-              </svg>
-              {{ 'properties.expose.preview' | translate }}
-            </button>
-            <button
-              (click)="downloadExpose($event, property.id!)"
-              class="flex-1 inline-flex justify-center items-center px-3 py-2 text-xs font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              [title]="'properties.expose.download' | translate">
-              <svg class="w-3.5 h-3.5 mr-1.5 text-red-600 dark:text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
-              </svg>
-              {{ 'common.download' | translate }}
-            </button>
+          <div style="font-size:12px;color:var(--text-3);">
+            <ng-container *ngIf="property.livingAreaSqm">{{ property.livingAreaSqm }} m²</ng-container>
+            <ng-container *ngIf="property.livingAreaSqm && property.rooms"> · </ng-container>
+            <ng-container *ngIf="property.rooms">{{ property.rooms }} Zi.</ng-container>
           </div>
         </div>
+
       </div>
     </div>
   </div>
 
   <!-- Pagination -->
-  <div *ngIf="!isLoading && properties.length > 0" class="mt-6 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-4">
-    <div class="flex-1 flex justify-between sm:hidden">
-      <button (click)="previousPage()" [disabled]="currentPage === 0"
-              class="btn btn-outline" [class.opacity-50]="currentPage === 0">
-        {{ 'common.previous' | translate }}
-      </button>
-      <button (click)="nextPage()" [disabled]="currentPage >= totalPages - 1"
-              class="btn btn-outline" [class.opacity-50]="currentPage >= totalPages - 1">
-        {{ 'common.next' | translate }}
-      </button>
-    </div>
-    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-      <div>
-        <p class="text-sm text-gray-700 dark:text-gray-300">
-          {{ 'common.showing' | translate }} {{ 'common.page' | translate }} <span class="font-medium">{{ currentPage + 1 }}</span> {{ 'common.of' | translate }}
-          <span class="font-medium">{{ totalPages }}</span>
-        </p>
-      </div>
-      <div>
-        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-          <button (click)="previousPage()" [disabled]="currentPage === 0"
-                  class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-            <span class="sr-only">{{ 'common.previous' | translate }}</span>
-            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-            </svg>
-          </button>
-
-          <button *ngFor="let page of getPageNumbers()" (click)="goToPage(page)"
-                  [class.bg-primary-50]="page === currentPage"
-                  [class.border-primary-500]="page === currentPage"
-                  [class.text-primary-600]="page === currentPage"
-                  class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-            {{ page + 1 }}
-          </button>
-
-          <button (click)="nextPage()" [disabled]="currentPage >= totalPages - 1"
-                  class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-            <span class="sr-only">{{ 'common.next' | translate }}</span>
-            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-            </svg>
-          </button>
-        </nav>
-      </div>
-    </div>
+  <div *ngIf="!isLoading && totalPages > 1"
+       style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:24px;">
+    <button (click)="previousPage()" [disabled]="currentPage === 0"
+            style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-2);font-size:13px;font-family:inherit;cursor:pointer;"
+            [style.opacity]="currentPage === 0 ? '0.4' : '1'">
+      ← Zurück
+    </button>
+    <span style="font-size:13px;color:var(--text-2);">Seite {{ currentPage + 1 }} von {{ totalPages }}</span>
+    <button (click)="nextPage()" [disabled]="currentPage >= totalPages - 1"
+            style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-2);font-size:13px;font-family:inherit;cursor:pointer;"
+            [style.opacity]="currentPage >= totalPages - 1 ? '0.4' : '1'">
+      Weiter →
+    </button>
   </div>
+
 </div>

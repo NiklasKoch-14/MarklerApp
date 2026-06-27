@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 import {
   PropertyService,
   Property,
@@ -17,14 +16,13 @@ import {
 @Component({
   selector: 'app-property-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, TranslateModule, TranslateEnumPipe],
+  imports: [CommonModule, RouterLink, FormsModule, TranslateModule],
   templateUrl: './property-list.component.html',
   styleUrls: ['./property-list.component.scss']
 })
 export class PropertyListComponent implements OnInit {
   properties: Property[] = [];
   isLoading = false;
-  showFilters = false;
 
   // Pagination
   currentPage = 0;
@@ -32,13 +30,10 @@ export class PropertyListComponent implements OnInit {
   totalElements = 0;
   totalPages = 0;
 
-  // Search and filters
+  // Filter state bound to the selects in the template
+  selectedStatus = '';
+  selectedType = '';
   searchFilter: PropertySearchFilter = {};
-
-  // Enum values for dropdowns
-  propertyTypes = Object.values(PropertyType);
-  listingTypes = Object.values(ListingType);
-  propertyStatuses = Object.values(PropertyStatus);
 
   constructor(public propertyService: PropertyService) {}
 
@@ -49,7 +44,7 @@ export class PropertyListComponent implements OnInit {
   private loadProperties(): void {
     this.isLoading = true;
 
-    const hasFilters = Object.keys(this.searchFilter).length > 0;
+    const hasFilters = Object.keys(this.searchFilter).some(k => (this.searchFilter as any)[k]);
 
     const observable = hasFilters
       ? this.propertyService.searchProperties(this.searchFilter, this.currentPage, this.pageSize)
@@ -69,26 +64,17 @@ export class PropertyListComponent implements OnInit {
     });
   }
 
+  onFilterChange(): void {
+    this.searchFilter = {};
+    if (this.selectedStatus) this.searchFilter.status = this.selectedStatus as PropertyStatus;
+    if (this.selectedType) this.searchFilter.propertyType = this.selectedType as PropertyType;
+    this.currentPage = 0;
+    this.loadProperties();
+  }
+
   applyFilters(): void {
     this.currentPage = 0;
     this.loadProperties();
-  }
-
-  clearFilters(): void {
-    this.searchFilter = {};
-    this.currentPage = 0;
-    this.loadProperties();
-  }
-
-  toggleFilters(): void {
-    this.showFilters = !this.showFilters;
-  }
-
-  goToPage(page: number): void {
-    if (page >= 0 && page < this.totalPages) {
-      this.currentPage = page;
-      this.loadProperties();
-    }
   }
 
   nextPage(): void {
@@ -105,35 +91,72 @@ export class PropertyListComponent implements OnInit {
     }
   }
 
-  getStatusBadgeClass(status?: PropertyStatus): string {
+  getStatusLabel(status?: PropertyStatus): string {
     switch (status) {
-      case PropertyStatus.AVAILABLE:
-        return 'bg-green-100 text-green-800';
-      case PropertyStatus.RESERVED:
-        return 'bg-yellow-100 text-yellow-800';
-      case PropertyStatus.SOLD:
-        return 'bg-blue-100 text-blue-800';
-      case PropertyStatus.RENTED:
-        return 'bg-purple-100 text-purple-800';
-      case PropertyStatus.WITHDRAWN:
-        return 'bg-gray-100 text-gray-800';
-      case PropertyStatus.UNDER_CONSTRUCTION:
-        return 'bg-orange-100 text-orange-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case PropertyStatus.AVAILABLE:          return 'Verfügbar';
+      case PropertyStatus.RESERVED:           return 'Reserviert';
+      case PropertyStatus.SOLD:               return 'Verkauft';
+      case PropertyStatus.RENTED:             return 'Vermietet';
+      case PropertyStatus.WITHDRAWN:          return 'Zurückgezogen';
+      case PropertyStatus.UNDER_CONSTRUCTION: return 'Im Bau';
+      default:                                return status ?? '—';
     }
   }
 
-  getListingTypeBadgeClass(listingType: ListingType): string {
-    switch (listingType) {
-      case ListingType.SALE:
-        return 'bg-indigo-100 text-indigo-800';
-      case ListingType.RENT:
-        return 'bg-cyan-100 text-cyan-800';
-      case ListingType.LEASE:
-        return 'bg-teal-100 text-teal-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  getStatusBg(status?: PropertyStatus): string {
+    switch (status) {
+      case PropertyStatus.AVAILABLE:          return 'rgba(220,252,231,0.95)';
+      case PropertyStatus.RESERVED:           return 'rgba(254,243,199,0.95)';
+      case PropertyStatus.SOLD:               return 'rgba(219,234,254,0.95)';
+      case PropertyStatus.RENTED:             return 'rgba(237,233,254,0.95)';
+      case PropertyStatus.UNDER_CONSTRUCTION: return 'rgba(254,243,199,0.95)';
+      default:                                return 'rgba(243,244,246,0.95)';
+    }
+  }
+
+  getStatusColor(status?: PropertyStatus): string {
+    switch (status) {
+      case PropertyStatus.AVAILABLE:          return '#16a34a';
+      case PropertyStatus.RESERVED:           return '#d97706';
+      case PropertyStatus.SOLD:               return '#2563eb';
+      case PropertyStatus.RENTED:             return '#7c3aed';
+      case PropertyStatus.UNDER_CONSTRUCTION: return '#d97706';
+      default:                                return '#6b7280';
+    }
+  }
+
+  getPropertyTypeLabel(type?: PropertyType): string {
+    switch (type) {
+      case PropertyType.APARTMENT:     return 'Wohnung';
+      case PropertyType.HOUSE:         return 'Haus';
+      case PropertyType.TOWNHOUSE:     return 'Reihenhaus';
+      case PropertyType.VILLA:         return 'Villa';
+      case PropertyType.PENTHOUSE:     return 'Penthouse';
+      case PropertyType.LOFT:          return 'Loft';
+      case PropertyType.DUPLEX:        return 'Duplex';
+      case PropertyType.STUDIO:        return 'Studio';
+      case PropertyType.OFFICE:        return 'Büro';
+      case PropertyType.RETAIL:        return 'Einzelhandel';
+      case PropertyType.WAREHOUSE:     return 'Lager';
+      case PropertyType.INDUSTRIAL:    return 'Industrie';
+      case PropertyType.RESTAURANT:    return 'Restaurant';
+      case PropertyType.HOTEL:         return 'Hotel';
+      case PropertyType.PARKING_SPACE: return 'Stellplatz';
+      case PropertyType.GARAGE:        return 'Garage';
+      case PropertyType.LAND:          return 'Grundstück';
+      case PropertyType.FARM:          return 'Bauernhof';
+      case PropertyType.CASTLE:        return 'Schloss';
+      case PropertyType.OTHER:         return 'Sonstige';
+      default:                         return type ?? '—';
+    }
+  }
+
+  getListingTypeLabel(type?: ListingType): string {
+    switch (type) {
+      case ListingType.SALE:  return 'Kauf';
+      case ListingType.RENT:  return 'Miete';
+      case ListingType.LEASE: return 'Pacht';
+      default:                return type ?? '—';
     }
   }
 
@@ -145,64 +168,6 @@ export class PropertyListComponent implements OnInit {
     return null;
   }
 
-  getPageNumbers(): number[] {
-    const pages: number[] = [];
-    const maxPagesToShow = 5;
-
-    let startPage = Math.max(0, this.currentPage - Math.floor(maxPagesToShow / 2));
-    let endPage = Math.min(this.totalPages - 1, startPage + maxPagesToShow - 1);
-
-    if (endPage - startPage < maxPagesToShow - 1) {
-      startPage = Math.max(0, endPage - maxPagesToShow + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    return pages;
-  }
-
-  previewExpose(event: Event, propertyId: string): void {
-    event.stopPropagation(); // Prevent navigation to detail page
-    this.propertyService.downloadExpose(propertyId).subscribe({
-      next: (expose) => {
-        const pdfWindow = window.open('');
-        if (pdfWindow) {
-          pdfWindow.document.write(
-            `<iframe width='100%' height='100%' src='data:application/pdf;base64,${expose.fileData}'></iframe>`
-          );
-        } else {
-          alert('Failed to open preview window. Please check popup blocker settings.');
-        }
-      },
-      error: (err) => {
-        console.error('Error previewing expose:', err);
-        alert('Failed to preview expose. Please try again.');
-      }
-    });
-  }
-
-  downloadExpose(event: Event, propertyId: string): void {
-    event.stopPropagation(); // Prevent navigation to detail page
-    this.propertyService.downloadExpose(propertyId).subscribe({
-      next: (expose) => {
-        const linkSource = `data:application/pdf;base64,${expose.fileData}`;
-        const downloadLink = document.createElement('a');
-        downloadLink.href = linkSource;
-        downloadLink.download = expose.fileName;
-        downloadLink.click();
-      },
-      error: (err) => {
-        console.error('Error downloading expose:', err);
-        alert('Failed to download expose. Please try again.');
-      }
-    });
-  }
-
-  /**
-   * TrackBy function for *ngFor performance optimization
-   */
   trackById(index: number, item: Property): string | undefined {
     return item.id;
   }
