@@ -24,7 +24,7 @@ import { PropertyImageDto, PropertyImageType, getImageTypeName } from '../../mod
             [class.ring-primary]="image.isPrimary"
           >
             <!-- Image -->
-            <div class="aspect-square bg-gray-200 dark:bg-gray-700">
+            <div style="aspect-ratio:1;background:var(--surface-2);">
               <img
                 [src]="image.thumbnailUrl || image.imageUrl"
                 [alt]="image.altText || image.title || 'Property image'"
@@ -33,7 +33,7 @@ import { PropertyImageDto, PropertyImageType, getImageTypeName } from '../../mod
             </div>
 
             <!-- Image Info -->
-            <div class="p-2 bg-white dark:bg-gray-800">
+            <div style="padding:8px;background:var(--surface);">
               <div class="flex items-center justify-between mb-1">
                 <span class="text-xs font-medium truncate">{{ image.title || 'Untitled' }}</span>
                 <span *ngIf="image.isPrimary" class="badge badge-xs badge-primary">{{ 'properties.detail.primaryImage' | translate }}</span>
@@ -83,7 +83,7 @@ import { PropertyImageDto, PropertyImageType, getImageTypeName } from '../../mod
         <h3 class="text-lg font-semibold mb-4">Upload Images</h3>
 
         <div
-          class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer"
+          style="border:2px dashed var(--border);border-radius:10px;padding:32px;text-align:center;cursor:pointer;transition:border-color 0.15s;"
           [class.border-primary]="isDragging"
           (dragover)="onDragOver($event)"
           (dragleave)="onDragLeave($event)"
@@ -117,7 +117,7 @@ import { PropertyImageDto, PropertyImageType, getImageTypeName } from '../../mod
           <div class="space-y-2">
             <div
               *ngFor="let file of selectedFiles; let i = index"
-              class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-900 rounded"
+              style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:var(--surface-2);border-radius:8px;"
             >
               <div class="flex items-center gap-2 flex-1">
                 <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
