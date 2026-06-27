@@ -11,7 +11,7 @@ import { ThemeService, Theme } from '../../../core/services/theme.service';
   template: `
     <button
       (click)="toggleTheme()"
-      class="p-2 rounded-md text-gray-400 hover:text-gray-500 dark:text-gray-300 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+      style="padding:8px;border-radius:8px;color:var(--text-3);background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;"
       [attr.aria-label]="currentTheme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'"
       title="{{ currentTheme === 'light' ? 'Switch to dark mode' : 'Switch to light mode' }}">
 

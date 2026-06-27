@@ -211,20 +211,6 @@ export class ResetPasswordComponent implements OnInit {
     return 100;
   }
 
-  getPasswordStrengthClass(): string {
-    const width = this.getPasswordStrengthWidth();
-    if (width <= 33) return 'bg-error-500';
-    if (width <= 66) return 'bg-warning-500';
-    return 'bg-success-500';
-  }
-
-  getPasswordStrengthTextClass(): string {
-    const width = this.getPasswordStrengthWidth();
-    if (width <= 33) return 'text-error-600 dark:text-error-400';
-    if (width <= 66) return 'text-warning-600 dark:text-warning-400';
-    return 'text-success-600 dark:text-success-400';
-  }
-
   getPasswordStrengthText(): string {
     const width = this.getPasswordStrengthWidth();
     if (width <= 33) return 'auth.resetPassword.weakPassword';
