@@ -2,12 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 import {
   PropertyService,
   Property,
   PropertyImage,
-  PropertyStatus
+  PropertyStatus,
+  PropertyType,
+  ListingType,
+  HeatingType
 } from '../../services/property.service';
 import { FileAttachmentManagerComponent } from '../../../../shared/components/file-attachment-manager/file-attachment-manager.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
@@ -19,7 +21,7 @@ import { PropertyNoteService, PropertyNoteResponse, NoteCategory } from '../../s
 @Component({
   selector: 'app-property-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, TranslateEnumPipe, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent],
   templateUrl: './property-detail.component.html',
   styleUrls: ['./property-detail.component.scss']
 })
@@ -204,22 +206,88 @@ export class PropertyDetailComponent implements OnInit {
     }
   }
 
-  getStatusBadgeClass(status?: PropertyStatus): string {
+  getStatusLabel(status?: PropertyStatus): string {
     switch (status) {
-      case PropertyStatus.AVAILABLE:
-        return 'bg-green-100 text-green-800';
-      case PropertyStatus.RESERVED:
-        return 'bg-yellow-100 text-yellow-800';
-      case PropertyStatus.SOLD:
-        return 'bg-blue-100 text-blue-800';
-      case PropertyStatus.RENTED:
-        return 'bg-purple-100 text-purple-800';
-      case PropertyStatus.WITHDRAWN:
-        return 'bg-gray-100 text-gray-800';
-      case PropertyStatus.UNDER_CONSTRUCTION:
-        return 'bg-orange-100 text-orange-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case PropertyStatus.AVAILABLE:          return 'Verfügbar';
+      case PropertyStatus.RESERVED:           return 'Reserviert';
+      case PropertyStatus.SOLD:               return 'Verkauft';
+      case PropertyStatus.RENTED:             return 'Vermietet';
+      case PropertyStatus.WITHDRAWN:          return 'Zurückgezogen';
+      case PropertyStatus.UNDER_CONSTRUCTION: return 'Im Bau';
+      default:                                return status ?? '—';
+    }
+  }
+
+  getStatusBg(status?: PropertyStatus): string {
+    switch (status) {
+      case PropertyStatus.AVAILABLE:          return 'rgba(220,252,231,0.95)';
+      case PropertyStatus.RESERVED:           return 'rgba(254,243,199,0.95)';
+      case PropertyStatus.SOLD:               return 'rgba(219,234,254,0.95)';
+      case PropertyStatus.RENTED:             return 'rgba(237,233,254,0.95)';
+      case PropertyStatus.UNDER_CONSTRUCTION: return 'rgba(254,243,199,0.95)';
+      default:                                return 'rgba(243,244,246,0.95)';
+    }
+  }
+
+  getStatusColor(status?: PropertyStatus): string {
+    switch (status) {
+      case PropertyStatus.AVAILABLE:          return '#16a34a';
+      case PropertyStatus.RESERVED:           return '#d97706';
+      case PropertyStatus.SOLD:               return '#2563eb';
+      case PropertyStatus.RENTED:             return '#7c3aed';
+      case PropertyStatus.UNDER_CONSTRUCTION: return '#d97706';
+      default:                                return '#6b7280';
+    }
+  }
+
+  getPropertyTypeLabel(type?: PropertyType): string {
+    switch (type) {
+      case PropertyType.APARTMENT:     return 'Wohnung';
+      case PropertyType.HOUSE:         return 'Haus';
+      case PropertyType.TOWNHOUSE:     return 'Reihenhaus';
+      case PropertyType.VILLA:         return 'Villa';
+      case PropertyType.PENTHOUSE:     return 'Penthouse';
+      case PropertyType.LOFT:          return 'Loft';
+      case PropertyType.DUPLEX:        return 'Duplex';
+      case PropertyType.STUDIO:        return 'Studio';
+      case PropertyType.OFFICE:        return 'Büro';
+      case PropertyType.RETAIL:        return 'Einzelhandel';
+      case PropertyType.WAREHOUSE:     return 'Lager';
+      case PropertyType.INDUSTRIAL:    return 'Industrie';
+      case PropertyType.RESTAURANT:    return 'Restaurant';
+      case PropertyType.HOTEL:         return 'Hotel';
+      case PropertyType.PARKING_SPACE: return 'Stellplatz';
+      case PropertyType.GARAGE:        return 'Garage';
+      case PropertyType.LAND:          return 'Grundstück';
+      case PropertyType.FARM:          return 'Bauernhof';
+      case PropertyType.CASTLE:        return 'Schloss';
+      case PropertyType.OTHER:         return 'Sonstige';
+      default:                         return type ?? '—';
+    }
+  }
+
+  getListingTypeLabel(type?: ListingType): string {
+    switch (type) {
+      case ListingType.SALE:  return 'Kauf';
+      case ListingType.RENT:  return 'Miete';
+      case ListingType.LEASE: return 'Pacht';
+      default:                return type ?? '—';
+    }
+  }
+
+  getHeatingTypeLabel(type?: HeatingType): string {
+    switch (type) {
+      case HeatingType.GAS:              return 'Gas';
+      case HeatingType.OIL:              return 'Öl';
+      case HeatingType.ELECTRIC:         return 'Strom';
+      case HeatingType.HEAT_PUMP:        return 'Wärmepumpe';
+      case HeatingType.DISTRICT_HEATING: return 'Fernwärme';
+      case HeatingType.SOLAR:            return 'Solar';
+      case HeatingType.WOOD_PELLETS:     return 'Holzpellets';
+      case HeatingType.GEOTHERMAL:       return 'Erdwärme';
+      case HeatingType.COAL:             return 'Kohle';
+      case HeatingType.OTHER:            return 'Sonstige';
+      default:                           return type ?? '—';
     }
   }
 

@@ -1,594 +1,479 @@
-<div class="p-6">
-  <div *ngIf="isLoading" class="text-center py-8">
-    <app-loading-spinner size="lg"></app-loading-spinner>
-    <p class="mt-2 text-sm text-gray-500">{{ 'properties.loadingProperties' | translate }}</p>
+<div style="padding:28px 32px;" *ngIf="property">
+
+  <!-- Back + Hero -->
+  <a routerLink="/properties"
+     style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-3);text-decoration:none;margin-bottom:20px;">
+    <i class="ph ph-arrow-left" style="font-size:14px;"></i>
+    Zurück zur Übersicht
+  </a>
+
+  <!-- Hero card -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px 24px;margin-bottom:24px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:0;">
+      <!-- Status + type chips -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;"
+              [style.background]="getStatusBg(property.status)"
+              [style.color]="getStatusColor(property.status)">
+          <span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;flex-shrink:0;"></span>
+          {{ getStatusLabel(property.status) }}
+        </span>
+        <span style="font-size:12px;font-weight:600;padding:3px 9px;border-radius:6px;background:var(--surface-2);color:var(--text-2);">
+          {{ getPropertyTypeLabel(property.propertyType) }}
+        </span>
+        <span style="font-size:12px;font-weight:600;padding:3px 9px;border-radius:6px;background:var(--surface-2);color:var(--text-2);">
+          {{ getListingTypeLabel(property.listingType) }}
+        </span>
+      </div>
+
+      <!-- Title -->
+      <h1 style="font-size:22px;font-weight:800;color:var(--text);margin:0 0 6px;">{{ property.title }}</h1>
+
+      <!-- Price -->
+      <div style="font-size:20px;font-weight:800;color:var(--primary);margin-bottom:6px;">
+        {{ propertyService.formatPrice(property.price, property.listingType) }}
+      </div>
+
+      <!-- Address -->
+      <div style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text-3);">
+        <i class="ph ph-map-pin" style="font-size:14px;"></i>
+        {{ property.formattedAddress || [property.addressStreet, property.addressHouseNumber, property.addressPostalCode, property.addressCity].filter(Boolean).join(' ') }}
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+      <button *ngIf="property.exposeFileName"
+              (click)="previewExpose()"
+              [disabled]="isLoadingExpose"
+              style="display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
+        <i class="ph ph-file-pdf" style="font-size:14px;color:var(--color-error);"></i>
+        Exposé
+      </button>
+      <a [routerLink]="['/properties', property.id, 'edit']"
+         style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:1.5px solid var(--primary);border-radius:10px;background:var(--surface);color:var(--primary);font-size:13px;font-weight:700;text-decoration:none;">
+        <i class="ph ph-pencil-simple" style="font-size:14px;"></i>
+        Bearbeiten
+      </a>
+    </div>
   </div>
 
-  <div *ngIf="!isLoading && property">
-    <!-- Header -->
-    <div class="sm:flex sm:items-start sm:justify-between">
-      <div class="flex-1">
-        <div class="flex items-center space-x-3">
-          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ property.title }}</h1>
-          <span [ngClass]="getStatusBadgeClass(property.status)"
-                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium">
-            {{ property.status | translateEnum:'propertyStatus' }}
-          </span>
+  <!-- 2-column body -->
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start;">
+
+    <!-- LEFT: main content -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+      <!-- Image gallery -->
+      <div *ngIf="property.images && property.images.length > 0"
+           style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+        <!-- Main image -->
+        <div style="position:relative;height:320px;background:#111;display:flex;align-items:center;justify-content:center;">
+          <img *ngIf="selectedImage"
+               [src]="selectedImage.imageUrl"
+               [alt]="selectedImage.caption || property.title"
+               style="max-width:100%;max-height:100%;object-fit:contain;">
+          <!-- Arrows -->
+          <button *ngIf="property.images.length > 1" (click)="previousImage()"
+                  style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.8);border:none;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;">
+            <i class="ph ph-caret-left"></i>
+          </button>
+          <button *ngIf="property.images.length > 1" (click)="nextImage()"
+                  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.8);border:none;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;">
+            <i class="ph ph-caret-right"></i>
+          </button>
+          <div style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.55);color:#fff;font-size:12px;font-weight:600;padding:3px 10px;border-radius:10px;">
+            {{ selectedImageIndex + 1 }} / {{ property.images.length }}
+          </div>
         </div>
-        <p class="mt-2 text-lg text-primary-600 dark:text-primary-400 font-bold">
-          {{ propertyService.formatPrice(property.price, property.listingType) }}
-        </p>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
-          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-          </svg>
-          {{ property.formattedAddress || property.addressCity + ', ' + property.addressPostalCode }}
-        </p>
-      </div>
-      <div class="mt-4 sm:mt-0 sm:ml-4 flex space-x-3">
-        <!-- Expose Preview Button -->
-        <button (click)="previewExpose()"
-                [disabled]="!property.exposeFileName || isLoadingExpose"
-                class="btn btn-outline flex items-center space-x-2"
-                [class.opacity-50]="!property.exposeFileName"
-                [class.cursor-not-allowed]="!property.exposeFileName"
-                [title]="property.exposeFileName ? ('properties.expose.preview' | translate) : ('properties.expose.noExpose' | translate)">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-          </svg>
-          <span class="hidden sm:inline">{{ isLoadingExpose ? ('common.loading' | translate) : ('properties.expose.preview' | translate) }}</span>
-        </button>
-
-        <!-- Expose Download Button -->
-        <button (click)="downloadExpose()"
-                [disabled]="!property.exposeFileName || isLoadingExpose"
-                class="btn btn-outline flex items-center space-x-2"
-                [class.opacity-50]="!property.exposeFileName"
-                [class.cursor-not-allowed]="!property.exposeFileName"
-                [title]="property.exposeFileName ? ('properties.expose.download' | translate) : ('properties.expose.noExpose' | translate)">
-          <svg class="w-4 h-4 text-red-600 dark:text-red-400" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
-          </svg>
-          <span class="hidden sm:inline">{{ isLoadingExpose ? ('common.downloading' | translate) : ('common.download' | translate) }}</span>
-        </button>
-
-        <!-- Edit Property Button -->
-        <a [routerLink]="['/properties', property.id, 'edit']" class="btn btn-primary">
-          {{ 'properties.editProperty' | translate }}
-        </a>
-      </div>
-    </div>
-
-    <!-- Image Gallery -->
-    <div class="mt-6 card overflow-hidden" *ngIf="property.images && property.images.length > 0">
-      <!-- Main Image -->
-      <div class="relative h-96 bg-gray-900 dark:bg-gray-800 flex items-center justify-center">
-        <img *ngIf="selectedImage"
-             [src]="selectedImage.imageUrl"
-             [alt]="selectedImage.caption || property.title"
-             class="max-w-full max-h-full object-contain">
-
-        <!-- Navigation Arrows -->
-        <button *ngIf="property.images.length > 1"
-                (click)="previousImage()"
-                class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-75 hover:bg-opacity-100 rounded-full p-2 transition-all">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-          </svg>
-        </button>
-        <button *ngIf="property.images.length > 1"
-                (click)="nextImage()"
-                class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-75 hover:bg-opacity-100 rounded-full p-2 transition-all">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-          </svg>
-        </button>
-
-        <!-- Image Counter -->
-        <div class="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
-          {{ selectedImageIndex + 1 }} / {{ property.images.length }}
+        <!-- Thumbnails -->
+        <div style="display:flex;gap:8px;padding:10px 12px;overflow-x:auto;background:var(--surface-2);">
+          <button *ngFor="let img of property.images; let i = index"
+                  (click)="selectImage(img, i)"
+                  style="flex-shrink:0;width:64px;height:64px;border-radius:8px;overflow:hidden;border:2px solid transparent;cursor:pointer;padding:0;background:none;"
+                  [style.border-color]="i === selectedImageIndex ? 'var(--primary)' : 'var(--border)'">
+            <img [src]="img.thumbnailUrl || img.imageUrl"
+                 [alt]="img.caption || 'Foto ' + (i+1)"
+                 style="width:100%;height:100%;object-fit:cover;">
+          </button>
         </div>
       </div>
 
-      <!-- Thumbnail Strip -->
-      <div class="p-4 flex space-x-2 overflow-x-auto bg-gray-50 dark:bg-gray-900">
-        <button *ngFor="let image of property.images; let i = index"
-                (click)="selectImage(image, i)"
-                [class.ring-2]="i === selectedImageIndex"
-                [class.ring-primary-500]="i === selectedImageIndex"
-                class="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden hover:opacity-75 transition-opacity bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-          <img [src]="image.thumbnailUrl || image.imageUrl"
-               [alt]="image.caption || 'Property image ' + (i + 1)"
-               class="max-w-full max-h-full object-contain">
-        </button>
-      </div>
-    </div>
-
-    <!-- Property Details Grid -->
-    <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <!-- Basic Information -->
-      <div class="card">
-        <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.detail.basicInformation' | translate }}</h3>
-        </div>
-        <div class="card-body">
-          <dl class="space-y-4">
-            <div>
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.propertyType' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                {{ property.propertyType | translateEnum:'propertyType' }}
-              </dd>
-            </div>
-            <div>
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.listingType' | translate }}</dt>
-              <dd class="mt-1">
-                <span class="badge badge-primary">
-                  {{ property.listingType | translateEnum:'listingType' }}
-                </span>
-              </dd>
-            </div>
-            <div *ngIf="property.description">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.description' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white whitespace-pre-line">
-                {{ property.description }}
-              </dd>
-            </div>
-            <div *ngIf="property.availableFrom">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.availableFrom' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                {{ property.availableFrom | date:'mediumDate' }}
-              </dd>
-            </div>
-          </dl>
-        </div>
-      </div>
-
-      <!-- Location -->
-      <div class="card">
-        <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.detail.locationInfo' | translate }}</h3>
-        </div>
-        <div class="card-body">
-          <dl class="space-y-4">
-            <div>
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.addressStreet' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                {{ property.addressStreet }}
-                <span *ngIf="property.addressHouseNumber">{{ property.addressHouseNumber }}</span>
-              </dd>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.addressCity' | translate }}</dt>
-                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.addressCity }}</dd>
-              </div>
-              <div>
-                <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.addressPostalCode' | translate }}</dt>
-                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.addressPostalCode }}</dd>
-              </div>
-            </div>
-            <div *ngIf="property.addressState" class="grid grid-cols-2 gap-4">
-              <div>
-                <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.addressState' | translate }}</dt>
-                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.addressState }}</dd>
-              </div>
-              <div>
-                <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.addressCountry' | translate }}</dt>
-                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.addressCountry }}</dd>
-              </div>
-            </div>
-            <div *ngIf="property.addressDistrict">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.addressDistrict' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.addressDistrict }}</dd>
-            </div>
-          </dl>
-        </div>
-      </div>
-
-      <!-- Specifications -->
-      <div class="card">
-        <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.detail.specifications' | translate }}</h3>
-        </div>
-        <div class="card-body">
-          <dl class="grid grid-cols-2 gap-4">
-            <div *ngIf="property.livingAreaSqm">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.livingArea' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.livingAreaSqm }} m²</dd>
-            </div>
-            <div *ngIf="property.totalAreaSqm">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.totalArea' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.totalAreaSqm }} m²</dd>
-            </div>
-            <div *ngIf="property.plotAreaSqm">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.plotArea' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.plotAreaSqm }} m²</dd>
-            </div>
-            <div *ngIf="property.rooms">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.rooms' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.rooms }}</dd>
-            </div>
-            <div *ngIf="property.bedrooms">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.bedrooms' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.bedrooms }}</dd>
-            </div>
-            <div *ngIf="property.bathrooms">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.bathrooms' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.bathrooms }}</dd>
-            </div>
-            <div *ngIf="property.floors">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.floors' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.floors }}</dd>
-            </div>
-            <div *ngIf="property.floorNumber !== undefined">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.floorNumber' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.floorNumber }}</dd>
-            </div>
-            <div *ngIf="property.constructionYear">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.constructionYear' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.constructionYear }}</dd>
-            </div>
-            <div *ngIf="property.lastRenovationYear">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.renovationYear' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ property.lastRenovationYear }}</dd>
-            </div>
-          </dl>
-        </div>
-      </div>
-
-      <!-- Financial Information -->
-      <div class="card">
-        <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.detail.financialDetails' | translate }}</h3>
-        </div>
-        <div class="card-body">
-          <dl class="space-y-4">
-            <div *ngIf="property.price">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.price' | translate }}</dt>
-              <dd class="mt-1 text-lg font-bold text-primary-600 dark:text-primary-400">
-                {{ propertyService.formatPrice(property.price, property.listingType) }}
-              </dd>
-            </div>
-            <div *ngIf="property.pricePerSqm || property.calculatedPricePerSqm">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.pricePerSqm' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                {{ (property.pricePerSqm || property.calculatedPricePerSqm) | number:'1.2-2' }} EUR/m²
-              </dd>
-            </div>
-            <div *ngIf="property.additionalCosts">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.additionalCosts' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                {{ property.additionalCosts | number:'1.2-2' }} EUR/month
-              </dd>
-            </div>
-            <div *ngIf="property.heatingCosts">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.heatingCosts' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                {{ property.heatingCosts | number:'1.2-2' }} EUR/month
-              </dd>
-            </div>
-            <div *ngIf="property.commission">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.commission' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                {{ property.commission | number:'1.2-2' }} EUR
-              </dd>
-            </div>
-          </dl>
-        </div>
+      <!-- Description -->
+      <div *ngIf="property.description"
+           style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Beschreibung</div>
+        <p style="font-size:14px;color:var(--text-2);line-height:1.65;margin:0;white-space:pre-line;">{{ property.description }}</p>
       </div>
 
       <!-- Features & Amenities -->
-      <div class="card lg:col-span-2" *ngIf="hasFeatures()">
-        <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.detail.featuresAmenities' | translate }}</h3>
-        </div>
-        <div class="card-body">
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div *ngIf="property.hasElevator" class="flex items-center">
-              <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-              </svg>
-              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.hasElevator' | translate }}</span>
-            </div>
-            <div *ngIf="property.hasBalcony" class="flex items-center">
-              <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-              </svg>
-              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.hasBalcony' | translate }}</span>
-            </div>
-            <div *ngIf="property.hasTerrace" class="flex items-center">
-              <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-              </svg>
-              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.hasTerrace' | translate }}</span>
-            </div>
-            <div *ngIf="property.hasGarden" class="flex items-center">
-              <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-              </svg>
-              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.hasGarden' | translate }}</span>
-            </div>
-            <div *ngIf="property.hasGarage" class="flex items-center">
-              <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-              </svg>
-              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.hasGarage' | translate }}</span>
-            </div>
-            <div *ngIf="property.hasParking" class="flex items-center">
-              <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-              </svg>
-              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.hasParking' | translate }}</span>
-            </div>
-            <div *ngIf="property.hasBasement" class="flex items-center">
-              <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-              </svg>
-              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.hasBasement' | translate }}</span>
-            </div>
-            <div *ngIf="property.hasAttic" class="flex items-center">
-              <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-              </svg>
-              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.hasAttic' | translate }}</span>
-            </div>
-            <div *ngIf="property.isBarrierFree" class="flex items-center">
-              <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-              </svg>
-              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.isBarrierFree' | translate }}</span>
-            </div>
-            <div *ngIf="property.petsAllowed" class="flex items-center">
-              <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-              </svg>
-              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.petsAllowed' | translate }}</span>
-            </div>
-            <div *ngIf="property.furnished" class="flex items-center">
-              <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-              </svg>
-              <span class="text-sm text-gray-900 dark:text-white">{{ 'properties.form.furnished' | translate }}</span>
-            </div>
-          </div>
+      <div *ngIf="hasFeatures()"
+           style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;text-transform:uppercase;letter-spacing:0.5px;">Ausstattung</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <span *ngIf="property.hasElevator"
+                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
+            <i class="ph ph-elevator" style="color:var(--primary);"></i>
+            Aufzug
+          </span>
+          <span *ngIf="property.hasBalcony"
+                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
+            <i class="ph ph-sun-horizon" style="color:var(--primary);"></i>
+            Balkon
+          </span>
+          <span *ngIf="property.hasTerrace"
+                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
+            <i class="ph ph-sun" style="color:var(--primary);"></i>
+            Terrasse
+          </span>
+          <span *ngIf="property.hasGarden"
+                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
+            <i class="ph ph-tree" style="color:var(--primary);"></i>
+            Garten
+          </span>
+          <span *ngIf="property.hasGarage"
+                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
+            <i class="ph ph-car" style="color:var(--primary);"></i>
+            Garage
+          </span>
+          <span *ngIf="property.hasParking"
+                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
+            <i class="ph ph-parking-sign" style="color:var(--primary);"></i>
+            Parkplatz
+          </span>
+          <span *ngIf="property.hasBasement"
+                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
+            <i class="ph ph-warehouse" style="color:var(--primary);"></i>
+            Keller
+          </span>
+          <span *ngIf="property.hasAttic"
+                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
+            <i class="ph ph-house-line" style="color:var(--primary);"></i>
+            Dachboden
+          </span>
+          <span *ngIf="property.isBarrierFree"
+                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
+            <i class="ph ph-wheelchair" style="color:var(--primary);"></i>
+            Barrierefrei
+          </span>
+          <span *ngIf="property.petsAllowed"
+                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
+            <i class="ph ph-paw-print" style="color:var(--primary);"></i>
+            Haustiere erlaubt
+          </span>
+          <span *ngIf="property.furnished"
+                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
+            <i class="ph ph-armchair" style="color:var(--primary);"></i>
+            Möbliert
+          </span>
         </div>
       </div>
 
-      <!-- Energy Efficiency -->
-      <div class="card" *ngIf="hasEnergyInfo()">
-        <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.detail.energyHeating' | translate }}</h3>
+      <!-- Interne Notizen -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
+          <i class="ph ph-lock" style="color:var(--primary);font-size:16px;"></i>
+          <span style="font-size:14px;font-weight:700;color:var(--text);">Interne Notizen</span>
+          <span style="font-size:11px;color:var(--text-3);">(nur für dich sichtbar)</span>
         </div>
-        <div class="card-body">
-          <dl class="space-y-4">
-            <div *ngIf="property.energyEfficiencyClass">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.energyClass' | translate }}</dt>
-              <dd class="mt-1">
-                <span class="inline-flex items-center px-3 py-1 rounded-md text-sm font-bold bg-green-100 text-green-800">
-                  {{ property.energyEfficiencyClass }}
-                </span>
-              </dd>
-            </div>
-            <div *ngIf="property.energyConsumptionKwh">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.energyConsumption' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                {{ property.energyConsumptionKwh }} kWh/m²a
-              </dd>
-            </div>
-            <div *ngIf="property.heatingType">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.heatingType' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                {{ property.heatingType | translateEnum:'heatingType' }}
-              </dd>
-            </div>
-          </dl>
-        </div>
-      </div>
-
-      <!-- Contact Information -->
-      <div class="card" *ngIf="property.contactPhone || property.contactEmail || property.virtualTourUrl">
-        <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.detail.contactInformation' | translate }}</h3>
-        </div>
-        <div class="card-body">
-          <dl class="space-y-4">
-            <div *ngIf="property.contactPhone">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.contactPhone' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                <a [href]="'tel:' + property.contactPhone" class="text-primary-600 hover:text-primary-900">
-                  {{ property.contactPhone }}
-                </a>
-              </dd>
-            </div>
-            <div *ngIf="property.contactEmail">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.contactEmail' | translate }}</dt>
-              <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                <a [href]="'mailto:' + property.contactEmail" class="text-primary-600 hover:text-primary-900">
-                  {{ property.contactEmail }}
-                </a>
-              </dd>
-            </div>
-            <div *ngIf="property.virtualTourUrl">
-              <dt class="text-sm font-medium text-gray-500">{{ 'properties.form.virtualTour' | translate }}</dt>
-              <dd class="mt-1">
-                <a [href]="property.virtualTourUrl" target="_blank" class="btn btn-outline btn-sm">
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                  </svg>
-                  {{ 'messages.viewVirtualTour' | translate }}
-                </a>
-              </dd>
-            </div>
-          </dl>
-        </div>
-      </div>
-
-      <!-- Additional Notes -->
-      <div class="card lg:col-span-2" *ngIf="property.notes">
-        <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.detail.additionalNotes' | translate }}</h3>
-        </div>
-        <div class="card-body">
-          <p class="text-sm text-gray-900 dark:text-white whitespace-pre-line">
-            {{ property.notes }}
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Interne Notizen Section -->
-    <div class="mt-8 card">
-      <div class="card-header">
-        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100" style="display:flex;align-items:center;gap:8px;">
-          <i class="ph ph-lock" style="color:var(--primary);"></i>
-          Interne Notizen
-          <span style="font-size:11px;color:var(--text-3);font-weight:400;">(nur für dich sichtbar)</span>
-        </h3>
-      </div>
-      <div class="card-body">
-        <!-- Quick-add form -->
-        <div style="margin-bottom:20px;padding:16px;background:var(--surface-2);border-radius:10px;border:1px solid var(--border);">
-          <textarea [(ngModel)]="newNoteText" rows="3"
-                    placeholder="Interne Notiz hinzufügen... z.B. 'Verkäufer will schnell abschließen', 'Preis verhandelbar'"
-                    style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;color:var(--text-1);background:var(--surface);resize:vertical;font-family:inherit;box-sizing:border-box;outline:none;">
-          </textarea>
-          <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;">
-            <select [(ngModel)]="newNoteCategory"
-                    style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text-1);background:var(--surface);cursor:pointer;">
-              <option *ngFor="let cat of noteCategories" [value]="cat">
-                {{ noteCategoryLabels[cat] }}
-              </option>
-            </select>
-            <button (click)="saveNote()" [disabled]="!newNoteText.trim() || isSavingNote"
-                    style="padding:7px 18px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;"
-                    [style.opacity]="!newNoteText.trim() || isSavingNote ? '0.5' : '1'">
-              <app-loading-spinner *ngIf="isSavingNote" size="xs" [centered]="false"></app-loading-spinner>
-              <i *ngIf="!isSavingNote" class="ph ph-check"></i>
-              {{ isSavingNote ? 'Speichern...' : 'Notiz speichern' }}
-            </button>
-          </div>
-        </div>
-
-        <app-loading-spinner *ngIf="isLoadingNotes" size="sm"></app-loading-spinner>
-
-        <div *ngIf="!isLoadingNotes && propertyNotes.length > 0" style="display:flex;flex-direction:column;gap:10px;">
-          <div *ngFor="let note of propertyNotes"
-               style="padding:14px 16px;border-radius:10px;border:1px solid var(--border);position:relative;">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
-              <div style="flex:1;">
-                <span [style.background]="noteCategoryColors[note.category]"
-                      style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;color:var(--text-2);display:inline-block;margin-bottom:6px;">
-                  {{ noteCategoryLabels[note.category] }}
-                </span>
-                <p style="font-size:14px;color:var(--text-1);margin:0;white-space:pre-wrap;line-height:1.5;">{{ note.content }}</p>
-              </div>
-              <button (click)="deleteNote(note.id)"
-                      style="border:none;background:none;cursor:pointer;padding:4px;color:var(--text-3);font-size:16px;flex-shrink:0;line-height:1;">
-                <i class="ph ph-trash"></i>
+        <div style="padding:16px 20px;">
+          <!-- Add note form -->
+          <div style="margin-bottom:16px;padding:14px;background:var(--surface-2);border-radius:10px;border:1px solid var(--border);">
+            <textarea [(ngModel)]="newNoteText" rows="3"
+                      placeholder="Interne Notiz… z.B. 'Verkäufer flexibel beim Preis', 'Eigentümer will bis Ende Q3 abschließen'"
+                      style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:var(--surface);resize:vertical;font-family:inherit;box-sizing:border-box;outline:none;"></textarea>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;">
+              <select [(ngModel)]="newNoteCategory"
+                      style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface);cursor:pointer;font-family:inherit;">
+                <option *ngFor="let cat of noteCategories" [value]="cat">{{ noteCategoryLabels[cat] }}</option>
+              </select>
+              <button (click)="saveNote()" [disabled]="!newNoteText.trim() || isSavingNote"
+                      style="padding:7px 18px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;"
+                      [style.opacity]="!newNoteText.trim() || isSavingNote ? '0.5' : '1'">
+                <i *ngIf="!isSavingNote" class="ph ph-check"></i>
+                {{ isSavingNote ? 'Speichern…' : 'Notiz speichern' }}
               </button>
             </div>
-            <div style="font-size:11px;color:var(--text-3);margin-top:8px;">
-              {{ note.createdAt | date:'dd.MM.yyyy HH:mm' }}
+          </div>
+
+          <div *ngIf="isLoadingNotes" style="text-align:center;padding:20px 0;color:var(--text-3);">
+            <div style="width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;"></div>
+          </div>
+
+          <div *ngIf="!isLoadingNotes && propertyNotes.length > 0" style="display:flex;flex-direction:column;gap:10px;">
+            <div *ngFor="let note of propertyNotes"
+                 style="padding:14px 16px;border-radius:10px;border:1px solid var(--border);">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                <div style="flex:1;">
+                  <span [style.background]="noteCategoryColors[note.category]"
+                        style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;color:var(--text-2);display:inline-block;margin-bottom:6px;">
+                    {{ noteCategoryLabels[note.category] }}
+                  </span>
+                  <p style="font-size:14px;color:var(--text);margin:0;white-space:pre-wrap;line-height:1.5;">{{ note.content }}</p>
+                </div>
+                <button (click)="deleteNote(note.id)"
+                        style="border:none;background:none;cursor:pointer;padding:4px;color:var(--text-3);font-size:16px;flex-shrink:0;">
+                  <i class="ph ph-trash"></i>
+                </button>
+              </div>
+              <div style="font-size:11px;color:var(--text-3);margin-top:8px;">{{ note.createdAt | date:'dd.MM.yyyy HH:mm' }}</div>
             </div>
           </div>
-        </div>
-
-        <div *ngIf="!isLoadingNotes && propertyNotes.length === 0"
-             style="text-align:center;padding:16px 0;color:var(--text-3);font-size:13px;">
-          Noch keine internen Notizen vorhanden.
+          <div *ngIf="!isLoadingNotes && propertyNotes.length === 0"
+               style="text-align:center;padding:14px 0;color:var(--text-3);font-size:13px;">
+            Noch keine Notizen vorhanden.
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Besichtigungen Section -->
-    <div class="mt-8 card">
-      <div class="card-header flex items-center justify-between">
-        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100" style="display:flex;align-items:center;gap:8px;">
-          <i class="ph ph-users" style="color:var(--primary);"></i>
-          Besichtigungen
-          <span *ngIf="viewings.length > 0"
-                style="font-size:12px;font-weight:600;padding:2px 8px;background:rgba(47,107,122,0.12);color:var(--primary);border-radius:10px;">
-            {{ viewings.length }}
-          </span>
-        </h3>
-        <button (click)="showViewingDialog = true"
-                style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
-          <i class="ph ph-plus"></i>
-          Besichtigung erfassen
+      <!-- Besichtigungen -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <i class="ph ph-users" style="color:var(--primary);font-size:16px;"></i>
+            <span style="font-size:14px;font-weight:700;color:var(--text);">Besichtigungen</span>
+            <span *ngIf="viewings.length > 0"
+                  style="font-size:12px;font-weight:600;padding:2px 8px;background:rgba(47,107,122,0.12);color:var(--primary);border-radius:10px;">
+              {{ viewings.length }}
+            </span>
+          </div>
+          <button (click)="showViewingDialog = true"
+                  style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
+            <i class="ph ph-plus"></i>
+            Besichtigung erfassen
+          </button>
+        </div>
+        <div style="padding:16px 20px;">
+          <div *ngIf="isLoadingViewings" style="text-align:center;padding:20px 0;color:var(--text-3);">
+            <div style="width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;"></div>
+          </div>
+          <div *ngIf="!isLoadingViewings && viewings.length > 0" style="display:flex;flex-direction:column;gap:10px;">
+            <div *ngFor="let v of viewings"
+                 style="display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;">
+              <div style="min-width:44px;text-align:center;background:var(--surface-2);border-radius:8px;padding:6px 4px;">
+                <div style="font-size:18px;font-weight:700;color:var(--text);line-height:1;">{{ v.viewingDate | date:'dd' }}</div>
+                <div style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;">{{ v.viewingDate | date:'MMM' }}</div>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:14px;font-weight:600;color:var(--text);">{{ v.clientName }}</div>
+                <div style="font-size:12px;color:var(--text-3);margin-top:2px;">{{ v.viewingDate | date:'HH:mm' }} Uhr</div>
+              </div>
+              <div *ngIf="v.feedback" style="font-size:16px;" [title]="v.feedback">
+                {{ v.feedback === 'LIKED' ? '👍' : v.feedback === 'DISLIKED' ? '👎' : '🤷' }}
+              </div>
+              <span [style.background]="getViewingStatusBg(v.status)"
+                    [style.color]="getViewingStatusColor(v.status)"
+                    style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:10px;white-space:nowrap;flex-shrink:0;">
+                {{ v.status === 'SCHEDULED' ? 'Geplant' : v.status === 'COMPLETED' ? 'Abgeschlossen' : 'Abgesagt' }}
+              </span>
+            </div>
+          </div>
+          <div *ngIf="!isLoadingViewings && viewings.length === 0"
+               style="text-align:center;padding:20px 0;color:var(--text-3);">
+            <i class="ph ph-users" style="font-size:28px;display:block;margin-bottom:8px;"></i>
+            <div style="font-size:13px;">Noch keine Besichtigungen erfasst</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- File Attachments -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
+          <i class="ph ph-paperclip" style="color:var(--primary);font-size:16px;"></i>
+          <span style="font-size:14px;font-weight:700;color:var(--text);">{{ 'attachments.sectionTitle' | translate }}</span>
+        </div>
+        <div style="padding:16px 20px;">
+          <app-file-attachment-manager entityType="property" [entityId]="property.id!"></app-file-attachment-manager>
+        </div>
+      </div>
+
+      <!-- Bottom actions -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-top:4px;">
+        <a routerLink="/properties"
+           style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-2);font-size:13px;font-weight:600;text-decoration:none;">
+          <i class="ph ph-arrow-left" style="font-size:14px;"></i>
+          Zurück
+        </a>
+        <button (click)="deleteProperty()" [disabled]="isDeleting"
+                style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:none;border-radius:10px;background:var(--color-error-soft);color:var(--color-error);font-size:13px;font-weight:600;cursor:pointer;"
+                [style.opacity]="isDeleting ? '0.5' : '1'">
+          <i class="ph ph-trash" style="font-size:14px;"></i>
+          {{ isDeleting ? 'Löschen…' : 'Objekt löschen' }}
         </button>
       </div>
-      <div class="card-body">
-        <app-loading-spinner *ngIf="isLoadingViewings" size="sm"></app-loading-spinner>
 
-        <div *ngIf="!isLoadingViewings && viewings.length > 0" style="display:flex;flex-direction:column;gap:10px;">
-          <div *ngFor="let v of viewings"
-               style="display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;">
-            <div style="min-width:48px;text-align:center;background:var(--surface-2);border-radius:8px;padding:6px 4px;">
-              <div style="font-size:18px;font-weight:700;color:var(--text-1);line-height:1;">{{ v.viewingDate | date:'dd' }}</div>
-              <div style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;">{{ v.viewingDate | date:'MMM' }}</div>
-            </div>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:14px;font-weight:600;color:var(--text-1);">{{ v.clientName }}</div>
-              <div style="font-size:12px;color:var(--text-3);margin-top:2px;">{{ v.viewingDate | date:'HH:mm' }} Uhr</div>
-            </div>
-            <div *ngIf="v.feedback" style="font-size:18px;" [title]="v.feedback">
-              {{ v.feedback === 'LIKED' ? '👍' : v.feedback === 'DISLIKED' ? '👎' : '🤷' }}
-            </div>
-            <span [style.background]="getViewingStatusBg(v.status)"
-                  [style.color]="getViewingStatusColor(v.status)"
-                  style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:10px;white-space:nowrap;flex-shrink:0;">
-              {{ v.status === 'SCHEDULED' ? 'Geplant' : v.status === 'COMPLETED' ? 'Abgeschlossen' : 'Abgesagt' }}
+    </div>
+
+    <!-- RIGHT: sidebar -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <!-- Eckdaten -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);">
+          <span style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.5px;">Eckdaten</span>
+        </div>
+        <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
+          <div *ngIf="property.livingAreaSqm" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-3);">Wohnfläche</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text);">{{ property.livingAreaSqm }} m²</span>
+          </div>
+          <div *ngIf="property.plotAreaSqm" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-3);">Grundstück</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text);">{{ property.plotAreaSqm }} m²</span>
+          </div>
+          <div *ngIf="property.totalAreaSqm" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-3);">Gesamtfläche</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text);">{{ property.totalAreaSqm }} m²</span>
+          </div>
+          <div *ngIf="property.rooms" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-3);">Zimmer</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text);">{{ property.rooms }}</span>
+          </div>
+          <div *ngIf="property.bedrooms" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-3);">Schlafzimmer</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text);">{{ property.bedrooms }}</span>
+          </div>
+          <div *ngIf="property.bathrooms" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-3);">Badezimmer</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text);">{{ property.bathrooms }}</span>
+          </div>
+          <div *ngIf="property.floors" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-3);">Stockwerke</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text);">{{ property.floors }}</span>
+          </div>
+          <div *ngIf="property.floorNumber !== undefined && property.floorNumber !== null" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-3);">Etage</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text);">{{ property.floorNumber }}</span>
+          </div>
+          <div *ngIf="property.constructionYear" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-3);">Baujahr</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text);">{{ property.constructionYear }}</span>
+          </div>
+          <div *ngIf="property.lastRenovationYear" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-3);">Saniert</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text);">{{ property.lastRenovationYear }}</span>
+          </div>
+          <div *ngIf="property.availableFrom" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-3);">Verfügbar ab</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text);">{{ property.availableFrom | date:'dd.MM.yyyy' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preisdetails -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);">
+          <span style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.5px;">Preisdetails</span>
+        </div>
+        <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
+          <div *ngIf="property.price" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-3);">{{ property.listingType === 'RENT' ? 'Kaltmiete' : 'Kaufpreis' }}</span>
+            <span style="font-size:14px;font-weight:800;color:var(--primary);">{{ propertyService.formatPrice(property.price, property.listingType) }}</span>
+          </div>
+          <div *ngIf="property.pricePerSqm || property.calculatedPricePerSqm" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-3);">Preis/m²</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text);">{{ (property.pricePerSqm || property.calculatedPricePerSqm) | number:'1.0-0' }} €/m²</span>
+          </div>
+          <div *ngIf="property.additionalCosts" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-3);">Nebenkosten</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text);">{{ property.additionalCosts | number:'1.0-0' }} €/Mon.</span>
+          </div>
+          <div *ngIf="property.heatingCosts" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-3);">Heizkosten</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text);">{{ property.heatingCosts | number:'1.0-0' }} €/Mon.</span>
+          </div>
+          <div *ngIf="property.commission" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-3);">Provision</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text);">{{ property.commission | number:'1.0-0' }} €</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Adresse -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);">
+          <span style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.5px;">Adresse</span>
+        </div>
+        <div style="padding:14px 18px;display:flex;flex-direction:column;gap:8px;">
+          <div *ngIf="property.addressStreet" style="display:flex;gap:8px;">
+            <i class="ph ph-map-pin" style="color:var(--text-3);font-size:14px;flex-shrink:0;margin-top:1px;"></i>
+            <span style="font-size:13px;color:var(--text);">
+              {{ property.addressStreet }}{{ property.addressHouseNumber ? ' ' + property.addressHouseNumber : '' }}<br>
+              {{ property.addressPostalCode }} {{ property.addressCity }}
+              <ng-container *ngIf="property.addressState"><br>{{ property.addressState }}</ng-container>
+              <ng-container *ngIf="property.addressDistrict"><br><span style="color:var(--text-3);">Stadtteil: {{ property.addressDistrict }}</span></ng-container>
             </span>
           </div>
         </div>
+      </div>
 
-        <div *ngIf="!isLoadingViewings && viewings.length === 0"
-             style="text-align:center;padding:24px 0;color:var(--text-3);">
-          <i class="ph ph-users" style="font-size:32px;display:block;margin-bottom:8px;"></i>
-          <div style="font-size:14px;">Noch keine Besichtigungen erfasst</div>
+      <!-- Energie & Heizung -->
+      <div *ngIf="hasEnergyInfo()"
+           style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);">
+          <span style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.5px;">Energie & Heizung</span>
+        </div>
+        <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
+          <div *ngIf="property.energyEfficiencyClass" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-3);">Energieklasse</span>
+            <span style="font-size:13px;font-weight:800;padding:2px 10px;border-radius:6px;background:rgba(22,163,74,0.12);color:#16a34a;">
+              {{ property.energyEfficiencyClass }}
+            </span>
+          </div>
+          <div *ngIf="property.energyConsumptionKwh" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-3);">Verbrauch</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text);">{{ property.energyConsumptionKwh }} kWh/m²a</span>
+          </div>
+          <div *ngIf="property.heatingType" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text-3);">Heizung</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text);">{{ getHeatingTypeLabel(property.heatingType) }}</span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- File Attachments Section -->
-    <div class="mt-8 card">
-      <div class="card-header">
-        <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-          {{ 'attachments.sectionTitle' | translate }}
-        </h3>
+      <!-- Contact / Virtual Tour -->
+      <div *ngIf="property.contactPhone || property.contactEmail || property.virtualTourUrl"
+           style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);">
+          <span style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.5px;">Kontakt</span>
+        </div>
+        <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
+          <a *ngIf="property.contactPhone" [href]="'tel:' + property.contactPhone"
+             style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--primary);text-decoration:none;">
+            <i class="ph ph-phone" style="font-size:14px;flex-shrink:0;"></i>
+            {{ property.contactPhone }}
+          </a>
+          <a *ngIf="property.contactEmail" [href]="'mailto:' + property.contactEmail"
+             style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--primary);text-decoration:none;">
+            <i class="ph ph-envelope" style="font-size:14px;flex-shrink:0;"></i>
+            {{ property.contactEmail }}
+          </a>
+          <a *ngIf="property.virtualTourUrl" [href]="property.virtualTourUrl" target="_blank"
+             style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--text-2);text-decoration:none;">
+            <i class="ph ph-video-camera" style="font-size:14px;"></i>
+            Virtuelle Tour öffnen
+          </a>
+        </div>
       </div>
-      <div class="card-body">
-        <app-file-attachment-manager
-          entityType="property"
-          [entityId]="property.id!"
-        ></app-file-attachment-manager>
-      </div>
-    </div>
 
-    <!-- Actions -->
-    <div class="mt-8 flex justify-between">
-      <a routerLink="/properties" class="btn btn-outline">
-        {{ 'messages.backToPropertiesArrow' | translate }}
-      </a>
-      <div class="space-x-3">
-        <button (click)="deleteProperty()" class="btn btn-danger" [disabled]="isDeleting">
-          {{ isDeleting ? ('messages.deletingProperty' | translate) : ('messages.deletePropertyButton' | translate) }}
-        </button>
-      </div>
     </div>
   </div>
+</div>
 
-  <div *ngIf="!isLoading && !property" class="text-center py-8">
-    <p class="text-sm text-gray-500">{{ 'messages.propertyNotFound' | translate }}</p>
-    <a routerLink="/properties" class="text-primary-600 hover:text-primary-900 text-sm font-medium">
-      {{ 'messages.backToProperties' | translate }}
-    </a>
-  </div>
+<!-- Not found state -->
+<div *ngIf="!isLoading && !property"
+     style="padding:80px 32px;text-align:center;">
+  <i class="ph ph-house" style="font-size:48px;color:var(--text-3);display:block;margin-bottom:12px;"></i>
+  <h3 style="font-size:15px;font-weight:600;color:var(--text);margin:0 0 6px;">Objekt nicht gefunden</h3>
+  <a routerLink="/properties"
+     style="font-size:13px;color:var(--primary);text-decoration:none;">← Zurück zur Übersicht</a>
+</div>
+
+<!-- Loading -->
+<div *ngIf="isLoading"
+     style="padding:80px 32px;text-align:center;">
+  <div style="width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px;"></div>
+  <p style="font-size:14px;color:var(--text-3);">Objekt wird geladen…</p>
 </div>
 
 <!-- Viewing Add Dialog -->
