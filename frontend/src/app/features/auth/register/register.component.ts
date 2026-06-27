@@ -11,214 +11,114 @@ import { LoadingSpinnerComponent } from '../../../shared/components/loading-spin
   selector: 'app-register',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule, LoadingSpinnerComponent],
+  styles: [`
+    .auth-page { min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--surface-2); padding:24px; }
+    .auth-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; box-shadow:0 4px 24px rgba(20,40,45,0.08); padding:36px 32px; width:100%; max-width:420px; }
+    .auth-logo { font-size:22px; font-weight:800; color:var(--primary); margin-bottom:4px; }
+    .auth-sub { font-size:13px; color:var(--text-3); margin-bottom:28px; }
+    .auth-btn { width:100%; padding:11px 0; background:var(--primary); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px; }
+    .auth-btn:hover { background:var(--primary-hover); }
+    .auth-btn:disabled { opacity:0.55; cursor:not-allowed; }
+    .auth-link { color:var(--primary); font-size:13px; font-weight:600; text-decoration:none; }
+    .auth-link:hover { text-decoration:underline; }
+  `],
   template: `
-    <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div class="max-w-md w-full space-y-8">
-        <div>
-          <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            {{ 'auth.register.title' | translate }}
-          </h2>
-          <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            {{ 'auth.register.subtitle' | translate }}
-          </p>
-        </div>
+    <div class="auth-page">
+      <div class="auth-card">
 
-        <form class="mt-8 space-y-6" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-          <div class="rounded-md shadow-sm space-y-4">
-            <!-- First Name -->
+        <div class="auth-logo">MarklerApp</div>
+        <div class="auth-sub">{{ 'auth.register.subtitle' | translate }}</div>
+
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" style="display:flex;flex-direction:column;gap:14px;">
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
             <div>
-              <label for="firstName" class="form-label">
-                {{ 'auth.register.firstName' | translate }}
-              </label>
-              <input
-                id="firstName"
-                name="firstName"
-                type="text"
-                autocomplete="given-name"
-                required
-                formControlName="firstName"
-                class="form-input"
-                [placeholder]="'auth.register.firstNamePlaceholder' | translate">
+              <label class="form-label">{{ 'auth.register.firstName' | translate }} *</label>
+              <input type="text" formControlName="firstName" class="form-input"
+                     [placeholder]="'auth.register.firstNamePlaceholder' | translate" autocomplete="given-name">
               <div *ngIf="registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched" class="form-error">
-                <span *ngIf="registerForm.get('firstName')?.errors?.['required']">
-                  {{ 'auth.register.errors.firstNameRequired' | translate }}
-                </span>
-                <span *ngIf="registerForm.get('firstName')?.errors?.['minlength']">
-                  {{ 'auth.register.errors.firstNameMinLength' | translate }}
-                </span>
+                <span *ngIf="registerForm.get('firstName')?.errors?.['required']">{{ 'auth.register.errors.firstNameRequired' | translate }}</span>
+                <span *ngIf="registerForm.get('firstName')?.errors?.['minlength']">{{ 'auth.register.errors.firstNameMinLength' | translate }}</span>
               </div>
             </div>
-
-            <!-- Last Name -->
             <div>
-              <label for="lastName" class="form-label">
-                {{ 'auth.register.lastName' | translate }}
-              </label>
-              <input
-                id="lastName"
-                name="lastName"
-                type="text"
-                autocomplete="family-name"
-                required
-                formControlName="lastName"
-                class="form-input"
-                [placeholder]="'auth.register.lastNamePlaceholder' | translate">
+              <label class="form-label">{{ 'auth.register.lastName' | translate }} *</label>
+              <input type="text" formControlName="lastName" class="form-input"
+                     [placeholder]="'auth.register.lastNamePlaceholder' | translate" autocomplete="family-name">
               <div *ngIf="registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched" class="form-error">
-                <span *ngIf="registerForm.get('lastName')?.errors?.['required']">
-                  {{ 'auth.register.errors.lastNameRequired' | translate }}
-                </span>
-                <span *ngIf="registerForm.get('lastName')?.errors?.['minlength']">
-                  {{ 'auth.register.errors.lastNameMinLength' | translate }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Email -->
-            <div>
-              <label for="email" class="form-label">
-                {{ 'auth.register.email' | translate }}
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autocomplete="email"
-                required
-                formControlName="email"
-                class="form-input"
-                [placeholder]="'auth.register.emailPlaceholder' | translate">
-              <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="form-error">
-                <span *ngIf="registerForm.get('email')?.errors?.['required']">
-                  {{ 'auth.register.errors.emailRequired' | translate }}
-                </span>
-                <span *ngIf="registerForm.get('email')?.errors?.['email']">
-                  {{ 'auth.register.errors.emailInvalid' | translate }}
-                </span>
-                <span *ngIf="registerForm.get('email')?.errors?.['emailTaken']">
-                  {{ 'auth.register.errors.emailTaken' | translate }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Phone -->
-            <div>
-              <label for="phone" class="form-label">
-                {{ 'auth.register.phone' | translate }} ({{ 'auth.register.optional' | translate }})
-              </label>
-              <input
-                id="phone"
-                name="phone"
-                type="tel"
-                autocomplete="tel"
-                formControlName="phone"
-                class="form-input"
-                [placeholder]="'auth.register.phonePlaceholder' | translate">
-              <div *ngIf="registerForm.get('phone')?.invalid && registerForm.get('phone')?.touched" class="form-error">
-                <span *ngIf="registerForm.get('phone')?.errors?.['pattern']">
-                  {{ 'auth.register.errors.phoneInvalid' | translate }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Password -->
-            <div>
-              <label for="password" class="form-label">
-                {{ 'auth.register.password' | translate }}
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autocomplete="new-password"
-                required
-                formControlName="password"
-                class="form-input"
-                [placeholder]="'auth.register.passwordPlaceholder' | translate">
-              <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="form-error">
-                <span *ngIf="registerForm.get('password')?.errors?.['required']">
-                  {{ 'auth.register.errors.passwordRequired' | translate }}
-                </span>
-                <span *ngIf="registerForm.get('password')?.errors?.['minlength']">
-                  {{ 'auth.register.errors.passwordMinLength' | translate }}
-                </span>
-                <span *ngIf="registerForm.get('password')?.errors?.['pattern']">
-                  {{ 'auth.register.errors.passwordPattern' | translate }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Confirm Password -->
-            <div>
-              <label for="confirmPassword" class="form-label">
-                {{ 'auth.register.confirmPassword' | translate }}
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                autocomplete="new-password"
-                required
-                formControlName="confirmPassword"
-                class="form-input"
-                [placeholder]="'auth.register.confirmPasswordPlaceholder' | translate">
-              <div *ngIf="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched" class="form-error">
-                <span *ngIf="registerForm.get('confirmPassword')?.errors?.['required']">
-                  {{ 'auth.register.errors.confirmPasswordRequired' | translate }}
-                </span>
-              </div>
-              <div *ngIf="registerForm.errors?.['passwordMismatch'] && registerForm.get('confirmPassword')?.touched" class="form-error">
-                {{ 'auth.register.errors.passwordMismatch' | translate }}
-              </div>
-            </div>
-
-            <!-- Language Preference -->
-            <div>
-              <label for="languagePreference" class="form-label">
-                {{ 'auth.register.languagePreference' | translate }}
-              </label>
-              <select
-                id="languagePreference"
-                name="languagePreference"
-                formControlName="languagePreference"
-                class="form-select">
-                <option value="DE">{{ 'auth.register.languageDe' | translate }}</option>
-                <option value="EN">{{ 'auth.register.languageEn' | translate }}</option>
-              </select>
-            </div>
-          </div>
-
-          <div *ngIf="errorMessage" class="rounded-md bg-error-50 dark:bg-error-900/20 p-4">
-            <div class="flex">
-              <div class="ml-3">
-                <h3 class="text-sm font-medium text-error-800 dark:text-error-400">
-                  {{ errorMessage }}
-                </h3>
+                <span *ngIf="registerForm.get('lastName')?.errors?.['required']">{{ 'auth.register.errors.lastNameRequired' | translate }}</span>
               </div>
             </div>
           </div>
 
+          <!-- Email -->
           <div>
-            <button
-              type="submit"
-              [disabled]="!registerForm.valid || isLoading"
-              class="btn btn-primary w-full">
+            <label class="form-label">{{ 'auth.register.email' | translate }} *</label>
+            <input type="email" formControlName="email" class="form-input"
+                   [placeholder]="'auth.register.emailPlaceholder' | translate" autocomplete="email">
+            <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="form-error">
+              <span *ngIf="registerForm.get('email')?.errors?.['required']">{{ 'auth.register.errors.emailRequired' | translate }}</span>
+              <span *ngIf="registerForm.get('email')?.errors?.['email']">{{ 'auth.register.errors.emailInvalid' | translate }}</span>
+              <span *ngIf="registerForm.get('email')?.errors?.['emailTaken']">{{ 'auth.register.errors.emailTaken' | translate }}</span>
+            </div>
+            </div>
 
-              <span *ngIf="isLoading" class="absolute left-0 inset-y-0 flex items-center pl-3">
-                <app-loading-spinner size="xs" [centered]="false"></app-loading-spinner>
-              </span>
-
-              {{ isLoading ? ('auth.register.registering' | translate) : ('auth.register.registerButton' | translate) }}
-            </button>
+          <!-- Phone -->
+          <div>
+            <label class="form-label">{{ 'auth.register.phone' | translate }} <span style="color:var(--text-3);font-weight:400;">(optional)</span></label>
+            <input type="tel" formControlName="phone" class="form-input"
+                   [placeholder]="'auth.register.phonePlaceholder' | translate" autocomplete="tel">
+            <div *ngIf="registerForm.get('phone')?.invalid && registerForm.get('phone')?.touched" class="form-error">
+              {{ 'auth.register.errors.phoneInvalid' | translate }}
+            </div>
           </div>
 
-          <div class="text-center">
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              {{ 'auth.register.alreadyHaveAccount' | translate }}
-              <a routerLink="/auth/login" class="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400">
-                {{ 'auth.register.signIn' | translate }}
-              </a>
-            </p>
+          <!-- Password -->
+          <div>
+            <label class="form-label">{{ 'auth.register.password' | translate }} *</label>
+            <input type="password" formControlName="password" class="form-input"
+                   [placeholder]="'auth.register.passwordPlaceholder' | translate" autocomplete="new-password">
+            <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="form-error">
+              <span *ngIf="registerForm.get('password')?.errors?.['required']">{{ 'auth.register.errors.passwordRequired' | translate }}</span>
+              <span *ngIf="registerForm.get('password')?.errors?.['minlength']">{{ 'auth.register.errors.passwordMinLength' | translate }}</span>
+              <span *ngIf="registerForm.get('password')?.errors?.['pattern']">{{ 'auth.register.errors.passwordPattern' | translate }}</span>
+            </div>
           </div>
+
+          <!-- Confirm Password -->
+          <div>
+            <label class="form-label">{{ 'auth.register.confirmPassword' | translate }} *</label>
+            <input type="password" formControlName="confirmPassword" class="form-input"
+                   [placeholder]="'auth.register.confirmPasswordPlaceholder' | translate" autocomplete="new-password">
+            <div *ngIf="registerForm.errors?.['passwordMismatch'] && registerForm.get('confirmPassword')?.touched" class="form-error">
+              {{ 'auth.register.errors.passwordMismatch' | translate }}
+            </div>
+          </div>
+
+          <!-- Language -->
+          <div>
+            <label class="form-label">{{ 'auth.register.languagePreference' | translate }}</label>
+            <select formControlName="languagePreference" class="form-input">
+              <option value="DE">{{ 'auth.register.languageDe' | translate }}</option>
+              <option value="EN">{{ 'auth.register.languageEn' | translate }}</option>
+            </select>
+          </div>
+
+          <div *ngIf="errorMessage"
+               style="padding:12px 14px;background:var(--color-error-soft);border-radius:10px;border-left:3px solid var(--color-error);">
+            <span style="font-size:13px;color:var(--color-error);">{{ errorMessage }}</span>
+          </div>
+
+          <button type="submit" class="auth-btn" [disabled]="!registerForm.valid || isLoading" style="margin-top:4px;">
+            <div *ngIf="isLoading" style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+            {{ isLoading ? ('auth.register.registering' | translate) : ('auth.register.registerButton' | translate) }}
+          </button>
+
+          <p style="text-align:center;font-size:13px;color:var(--text-3);margin:4px 0 0;">
+            {{ 'auth.register.alreadyHaveAccount' | translate }}
+            <a routerLink="/auth/login" class="auth-link">{{ 'auth.register.signIn' | translate }}</a>
+          </p>
+
         </form>
       </div>
     </div>

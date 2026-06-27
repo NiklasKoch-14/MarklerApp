@@ -11,98 +11,65 @@ import { LoadingSpinnerComponent } from '../../../shared/components/loading-spin
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule, LoadingSpinnerComponent],
+  styles: [`
+    .auth-page { min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--surface-2); padding:24px; }
+    .auth-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; box-shadow:0 4px 24px rgba(20,40,45,0.08); padding:36px 32px; width:100%; max-width:400px; }
+    .auth-logo { font-size:22px; font-weight:800; color:var(--primary); margin-bottom:4px; }
+    .auth-sub { font-size:13px; color:var(--text-3); margin-bottom:28px; }
+    .auth-btn { width:100%; padding:11px 0; background:var(--primary); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; transition:background 0.15s; }
+    .auth-btn:hover { background:var(--primary-hover); }
+    .auth-btn:disabled { opacity:0.55; cursor:not-allowed; }
+    .auth-link { color:var(--primary); font-size:13px; font-weight:600; text-decoration:none; }
+    .auth-link:hover { text-decoration:underline; }
+  `],
   template: `
-    <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div class="max-w-md w-full space-y-8">
-        <div>
-          <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            {{ 'auth.login.title' | translate }}
-          </h2>
-          <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            {{ 'auth.login.subtitle' | translate }}
-          </p>
-        </div>
+    <div class="auth-page">
+      <div class="auth-card">
 
-        <form class="mt-8 space-y-6" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-          <div class="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label for="email" class="sr-only">{{ 'auth.login.email' | translate }}</label>
-              <input
-                #emailInput
-                id="email"
-                name="email"
-                type="email"
-                autocomplete="email"
-                required
-                formControlName="email"
-                class="form-input appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-600 rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                [placeholder]="'auth.login.emailPlaceholder' | translate">
-            </div>
-            <div>
-              <label for="password" class="sr-only">{{ 'auth.login.password' | translate }}</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autocomplete="current-password"
-                required
-                formControlName="password"
-                class="form-input appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-600 rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                [placeholder]="'auth.login.passwordPlaceholder' | translate">
-            </div>
-          </div>
+        <!-- Brand -->
+        <div class="auth-logo">MarklerApp</div>
+        <div class="auth-sub">{{ 'auth.login.subtitle' | translate }}</div>
 
-          <div class="flex items-center justify-between">
-            <div class="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 dark:border-gray-600 rounded">
-              <label for="remember-me" class="ml-2 block text-sm text-gray-900 dark:text-gray-300">
-                {{ 'auth.login.rememberMe' | translate }}
-              </label>
-            </div>
+        <!-- Form -->
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" style="display:flex;flex-direction:column;gap:14px;">
 
-            <div class="text-sm">
-              <a routerLink="/auth/forgot-password" class="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400">
-                {{ 'auth.login.forgotPassword' | translate }}
-              </a>
-            </div>
-          </div>
-
-          <div *ngIf="errorMessage" class="rounded-md bg-error-50 dark:bg-error-900/20 p-4">
-            <div class="flex">
-              <div class="ml-3">
-                <h3 class="text-sm font-medium text-error-800 dark:text-error-400">
-                  {{ errorMessage }}
-                </h3>
-              </div>
-            </div>
+          <div>
+            <label class="form-label">{{ 'auth.login.email' | translate }}</label>
+            <input #emailInput type="email" formControlName="email" class="form-input"
+                   [placeholder]="'auth.login.emailPlaceholder' | translate"
+                   autocomplete="email">
           </div>
 
           <div>
-            <button
-              type="submit"
-              [disabled]="!loginForm.valid || isLoading"
-              class="btn btn-primary w-full">
-
-              <span *ngIf="isLoading" class="absolute left-0 inset-y-0 flex items-center pl-3">
-                <app-loading-spinner size="xs" [centered]="false"></app-loading-spinner>
-              </span>
-
-              {{ isLoading ? ('auth.login.signingIn' | translate) : ('auth.login.signInButton' | translate) }}
-            </button>
+            <label class="form-label">{{ 'auth.login.password' | translate }}</label>
+            <input type="password" formControlName="password" class="form-input"
+                   [placeholder]="'auth.login.passwordPlaceholder' | translate"
+                   autocomplete="current-password">
           </div>
 
-          <div class="text-center">
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              {{ 'auth.login.noAccount' | translate }}
-              <a routerLink="/auth/register" class="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400">
-                {{ 'auth.login.signUp' | translate }}
-              </a>
-            </p>
+          <div style="display:flex;align-items:center;justify-content:flex-end;">
+            <a routerLink="/auth/forgot-password" class="auth-link">
+              {{ 'auth.login.forgotPassword' | translate }}
+            </a>
           </div>
+
+          <!-- Error -->
+          <div *ngIf="errorMessage"
+               style="padding:12px 14px;background:var(--color-error-soft);border-radius:10px;border-left:3px solid var(--color-error);">
+            <span style="font-size:13px;color:var(--color-error);">{{ errorMessage }}</span>
+          </div>
+
+          <button type="submit" class="auth-btn" [disabled]="!loginForm.valid || isLoading"
+                  style="margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px;">
+            <div *ngIf="isLoading" style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+            {{ isLoading ? ('auth.login.signingIn' | translate) : ('auth.login.signInButton' | translate) }}
+          </button>
+
+          <p style="text-align:center;font-size:13px;color:var(--text-3);margin:4px 0 0;">
+            {{ 'auth.login.noAccount' | translate }}
+            <a routerLink="/auth/register" class="auth-link">{{ 'auth.login.signUp' | translate }}</a>
+          </p>
+
         </form>
       </div>
     </div>

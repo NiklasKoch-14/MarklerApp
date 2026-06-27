@@ -11,84 +11,56 @@ import { LoadingSpinnerComponent } from '../../../shared/components/loading-spin
   selector: 'app-forgot-password',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule, LoadingSpinnerComponent],
+  styles: [`
+    .auth-page { min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--surface-2); padding:24px; }
+    .auth-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; box-shadow:0 4px 24px rgba(20,40,45,0.08); padding:36px 32px; width:100%; max-width:400px; }
+    .auth-logo { font-size:22px; font-weight:800; color:var(--primary); margin-bottom:4px; }
+    .auth-sub { font-size:13px; color:var(--text-3); margin-bottom:28px; }
+    .auth-btn { width:100%; padding:11px 0; background:var(--primary); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px; }
+    .auth-btn:hover { background:var(--primary-hover); }
+    .auth-btn:disabled { opacity:0.55; cursor:not-allowed; }
+    .auth-link { color:var(--primary); font-size:13px; font-weight:600; text-decoration:none; }
+    .auth-link:hover { text-decoration:underline; }
+  `],
   template: `
-    <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div class="max-w-md w-full space-y-8">
-        <div>
-          <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            {{ 'auth.forgotPassword.title' | translate }}
-          </h2>
-          <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            {{ 'auth.forgotPassword.subtitle' | translate }}
+    <div class="auth-page">
+      <div class="auth-card">
+
+        <div class="auth-logo">MarklerApp</div>
+        <div class="auth-sub">{{ 'auth.forgotPassword.subtitle' | translate }}</div>
+
+        <form [formGroup]="forgotPasswordForm" (ngSubmit)="onSubmit()" style="display:flex;flex-direction:column;gap:14px;">
+
+          <div>
+            <label class="form-label">{{ 'auth.forgotPassword.email' | translate }}</label>
+            <input type="email" formControlName="email" class="form-input"
+                   [placeholder]="'auth.forgotPassword.emailPlaceholder' | translate"
+                   autocomplete="email">
+            <div *ngIf="forgotPasswordForm.get('email')?.invalid && forgotPasswordForm.get('email')?.touched" class="form-error">
+              <span *ngIf="forgotPasswordForm.get('email')?.errors?.['required']">{{ 'validation.isRequired' | translate }}</span>
+              <span *ngIf="forgotPasswordForm.get('email')?.errors?.['email']">{{ 'validation.invalidEmail' | translate }}</span>
+            </div>
+          </div>
+
+          <div *ngIf="successMessage"
+               style="padding:12px 14px;background:var(--color-success-soft);border-radius:10px;border-left:3px solid var(--color-success);">
+            <div style="font-size:13px;color:var(--color-success);font-weight:600;">{{ successMessage }}</div>
+            <div style="font-size:12px;color:var(--color-success);margin-top:4px;opacity:0.8;">{{ 'auth.forgotPassword.checkSpam' | translate }}</div>
+          </div>
+
+          <div *ngIf="errorMessage"
+               style="padding:12px 14px;background:var(--color-error-soft);border-radius:10px;border-left:3px solid var(--color-error);">
+            <span style="font-size:13px;color:var(--color-error);">{{ errorMessage }}</span>
+          </div>
+
+          <button type="submit" class="auth-btn" [disabled]="!forgotPasswordForm.valid || isLoading" style="margin-top:4px;">
+            <div *ngIf="isLoading" style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+            {{ isLoading ? ('auth.forgotPassword.submitting' | translate) : ('auth.forgotPassword.submitButton' | translate) }}
+          </button>
+
+          <p style="text-align:center;font-size:13px;color:var(--text-3);margin:4px 0 0;">
+            <a routerLink="/auth/login" class="auth-link">{{ 'auth.forgotPassword.backToLogin' | translate }}</a>
           </p>
-        </div>
-
-        <form class="mt-8 space-y-6" [formGroup]="forgotPasswordForm" (ngSubmit)="onSubmit()">
-          <div>
-            <label for="email" class="sr-only">{{ 'auth.forgotPassword.email' | translate }}</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autocomplete="email"
-              required
-              formControlName="email"
-              class="form-input appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 dark:text-gray-100 dark:bg-gray-800 dark:border-gray-600 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-              [placeholder]="'auth.forgotPassword.emailPlaceholder' | translate">
-
-            <div *ngIf="forgotPasswordForm.get('email')?.invalid && forgotPasswordForm.get('email')?.touched"
-                 class="mt-2 text-sm text-error-600 dark:text-error-400">
-              <span *ngIf="forgotPasswordForm.get('email')?.errors?.['required']">
-                {{ 'auth.forgotPassword.email' | translate }} {{ 'validation.isRequired' | translate }}
-              </span>
-              <span *ngIf="forgotPasswordForm.get('email')?.errors?.['email']">
-                {{ 'validation.invalidEmail' | translate }}
-              </span>
-            </div>
-          </div>
-
-          <div *ngIf="successMessage" class="rounded-md bg-success-50 dark:bg-success-900/20 p-4">
-            <div class="flex">
-              <div class="ml-3">
-                <h3 class="text-sm font-medium text-success-800 dark:text-success-400">
-                  {{ successMessage }}
-                </h3>
-                <p class="mt-2 text-sm text-success-700 dark:text-success-500">
-                  {{ 'auth.forgotPassword.checkSpam' | translate }}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div *ngIf="errorMessage" class="rounded-md bg-error-50 dark:bg-error-900/20 p-4">
-            <div class="flex">
-              <div class="ml-3">
-                <h3 class="text-sm font-medium text-error-800 dark:text-error-400">
-                  {{ errorMessage }}
-                </h3>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <button
-              type="submit"
-              [disabled]="!forgotPasswordForm.valid || isLoading"
-              class="btn btn-primary w-full">
-
-              <span *ngIf="isLoading" class="absolute left-0 inset-y-0 flex items-center pl-3">
-                <app-loading-spinner size="xs" [centered]="false"></app-loading-spinner>
-              </span>
-
-              {{ isLoading ? ('auth.forgotPassword.submitting' | translate) : ('auth.forgotPassword.submitButton' | translate) }}
-            </button>
-          </div>
-
-          <div class="text-center">
-            <a routerLink="/auth/login" class="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400">
-              {{ 'auth.forgotPassword.backToLogin' | translate }}
-            </a>
-          </div>
         </form>
       </div>
     </div>
