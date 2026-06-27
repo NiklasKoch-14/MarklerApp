@@ -89,6 +89,20 @@ interface ViewingRow {
         </div>
       </div>
 
+      <!-- Stat cards -->
+      <div class="stat-grid" style="margin-bottom:20px;">
+        @for (s of statCards; track s.label) {
+          <div class="stat-card">
+            <div class="stat-icon-wrap" [style.background]="s.iconBg">
+              <i [class]="s.icon" [style.color]="s.iconColor"></i>
+            </div>
+            <div class="stat-value">{{ s.value }}</div>
+            <div class="stat-label">{{ s.label }}</div>
+            <div class="stat-caption" [style.color]="s.capColor">{{ s.caption }}</div>
+          </div>
+        }
+      </div>
+
       <!-- Heutige Besichtigungen — Tagesagenda, immer als erstes sichtbar -->
       <div class="widget-card" style="margin-bottom:20px;">
         <div class="widget-header">
@@ -371,25 +385,6 @@ interface ViewingRow {
         </div>
       }
 
-      <!-- Statistiken — Auswertungsdaten, bewusst am Ende der Seite -->
-      <div style="margin-top:32px; margin-bottom:6px; display:flex; align-items:center; gap:8px;">
-        <span style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-3);">
-          Statistiken
-        </span>
-        <div style="flex:1; height:1px; background:var(--border);"></div>
-      </div>
-      <div class="stat-grid" style="margin-bottom:32px;">
-        @for (s of statCards; track s.label) {
-          <div class="stat-card">
-            <div class="stat-icon-wrap" [style.background]="s.iconBg">
-              <i [class]="s.icon" [style.color]="s.iconColor"></i>
-            </div>
-            <div class="stat-value">{{ s.value }}</div>
-            <div class="stat-label">{{ s.label }}</div>
-            <div class="stat-caption" [style.color]="s.capColor">{{ s.caption }}</div>
-          </div>
-        }
-      </div>
 
     </div>
 

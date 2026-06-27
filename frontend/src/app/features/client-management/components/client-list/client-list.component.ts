@@ -55,7 +55,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
 
           <!-- Card Header: Avatar + Name + Chevron -->
           <div style="display:flex; align-items:center; gap:12px; padding:16px 16px 12px;">
-            <div style="width:42px; height:42px; border-radius:50%; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:var(--primary); flex-shrink:0; letter-spacing:0.5px;">
+            <div style="width:42px; height:42px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:#fff; flex-shrink:0; letter-spacing:0.5px;">
               {{ getInitials(client) }}
             </div>
             <div style="flex:1; min-width:0; overflow:hidden;">
@@ -77,8 +77,8 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
               <i class="ph ph-envelope" style="color:var(--text-3); font-size:14px; flex-shrink:0;"></i>
               <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ client.email }}</span>
             </div>
-            <div *ngIf="client.searchCriteria" style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);">
-              <i class="ph ph-buildings" style="color:var(--text-3); font-size:14px; flex-shrink:0;"></i>
+            <div *ngIf="client.searchCriteria || client.clientType" style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);">
+              <i class="ph ph-magnifying-glass" style="color:var(--text-3); font-size:14px; flex-shrink:0;"></i>
               <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ getSearchSummary(client) }}</span>
             </div>
           </div>
@@ -164,12 +164,14 @@ export class ClientListComponent implements OnInit {
   }
 
   getSearchSummary(client: Client): string {
-    const c = client.searchCriteria;
-    if (!c) return '';
     const parts: string[] = [];
-    if (c.propertyTypes?.length) parts.push(c.propertyTypes[0]);
-    if (c.maxBudget) parts.push(new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(c.maxBudget));
-    return parts.join(' · ');
+    const c = client.searchCriteria;
+    if (c?.propertyTypes?.length) parts.push(c.propertyTypes[0]);
+    if (client.clientType === 'BUYER') parts.push('Kauf');
+    else if (client.clientType === 'RENTER') parts.push('Miete');
+    else if (client.clientType === 'SELLER') parts.push('Verkauf');
+    if (c?.maxBudget) parts.push(new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(c.maxBudget));
+    return parts.join(' · ') || '—';
   }
 
   toggleStagePicker(clientId: string, event: MouseEvent): void {
