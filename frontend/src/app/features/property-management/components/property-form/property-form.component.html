@@ -1,38 +1,26 @@
 <div class="p-6">
   <!-- Restore Draft Dialog -->
-  <div *ngIf="showRestoreDialog" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <!-- Backdrop -->
-    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
-
-    <!-- Dialog -->
-    <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
-      <div class="flex items-start">
-        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 dark:bg-amber-900 sm:mx-0 sm:h-10 sm:w-10">
-          <svg class="h-6 w-6 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-          </svg>
+  <div *ngIf="showRestoreDialog"
+       style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;">
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);"></div>
+    <div style="position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.2);padding:24px;width:100%;max-width:420px;">
+      <div style="display:flex;align-items:flex-start;gap:14px;">
+        <div style="flex-shrink:0;width:40px;height:40px;border-radius:50%;background:rgba(192,122,30,0.12);display:flex;align-items:center;justify-content:center;">
+          <i class="ph ph-warning" style="font-size:20px;color:var(--color-amber);"></i>
         </div>
-        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-          <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
-            {{ 'formDraft.restoreTitle' | translate }}
-          </h3>
-          <div class="mt-2">
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-              {{ 'formDraft.restoreMessage' | translate }}
-            </p>
-          </div>
+        <div>
+          <h3 style="font-size:16px;font-weight:700;color:var(--text);margin:0 0 6px;">{{ 'formDraft.restoreTitle' | translate }}</h3>
+          <p style="font-size:13px;color:var(--text-2);margin:0;line-height:1.5;">{{ 'formDraft.restoreMessage' | translate }}</p>
         </div>
       </div>
-      <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse gap-3">
-        <button
-          (click)="restoreFromDraft()"
-          class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:ml-3 sm:w-auto sm:text-sm">
-          {{ 'formDraft.restoreYes' | translate }}
-        </button>
-        <button
-          (click)="discardDraft()"
-          class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:w-auto sm:text-sm">
+      <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:20px;">
+        <button (click)="discardDraft()"
+                style="padding:9px 18px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
           {{ 'formDraft.restoreNo' | translate }}
+        </button>
+        <button (click)="restoreFromDraft()"
+                style="padding:9px 18px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
+          {{ 'formDraft.restoreYes' | translate }}
         </button>
       </div>
     </div>
@@ -54,7 +42,7 @@
       <!-- Basic Information Section -->
       <div class="card animation-fade-in">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.form.basicInfo' | translate }}</h3>
+          <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.basicInfo' | translate }}</h3>
         </div>
         <div class="card-body space-y-6">
           <!-- Title -->
@@ -140,7 +128,7 @@
       <!-- Location Section -->
       <div class="card animation-fade-in">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.form.location' | translate }}</h3>
+          <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.location' | translate }}</h3>
         </div>
         <div class="card-body space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -239,7 +227,7 @@
       <!-- Specifications Section -->
       <div class="card animation-fade-in">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.form.specifications' | translate }}</h3>
+          <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.specifications' | translate }}</h3>
         </div>
         <div class="card-body space-y-6">
           <!-- Area Fields -->
@@ -393,7 +381,7 @@
       <!-- Financial Section -->
       <div class="card animation-fade-in">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.form.financial' | translate }}</h3>
+          <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.financial' | translate }}</h3>
         </div>
         <div class="card-body space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -480,7 +468,7 @@
       <!-- Features & Energy Section -->
       <div class="card animation-fade-in">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.form.featuresEnergy' | translate }}</h3>
+          <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.featuresEnergy' | translate }}</h3>
         </div>
         <div class="card-body space-y-6">
           <!-- Features Checkboxes -->
@@ -489,47 +477,47 @@
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasElevator" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasElevator' | translate }}</span>
+                <span style="margin-left:8px;font-size:13px;color:var(--text-2);">{{ 'properties.form.hasElevator' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasBalcony" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasBalcony' | translate }}</span>
+                <span style="margin-left:8px;font-size:13px;color:var(--text-2);">{{ 'properties.form.hasBalcony' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasTerrace" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasTerrace' | translate }}</span>
+                <span style="margin-left:8px;font-size:13px;color:var(--text-2);">{{ 'properties.form.hasTerrace' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasGarden" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasGarden' | translate }}</span>
+                <span style="margin-left:8px;font-size:13px;color:var(--text-2);">{{ 'properties.form.hasGarden' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasGarage" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasGarage' | translate }}</span>
+                <span style="margin-left:8px;font-size:13px;color:var(--text-2);">{{ 'properties.form.hasGarage' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasParking" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasParking' | translate }}</span>
+                <span style="margin-left:8px;font-size:13px;color:var(--text-2);">{{ 'properties.form.hasParking' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasBasement" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasBasement' | translate }}</span>
+                <span style="margin-left:8px;font-size:13px;color:var(--text-2);">{{ 'properties.form.hasBasement' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="hasAttic" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.hasAttic' | translate }}</span>
+                <span style="margin-left:8px;font-size:13px;color:var(--text-2);">{{ 'properties.form.hasAttic' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="isBarrierFree" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.isBarrierFree' | translate }}</span>
+                <span style="margin-left:8px;font-size:13px;color:var(--text-2);">{{ 'properties.form.isBarrierFree' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="petsAllowed" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.petsAllowed' | translate }}</span>
+                <span style="margin-left:8px;font-size:13px;color:var(--text-2);">{{ 'properties.form.petsAllowed' | translate }}</span>
               </label>
               <label class="flex items-center">
                 <input type="checkbox" formControlName="furnished" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{{ 'properties.form.furnished' | translate }}</span>
+                <span style="margin-left:8px;font-size:13px;color:var(--text-2);">{{ 'properties.form.furnished' | translate }}</span>
               </label>
             </div>
           </div>
@@ -640,7 +628,7 @@
       <!-- Images Section -->
       <div *ngIf="isEditMode" class="card animation-fade-in">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.images.title' | translate }}</h3>
+          <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.images.title' | translate }}</h3>
           <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {{ 'placeholders.imagesUploadInfo' | translate }}
           </p>
@@ -666,7 +654,7 @@
       <!-- Expose/Brochure Section -->
       <div *ngIf="isEditMode" class="card animation-fade-in">
         <div class="card-header">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ 'properties.expose.title' | translate }}</h3>
+          <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.expose.title' | translate }}</h3>
           <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {{ 'placeholders.exposeUploadInfo' | translate }}
           </p>
