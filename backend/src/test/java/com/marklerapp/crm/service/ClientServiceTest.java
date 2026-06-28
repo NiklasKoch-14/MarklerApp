@@ -9,6 +9,7 @@ import com.marklerapp.crm.entity.PropertySearchCriteria;
 import com.marklerapp.crm.mapper.ClientMapper;
 import com.marklerapp.crm.mapper.PropertySearchCriteriaMapper;
 import com.marklerapp.crm.repository.AgentRepository;
+import com.marklerapp.crm.repository.CallNoteRepository;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.PropertySearchCriteriaRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,6 +49,9 @@ class ClientServiceTest {
     private PropertySearchCriteriaRepository searchCriteriaRepository;
 
     @Mock
+    private CallNoteRepository callNoteRepository;
+
+    @Mock
     private ClientMapper clientMapper;
 
     @Mock
@@ -74,6 +78,7 @@ class ClientServiceTest {
             clientRepository,
             agentRepository,
             searchCriteriaRepository,
+            callNoteRepository,
             clientMapper,
             searchCriteriaMapper,
             ownershipValidator
