@@ -17,6 +17,8 @@ import { FormsModule } from '@angular/forms';
 import { ViewingService, ViewingSummary, ViewingStatus } from '../../../viewing-management/services/viewing.service';
 import { ViewingAddDialogComponent } from '../../../viewing-management/components/viewing-add-dialog/viewing-add-dialog.component';
 import { PropertyNoteService, PropertyNoteResponse, NoteCategory } from '../../services/property-note.service';
+import { PropertyMatchingService } from '../../services/property-matching.service';
+import { ClientMatchResult } from '../../models/property-match.model';
 
 @Component({
   selector: 'app-property-detail',
@@ -39,6 +41,9 @@ export class PropertyDetailComponent implements OnInit {
 
   propertyNotes: PropertyNoteResponse[] = [];
   isLoadingNotes = false;
+
+  matchingClients: ClientMatchResult[] = [];
+  isLoadingMatchingClients = false;
   newNoteText = '';
   newNoteCategory: NoteCategory = NoteCategory.GENERAL;
   isSavingNote = false;
@@ -67,7 +72,8 @@ export class PropertyDetailComponent implements OnInit {
     private router: Router,
     public propertyService: PropertyService,
     private viewingService: ViewingService,
-    private propertyNoteService: PropertyNoteService
+    private propertyNoteService: PropertyNoteService,
+    private propertyMatchingService: PropertyMatchingService
   ) {}
 
   ngOnInit(): void {
@@ -76,6 +82,7 @@ export class PropertyDetailComponent implements OnInit {
       this.loadProperty(propertyId);
       this.loadViewings(propertyId);
       this.loadNotes(propertyId);
+      this.loadMatchingClients(propertyId);
     }
   }
 
@@ -131,6 +138,29 @@ export class PropertyDetailComponent implements OnInit {
       case ViewingStatus.CANCELLED: return 'var(--color-error)';
       default: return 'var(--stage-viewing)';
     }
+  }
+
+  private loadMatchingClients(propertyId: string): void {
+    this.isLoadingMatchingClients = true;
+    this.propertyMatchingService.findMatchingClientsForProperty(propertyId, { maxResults: 5, matchThreshold: 0 }).subscribe({
+      next: (response) => {
+        this.matchingClients = response.clients?.slice(0, 5) ?? [];
+        this.isLoadingMatchingClients = false;
+      },
+      error: () => { this.isLoadingMatchingClients = false; }
+    });
+  }
+
+  getMatchScoreBg(score: number): string {
+    if (score >= 75) return 'var(--accent-soft)';
+    if (score >= 50) return 'var(--color-amber-soft)';
+    return 'var(--surface-2)';
+  }
+
+  getMatchScoreColor(score: number): string {
+    if (score >= 75) return 'var(--primary)';
+    if (score >= 50) return 'var(--color-amber)';
+    return 'var(--text-3)';
   }
 
   private loadNotes(propertyId: string): void {

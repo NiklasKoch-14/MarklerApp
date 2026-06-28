@@ -11,7 +11,7 @@ import { PropertyMatchRequest, PropertyMatchResponse } from '../models/property-
   providedIn: 'root'
 })
 export class PropertyMatchingService {
-  private readonly apiUrl = `${environment.apiUrl}/property-matching`;
+  private readonly apiUrl = `${environment.apiUrl}/properties/match`;
 
   constructor(private http: HttpClient) {}
 
@@ -19,31 +19,23 @@ export class PropertyMatchingService {
    * Find properties that match a client's search criteria
    */
   findMatchingPropertiesForClient(clientId: string, request?: Partial<PropertyMatchRequest>): Observable<PropertyMatchResponse> {
-    const matchRequest: PropertyMatchRequest = {
-      clientId,
-      ...request
-    };
-
-    return this.http.post<PropertyMatchResponse>(`${this.apiUrl}/find-properties`, matchRequest);
+    const { clientId: _c, propertyId: _p, customCriteria: _cc, ...body } = (request ?? {}) as any;
+    return this.http.post<PropertyMatchResponse>(`${this.apiUrl}/client/${clientId}`, body);
   }
 
   /**
    * Find clients interested in a specific property
    */
   findMatchingClientsForProperty(propertyId: string, request?: Partial<PropertyMatchRequest>): Observable<PropertyMatchResponse> {
-    const matchRequest: PropertyMatchRequest = {
-      propertyId,
-      ...request
-    };
-
-    return this.http.post<PropertyMatchResponse>(`${this.apiUrl}/find-clients`, matchRequest);
+    const { clientId: _c, propertyId: _p, customCriteria: _cc, ...body } = (request ?? {}) as any;
+    return this.http.post<PropertyMatchResponse>(`${this.apiUrl}/property/${propertyId}`, body);
   }
 
   /**
    * Find properties matching custom criteria
    */
   findMatchingPropertiesByCustomCriteria(request: PropertyMatchRequest): Observable<PropertyMatchResponse> {
-    return this.http.post<PropertyMatchResponse>(`${this.apiUrl}/find-properties`, request);
+    return this.http.post<PropertyMatchResponse>(`${this.apiUrl}/custom`, request.customCriteria);
   }
 
   /**

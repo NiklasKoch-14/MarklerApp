@@ -483,7 +483,7 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
                   <span [style.background]="getMatchScoreBg(match.matchScore)"
                         [style.color]="getMatchScoreColor(match.matchScore)"
                         style="font-size:11px;font-weight:800;padding:4px 8px;border-radius:8px;flex-shrink:0;min-width:36px;text-align:center;">
-                    {{ (match.matchScore * 100).toFixed(0) }}%
+                    {{ match.matchScore }}%
                   </span>
                   <div style="flex:1;min-width:0;">
                     <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ match.property.title }}</div>
@@ -616,9 +616,7 @@ export class ClientDetailComponent implements OnInit {
     { value: PipelineStage.PROSPECT,      label: 'Interessent',    color: 'var(--stage-prospect)',      bg: 'var(--stage-prospect-bg)' },
     { value: PipelineStage.ACTIVE_SEARCH, label: 'Aktive Suche',   color: 'var(--stage-active-search)', bg: 'var(--stage-active-search-bg)' },
     { value: PipelineStage.VIEWING,       label: 'Besichtigungen', color: 'var(--stage-viewing)',       bg: 'var(--stage-viewing-bg)' },
-    { value: PipelineStage.OFFER,         label: 'Angebot',        color: 'var(--stage-offer)',         bg: 'var(--stage-offer-bg)' },
     { value: PipelineStage.CLOSED,        label: 'Abschluss',      color: 'var(--stage-closed)',        bg: 'var(--stage-closed-bg)' },
-    { value: PipelineStage.INACTIVE,      label: 'Inaktiv',        color: 'var(--stage-inactive)',      bg: 'var(--stage-inactive-bg)' },
   ];
 
   constructor(
@@ -881,14 +879,14 @@ export class ClientDetailComponent implements OnInit {
   }
 
   getMatchScoreBg(score: number): string {
-    if (score >= 0.75) return 'var(--accent-soft)';
-    if (score >= 0.5)  return 'var(--color-amber-soft)';
+    if (score >= 75) return 'var(--accent-soft)';
+    if (score >= 50) return 'var(--color-amber-soft)';
     return 'var(--surface-2)';
   }
 
   getMatchScoreColor(score: number): string {
-    if (score >= 0.75) return 'var(--primary)';
-    if (score >= 0.5)  return 'var(--color-amber)';
+    if (score >= 75) return 'var(--primary)';
+    if (score >= 50) return 'var(--color-amber)';
     return 'var(--text-3)';
   }
 
