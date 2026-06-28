@@ -75,6 +75,7 @@ public class ClientService {
      * Get client by ID
      */
     @Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public ClientDto getClientById(UUID clientId, UUID agentId) {
         log.debug("Getting client: {} for agent: {}", clientId, agentId);
 
