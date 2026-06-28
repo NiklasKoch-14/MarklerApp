@@ -431,6 +431,28 @@
         </div>
       </div>
 
+      <!-- Owner Contact (internal) -->
+      <div *ngIf="property.ownerName || property.ownerPhone"
+           style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
+          <i class="ph ph-user-circle" style="font-size:15px;color:var(--text-3);"></i>
+          <span style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.5px;">Eigentümer</span>
+          <span style="margin-left:auto;font-size:11px;color:var(--text-3);font-style:italic;">intern</span>
+        </div>
+        <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
+          <span *ngIf="property.ownerName"
+                style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);">
+            <i class="ph ph-user" style="font-size:14px;flex-shrink:0;color:var(--text-3);"></i>
+            {{ property.ownerName }}
+          </span>
+          <a *ngIf="property.ownerPhone" [href]="'tel:' + property.ownerPhone"
+             style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--primary);text-decoration:none;font-weight:600;">
+            <i class="ph ph-phone" style="font-size:14px;flex-shrink:0;"></i>
+            {{ property.ownerPhone }}
+          </a>
+        </div>
+      </div>
+
       <!-- Contact / Virtual Tour -->
       <div *ngIf="property.contactPhone || property.contactEmail || property.virtualTourUrl"
            style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">

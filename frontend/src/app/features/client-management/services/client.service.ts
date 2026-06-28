@@ -30,9 +30,7 @@ export enum PipelineStage {
   PROSPECT = 'PROSPECT',
   ACTIVE_SEARCH = 'ACTIVE_SEARCH',
   VIEWING = 'VIEWING',
-  OFFER = 'OFFER',
-  CLOSED = 'CLOSED',
-  INACTIVE = 'INACTIVE'
+  CLOSED = 'CLOSED'
 }
 
 export interface Client {
@@ -50,6 +48,7 @@ export interface Client {
   financingStatus?: FinancingStatus;
   moveInTimeline?: MoveInTimeline;
   pipelineStage?: PipelineStage;
+  lastContactDate?: string;
   gdprConsentGiven: boolean;
   gdprConsentDate?: string;
   searchCriteria?: PropertySearchCriteria;
@@ -161,6 +160,12 @@ export class ClientService {
 
   getClientsByStage(): Observable<Record<PipelineStage, Client[]>> {
     return this.http.get<Record<PipelineStage, Client[]>>(`${this.apiUrl}/by-stage`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
+
+  getSortedByLastContact(): Observable<Client[]> {
+    return this.http.get<Client[]>(`${this.apiUrl}/sorted-by-contact`).pipe(
       catchError(err => this.errorHandler.handleError(err))
     );
   }

@@ -59,6 +59,8 @@ public class ClientDto {
     private Client.MoveInTimeline moveInTimeline;
     private Client.PipelineStage pipelineStage;
 
+    private LocalDateTime lastContactDate;
+
     private boolean gdprConsentGiven;
 
     private LocalDateTime gdprConsentDate;

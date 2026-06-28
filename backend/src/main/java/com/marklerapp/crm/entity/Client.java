@@ -115,9 +115,7 @@ public class Client extends BaseEntity {
         PROSPECT,
         ACTIVE_SEARCH,
         VIEWING,
-        OFFER,
-        CLOSED,
-        INACTIVE
+        CLOSED
     }
 
     /**

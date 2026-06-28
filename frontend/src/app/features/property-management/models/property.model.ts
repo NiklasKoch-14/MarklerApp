@@ -126,6 +126,9 @@ export interface Property {
 
   // Additional Fields
   availableFrom?: string;
+  ownerName?: string;
+  ownerPhone?: string;
+  ownerEmail?: string;
   contactPhone?: string;
   contactEmail?: string;
   virtualTourUrl?: string;

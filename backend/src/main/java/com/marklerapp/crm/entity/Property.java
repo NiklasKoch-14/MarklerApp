@@ -217,6 +217,19 @@ public class Property extends BaseEntity {
     @Column(name = "available_from")
     private LocalDate availableFrom;
 
+    @Column(name = "owner_name")
+    @Size(max = 100, message = "Owner name must not exceed 100 characters")
+    private String ownerName;
+
+    @Column(name = "owner_phone")
+    @Pattern(regexp = "^[+]?[0-9\\s\\-()]*$", message = "Phone number format is invalid")
+    @Size(max = 20, message = "Owner phone must not exceed 20 characters")
+    private String ownerPhone;
+
+    @Column(name = "owner_email")
+    @Email(message = "Owner email should be valid")
+    private String ownerEmail;
+
     @Column(name = "contact_phone")
     @Pattern(regexp = "^[+]?[0-9\\s\\-()]*$", message = "Phone number format is invalid")
     @Size(max = 20, message = "Contact phone must not exceed 20 characters")

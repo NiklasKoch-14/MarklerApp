@@ -51,7 +51,9 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
         style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
         <div *ngFor="let client of clients; trackBy: trackById"
           [routerLink]="['/clients', client.id]"
-          class="client-card">
+          class="client-card"
+          [style.border-color]="isOverdue(client) ? 'rgba(178,58,85,0.35)' : ''"
+          [style.background]="isOverdue(client) ? 'color-mix(in srgb,#b23a55 3%,var(--surface))' : ''">
 
           <!-- Card Header: Avatar + Name + Chevron -->
           <div style="display:flex; align-items:center; gap:12px; padding:16px 16px 12px;">
@@ -81,6 +83,13 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
               <i class="ph ph-magnifying-glass" style="color:var(--text-3); font-size:14px; flex-shrink:0;"></i>
               <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ getSearchSummary(client) }}</span>
             </div>
+          </div>
+
+          <!-- Last Contact -->
+          <div style="padding:0 16px 10px; display:flex; align-items:center; gap:6px; font-size:12px;"
+               [style.color]="isOverdue(client) ? '#b23a55' : 'var(--text-3)'">
+            <i class="ph" [class.ph-clock]="!isOverdue(client)" [class.ph-warning]="isOverdue(client)" style="font-size:13px;"></i>
+            {{ lastContactLabel(client) }}
           </div>
 
           <!-- Footer: Stage + DSGVO -->
@@ -129,12 +138,10 @@ export class ClientListComponent implements OnInit {
   activeStagePicker: string | null = null;
 
   readonly stageOptions = [
-    { value: PipelineStage.PROSPECT,      label: 'Interessent' },
-    { value: PipelineStage.ACTIVE_SEARCH, label: 'Aktive Suche' },
-    { value: PipelineStage.VIEWING,       label: 'Besichtigung' },
-    { value: PipelineStage.OFFER,         label: 'Angebot' },
+    { value: PipelineStage.PROSPECT,      label: 'Neu' },
+    { value: PipelineStage.ACTIVE_SEARCH, label: 'Aktiv' },
+    { value: PipelineStage.VIEWING,       label: 'Besichtigt' },
     { value: PipelineStage.CLOSED,        label: 'Abgeschlossen' },
-    { value: PipelineStage.INACTIVE,      label: 'Inaktiv' },
   ];
 
   constructor(private clientService: ClientService) {}
@@ -145,9 +152,9 @@ export class ClientListComponent implements OnInit {
 
   private loadClients(): void {
     this.isLoading = true;
-    this.clientService.getClients(0, 50).subscribe({
-      next: (response: PagedResponse<Client>) => {
-        this.clients = response.content;
+    this.clientService.getSortedByLastContact().subscribe({
+      next: (clients: Client[]) => {
+        this.clients = clients;
         this.isLoading = false;
       },
       error: (error) => {
@@ -155,6 +162,25 @@ export class ClientListComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  daysSinceContact(client: Client): number | null {
+    if (!client.lastContactDate) return null;
+    const ms = Date.now() - new Date(client.lastContactDate).getTime();
+    return Math.floor(ms / (1000 * 60 * 60 * 24));
+  }
+
+  lastContactLabel(client: Client): string {
+    const days = this.daysSinceContact(client);
+    if (days === null) return 'Noch nie kontaktiert';
+    if (days === 0) return 'Heute';
+    if (days === 1) return 'Gestern';
+    return `vor ${days} Tagen`;
+  }
+
+  isOverdue(client: Client): boolean {
+    const days = this.daysSinceContact(client);
+    return days === null || days > 21;
   }
 
   getInitials(client: Client): string {
@@ -196,9 +222,7 @@ export class ClientListComponent implements OnInit {
       case PipelineStage.PROSPECT:      return 'color-mix(in srgb,var(--stage-prospect) 14%,var(--surface))';
       case PipelineStage.ACTIVE_SEARCH: return 'color-mix(in srgb,var(--stage-active-search) 14%,var(--surface))';
       case PipelineStage.VIEWING:       return 'color-mix(in srgb,var(--stage-viewing) 14%,var(--surface))';
-      case PipelineStage.OFFER:         return 'color-mix(in srgb,var(--stage-offer) 14%,var(--surface))';
       case PipelineStage.CLOSED:        return 'color-mix(in srgb,var(--color-success) 14%,var(--surface))';
-      case PipelineStage.INACTIVE:      return 'var(--surface-2)';
       default:                          return 'var(--surface-2)';
     }
   }
@@ -208,9 +232,7 @@ export class ClientListComponent implements OnInit {
       case PipelineStage.PROSPECT:      return 'var(--stage-prospect)';
       case PipelineStage.ACTIVE_SEARCH: return 'var(--stage-active-search)';
       case PipelineStage.VIEWING:       return 'var(--stage-viewing)';
-      case PipelineStage.OFFER:         return 'var(--stage-offer)';
       case PipelineStage.CLOSED:        return 'var(--color-success)';
-      case PipelineStage.INACTIVE:      return 'var(--text-3)';
       default:                          return 'var(--text-3)';
     }
   }

@@ -169,6 +169,17 @@ public class ClientController extends BaseController {
     }
 
     /**
+     * Get all active clients sorted by last contact date (oldest first, never-contacted first).
+     * Primary client list view — shows Thomas who needs attention.
+     */
+    @GetMapping("/sorted-by-contact")
+    @Operation(summary = "Get clients sorted by last contact", description = "Returns active clients sorted by last call note date ascending")
+    public ResponseEntity<List<ClientDto>> getClientsSortedByLastContact(Authentication authentication) {
+        UUID agentId = getAgentIdFromAuth(authentication);
+        return ResponseEntity.ok(clientService.getClientsSortedByLastContact(agentId));
+    }
+
+    /**
      * Get clients grouped by pipeline stage (for Kanban dashboard)
      */
     @GetMapping("/by-stage")

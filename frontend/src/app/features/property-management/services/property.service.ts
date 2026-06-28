@@ -144,6 +144,9 @@ export interface Property {
 
   // Additional
   availableFrom?: string;
+  ownerName?: string;
+  ownerPhone?: string;
+  ownerEmail?: string;
   contactPhone?: string;
   contactEmail?: string;
   virtualTourUrl?: string;

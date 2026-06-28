@@ -113,6 +113,11 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
       energyConsumptionKwh: ['', [Validators.min(0), Validators.max(1000)]],
       heatingType: [''],
 
+      // Owner (internal, not in exposé)
+      ownerName:  ['', [Validators.maxLength(100)]],
+      ownerPhone: ['', [Validators.pattern('^[+]?[0-9\\s\\-()]*$'), Validators.maxLength(20)]],
+      ownerEmail: ['', [Validators.email]],
+
       // Additional
       contactPhone: ['', [Validators.pattern('^[+]?[0-9\\s\\-()]*$'), Validators.maxLength(20)]],
       contactEmail: ['', [Validators.email]],
@@ -196,6 +201,9 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
           energyConsumptionKwh: property.energyConsumptionKwh,
           heatingType: property.heatingType,
 
+          ownerName:  property.ownerName,
+          ownerPhone: property.ownerPhone,
+          ownerEmail: property.ownerEmail,
           contactPhone: property.contactPhone,
           contactEmail: property.contactEmail,
           virtualTourUrl: property.virtualTourUrl,

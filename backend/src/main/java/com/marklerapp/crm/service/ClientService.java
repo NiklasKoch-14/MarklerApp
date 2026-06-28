@@ -10,6 +10,7 @@ import com.marklerapp.crm.entity.PropertySearchCriteria;
 import com.marklerapp.crm.mapper.ClientMapper;
 import com.marklerapp.crm.mapper.PropertySearchCriteriaMapper;
 import com.marklerapp.crm.repository.AgentRepository;
+import com.marklerapp.crm.repository.CallNoteRepository;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.PropertySearchCriteriaRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -37,6 +40,7 @@ public class ClientService {
     private final ClientRepository clientRepository;
     private final AgentRepository agentRepository;
     private final PropertySearchCriteriaRepository searchCriteriaRepository;
+    private final CallNoteRepository callNoteRepository;
     private final ClientMapper clientMapper;
     private final PropertySearchCriteriaMapper searchCriteriaMapper;
     private final OwnershipValidator ownershipValidator;
@@ -270,24 +274,65 @@ public class ClientService {
         List<Client> clients = clientRepository.findActiveClientsByAgent(agent);
         Map<Client.PipelineStage, List<ClientDto>> result = new java.util.LinkedHashMap<>();
         for (Client.PipelineStage stage : Client.PipelineStage.values()) {
-            if (stage == Client.PipelineStage.CLOSED || stage == Client.PipelineStage.INACTIVE) continue;
+            if (stage == Client.PipelineStage.CLOSED) continue;
             result.put(stage, new java.util.ArrayList<>());
         }
         for (Client c : clients) {
-            result.get(c.getPipelineStage()).add(clientMapper.toDto(c));
+            List<ClientDto> bucket = result.get(c.getPipelineStage());
+            if (bucket != null) bucket.add(clientMapper.toDto(c));
         }
         return result;
     }
 
     /**
-     * Get clients without recent contact (for "Kunden ohne Kontakt" widget)
+     * Get all active clients sorted by last call note date ascending (oldest contact first, never-contacted first).
+     * Used as the primary client list view so Thomas always sees who needs attention.
+     */
+    @Transactional(readOnly = true)
+    public List<ClientDto> getClientsSortedByLastContact(UUID agentId) {
+        Agent agent = getAgentById(agentId);
+        List<Client> clients = clientRepository.findActiveClientsByAgent(agent);
+        List<ClientDto> dtos = clientMapper.toDtoList(clients);
+        Map<UUID, LocalDateTime> lastContactMap = buildLastContactMap(clients);
+        dtos.forEach(dto -> dto.setLastContactDate(lastContactMap.get(dto.getId())));
+        dtos.sort(Comparator.comparing(ClientDto::getLastContactDate,
+                Comparator.nullsFirst(Comparator.naturalOrder())));
+        return dtos;
+    }
+
+    /**
+     * Get clients without recent contact based on actual call note dates.
      */
     @Transactional(readOnly = true)
     public List<ClientDto> getClientsWithoutRecentContact(UUID agentId, int days) {
         Agent agent = getAgentById(agentId);
+        List<Client> clients = clientRepository.findActiveClientsOrderedByUpdatedAt(agent);
+        Map<UUID, LocalDateTime> lastContactMap = buildLastContactMap(clients);
         LocalDateTime cutoff = LocalDateTime.now().minusDays(days);
-        return clientRepository.findClientsWithoutRecentContact(agent, cutoff)
-                .stream().map(clientMapper::toDto).collect(Collectors.toList());
+        return clients.stream()
+                .filter(c -> {
+                    LocalDateTime last = lastContactMap.get(c.getId());
+                    return last == null || last.isBefore(cutoff);
+                })
+                .map(c -> {
+                    ClientDto dto = clientMapper.toDto(c);
+                    dto.setLastContactDate(lastContactMap.get(c.getId()));
+                    return dto;
+                })
+                .sorted(Comparator.comparing(ClientDto::getLastContactDate,
+                        Comparator.nullsFirst(Comparator.naturalOrder())))
+                .collect(Collectors.toList());
+    }
+
+    private Map<UUID, LocalDateTime> buildLastContactMap(List<Client> clients) {
+        if (clients.isEmpty()) return new HashMap<>();
+        List<UUID> ids = clients.stream().map(Client::getId).collect(Collectors.toList());
+        List<Object[]> rows = callNoteRepository.findLastContactDateForClients(ids);
+        Map<UUID, LocalDateTime> map = new HashMap<>();
+        for (Object[] row : rows) {
+            map.put((UUID) row[0], (LocalDateTime) row[1]);
+        }
+        return map;
     }
 
     /**

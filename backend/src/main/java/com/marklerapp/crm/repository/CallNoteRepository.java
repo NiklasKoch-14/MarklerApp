@@ -138,6 +138,13 @@ public interface CallNoteRepository extends JpaRepository<CallNote, UUID> {
     );
 
     /**
+     * Batch-fetch last call date per client for a set of client IDs.
+     * Returns Object[] pairs: [clientId (UUID), maxCallDate (LocalDateTime)]
+     */
+    @Query("SELECT cn.client.id, MAX(cn.callDate) FROM CallNote cn WHERE cn.client.id IN :clientIds GROUP BY cn.client.id")
+    List<Object[]> findLastContactDateForClients(@Param("clientIds") List<UUID> clientIds);
+
+    /**
      * Count total call notes for a specific client
      */
     long countByClient(Client client);

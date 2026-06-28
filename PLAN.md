@@ -100,15 +100,14 @@
 - [x] Properties-Stat auf Dashboard repariert (war hartcodiertes "–")
 
 ### Kurzfristig (halber Tag je)
-- [ ] `pipelineStage`-Enum an Client: PROSPECT | ACTIVE_SEARCH | VIEWING | OFFER | CLOSED | INACTIVE
-  — Flyway-Migration + Frontend Klick-Dropdown direkt im Kunden-Header (kein Formular)
-- [ ] `clientType` (BUYER / RENTER / SELLER) am Kunden — steuert Ansicht
-- [ ] `financingStatus` (UNKNOWN | SELF_FINANCED | BANK_PRE_APPROVED | NEEDS_FINANCING) + `moveInTimeline`
-  in Kunden-Profil-Karte
+- [x] `pipelineStage`-Enum an Client: 4 Stufen (Neu/Aktiv/Besichtigt/Abgeschlossen) — Flyway V18 + Frontend Klick-Dropdown (OFFER→VIEWING, INACTIVE→CLOSED migriert)
+- [x] Kundenliste nach "letztem Kontakt" sortieren — `/clients/sorted-by-contact` Endpoint, `lastContactDate` in ClientDto, Rot-Markierung ab 21 Tagen im Frontend
+- [x] Eigentümer-Kontaktdaten (Name, Tel) als interne Felder bei Immobilien — Flyway V18, Property-Form + Detail
+- [ ] `clientType` (BUYER / RENTER / SELLER) am Kunden — steuert Ansicht (deferred: erst wenn Seller-Ansicht gebraucht wird)
+- [ ] `financingStatus` + `moveInTimeline` gestrichen (Elon-Review: zu ungenau für Makler-Alltag)
 - [ ] Dashboard-Kanban auf `pipelineStage` umstellen (statt fragiler CallOutcome-Ableitung)
-- [ ] "Kunden ohne Kontakt >30 Tage"-Widget auf Dashboard
+- [ ] "Kunden ohne Kontakt >30 Tage"-Widget auf Dashboard (Backend bereits implementiert)
 - [ ] Listing-Datum + "X Tage am Markt" im Immobilien-Header
-- [ ] Eigentümer-Kontaktdaten (Name, Tel, Email) als interne Felder bei Immobilien
 
 ### Mittelfristig (>1 Tag je)
 - [ ] **Besichtigungs-Feature** (Kunde ↔ Immobilie mit Feedback):
