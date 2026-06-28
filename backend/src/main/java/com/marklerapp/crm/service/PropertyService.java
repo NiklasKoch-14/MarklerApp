@@ -581,6 +581,9 @@ public class PropertyService {
             .energyConsumptionKwh(request.getEnergyConsumptionKwh())
             .heatingType(request.getHeatingType())
             .availableFrom(request.getAvailableFrom())
+            .ownerName(request.getOwnerName())
+            .ownerPhone(request.getOwnerPhone())
+            .ownerEmail(request.getOwnerEmail())
             .contactPhone(request.getContactPhone())
             .contactEmail(request.getContactEmail())
             .virtualTourUrl(request.getVirtualTourUrl())
@@ -654,6 +657,9 @@ public class PropertyService {
 
         // Additional fields
         if (request.getAvailableFrom() != null) property.setAvailableFrom(request.getAvailableFrom());
+        if (request.getOwnerName() != null) property.setOwnerName(request.getOwnerName());
+        if (request.getOwnerPhone() != null) property.setOwnerPhone(request.getOwnerPhone());
+        if (request.getOwnerEmail() != null) property.setOwnerEmail(request.getOwnerEmail());
         if (request.getContactPhone() != null) property.setContactPhone(request.getContactPhone());
         if (request.getContactEmail() != null) property.setContactEmail(request.getContactEmail());
         if (request.getVirtualTourUrl() != null) property.setVirtualTourUrl(request.getVirtualTourUrl());

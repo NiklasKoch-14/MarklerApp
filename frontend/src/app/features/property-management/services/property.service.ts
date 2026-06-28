@@ -304,6 +304,15 @@ export class PropertyService {
   }
 
   /**
+   * Partially update property (PATCH)
+   */
+  patchProperty(id: string, partial: Partial<Property>): Observable<Property> {
+    return this.http.patch<Property>(`${this.apiUrl}/${id}`, partial).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
+
+  /**
    * Delete property
    */
   deleteProperty(id: string): Observable<void> {

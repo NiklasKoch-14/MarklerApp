@@ -35,6 +35,10 @@ export class PropertyDetailComponent implements OnInit {
   selectedImage: PropertyImage | null = null;
   selectedImageIndex = 0;
 
+  showStatusDropdown = false;
+  isUpdatingStatus = false;
+  readonly allStatuses = Object.values(PropertyStatus);
+
   viewings: ViewingSummary[] = [];
   isLoadingViewings = false;
   showViewingDialog = false;
@@ -199,6 +203,30 @@ export class PropertyDetailComponent implements OnInit {
         this.propertyNotes = this.propertyNotes.filter(n => n.id !== noteId);
       }
     });
+  }
+
+  updateStatus(newStatus: PropertyStatus): void {
+    if (!this.property?.id || this.isUpdatingStatus || this.property.status === newStatus) {
+      this.showStatusDropdown = false;
+      return;
+    }
+    this.isUpdatingStatus = true;
+    this.showStatusDropdown = false;
+    this.propertyService.patchProperty(this.property.id, { status: newStatus }).subscribe({
+      next: (updated) => {
+        this.property = updated;
+        this.isUpdatingStatus = false;
+      },
+      error: () => { this.isUpdatingStatus = false; }
+    });
+  }
+
+  getDaysOnMarket(): number | null {
+    if (!this.property?.createdAt) return null;
+    const created = new Date(this.property.createdAt);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+    return diff;
   }
 
   deleteProperty(): void {
