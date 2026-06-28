@@ -74,7 +74,7 @@
       <!-- Address -->
       <div style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text-3);">
         <i class="ph ph-map-pin" style="font-size:14px;"></i>
-        {{ property.formattedAddress || [property.addressStreet, property.addressHouseNumber, property.addressPostalCode, property.addressCity].filter(v => !!v).join(' ') }}
+        {{ property.formattedAddress || joinAddressParts() }}
       </div>
     </div>
 
