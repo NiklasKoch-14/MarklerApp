@@ -471,7 +471,7 @@ export class ViewingAddDialogComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$)
       ).subscribe((result: any) => {
         const all: Client[] = result.content || [];
-        const hotStages: string[] = [PipelineStage.ACTIVE_SEARCH, PipelineStage.VIEWING, PipelineStage.OFFER];
+        const hotStages: string[] = [PipelineStage.ACTIVE_SEARCH, PipelineStage.VIEWING];
         this.hotLeadClients = all.filter(c => hotStages.includes(c.pipelineStage as string));
         this.otherClients = all.filter(c => !hotStages.includes(c.pipelineStage as string));
         this.clientListDisplay = this.otherClients;
@@ -614,7 +614,6 @@ export class ViewingAddDialogComponent implements OnInit, OnDestroy {
     switch (stage) {
       case PipelineStage.ACTIVE_SEARCH: return 'color-mix(in srgb,var(--stage-active-search) 14%,var(--surface))';
       case PipelineStage.VIEWING:       return 'color-mix(in srgb,var(--stage-viewing) 14%,var(--surface))';
-      case PipelineStage.OFFER:         return 'color-mix(in srgb,var(--stage-offer) 14%,var(--surface))';
       case PipelineStage.CLOSED:        return 'color-mix(in srgb,var(--color-success) 14%,var(--surface))';
       default:                          return 'var(--surface-2)';
     }
@@ -625,7 +624,6 @@ export class ViewingAddDialogComponent implements OnInit, OnDestroy {
       case PipelineStage.PROSPECT:      return 'var(--stage-prospect)';
       case PipelineStage.ACTIVE_SEARCH: return 'var(--stage-active-search)';
       case PipelineStage.VIEWING:       return 'var(--stage-viewing)';
-      case PipelineStage.OFFER:         return 'var(--stage-offer)';
       case PipelineStage.CLOSED:        return 'var(--color-success)';
       default:                          return 'var(--text-3)';
     }
@@ -636,9 +634,7 @@ export class ViewingAddDialogComponent implements OnInit, OnDestroy {
       case PipelineStage.PROSPECT:      return 'Interessent';
       case PipelineStage.ACTIVE_SEARCH: return 'Aktive Suche';
       case PipelineStage.VIEWING:       return 'Besichtigung';
-      case PipelineStage.OFFER:         return 'Angebot';
       case PipelineStage.CLOSED:        return 'Abgeschlossen';
-      case PipelineStage.INACTIVE:      return 'Inaktiv';
       default:                          return '—';
     }
   }

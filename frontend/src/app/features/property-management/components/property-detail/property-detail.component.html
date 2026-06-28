@@ -33,8 +33,8 @@
                     style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-family:inherit;text-align:left;"
                     [style.background]="s === property.status ? 'var(--surface-2)' : 'transparent'"
                     [style.color]="s === property.status ? getStatusColor(s) : 'var(--text-2)'"
-                    (mouseenter)="$event.currentTarget.style.background='var(--surface-2)'"
-                    (mouseleave)="$event.currentTarget.style.background= s === property.status ? 'var(--surface-2)' : 'transparent'">
+                    (mouseenter)="$any($event.currentTarget).style.background='var(--surface-2)'"
+                    (mouseleave)="$any($event.currentTarget).style.background= s === property.status ? 'var(--surface-2)' : 'transparent'">
               <span style="width:7px;height:7px;border-radius:50%;flex-shrink:0;"
                     [style.background]="getStatusColor(s)"></span>
               {{ getStatusLabel(s) }}
@@ -74,7 +74,7 @@
       <!-- Address -->
       <div style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text-3);">
         <i class="ph ph-map-pin" style="font-size:14px;"></i>
-        {{ property.formattedAddress || [property.addressStreet, property.addressHouseNumber, property.addressPostalCode, property.addressCity].filter(Boolean).join(' ') }}
+        {{ property.formattedAddress || [property.addressStreet, property.addressHouseNumber, property.addressPostalCode, property.addressCity].filter(v => !!v).join(' ') }}
       </div>
     </div>
 
@@ -508,8 +508,8 @@
             <a *ngFor="let m of matchingClients"
                [routerLink]="['/clients', m.client.id]"
                style="display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2);text-decoration:none;transition:background 0.1s;"
-               (mouseenter)="$event.currentTarget.style.background='var(--surface)'"
-               (mouseleave)="$event.currentTarget.style.background='var(--surface-2)'">
+               (mouseenter)="$any($event.currentTarget).style.background='var(--surface)'"
+               (mouseleave)="$any($event.currentTarget).style.background='var(--surface-2)'">
               <span [style.background]="getMatchScoreBg(m.matchScore)"
                     [style.color]="getMatchScoreColor(m.matchScore)"
                     style="font-size:11px;font-weight:800;padding:3px 7px;border-radius:7px;flex-shrink:0;min-width:32px;text-align:center;">
