@@ -48,6 +48,12 @@ public class DashboardAnalyticsDto {
     private ActivityTrendsDto activityTrends;
 
     // ========================================
+    // Revenue / Commission (was Thomas wirklich sehen will)
+    // ========================================
+
+    private RevenueDto revenue;
+
+    // ========================================
     // AI-Powered Insights
     // ========================================
 
@@ -102,6 +108,30 @@ public class DashboardAnalyticsDto {
         private Long propertiesWithImages;
         private Long propertiesWithExpose;
         private BigDecimal totalPortfolioValue;
+        private List<PropertyOnMarketDto> longestOnMarket; // Objekte die am längsten hängen — Preisdruck-Gespräch
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PropertyOnMarketDto {
+        private String propertyId;
+        private String title;
+        private String city;
+        private Integer daysOnMarket;
+        private BigDecimal price;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class RevenueDto {
+        private BigDecimal realizedCommissionYtd;   // Provision aus verkauften/vermieteten Objekten (dieses Jahr)
+        private BigDecimal pipelineCommission;      // Provision die noch im Bestand steckt (verfügbar/reserviert)
+        private Long dealsClosedYtd;                // Anzahl abgeschlossener Objekte dieses Jahr
+        private BigDecimal avgCommissionPerDeal;    // Durchschnittliche Provision je Abschluss (dieses Jahr)
     }
 
     @Data

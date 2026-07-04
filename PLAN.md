@@ -29,6 +29,7 @@
 - [ ] **Dashboard = Morgen-Cockpit:** heutige Follow-ups, überfällige Kontakte >30 Tage (Backend existiert), heutige Besichtigungen — die 7:30-Uhr-Ansicht
 - [ ] **Lead-Import per E-Mail-Weiterleitung:** ImmoScout-Anfrage an App-Adresse weiterleiten → Kunde wird automatisch angelegt (ohne das bleibt die App ein Zweitsystem neben dem Portal)
 - [x] **Sprach-Notiz mit KI-Strukturierung** (2026-07-04, siehe eigener Abschnitt unten)
+- [x] **Analyse-Seite mit Graphen** (2026-07-05): eigene `/analytics`-Route mit handgebauten SVG-Charts (keine Chart-Lib) — Verkaufstrichter mit Absprung-Erkennung ("größter Verlust"), 30-Tage-Aktivitätsverlauf (Area-Chart + Abschluss-Marker), "Objekte am längsten am Markt"-Ranking (farbcodiert für Preisgespräch), Provisions-KPIs (realisiert YTD + Pipeline). Backend: `last30DaysActivity` (war leerer Stub) gefüllt, `RevenueDto` (commission-basiert) + `longestOnMarket` ergänzt. Vanity-Metriken (Portfolio-Gesamtwert, Objekte-nach-Typ) bewusst weggelassen (Makler-Review Thomas Brenner).
 - [ ] KI-Kundenprofil via Claude API (→ bestehender Abschnitt)
 
 ### Phase C — erst mit erstem zahlenden Kunden (Defer-Entscheidungen bleiben)

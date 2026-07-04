@@ -62,6 +62,7 @@ public class DashboardAnalyticsService {
                 .pipelineHealth(calculatePipelineHealth(agent))
                 .propertyPortfolio(calculatePropertyPortfolio(agent))
                 .activityTrends(calculateActivityTrends(agent))
+                .revenue(calculateRevenue(agent))
                 .clientsNeedingAttention(identifyClientsNeedingAttention(agent))
                 .suggestedActions(generateSuggestedActions(agent))
                 .build();
@@ -230,6 +231,19 @@ public class DashboardAnalyticsService {
         }
         int averageDaysOnMarket = availableProperties.isEmpty() ? 0 : totalDaysOnMarket / availableProperties.size();
 
+        // Objekte die am längsten hängen — Grundlage fürs Preisreduktions-Gespräch mit dem Eigentümer
+        List<PropertyOnMarketDto> longestOnMarket = availableProperties.stream()
+                .map(p -> PropertyOnMarketDto.builder()
+                        .propertyId(p.getId().toString())
+                        .title(p.getTitle())
+                        .city(p.getAddressCity())
+                        .daysOnMarket((int) ChronoUnit.DAYS.between(p.getCreatedAt(), now))
+                        .price(p.getPrice())
+                        .build())
+                .sorted(Comparator.comparing(PropertyOnMarketDto::getDaysOnMarket).reversed())
+                .limit(5)
+                .collect(Collectors.toList());
+
         // Properties with images and expose
         long propertiesWithImages = allProperties.stream()
                 .filter(p -> p.getImages() != null && !p.getImages().isEmpty())
@@ -253,6 +267,47 @@ public class DashboardAnalyticsService {
                 .propertiesWithImages(propertiesWithImages)
                 .propertiesWithExpose(propertiesWithExpose)
                 .totalPortfolioValue(totalValue)
+                .longestOnMarket(longestOnMarket)
+                .build();
+    }
+
+    // ========================================
+    // Revenue / Commission Calculation
+    // ========================================
+
+    private RevenueDto calculateRevenue(Agent agent) {
+        List<Property> allProperties = propertyRepository.findByAgent(agent, Pageable.unpaged()).getContent();
+        int currentYear = LocalDate.now().getYear();
+
+        // Abgeschlossene Objekte dieses Jahr (Status SOLD/RENTED, in diesem Jahr aktualisiert)
+        List<Property> closedThisYear = allProperties.stream()
+                .filter(p -> p.getStatus() == PropertyStatus.SOLD || p.getStatus() == PropertyStatus.RENTED)
+                .filter(p -> p.getUpdatedAt() != null && p.getUpdatedAt().getYear() == currentYear)
+                .toList();
+
+        BigDecimal realizedCommission = closedThisYear.stream()
+                .map(Property::getCommission)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        long dealsClosedYtd = closedThisYear.size();
+
+        // Provision die noch im Bestand steckt (verfügbar/reserviert)
+        BigDecimal pipelineCommission = allProperties.stream()
+                .filter(p -> p.getStatus() == PropertyStatus.AVAILABLE || p.getStatus() == PropertyStatus.RESERVED)
+                .map(Property::getCommission)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal avgCommission = dealsClosedYtd > 0
+                ? realizedCommission.divide(BigDecimal.valueOf(dealsClosedYtd), 2, java.math.RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        return RevenueDto.builder()
+                .realizedCommissionYtd(realizedCommission)
+                .pipelineCommission(pipelineCommission)
+                .dealsClosedYtd(dealsClosedYtd)
+                .avgCommissionPerDeal(avgCommission)
                 .build();
     }
 
@@ -308,12 +363,33 @@ public class DashboardAnalyticsService {
                 .filter(p -> p.getCreatedAt().isAfter(startOfLastMonth) && p.getCreatedAt().isBefore(startOfThisMonth))
                 .count();
 
-        // Last 30 days daily activity (for charts)
-        LocalDateTime thirtyDaysAgo = now.minusDays(ValidationConstants.ACTIVITY_TRENDS_DAYS);
+        // Last 30 days daily activity (for charts) — pro Tag gruppiert, Lücken mit 0 gefüllt
+        LocalDate startDay = LocalDate.now().minusDays(ValidationConstants.ACTIVITY_TRENDS_DAYS - 1L);
+        LocalDateTime windowStart = startDay.atStartOfDay();
+
+        List<CallNote> windowNotes = callNoteRepository.findRecentCallNotesByAgent(agent, windowStart);
+        Map<LocalDate, Long> callsByDay = windowNotes.stream()
+                .filter(n -> n.getCallDate() != null && !n.getCallDate().isAfter(now))
+                .collect(Collectors.groupingBy(n -> n.getCallDate().toLocalDate(), Collectors.counting()));
+        Map<LocalDate, Long> dealsByDay = windowNotes.stream()
+                .filter(n -> n.getOutcome() == CallOutcome.DEAL_CLOSED)
+                .filter(n -> n.getCallDate() != null && !n.getCallDate().isAfter(now))
+                .collect(Collectors.groupingBy(n -> n.getCallDate().toLocalDate(), Collectors.counting()));
+
+        Map<LocalDate, Long> newClientsByDay = clientRepository.findRecentClientsByAgent(agent, windowStart).stream()
+                .filter(c -> c.getCreatedAt() != null && !c.getCreatedAt().isBefore(windowStart) && !c.getCreatedAt().isAfter(now))
+                .collect(Collectors.groupingBy(c -> c.getCreatedAt().toLocalDate(), Collectors.counting()));
+
         List<DailyActivityDto> dailyActivity = new ArrayList<>();
-        // Simplified - in production, group by day
-        // For now, just return empty list to keep response fast
-        // TODO: Implement daily grouping for charts
+        for (int i = 0; i < ValidationConstants.ACTIVITY_TRENDS_DAYS; i++) {
+            LocalDate day = startDay.plusDays(i);
+            dailyActivity.add(DailyActivityDto.builder()
+                    .date(day.atStartOfDay())
+                    .callNotes(callsByDay.getOrDefault(day, 0L))
+                    .newClients(newClientsByDay.getOrDefault(day, 0L))
+                    .dealsClosed(dealsByDay.getOrDefault(day, 0L))
+                    .build());
+        }
 
         return ActivityTrendsDto.builder()
                 .callNotesThisMonth(callNotesThisMonth)
