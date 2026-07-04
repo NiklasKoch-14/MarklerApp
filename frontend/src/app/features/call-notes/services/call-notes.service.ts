@@ -101,6 +101,16 @@ export interface FollowUpReminder {
   daysUntilDue: number;
 }
 
+export interface VoiceNoteDraft {
+  subject?: string;
+  notes?: string;
+  callType?: CallType;
+  outcome?: CallOutcome;
+  followUpRequired?: boolean;
+  followUpDate?: string;
+  durationMinutes?: number;
+}
+
 export interface PropertySummary {
   id: string;
   title: string;
@@ -152,6 +162,16 @@ export class CallNotesService {
    */
   createCallNote(callNote: CallNoteCreateRequest): Observable<CallNote> {
     return this.http.post<CallNote>(this.apiUrl, callNote).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
+
+  /**
+   * Parse a dictated voice transcript into a structured call note draft.
+   * Backend responds 503 when the AI parser is not configured.
+   */
+  parseVoiceTranscript(transcript: string): Observable<VoiceNoteDraft> {
+    return this.http.post<VoiceNoteDraft>(`${this.apiUrl}/parse-voice`, { transcript }).pipe(
       catchError(err => this.errorHandler.handleError(err))
     );
   }

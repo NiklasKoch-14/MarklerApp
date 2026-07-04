@@ -774,7 +774,15 @@
     "followUpDate": "Follow Up Date",
     "outcome": "Outcome",
     "summary": "Summary",
-    "generateSummary": "Generate Summary"
+    "generateSummary": "Generate Summary",
+    "voice": {
+      "start": "Dictate note",
+      "stop": "Stop recording",
+      "listening": "Listening — just speak freely…",
+      "structuring": "AI is structuring your note…",
+      "followUpDetected": "Follow-up",
+      "notSupported": "Voice input is not supported by this browser"
+    }
   },
   "search": {
     "criteria": "Search Criteria",

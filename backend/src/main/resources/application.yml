@@ -104,6 +104,12 @@ application:
   password-reset:
     token-expiration-minutes: 15
 
+# Claude API — voice note parsing (disabled when key is unset)
+anthropic:
+  api-key: ${ANTHROPIC_API_KEY:}
+  model: claude-haiku-4-5
+  max-tokens: 1024
+
 # File Storage Configuration
 app:
   file-storage:

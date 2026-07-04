@@ -774,7 +774,15 @@
     "followUpDate": "Nachfass-Datum",
     "outcome": "Ergebnis",
     "summary": "Zusammenfassung",
-    "generateSummary": "Zusammenfassung generieren"
+    "generateSummary": "Zusammenfassung generieren",
+    "voice": {
+      "start": "Notiz einsprechen",
+      "stop": "Aufnahme beenden",
+      "listening": "Ich höre zu — einfach frei sprechen…",
+      "structuring": "KI strukturiert deine Notiz…",
+      "followUpDetected": "Follow-up",
+      "notSupported": "Spracheingabe wird von diesem Browser nicht unterstützt"
+    }
   },
   "search": {
     "criteria": "Suchkriterien",

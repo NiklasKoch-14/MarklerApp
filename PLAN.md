@@ -4,7 +4,53 @@
 > Architektur-Entscheidung: **Hybrid** — Spring Boot bleibt, **Supabase** liefert Postgres + Storage.
 > Diese Datei wird Schritt für Schritt abgehakt. Reihenfolge = empfohlene Umsetzungsreihenfolge.
 
-**Stand:** 2026-06-22 (Phase 1 in Arbeit) · **Legende:** `[ ]` offen · `[x]` erledigt · `[~]` teilweise
+**Stand:** 2026-07-04 · **Legende:** `[ ]` offen · `[x]` erledigt · `[~]` teilweise
+
+---
+
+## Produktionsreife-Plan (Analyse 2026-07-04)
+
+> Positionierung/USP: **"Das CRM, das Einzelkämpfern sagt, wen sie heute anrufen müssen."**
+> Zielgruppe: Solo-Makler und 2-Personen-Büros, die heute Excel/Outlook nutzen und für die
+> onOffice/FlowFact (90–150 €/Mo, schulungspflichtig) zu teuer und zu komplex sind.
+> Kein Feature-Wettrennen gegen die Platzhirsche — gewinnen über Follow-up-Gedächtnis,
+> Mobile-First (Browser/PWA, keine native App) und radikale Einfachheit unter 50 €/Mo.
+> Größte strategische Risiken: fehlende Mobile-Tauglichkeit und fehlender Lead-Import (ImmoScout).
+
+### Phase A — Beta-fähig für den ersten fremden Makler (~1–2 Wochen)
+- [ ] **Mobile-First-Pass** über die 5 Kern-Screens (Dashboard, Kundenliste, Kunden-Detail, Call-Note-Quick-Add, Besichtigung) — Akzeptanz: auf einem iPhone einhändig bedienbar (aktuell faktisch Desktop-only: nur 1 Template mit responsive Breakpoints)
+- [ ] **E-Mail minimal reaktivieren** — transaktionaler Dienst (Resend/Postmark statt eigenem SMTP), nur Passwort-Reset + Willkommen, per `@ConditionalOnProperty` abgesichert (Reset-Tokens landen aktuell in der DB und erreichen den Nutzer nie)
+- [ ] **Demo-/Seed-Daten aus Prod-Migrationen entfernen** (V19/V20 seeden Beispieldaten — neue Makler dürfen nicht mit Fake-Kunden starten; Demo-Daten nur noch im dev-Profil)
+- [ ] **Monitoring:** Sentry (FE+BE), Uptime-Check, Supabase-Backups/PITR verifizieren
+- [ ] **DSGVO-Rechtliches:** Impressum, Datenschutzerklärung, AVV mit Supabase, einfache AGB (Abmahn-Risiko ab dem ersten externen Nutzer)
+- [ ] **Tenant-Isolation-Tests:** automatisierte Tests, dass Agent A niemals Daten von Agent B liest/ändert (Fundament für Phase 2, heute nur 4 Testklassen für 13 Controller)
+
+### Phase B — USP schärfen (macht aus "funktioniert" → "wird gekauft")
+- [ ] **Dashboard = Morgen-Cockpit:** heutige Follow-ups, überfällige Kontakte >30 Tage (Backend existiert), heutige Besichtigungen — die 7:30-Uhr-Ansicht
+- [ ] **Lead-Import per E-Mail-Weiterleitung:** ImmoScout-Anfrage an App-Adresse weiterleiten → Kunde wird automatisch angelegt (ohne das bleibt die App ein Zweitsystem neben dem Portal)
+- [x] **Sprach-Notiz mit KI-Strukturierung** (2026-07-04, siehe eigener Abschnitt unten)
+- [ ] KI-Kundenprofil via Claude API (→ bestehender Abschnitt)
+
+### Phase C — erst mit erstem zahlenden Kunden (Defer-Entscheidungen bleiben)
+- [ ] Multi-Tenancy (Phase 2), Plan-Limits (Phase 3), Stripe (Phase 4), Landing-Page mit Preisen — nichts davon vorziehen
+
+---
+
+## ✅ Sprach-Notiz mit KI-Strukturierung (umgesetzt 2026-07-04)
+
+> **Job:** Als Makler direkt nach einem Telefonat (oft unterwegs) will ich meine Gesprächsnotiz
+> frei einsprechen können, damit sie ohne Tippen strukturiert im CRM landet — weil das Nachtragen
+> abends heute Zeit kostet und Details verloren gehen. (Analog kcal-App: Sprache statt Barcode.)
+>
+> **Akzeptanzkriterium:** Kunden-Detailseite → "+ Neue Notiz" → Mikrofon → frei sprechen
+> ("…will Dienstag besichtigen, ich soll das Exposé schicken und Freitag anrufen") → Stopp →
+> Formular ist befüllt (Betreff, aufgeräumte Notiz, Kontaktart, Ergebnis, Follow-up-Datum) →
+> 1 Tap "Notiz speichern".
+
+- [x] **Frontend:** Web Speech API (`de-DE`, on-device STT — kein Audio verlässt das Gerät), Mikro-Button im Quick-Note-Formular, Live-Transkript in der Textarea, Follow-up-Chip mit editierbarem Datum. Mikro erscheint nur wenn der Browser STT unterstützt.
+- [x] **Backend:** `POST /api/v1/call-notes/parse-voice` → `VoiceNoteParseService` ruft Claude API (`claude-haiku-4-5`, ~0,001 €/Notiz), löst relative Datumsangaben ("Freitag") serverseitig auf, Fallback auf Roh-Transkript bei Parse-Fehlern
+- [x] **Config:** `ANTHROPIC_API_KEY` Env-Var (Railway setzen!) — ohne Key antwortet der Endpoint 503 und das Frontend behält das Roh-Transkript editierbar
+- [ ] **Offen:** `ANTHROPIC_API_KEY` in Railway setzen; iPhone-Safari-Test (webkitSpeechRecognition nutzt Siri-Diktat)
 
 ---
 

@@ -1,10 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, NgZone, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { ClientService, Client, PipelineStage, ClientType, FinancingStatus, MoveInTimeline } from '../../services/client.service';
-import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse, CallNoteCreateRequest, CallType, CallOutcome } from '../../../call-notes/services/call-notes.service';
+import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse, CallNoteCreateRequest, CallType, CallOutcome, VoiceNoteDraft } from '../../../call-notes/services/call-notes.service';
 import { ViewingService, ViewingSummary, ViewingStatus } from '../../../viewing-management/services/viewing.service';
 import { ViewingAddDialogComponent } from '../../../viewing-management/components/viewing-add-dialog/viewing-add-dialog.component';
 import { FileAttachmentManagerComponent } from '../../../../shared/components/file-attachment-manager/file-attachment-manager.component';
@@ -24,6 +24,8 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
     .qm-item.danger:hover { background:var(--color-error-soft); }
     .note-form-enter { animation:slideDown .18s ease; }
     @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+    .rec-dot { width:8px; height:8px; border-radius:50%; background:var(--color-error); display:inline-block; flex-shrink:0; animation:recPulse 1.1s ease infinite; }
+    @keyframes recPulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.35; transform:scale(.8); } }
     .tl-row { display:flex; align-items:flex-start; gap:12px; padding:14px 0; border-bottom:1px solid var(--border); }
     .tl-row:last-child { border-bottom:none; }
     .match-link:hover { background:var(--surface) !important; }
@@ -159,10 +161,26 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
             <i class="ph-fill ph-note-pencil" style="font-size:16px;color:var(--primary);"></i>
             <span style="font-size:14px;font-weight:700;color:var(--text);">Gesprächsnotiz</span>
+            <div style="flex:1;"></div>
+            <button *ngIf="voiceSupported" (click)="toggleVoiceRecording()" [disabled]="isParsingVoice"
+                    [style.background]="isRecording ? 'var(--color-error)' : 'var(--accent-soft)'"
+                    [style.color]="isRecording ? '#fff' : 'var(--primary)'"
+                    style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">
+              <i [class]="isRecording ? 'ph-fill ph-stop-circle' : 'ph-fill ph-microphone'" style="font-size:14px;"></i>
+              {{ (isRecording ? 'callNotes.voice.stop' : 'callNotes.voice.start') | translate }}
+            </button>
             <button (click)="showQuickNoteForm = false"
-                    style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text-3);font-size:18px;line-height:1;">
+                    style="background:none;border:none;cursor:pointer;color:var(--text-3);font-size:18px;line-height:1;">
               <i class="ph ph-x"></i>
             </button>
+          </div>
+          <div *ngIf="isRecording || isParsingVoice"
+               style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:9px 12px;border-radius:8px;background:var(--accent-soft);">
+            <span *ngIf="isRecording" class="rec-dot"></span>
+            <i *ngIf="isParsingVoice" class="ph-fill ph-sparkle" style="font-size:13px;color:var(--primary);"></i>
+            <span style="font-size:12px;font-weight:600;color:var(--primary);">
+              {{ (isRecording ? 'callNotes.voice.listening' : 'callNotes.voice.structuring') | translate }}
+            </span>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
             <div>
@@ -194,9 +212,20 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
               <option value="OFFER_MADE">Angebot gemacht</option>
               <option value="DEAL_CLOSED">Abschluss</option>
             </select>
-            <button (click)="saveQuickNote()" [disabled]="isSavingNote || !quickNoteText.trim()"
+            <div *ngIf="quickNoteFollowUpRequired"
+                 style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:var(--color-amber-soft);border-radius:8px;">
+              <i class="ph-fill ph-bell-ringing" style="font-size:13px;color:var(--color-amber);"></i>
+              <span style="font-size:12px;font-weight:600;color:var(--color-amber);">{{ 'callNotes.voice.followUpDetected' | translate }}</span>
+              <input type="date" [(ngModel)]="quickNoteFollowUpDate"
+                     style="border:none;background:none;font-size:12px;color:var(--color-amber);font-weight:600;font-family:inherit;outline:none;cursor:pointer;">
+              <button (click)="quickNoteFollowUpRequired = false; quickNoteFollowUpDate = ''"
+                      style="background:none;border:none;cursor:pointer;color:var(--color-amber);padding:0;line-height:1;">
+                <i class="ph ph-x" style="font-size:12px;"></i>
+              </button>
+            </div>
+            <button (click)="saveQuickNote()" [disabled]="isSavingNote || isParsingVoice || !quickNoteText.trim()"
                     style="padding:9px 20px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;"
-                    [style.opacity]="(isSavingNote || !quickNoteText.trim()) ? '0.45' : '1'">
+                    [style.opacity]="(isSavingNote || isParsingVoice || !quickNoteText.trim()) ? '0.45' : '1'">
               <i class="ph ph-check" style="margin-right:5px;"></i>
               {{ isSavingNote ? 'Speichern…' : 'Notiz speichern' }}
             </button>
@@ -594,7 +623,16 @@ export class ClientDetailComponent implements OnInit {
   quickNoteType = 'PHONE_OUTBOUND';
   quickNoteText = '';
   quickNoteOutcome = '';
+  quickNoteFollowUpRequired = false;
+  quickNoteFollowUpDate = '';
   isSavingNote = false;
+
+  readonly voiceSupported = typeof window !== 'undefined'
+    && !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+  isRecording = false;
+  isParsingVoice = false;
+  private recognition: any = null;
+  private finalTranscript = '';
 
   recentCallNotes: CallNoteSummary[] = [];
   callNotesSummary: BulkSummary | null = null;
@@ -625,7 +663,8 @@ export class ClientDetailComponent implements OnInit {
     private clientService: ClientService,
     public callNotesService: CallNotesService,
     private viewingService: ViewingService,
-    private propertyMatchingService: PropertyMatchingService
+    private propertyMatchingService: PropertyMatchingService,
+    private zone: NgZone
   ) {}
 
   ngOnInit(): void {
@@ -733,7 +772,8 @@ export class ClientDetailComponent implements OnInit {
       callType: (this.quickNoteType as CallType) || CallType.PHONE_OUTBOUND,
       subject: this.quickNoteSubject.trim() || 'Gesprächsnotiz',
       notes: this.quickNoteText.trim(),
-      followUpRequired: false,
+      followUpRequired: this.quickNoteFollowUpRequired,
+      followUpDate: this.quickNoteFollowUpRequired && this.quickNoteFollowUpDate ? this.quickNoteFollowUpDate : undefined,
       outcome: (this.quickNoteOutcome as CallOutcome) || undefined
     };
     this.callNotesService.createCallNote(request).subscribe({
@@ -744,9 +784,74 @@ export class ClientDetailComponent implements OnInit {
         this.quickNoteText = '';
         this.quickNoteOutcome = '';
         this.quickNoteType = 'PHONE_OUTBOUND';
+        this.quickNoteFollowUpRequired = false;
+        this.quickNoteFollowUpDate = '';
         this.loadCallNotes(this.client!.id!);
       },
       error: () => { this.isSavingNote = false; }
+    });
+  }
+
+  /**
+   * Voice flow: on-device speech-to-text (Web Speech API) fills the textarea live;
+   * when the recording stops, the transcript is sent to the AI parser which
+   * prefills subject, outcome, call type and follow-up for one-tap saving.
+   */
+  toggleVoiceRecording(): void {
+    if (this.isRecording) {
+      this.recognition?.stop();
+      return;
+    }
+    const SpeechRecognitionImpl = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognitionImpl) return;
+
+    this.finalTranscript = '';
+    const rec = new SpeechRecognitionImpl();
+    rec.lang = 'de-DE';
+    rec.continuous = true;
+    rec.interimResults = true;
+
+    rec.onresult = (event: any) => this.zone.run(() => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) this.finalTranscript += result[0].transcript + ' ';
+        else interim += result[0].transcript;
+      }
+      this.quickNoteText = (this.finalTranscript + interim).trim();
+    });
+    rec.onerror = () => this.zone.run(() => {
+      this.isRecording = false;
+      this.recognition = null;
+    });
+    rec.onend = () => this.zone.run(() => {
+      if (!this.isRecording) return;
+      this.isRecording = false;
+      this.recognition = null;
+      this.parseDictatedTranscript();
+    });
+
+    this.recognition = rec;
+    this.isRecording = true;
+    rec.start();
+  }
+
+  private parseDictatedTranscript(): void {
+    const transcript = this.quickNoteText.trim();
+    if (transcript.length < 10) return;
+    this.isParsingVoice = true;
+    this.callNotesService.parseVoiceTranscript(transcript).subscribe({
+      next: (draft: VoiceNoteDraft) => {
+        this.isParsingVoice = false;
+        if (draft.subject) this.quickNoteSubject = draft.subject;
+        if (draft.notes) this.quickNoteText = draft.notes;
+        if (draft.callType) this.quickNoteType = draft.callType;
+        if (draft.outcome) this.quickNoteOutcome = draft.outcome;
+        this.quickNoteFollowUpRequired = !!draft.followUpRequired;
+        this.quickNoteFollowUpDate = draft.followUpDate ?? '';
+      },
+      // parser unavailable or failed — the raw transcript stays editable in the textarea
+      error: () => { this.isParsingVoice = false; }
     });
   }
 

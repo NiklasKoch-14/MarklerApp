@@ -4,6 +4,7 @@ import com.marklerapp.crm.constants.PaginationConstants;
 import com.marklerapp.crm.dto.CallNoteDto;
 import com.marklerapp.crm.service.CallNoteService;
 import com.marklerapp.crm.service.CallNoteSummaryService;
+import com.marklerapp.crm.service.VoiceNoteParseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,6 +41,25 @@ public class CallNoteController extends BaseController {
 
     private final CallNoteService callNoteService;
     private final CallNoteSummaryService callNoteSummaryService;
+    private final VoiceNoteParseService voiceNoteParseService;
+
+    /**
+     * Parse a dictated voice transcript into a structured call note draft.
+     * Returns 503 when the AI parser is not configured (missing ANTHROPIC_API_KEY)
+     * so the frontend can hide the voice flow.
+     */
+    @PostMapping("/parse-voice")
+    @Operation(summary = "Parse voice transcript", description = "Turns a dictated transcript into a structured call note draft using AI")
+    public ResponseEntity<CallNoteDto.VoiceDraft> parseVoiceTranscript(
+            Authentication authentication,
+            @Valid @RequestBody CallNoteDto.VoiceParseRequest request) {
+
+        getAgentIdFromAuth(authentication);
+        if (!voiceNoteParseService.isEnabled()) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+        }
+        return ResponseEntity.ok(voiceNoteParseService.parseTranscript(request.getTranscript()));
+    }
 
     /**
      * Create a new call note

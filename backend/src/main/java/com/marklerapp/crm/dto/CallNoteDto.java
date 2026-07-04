@@ -183,6 +183,37 @@ public class CallNoteDto {
     }
 
     /**
+     * DTO for parsing a dictated voice transcript into a structured call note draft
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class VoiceParseRequest {
+        @NotBlank(message = "Transcript is required")
+        @Size(min = 10, max = 5000, message = "Transcript must be between 10 and 5000 characters")
+        private String transcript;
+    }
+
+    /**
+     * Structured draft returned by the AI parser — prefills the call note form,
+     * the agent reviews and saves it as a regular CreateRequest.
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class VoiceDraft {
+        private String subject;
+        private String notes;
+        private CallNote.CallType callType;
+        private CallNote.CallOutcome outcome;
+        private Boolean followUpRequired;
+        private LocalDate followUpDate;
+        private Integer durationMinutes;
+    }
+
+    /**
      * DTO for follow-up reminders
      */
     @Data
