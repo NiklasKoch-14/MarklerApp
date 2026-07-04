@@ -47,8 +47,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
       </div>
 
       <!-- Card Grid -->
-      <div *ngIf="!isLoading && clients.length > 0"
-        style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
+      <div *ngIf="!isLoading && clients.length > 0" class="grid-3col">
         <div *ngFor="let client of clients; trackBy: trackById"
           [routerLink]="['/clients', client.id]"
           class="client-card"

@@ -31,7 +31,7 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
     .match-link:hover { background:var(--surface) !important; }
   `],
   template: `
-    <div style="padding:28px 36px;">
+    <div class="detail-page">
       <div *ngIf="isLoading" style="text-align:center;padding:48px 0;">
         <app-loading-spinner size="lg"></app-loading-spinner>
       </div>
@@ -40,7 +40,7 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
 
         <!-- ══ HERO CARD ══════════════════════════════════════════ -->
         <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:24px 28px;margin-bottom:16px;">
-          <div style="display:flex;align-items:flex-start;gap:16px;">
+          <div class="hero-row" style="display:flex;align-items:flex-start;gap:16px;">
 
             <!-- Back arrow -->
             <a routerLink="/clients"
@@ -104,7 +104,7 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
             </div>
 
             <!-- Right: action buttons -->
-            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+            <div class="hero-actions" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
               <!-- Follow-up button (only if pending) -->
               <button *ngIf="(callNotesSummary?.pendingFollowUps || 0) > 0"
                       (click)="showFollowUpPanel = !showFollowUpPanel; showQuickNoteForm = false"
@@ -182,7 +182,7 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
               {{ (isRecording ? 'callNotes.voice.listening' : 'callNotes.voice.structuring') | translate }}
             </span>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div class="form-grid-2" style="gap:12px;margin-bottom:12px;">
             <div>
               <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">Betreff</label>
               <input type="text" [(ngModel)]="quickNoteSubject" placeholder="Worum ging es?"
@@ -254,7 +254,7 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
           <div style="font-size:13px;color:var(--text-2);margin-bottom:14px;">
             Was ist beim Follow-up passiert? Trag kurz ein, was besprochen wurde.
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div class="form-grid-2" style="gap:12px;margin-bottom:12px;">
             <div>
               <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">Betreff</label>
               <input type="text" [(ngModel)]="quickNoteSubject"
@@ -306,7 +306,7 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
         </app-viewing-add-dialog>
 
         <!-- ══ TWO-COLUMN BODY ════════════════════════════════════ -->
-        <div style="display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:20px;align-items:start;">
+        <div class="detail-two-col">
 
           <!-- LEFT: Activity stream -->
           <div style="display:flex;flex-direction:column;gap:16px;">

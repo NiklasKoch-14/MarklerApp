@@ -187,7 +187,7 @@ interface ViewingRow {
 
       <!-- Cards view -->
       @if (view === 'cards') {
-        <div style="display:grid; grid-template-columns:1.35fr 1fr; gap:20px;">
+        <div class="dash-main-grid">
 
           <!-- Follow-ups widget -->
           <div class="widget-card">
@@ -348,7 +348,7 @@ interface ViewingRow {
 
       <!-- Pipeline view -->
       @if (view === 'pipeline') {
-        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px; align-items:start;">
+        <div class="pipeline-grid">
           @for (col of pipelineCols; track col.label) {
             <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:14px; padding:6px;">
               <div style="display:flex; align-items:center; gap:8px; padding:11px 12px 10px;">

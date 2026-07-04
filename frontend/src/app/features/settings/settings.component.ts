@@ -11,7 +11,7 @@ import { ThemeService } from '../../core/services/theme.service';
   standalone: true,
   imports: [CommonModule, TranslateModule],
   template: `
-    <div style="padding:28px 36px; max-width:640px;">
+    <div class="detail-page" style="max-width:640px;">
 
       <h1 style="font-size:22px;font-weight:800;color:var(--text);margin:0 0 24px;">Einstellungen</h1>
 

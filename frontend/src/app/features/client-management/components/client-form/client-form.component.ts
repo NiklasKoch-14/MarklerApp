@@ -40,7 +40,7 @@ import { ClientService } from '../../services/client.service';
                 </div>
               </div>
               <div style="padding:20px; display:flex; flex-direction:column; gap:16px;">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="form-grid-2">
                   <div>
                     <label class="form-label">{{ 'clients.firstName' | translate }} *</label>
                     <input type="text" formControlName="firstName" class="form-input"
@@ -58,7 +58,7 @@ import { ClientService } from '../../services/client.service';
                     </div>
                   </div>
                 </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="form-grid-2">
                   <div>
                     <label class="form-label">{{ 'clients.email' | translate }}</label>
                     <input type="email" formControlName="email" class="form-input"
@@ -78,7 +78,7 @@ import { ClientService } from '../../services/client.service';
                   <input type="text" formControlName="addressStreet" class="form-input"
                     [placeholder]="'clients.streetPlaceholder' | translate">
                 </div>
-                <div style="display:grid; grid-template-columns:120px 1fr 1fr; gap:16px;">
+                <div class="form-grid-plz">
                   <div>
                     <label class="form-label">{{ 'clients.postalCode' | translate }}</label>
                     <input type="text" formControlName="addressPostalCode" class="form-input"
@@ -121,7 +121,7 @@ import { ClientService } from '../../services/client.service';
               </button>
               <div *ngIf="searchCriteriaExpanded" [formGroup]="searchCriteriaGroup"
                    style="padding:20px; display:flex; flex-direction:column; gap:16px;">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="form-grid-2">
                   <div>
                     <label class="form-label">{{ 'clients.searchCriteria.minSquareMeters' | translate }}</label>
                     <input type="number" formControlName="minSquareMeters" min="0" class="form-input"
@@ -136,7 +136,7 @@ import { ClientService } from '../../services/client.service';
                 <div *ngIf="searchCriteriaGroup.hasError('squareMetersRange')" class="form-error">
                   {{ 'clients.searchCriteria.minMaxError' | translate }}
                 </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="form-grid-2">
                   <div>
                     <label class="form-label">{{ 'clients.searchCriteria.minRooms' | translate }}</label>
                     <input type="number" formControlName="minRooms" min="0" step="0.5" class="form-input"
@@ -151,7 +151,7 @@ import { ClientService } from '../../services/client.service';
                 <div *ngIf="searchCriteriaGroup.hasError('roomsRange')" class="form-error">
                   {{ 'clients.searchCriteria.minMaxError' | translate }}
                 </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="form-grid-2">
                   <div>
                     <label class="form-label">{{ 'clients.searchCriteria.minBudget' | translate }}</label>
                     <div style="position:relative;">

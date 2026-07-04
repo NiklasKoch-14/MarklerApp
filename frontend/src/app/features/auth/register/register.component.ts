@@ -31,7 +31,7 @@ import { LoadingSpinnerComponent } from '../../../shared/components/loading-spin
 
         <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" style="display:flex;flex-direction:column;gap:14px;">
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="form-grid-2" style="gap:14px;">
             <div>
               <label class="form-label">{{ 'auth.register.firstName' | translate }} *</label>
               <input type="text" formControlName="firstName" class="form-input"

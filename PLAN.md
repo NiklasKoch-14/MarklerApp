@@ -18,7 +18,7 @@
 > Größte strategische Risiken: fehlende Mobile-Tauglichkeit und fehlender Lead-Import (ImmoScout).
 
 ### Phase A — Beta-fähig für den ersten fremden Makler (~1–2 Wochen)
-- [ ] **Mobile-First-Pass** über die 5 Kern-Screens (Dashboard, Kundenliste, Kunden-Detail, Call-Note-Quick-Add, Besichtigung) — Akzeptanz: auf einem iPhone einhändig bedienbar (aktuell faktisch Desktop-only: nur 1 Template mit responsive Breakpoints)
+- [~] **Mobile-First-Pass** (Kern erledigt 2026-07-04): Sidebar wird auf Mobile zur Bottom-Tab-Bar (inkl. Einstellungen-Tab), responsive Grids für Dashboard (Widgets, Stats, Kanban als Swipe), Kundenliste, Kunden-Detail (Hero, Zwei-Spalten, Quick-Note), Kunden-Formular, Registrierung, Settings. **Offen:** Immobilien-Screens (Liste/Detail/Formular) + echter iPhone-Test
 - [ ] **E-Mail minimal reaktivieren** — transaktionaler Dienst (Resend/Postmark statt eigenem SMTP), nur Passwort-Reset + Willkommen, per `@ConditionalOnProperty` abgesichert (Reset-Tokens landen aktuell in der DB und erreichen den Nutzer nie)
 - [ ] **Demo-/Seed-Daten aus Prod-Migrationen entfernen** (V19/V20 seeden Beispieldaten — neue Makler dürfen nicht mit Fake-Kunden starten; Demo-Daten nur noch im dev-Profil)
 - [ ] **Monitoring:** Sentry (FE+BE), Uptime-Check, Supabase-Backups/PITR verifizieren
@@ -50,7 +50,7 @@
 - [x] **Frontend:** Web Speech API (`de-DE`, on-device STT — kein Audio verlässt das Gerät), Mikro-Button im Quick-Note-Formular, Live-Transkript in der Textarea, Follow-up-Chip mit editierbarem Datum. Mikro erscheint nur wenn der Browser STT unterstützt.
 - [x] **Backend:** `POST /api/v1/call-notes/parse-voice` → `VoiceNoteParseService` ruft Claude API (`claude-haiku-4-5`, ~0,001 €/Notiz), löst relative Datumsangaben ("Freitag") serverseitig auf, Fallback auf Roh-Transkript bei Parse-Fehlern
 - [x] **Config:** `ANTHROPIC_API_KEY` Env-Var (Railway setzen!) — ohne Key antwortet der Endpoint 503 und das Frontend behält das Roh-Transkript editierbar
-- [ ] **Offen:** `ANTHROPIC_API_KEY` in Railway setzen; iPhone-Safari-Test (webkitSpeechRecognition nutzt Siri-Diktat)
+- [ ] **Offen (Defer-Entscheidung 2026-07-04):** `ANTHROPIC_API_KEY` in Railway + Spending-Limit erst kurz vor Live-Gang einrichten — bis dahin antwortet der Endpoint 503 und das Roh-Transkript bleibt nutzbar. iPhone-Safari-Test ebenfalls dann.
 
 ---
 
@@ -151,18 +151,15 @@
 - [x] Eigentümer-Kontaktdaten (Name, Tel) als interne Felder bei Immobilien — Flyway V18, Property-Form + Detail
 - [ ] `clientType` (BUYER / RENTER / SELLER) am Kunden — steuert Ansicht (deferred: erst wenn Seller-Ansicht gebraucht wird)
 - [ ] `financingStatus` + `moveInTimeline` gestrichen (Elon-Review: zu ungenau für Makler-Alltag)
-- [ ] Dashboard-Kanban auf `pipelineStage` umstellen (statt fragiler CallOutcome-Ableitung)
-- [ ] "Kunden ohne Kontakt >30 Tage"-Widget auf Dashboard (Backend bereits implementiert)
-- [ ] Listing-Datum + "X Tage am Markt" im Immobilien-Header
+- [x] Dashboard-Kanban auf `pipelineStage` umstellen (verifiziert 2026-07-04: `buildPipelineFromStages`)
+- [x] "Kunden ohne Kontakt >30 Tage"-Widget auf Dashboard (verifiziert 2026-07-04: inkl. Anruf-Button + Inaktiv-Aktion)
+- [x] Listing-Datum + "X Tage am Markt" im Immobilien-Header (Commit 7453775)
 
 ### Mittelfristig (>1 Tag je)
-- [ ] **Besichtigungs-Feature** (Kunde ↔ Immobilie mit Feedback):
-  - Backend: `viewings`-Tabelle + Flyway-Migration + POST/GET API
-  - Frontend: Quick-Add-Dialog von Kunden- und Immobilien-Detailseite
-  - Besichtigungs-Tab bei Kunde und bei Immobilie
-- [ ] Interne Notiz-Karte bei Immobilien (wie Call Notes, nicht im Exposé)
-- [ ] Automatischer Pipeline-Stage-Vorschlag: Besichtigung erfasst → "Stage auf VIEWING setzen?"
-- [ ] "Heutige Besichtigungen"-Widget auf Dashboard
+- [x] **Besichtigungs-Feature** (verifiziert 2026-07-04: V14-Migration, ViewingController, Quick-Add-Dialog, Karten bei Kunde)
+- [x] Interne Notiz-Karte bei Immobilien (PropertyNote: V15, Controller + Service vorhanden)
+- [x] Automatischer Pipeline-Stage-Vorschlag: Besichtigung erfasst → "Stage auf VIEWING setzen?" (Kunden-Detail)
+- [x] "Heutige Besichtigungen"-Widget auf Dashboard (inkl. Erledigt/Absagen-Quick-Actions)
 - [ ] Verkäufer-spezifische Kunden-Ansicht (andere Karte statt Suchkriterien)
 
 ### Langfristig
