@@ -843,8 +843,9 @@
 @media (max-width: 640px) {
   .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
 
-  /* Clients: keep two compact columns so more people fit above the fold */
-  .grid-3col { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  /* Clients: one column, full width — cards are compacted in height instead
+     (see .cc-* rules in the component) so more still fit above the fold */
+  .grid-3col { grid-template-columns: 1fr; }
 
   /* Properties: one large card per row (photos need the width) */
   .property-grid { grid-template-columns: 1fr; }

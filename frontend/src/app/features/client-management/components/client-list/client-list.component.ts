@@ -13,6 +13,19 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
     .client-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow); cursor:pointer; transition:box-shadow 0.15s, border-color 0.15s; display:flex; flex-direction:column; }
     .client-card:hover { border-color:var(--primary); box-shadow:0 4px 16px rgba(20,40,45,0.12); }
     .stage-opt:hover { background:var(--surface-2) !important; }
+    /* Card sections — padding lives here so the mobile media query can compact height */
+    .cc-avatar { width:42px; height:42px; }
+    .cc-head { padding:16px 16px 12px; }
+    .cc-body { padding:0 16px 12px; gap:7px; }
+    .cc-meta { padding:0 16px 10px; }
+    .cc-foot { padding:10px 16px; }
+    @media (max-width:640px) {
+      .cc-avatar { width:34px; height:34px; font-size:12px !important; }
+      .cc-head { padding:10px 13px 6px; }
+      .cc-body { padding:0 13px 6px; gap:3px; }
+      .cc-meta { padding:0 13px 6px; }
+      .cc-foot { padding:7px 13px; }
+    }
   `],
   template: `
     <div style="padding:28px 32px;">
@@ -55,8 +68,8 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
           [style.background]="isOverdue(client) ? 'color-mix(in srgb,#b23a55 3%,var(--surface))' : ''">
 
           <!-- Card Header: Avatar + Name + Chevron -->
-          <div style="display:flex; align-items:center; gap:12px; padding:16px 16px 12px;">
-            <div style="width:42px; height:42px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:#fff; flex-shrink:0; letter-spacing:0.5px;">
+          <div class="cc-head" style="display:flex; align-items:center; gap:12px;">
+            <div class="cc-avatar" style="border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:#fff; flex-shrink:0; letter-spacing:0.5px;">
               {{ getInitials(client) }}
             </div>
             <div style="flex:1; min-width:0; overflow:hidden;">
@@ -69,7 +82,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
           </div>
 
           <!-- Contact Info -->
-          <div style="padding:0 16px 12px; display:flex; flex-direction:column; gap:7px; flex:1;">
+          <div class="cc-body" style="display:flex; flex-direction:column; flex:1;">
             <div *ngIf="client.phone" style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);">
               <i class="ph ph-phone" style="color:var(--text-3); font-size:14px; flex-shrink:0;"></i>
               <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ client.phone }}</span>
@@ -85,14 +98,14 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
           </div>
 
           <!-- Last Contact -->
-          <div style="padding:0 16px 10px; display:flex; align-items:center; gap:6px; font-size:12px;"
+          <div class="cc-meta" style="display:flex; align-items:center; gap:6px; font-size:12px;"
                [style.color]="isOverdue(client) ? '#b23a55' : 'var(--text-3)'">
             <i class="ph" [class.ph-clock]="!isOverdue(client)" [class.ph-warning]="isOverdue(client)" style="font-size:13px;"></i>
             {{ lastContactLabel(client) }}
           </div>
 
           <!-- Footer: Stage + DSGVO -->
-          <div style="padding:10px 16px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:8px;">
+          <div class="cc-foot" style="border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:8px;">
             <!-- Stage badge with dropdown -->
             <div style="position:relative;" (click)="$event.stopPropagation(); $event.preventDefault()">
               <button (click)="toggleStagePicker(client.id!, $event)"
