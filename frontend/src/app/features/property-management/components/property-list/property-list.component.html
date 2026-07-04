@@ -58,8 +58,7 @@
   </div>
 
   <!-- Card Grid -->
-  <div *ngIf="!isLoading && properties.length > 0"
-       style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+  <div *ngIf="!isLoading && properties.length > 0" class="property-grid">
 
     <div *ngFor="let property of properties; trackBy: trackById"
          [routerLink]="['/properties', property.id]"

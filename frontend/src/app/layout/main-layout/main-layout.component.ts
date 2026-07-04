@@ -43,6 +43,7 @@ interface NavItem {
              style="padding:0;">
           <div *ngFor="let item of navItems; trackBy: trackByRoute"
                cdkDrag
+               [cdkDragDisabled]="isMobile"
                [cdkDragLockAxis]="'y'"
                class="sidebar-nav-drag-item"
                (mouseenter)="item['_hover'] = true"
@@ -68,7 +69,7 @@ interface NavItem {
               <!-- Drag handle — visible on hover -->
               <i cdkDragHandle
                  class="ph ph-dots-six-vertical"
-                 *ngIf="item['_hover']"
+                 *ngIf="item['_hover'] && !isMobile"
                  style="font-size:16px; color:rgba(255,255,255,0.35); cursor:grab; margin-left:4px;"
                  (mousedown)="$event.preventDefault()"></i>
             </a>
@@ -121,6 +122,12 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   userName = '';
 
+  /* Nav reordering is a desktop feature — on touch/mobile the drag handle
+     steals space in the bottom tab bar and long-press dragging fights scrolling. */
+  isMobile = false;
+  private mobileQuery = typeof window !== 'undefined' ? window.matchMedia('(max-width: 768px)') : null;
+  private mobileQueryListener = (e: MediaQueryListEvent) => { this.isMobile = e.matches; };
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -133,9 +140,15 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       .subscribe(user => this.updateUser(user));
 
     this.loadNavOrder();
+
+    if (this.mobileQuery) {
+      this.isMobile = this.mobileQuery.matches;
+      this.mobileQuery.addEventListener('change', this.mobileQueryListener);
+    }
   }
 
   ngOnDestroy(): void {
+    this.mobileQuery?.removeEventListener('change', this.mobileQueryListener);
     this.destroy$.next();
     this.destroy$.complete();
   }

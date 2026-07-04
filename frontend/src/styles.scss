@@ -726,6 +726,13 @@
   gap: 16px;
 }
 
+/* Property cards: fewer, larger cards on small screens */
+.property-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
 .form-grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -770,6 +777,7 @@
 @media (max-width: 1024px) {
   .dash-main-grid { grid-template-columns: 1fr; }
   .grid-3col { grid-template-columns: repeat(2, 1fr); }
+  .property-grid { grid-template-columns: repeat(2, 1fr); }
   .detail-two-col { grid-template-columns: 1fr; }
 }
 
@@ -835,7 +843,12 @@
 @media (max-width: 640px) {
   .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
 
-  .grid-3col,
+  /* Clients: keep two compact columns so more people fit above the fold */
+  .grid-3col { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+  /* Properties: one large card per row (photos need the width) */
+  .property-grid { grid-template-columns: 1fr; }
+
   .form-grid-2 { grid-template-columns: 1fr; }
 
   .form-grid-plz { grid-template-columns: 1fr 1fr; }
