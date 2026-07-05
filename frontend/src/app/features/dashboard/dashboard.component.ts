@@ -152,13 +152,13 @@ interface ViewingRow {
                   <div style="display:flex; gap:6px; margin-top:10px;" (click)="$event.stopPropagation()">
                     <button (click)="openViewingDone(v)"
                             style="flex:1; padding:5px 8px; border:1.5px solid var(--color-success); border-radius:7px;
-                                   background:none; color:var(--color-success); font-size:12px; font-weight:600; cursor:pointer;">
-                      ✓ Erledigt
+                                   background:none; color:var(--color-success); font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:5px;">
+                      <i class="ph ph-check" style="font-size:13px;"></i> Erledigt
                     </button>
                     <button (click)="quickCancelViewing(v, $event)"
                             style="padding:5px 10px; border:1.5px solid var(--border); border-radius:7px;
-                                   background:none; color:var(--text-3); font-size:12px; cursor:pointer;" title="Absagen">
-                      ✗
+                                   background:none; color:var(--text-3); font-size:12px; cursor:pointer; display:inline-flex; align-items:center;" title="Absagen">
+                      <i class="ph ph-x"></i>
                     </button>
                   </div>
                 }
@@ -219,8 +219,8 @@ interface ViewingRow {
                 <button (click)="openFollowUpDone(f, $event)"
                         style="padding:4px 10px; border:1.5px solid var(--color-success); border-radius:7px;
                                background:none; color:var(--color-success); font-size:12px; font-weight:600;
-                               cursor:pointer; white-space:nowrap; flex-shrink:0;">
-                  ✓ Erledigt
+                               cursor:pointer; white-space:nowrap; flex-shrink:0; display:inline-flex; align-items:center; gap:5px;">
+                  <i class="ph ph-check" style="font-size:12px;"></i> Erledigt
                 </button>
                 <button class="btn-icon" [routerLink]="['/clients', f.clientId]"
                         title="{{ 'dashboard.openCustomer' | translate }}">
@@ -423,9 +423,11 @@ interface ViewingRow {
             <button (click)="submitFollowUpDone()"
                     [disabled]="isSubmittingFollowUp"
                     style="flex:2;padding:9px;border:none;border-radius:8px;background:var(--color-success);
-                           color:#fff;font-size:13px;font-weight:600;cursor:pointer;"
+                           color:#fff;font-size:13px;font-weight:600;cursor:pointer;
+                           display:inline-flex;align-items:center;justify-content:center;gap:6px;"
                     [style.opacity]="isSubmittingFollowUp ? '0.6' : '1'">
-              {{ isSubmittingFollowUp ? 'Speichern...' : '✓ Als erledigt speichern' }}
+              <i class="ph ph-check" *ngIf="!isSubmittingFollowUp" style="font-size:14px;"></i>
+              {{ isSubmittingFollowUp ? 'Speichern...' : 'Als erledigt speichern' }}
             </button>
           </div>
         </div>
@@ -445,25 +447,25 @@ interface ViewingRow {
           <div style="font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Kundenfeedback</div>
           <div style="display:flex;gap:8px;margin-bottom:16px;">
             <button (click)="viewingPopoverFeedback = viewingPopoverFeedback === 'LIKED' ? null : 'LIKED'"
-                    [style.background]="viewingPopoverFeedback === 'LIKED' ? '#f0fdf4' : 'var(--surface-2)'"
-                    [style.border-color]="viewingPopoverFeedback === 'LIKED' ? '#16a34a' : 'var(--border)'"
-                    [style.color]="viewingPopoverFeedback === 'LIKED' ? '#16a34a' : 'var(--text-2)'"
-                    style="flex:1;padding:8px 10px;border-radius:8px;border:1.5px solid;cursor:pointer;font-size:13px;font-weight:500;">
-              👍 Gefällt
+                    [style.background]="viewingPopoverFeedback === 'LIKED' ? 'var(--color-success-soft)' : 'var(--surface-2)'"
+                    [style.border-color]="viewingPopoverFeedback === 'LIKED' ? 'var(--color-success)' : 'var(--border)'"
+                    [style.color]="viewingPopoverFeedback === 'LIKED' ? 'var(--color-success)' : 'var(--text-2)'"
+                    style="flex:1;padding:8px 10px;border-radius:8px;border:1.5px solid;cursor:pointer;font-size:13px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:6px;">
+              <i class="ph ph-thumbs-up" style="font-size:15px;"></i> Gefällt
             </button>
             <button (click)="viewingPopoverFeedback = viewingPopoverFeedback === 'NEUTRAL' ? null : 'NEUTRAL'"
-                    [style.background]="viewingPopoverFeedback === 'NEUTRAL' ? '#fffbeb' : 'var(--surface-2)'"
-                    [style.border-color]="viewingPopoverFeedback === 'NEUTRAL' ? '#d97706' : 'var(--border)'"
-                    [style.color]="viewingPopoverFeedback === 'NEUTRAL' ? '#d97706' : 'var(--text-2)'"
-                    style="flex:1;padding:8px 10px;border-radius:8px;border:1.5px solid;cursor:pointer;font-size:13px;font-weight:500;">
-              🤷 Neutral
+                    [style.background]="viewingPopoverFeedback === 'NEUTRAL' ? 'var(--color-warning-soft)' : 'var(--surface-2)'"
+                    [style.border-color]="viewingPopoverFeedback === 'NEUTRAL' ? 'var(--color-warning)' : 'var(--border)'"
+                    [style.color]="viewingPopoverFeedback === 'NEUTRAL' ? 'var(--color-warning)' : 'var(--text-2)'"
+                    style="flex:1;padding:8px 10px;border-radius:8px;border:1.5px solid;cursor:pointer;font-size:13px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:6px;">
+              <i class="ph ph-smiley-meh" style="font-size:15px;"></i> Neutral
             </button>
             <button (click)="viewingPopoverFeedback = viewingPopoverFeedback === 'DISLIKED' ? null : 'DISLIKED'"
-                    [style.background]="viewingPopoverFeedback === 'DISLIKED' ? '#fef2f2' : 'var(--surface-2)'"
-                    [style.border-color]="viewingPopoverFeedback === 'DISLIKED' ? '#dc2626' : 'var(--border)'"
-                    [style.color]="viewingPopoverFeedback === 'DISLIKED' ? '#dc2626' : 'var(--text-2)'"
-                    style="flex:1;padding:8px 10px;border-radius:8px;border:1.5px solid;cursor:pointer;font-size:13px;font-weight:500;">
-              👎 Nicht
+                    [style.background]="viewingPopoverFeedback === 'DISLIKED' ? 'var(--color-error-soft)' : 'var(--surface-2)'"
+                    [style.border-color]="viewingPopoverFeedback === 'DISLIKED' ? 'var(--color-error)' : 'var(--border)'"
+                    [style.color]="viewingPopoverFeedback === 'DISLIKED' ? 'var(--color-error)' : 'var(--text-2)'"
+                    style="flex:1;padding:8px 10px;border-radius:8px;border:1.5px solid;cursor:pointer;font-size:13px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:6px;">
+              <i class="ph ph-thumbs-down" style="font-size:15px;"></i> Nicht
             </button>
           </div>
           <textarea [(ngModel)]="viewingPopoverNote" placeholder="Notiz zur Besichtigung..." rows="2"
@@ -479,9 +481,11 @@ interface ViewingRow {
             <button (click)="setViewingStatus(activeViewingRow, 'COMPLETED')"
                     [disabled]="isUpdatingViewing"
                     style="flex:2;padding:9px;border:none;border-radius:8px;background:var(--color-success);
-                           color:#fff;font-size:13px;font-weight:600;cursor:pointer;"
+                           color:#fff;font-size:13px;font-weight:600;cursor:pointer;
+                           display:inline-flex;align-items:center;justify-content:center;gap:6px;"
                     [style.opacity]="isUpdatingViewing ? '0.6' : '1'">
-              {{ isUpdatingViewing ? 'Speichern...' : '✓ Als erledigt speichern' }}
+              <i class="ph ph-check" *ngIf="!isUpdatingViewing" style="font-size:14px;"></i>
+              {{ isUpdatingViewing ? 'Speichern...' : 'Als erledigt speichern' }}
             </button>
           </div>
         </div>
@@ -656,7 +660,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         customerInitials: initials,
         subject: r.subject,
         typeLabel: '',
-        dueLabel: r.isOverdue ? '⚠ Überfällig' : dueLabel,
+        dueLabel: r.isOverdue ? 'Überfällig' : dueLabel,
         dueColor: r.isOverdue ? 'var(--color-error)' : (r.daysUntilDue <= 2 ? 'var(--color-warning)' : 'var(--color-success)'),
         followupFmt: dueLabel,
         isOverdue: r.isOverdue,

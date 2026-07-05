@@ -192,10 +192,10 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
               <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">Kontaktart</label>
               <select [(ngModel)]="quickNoteType"
                       style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
-                <option value="PHONE_OUTBOUND">📞 Anruf (ausgehend)</option>
-                <option value="PHONE_INBOUND">📞 Anruf (eingehend)</option>
-                <option value="EMAIL">✉ E-Mail</option>
-                <option value="MEETING">🤝 Meeting</option>
+                <option value="PHONE_OUTBOUND">Anruf (ausgehend)</option>
+                <option value="PHONE_INBOUND">Anruf (eingehend)</option>
+                <option value="EMAIL">E-Mail</option>
+                <option value="MEETING">Meeting</option>
               </select>
             </div>
           </div>
@@ -265,10 +265,10 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
               <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">Kontaktart</label>
               <select [(ngModel)]="quickNoteType"
                       style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
-                <option value="PHONE_OUTBOUND">📞 Anruf (ausgehend)</option>
-                <option value="PHONE_INBOUND">📞 Anruf (eingehend)</option>
-                <option value="EMAIL">✉ E-Mail</option>
-                <option value="MEETING">🤝 Meeting</option>
+                <option value="PHONE_OUTBOUND">Anruf (ausgehend)</option>
+                <option value="PHONE_INBOUND">Anruf (eingehend)</option>
+                <option value="EMAIL">E-Mail</option>
+                <option value="MEETING">Meeting</option>
               </select>
             </div>
           </div>
@@ -342,8 +342,12 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
                     </a>
                     <div style="font-size:11px;color:var(--text-3);">{{ v.viewingDate | date:'HH:mm' }} Uhr · {{ v.propertyAddress }}</div>
                   </div>
-                  <div *ngIf="v.feedback" style="font-size:16px;" [title]="v.feedback">
-                    {{ v.feedback === 'LIKED' ? '👍' : v.feedback === 'DISLIKED' ? '👎' : '🤷' }}
+                  <div *ngIf="v.feedback" style="font-size:16px;flex-shrink:0;" [title]="v.feedback">
+                    <i class="ph-fill"
+                       [class.ph-thumbs-up]="v.feedback === 'LIKED'"
+                       [class.ph-thumbs-down]="v.feedback === 'DISLIKED'"
+                       [class.ph-smiley-meh]="v.feedback !== 'LIKED' && v.feedback !== 'DISLIKED'"
+                       [style.color]="v.feedback === 'LIKED' ? 'var(--color-success)' : v.feedback === 'DISLIKED' ? 'var(--color-error)' : 'var(--color-warning)'"></i>
                   </div>
                   <span [style.background]="getViewingStatusBg(v.status)"
                         [style.color]="getViewingStatusColor(v.status)"

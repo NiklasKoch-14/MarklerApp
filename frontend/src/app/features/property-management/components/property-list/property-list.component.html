@@ -134,15 +134,15 @@
   <div *ngIf="!isLoading && totalPages > 1"
        style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:24px;">
     <button (click)="previousPage()" [disabled]="currentPage === 0"
-            style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-2);font-size:13px;font-family:inherit;cursor:pointer;"
+            style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-2);font-size:13px;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"
             [style.opacity]="currentPage === 0 ? '0.4' : '1'">
-      ← Zurück
+      <i class="ph ph-arrow-left"></i> Zurück
     </button>
     <span style="font-size:13px;color:var(--text-2);">Seite {{ currentPage + 1 }} von {{ totalPages }}</span>
     <button (click)="nextPage()" [disabled]="currentPage >= totalPages - 1"
-            style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-2);font-size:13px;font-family:inherit;cursor:pointer;"
+            style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-2);font-size:13px;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"
             [style.opacity]="currentPage >= totalPages - 1 ? '0.4' : '1'">
-      Weiter →
+      Weiter <i class="ph ph-arrow-right"></i>
     </button>
   </div>
 

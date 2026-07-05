@@ -41,10 +41,11 @@
 
       <!-- Basic Information Section -->
       <div class="card animation-fade-in">
-        <div class="card-header">
+        <button type="button" class="card-header section-toggle" (click)="toggleSection('basic')">
           <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.basicInfo' | translate }}</h3>
-        </div>
-        <div class="card-body space-y-6">
+          <i class="ph ph-caret-down section-caret" [class.open]="sectionOpen['basic']"></i>
+        </button>
+        <div class="card-body space-y-6" *ngIf="sectionOpen['basic']">
           <!-- Title -->
           <div>
             <label for="title" class="form-label">{{ 'properties.form.title' | translate }} *</label>
@@ -127,10 +128,11 @@
 
       <!-- Location Section -->
       <div class="card animation-fade-in">
-        <div class="card-header">
+        <button type="button" class="card-header section-toggle" (click)="toggleSection('location')">
           <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.location' | translate }}</h3>
-        </div>
-        <div class="card-body space-y-6">
+          <i class="ph ph-caret-down section-caret" [class.open]="sectionOpen['location']"></i>
+        </button>
+        <div class="card-body space-y-6" *ngIf="sectionOpen['location']">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Street -->
             <div class="md:col-span-2">
@@ -226,10 +228,11 @@
 
       <!-- Specifications Section -->
       <div class="card animation-fade-in">
-        <div class="card-header">
+        <button type="button" class="card-header section-toggle" (click)="toggleSection('specs')">
           <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.specifications' | translate }}</h3>
-        </div>
-        <div class="card-body space-y-6">
+          <i class="ph ph-caret-down section-caret" [class.open]="sectionOpen['specs']"></i>
+        </button>
+        <div class="card-body space-y-6" *ngIf="sectionOpen['specs']">
           <!-- Area Fields -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
@@ -380,10 +383,11 @@
 
       <!-- Financial Section -->
       <div class="card animation-fade-in">
-        <div class="card-header">
+        <button type="button" class="card-header section-toggle" (click)="toggleSection('financial')">
           <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.financial' | translate }}</h3>
-        </div>
-        <div class="card-body space-y-6">
+          <i class="ph ph-caret-down section-caret" [class.open]="sectionOpen['financial']"></i>
+        </button>
+        <div class="card-body space-y-6" *ngIf="sectionOpen['financial']">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Price -->
             <div>
@@ -467,10 +471,11 @@
 
       <!-- Features & Energy Section -->
       <div class="card animation-fade-in">
-        <div class="card-header">
+        <button type="button" class="card-header section-toggle" (click)="toggleSection('features')">
           <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.featuresEnergy' | translate }}</h3>
-        </div>
-        <div class="card-body space-y-6">
+          <i class="ph ph-caret-down section-caret" [class.open]="sectionOpen['features']"></i>
+        </button>
+        <div class="card-body space-y-6" *ngIf="sectionOpen['features']">
           <!-- Features Checkboxes -->
           <div>
             <label class="form-label">{{ 'properties.form.featuresEnergy' | translate }}</label>
@@ -644,13 +649,16 @@
 
       <!-- Images Section -->
       <div *ngIf="isEditMode" class="card animation-fade-in">
-        <div class="card-header">
-          <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.images.title' | translate }}</h3>
-          <p style="margin-top:4px;font-size:13px;color:var(--text-3);">
-            {{ 'placeholders.imagesUploadInfo' | translate }}
-          </p>
-        </div>
-        <div class="card-body">
+        <button type="button" class="card-header section-toggle" (click)="toggleSection('images')">
+          <div>
+            <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.images.title' | translate }}</h3>
+            <p style="margin-top:4px;font-size:13px;color:var(--text-3);">
+              {{ 'placeholders.imagesUploadInfo' | translate }}
+            </p>
+          </div>
+          <i class="ph ph-caret-down section-caret" [class.open]="sectionOpen['images']"></i>
+        </button>
+        <div class="card-body" *ngIf="sectionOpen['images']">
           <app-property-image-upload
             *ngIf="propertyId"
             [propertyId]="propertyId"
@@ -668,13 +676,16 @@
 
       <!-- Expose/Brochure Section -->
       <div *ngIf="isEditMode" class="card animation-fade-in">
-        <div class="card-header">
-          <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.expose.title' | translate }}</h3>
-          <p style="margin-top:4px;font-size:13px;color:var(--text-3);">
-            {{ 'placeholders.exposeUploadInfo' | translate }}
-          </p>
-        </div>
-        <div class="card-body">
+        <button type="button" class="card-header section-toggle" (click)="toggleSection('expose')">
+          <div>
+            <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.expose.title' | translate }}</h3>
+            <p style="margin-top:4px;font-size:13px;color:var(--text-3);">
+              {{ 'placeholders.exposeUploadInfo' | translate }}
+            </p>
+          </div>
+          <i class="ph ph-caret-down section-caret" [class.open]="sectionOpen['expose']"></i>
+        </button>
+        <div class="card-body" *ngIf="sectionOpen['expose']">
           <app-property-expose
             *ngIf="propertyId"
             [propertyId]="propertyId">

@@ -36,6 +36,18 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
   // Current form section
   currentSection: 'basic' | 'location' | 'specs' | 'financial' | 'features' | 'images' | 'expose' = 'basic';
 
+  // Collapsible sections — essentials open, advanced collapsed by default so the
+  // "quick add" flow isn't a wall of fields (progressive disclosure).
+  sectionOpen: { [key: string]: boolean } = {
+    basic: true,
+    location: true,
+    specs: true,
+    financial: true,
+    features: false,
+    images: true,
+    expose: false,
+  };
+
   // Enum values for dropdowns
   propertyTypes = Object.values(PropertyType);
   listingTypes = Object.values(ListingType);
@@ -262,6 +274,7 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
       Object.keys(this.propertyForm.controls).forEach(key => {
         this.propertyForm.get(key)?.markAsTouched();
       });
+      this.openAllSections();
       this.errorMessage = 'Please fill in all required fields correctly.';
       this.scrollToFirstError();
     }
@@ -294,6 +307,7 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
         }
       });
 
+      this.openAllSections();
       this.scrollToFirstError();
     } else {
       this.errorMessage = error.error?.message || 'Failed to save property. Please try again.';
@@ -457,5 +471,15 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
    */
   goToSection(section: 'basic' | 'location' | 'specs' | 'financial' | 'features' | 'images' | 'expose'): void {
     this.currentSection = section;
+  }
+
+  /** Toggle a collapsible form section open/closed. */
+  toggleSection(section: string): void {
+    this.sectionOpen[section] = !this.sectionOpen[section];
+  }
+
+  /** Expand every section — used when a submit fails so hidden errors stay visible. */
+  private openAllSections(): void {
+    Object.keys(this.sectionOpen).forEach(key => (this.sectionOpen[key] = true));
   }
 }

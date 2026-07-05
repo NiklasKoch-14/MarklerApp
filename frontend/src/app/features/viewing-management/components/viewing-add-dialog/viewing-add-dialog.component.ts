@@ -257,8 +257,8 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
                     [style.background]="form.get('feedback')?.value === option.value ? option.bg : 'var(--surface-2)'"
                     [style.border-color]="form.get('feedback')?.value === option.value ? option.color : 'var(--border)'"
                     [style.color]="form.get('feedback')?.value === option.value ? option.color : 'var(--text-2)'"
-                    style="flex:1;padding:8px 12px;border-radius:8px;border:1.5px solid;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s;">
-              {{ option.icon }} {{ option.label }}
+                    style="flex:1;padding:8px 12px;border-radius:8px;border:1.5px solid;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;">
+              <i class="ph-fill" [ngClass]="option.icon" style="font-size:15px;"></i> {{ option.label }}
             </button>
           </div>
         </div>
@@ -391,9 +391,9 @@ export class ViewingAddDialogComponent implements OnInit, OnDestroy {
   errorMessage = '';
 
   feedbackOptions = [
-    { value: ViewingFeedback.LIKED,    label: 'Gefällt',   icon: '👍', color: '#16a34a', bg: '#f0fdf4' },
-    { value: ViewingFeedback.NEUTRAL,  label: 'Neutral',   icon: '🤷', color: '#d97706', bg: '#fffbeb' },
-    { value: ViewingFeedback.DISLIKED, label: 'Gefällt nicht', icon: '👎', color: '#dc2626', bg: '#fef2f2' }
+    { value: ViewingFeedback.LIKED,    label: 'Gefällt',   icon: 'ph-thumbs-up',   color: 'var(--color-success)', bg: 'var(--color-success-soft)' },
+    { value: ViewingFeedback.NEUTRAL,  label: 'Neutral',   icon: 'ph-smiley-meh',  color: 'var(--color-warning)', bg: 'var(--color-warning-soft)' },
+    { value: ViewingFeedback.DISLIKED, label: 'Gefällt nicht', icon: 'ph-thumbs-down', color: 'var(--color-error)', bg: 'var(--color-error-soft)' }
   ];
 
   private destroy$ = new Subject<void>();
