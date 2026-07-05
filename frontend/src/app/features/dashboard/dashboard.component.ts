@@ -18,15 +18,6 @@ import {
 } from '../call-notes/services/call-notes.service';
 import { ViewingService, ViewingSummary, ViewingFeedback, ViewingStatus } from '../viewing-management/services/viewing.service';
 
-interface StatCard {
-  icon: string;
-  iconBg: string;
-  iconColor: string;
-  value: string;
-  label: string;
-  caption: string;
-  capColor: string;
-}
 
 interface FollowUpRow {
   id: string;
@@ -89,22 +80,67 @@ interface ViewingRow {
         </div>
       </div>
 
-      <!-- Stat cards -->
-      <div class="stat-grid" style="margin-bottom:20px;">
-        @for (s of statCards; track s.label) {
-          <div class="stat-card">
-            <div class="stat-icon-wrap" [style.background]="s.iconBg">
-              <i [class]="s.icon" [style.color]="s.iconColor"></i>
+      <!-- Aktions-Zeile: was brennt heute? -->
+      @if (!allClear) {
+        <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+          <!-- 1) Überfällige Rückrufe — schlagen alles -->
+          <button (click)="focusSection('sec-followups')"
+                  style="flex:1; min-width:150px; display:flex; align-items:center; gap:13px; padding:15px 17px;
+                         border-radius:14px; cursor:pointer; text-align:left; font-family:inherit;
+                         box-shadow:var(--shadow); transition:transform .1s;"
+                  [style.background]="overdueCount > 0 ? 'var(--color-error-soft)' : 'var(--surface)'"
+                  [style.border]="overdueCount > 0 ? '1px solid var(--color-error)' : '1px solid var(--border)'">
+            <i class="ph-fill ph-phone-x" style="font-size:23px;"
+               [style.color]="overdueCount > 0 ? 'var(--color-error)' : 'var(--text-3)'"></i>
+            <div>
+              <div style="font-size:23px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums;"
+                   [style.color]="overdueCount > 0 ? 'var(--color-error)' : 'var(--text)'">{{ overdueCount }}</div>
+              <div style="font-size:12px; font-weight:600; color:var(--text-2); margin-top:4px;">Rückrufe überfällig</div>
             </div>
-            <div class="stat-value">{{ s.value }}</div>
-            <div class="stat-label">{{ s.label }}</div>
-            <div class="stat-caption" [style.color]="s.capColor">{{ s.caption }}</div>
+          </button>
+
+          <!-- 2) Besichtigungen heute -->
+          <button (click)="focusSection('sec-today-viewings')"
+                  style="flex:1; min-width:150px; display:flex; align-items:center; gap:13px; padding:15px 17px;
+                         background:var(--surface); border:1px solid var(--border); border-radius:14px; cursor:pointer;
+                         text-align:left; font-family:inherit; box-shadow:var(--shadow); transition:transform .1s;">
+            <i class="ph-fill ph-door-open" style="font-size:23px; color:var(--color-purple);"></i>
+            <div>
+              <div style="font-size:23px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; color:var(--text);">{{ todayViewingRows.length }}</div>
+              <div style="font-size:12px; font-weight:600; color:var(--text-2); margin-top:4px;">Besichtigungen heute</div>
+            </div>
+          </button>
+
+          <!-- 3) Kunden lange nicht gehört -->
+          <button (click)="focusSection('sec-stale')"
+                  style="flex:1; min-width:150px; display:flex; align-items:center; gap:13px; padding:15px 17px;
+                         background:var(--surface); border:1px solid var(--border); border-radius:14px; cursor:pointer;
+                         text-align:left; font-family:inherit; box-shadow:var(--shadow); transition:transform .1s;">
+            <i class="ph-fill ph-clock-countdown" style="font-size:23px;"
+               [style.color]="staleClientRows.length > 0 ? 'var(--color-warning)' : 'var(--text-3)'"></i>
+            <div>
+              <div style="font-size:23px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums;"
+                   [style.color]="staleClientRows.length > 0 ? 'var(--color-warning)' : 'var(--text)'">{{ staleClientRows.length }}</div>
+              <div style="font-size:12px; font-weight:600; color:var(--text-2); margin-top:4px;">Kunden lange nicht gehört</div>
+            </div>
+          </button>
+        </div>
+      }
+
+      <!-- Positiver Zustand: nichts brennt -->
+      @if (allClear && !loading) {
+        <div style="display:flex; align-items:center; gap:13px; margin-bottom:20px; padding:16px 18px;
+                    background:var(--color-success-soft); border:1px solid var(--color-success); border-radius:14px;">
+          <i class="ph-fill ph-check-circle" style="font-size:26px; color:var(--color-success);"></i>
+          <div>
+            <div style="font-size:15px; font-weight:700; color:var(--text);">Alles im Griff</div>
+            <div style="font-size:13px; color:var(--text-2);">Keine überfälligen Rückrufe und keine Besichtigungen heute.</div>
           </div>
-        }
-      </div>
+        </div>
+      }
 
       <!-- Heutige Besichtigungen — Tagesagenda, immer als erstes sichtbar -->
-      <div class="widget-card" style="margin-bottom:20px;">
+      <div id="sec-today-viewings" class="widget-card" style="margin-bottom:20px; scroll-margin-top:16px;">
         <div class="widget-header">
           <i class="ph-fill ph-door-open" style="color:#7c3aed; font-size:18px;"></i>
           <h3 class="widget-title">Heutige Besichtigungen</h3>
@@ -190,7 +226,7 @@ interface ViewingRow {
         <div class="dash-main-grid">
 
           <!-- Follow-ups widget -->
-          <div class="widget-card">
+          <div id="sec-followups" class="widget-card" style="scroll-margin-top:16px;">
             <div class="widget-header">
               <i class="ph-fill ph-bell-ringing" style="color:#c07a1e; font-size:18px;"></i>
               <h3 class="widget-title">{{ 'dashboard.openFollowups' | translate }}</h3>
@@ -285,7 +321,7 @@ interface ViewingRow {
         </div>
 
         <!-- Kunden ohne Kontakt >30 Tage -->
-        <div class="widget-card" style="margin-top:20px;">
+        <div id="sec-stale" class="widget-card" style="margin-top:20px; scroll-margin-top:16px;">
           <div class="widget-header">
             <i class="ph-fill ph-user-minus" style="color:var(--color-warning); font-size:18px;"></i>
             <h3 class="widget-title">Kunden ohne Kontakt &gt;30 Tage</h3>
@@ -497,13 +533,30 @@ export class DashboardComponent implements OnInit, OnDestroy {
   view: 'cards' | 'pipeline' = 'cards';
   loading = true;
 
-  statCards: StatCard[] = [];
   followUps: FollowUpRow[] = [];
   recentActivity: ActivityRow[] = [];
   todayViewingRows: ViewingRow[] = [];
   staleClientRows: { id: string; name: string; initials: string; daysSince: string; phone?: string }[] = [];
 
   pipelineCols: { label: string; color: string; items: any[] }[] = [];
+
+  /** Überfällige Rückrufe — die dringendste Zahl der Aktions-Zeile. */
+  get overdueCount(): number {
+    return this.followUps.filter(f => f.isOverdue).length;
+  }
+
+  /** Nichts brennt: keine überfälligen Rückrufe, keine Besichtigungen heute, keine liegengebliebenen Kunden. */
+  get allClear(): boolean {
+    return this.overdueCount === 0 && this.todayViewingRows.length === 0 && this.staleClientRows.length === 0;
+  }
+
+  /** Aktions-Zeile klickbar: zur passenden Sektion springen (in Cards-Ansicht, da manche Widgets nur dort liegen). */
+  focusSection(id: string): void {
+    this.view = 'cards';
+    setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  }
 
   // Follow-up popover
   activeFollowUp: FollowUpRow | null = null;
@@ -563,79 +616,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private loadData(): void {
     forkJoin({
-      clientStats:    this.clientService.getClientStats().pipe(catchError(() => of({ totalClients: 0 }))),
       notes:          this.callNotesService.getCallNotesByAgent(0, 10).pipe(catchError(() => of({ content: [], totalElements: 0 }))),
       followUps:      this.callNotesService.getFollowUpReminders().pipe(catchError(() => of([]))),
-      properties:     this.propertyService.getProperties(0, 1).pipe(catchError(() => of({ content: [], totalElements: 0 }))),
       todayViewings:  this.viewingService.getTodaysViewings().pipe(catchError(() => of([]))),
       clientsByStage: this.clientService.getClientsByStage().pipe(catchError(() => of({}))),
       staleClients:   this.clientService.getClientsWithoutRecentContact(30).pipe(catchError(() => of([]))),
     })
     .pipe(takeUntil(this.destroy$))
-    .subscribe(({ clientStats, notes, followUps, properties, todayViewings, clientsByStage, staleClients }) => {
+    .subscribe(({ notes, followUps, todayViewings, clientsByStage, staleClients }) => {
       this.loading = false;
-
-      const totalClients    = clientStats.totalClients;
-      const totalNotes      = (notes as any).totalElements ?? 0;
-      const totalProperties = (properties as any).totalElements ?? 0;
 
       this.buildTodayViewings(todayViewings as ViewingSummary[]);
       this.buildStaleClients(staleClients as any[]);
-      this.buildStatCards(totalClients, totalNotes, totalProperties, (followUps as FollowUpReminder[]).length);
       this.buildFollowUps(followUps as FollowUpReminder[]);
       this.buildActivity((notes as any).content ?? []);
       this.buildPipelineFromStages(clientsByStage as Record<PipelineStage, any[]>);
-    });
-  }
-
-  private buildStatCards(clients: number, notes: number, properties: number, followups: number): void {
-    this.translate.get([
-      'dashboard.stats.clients',
-      'dashboard.stats.notes',
-      'dashboard.stats.properties',
-      'dashboard.stats.followups',
-      'dashboard.stats.activeThis',
-      'dashboard.stats.thisMonth',
-      'dashboard.stats.open',
-    ]).subscribe(t => {
-      this.statCards = [
-        {
-          icon: 'ph-fill ph-users',
-          iconBg: 'color-mix(in srgb,var(--primary) 12%,var(--surface))',
-          iconColor: 'var(--primary)',
-          value: String(clients),
-          label: t['dashboard.stats.clients'],
-          caption: t['dashboard.stats.activeThis'],
-          capColor: 'var(--color-success)',
-        },
-        {
-          icon: 'ph-fill ph-chats-circle',
-          iconBg: 'color-mix(in srgb,var(--color-viewing) 12%,var(--surface))',
-          iconColor: 'var(--color-viewing)',
-          value: String(notes),
-          label: t['dashboard.stats.notes'],
-          caption: t['dashboard.stats.thisMonth'],
-          capColor: 'var(--text-3)',
-        },
-        {
-          icon: 'ph-fill ph-buildings',
-          iconBg: 'color-mix(in srgb,var(--color-success) 12%,var(--surface))',
-          iconColor: 'var(--color-success)',
-          value: String(properties),
-          label: t['dashboard.stats.properties'],
-          caption: '',
-          capColor: 'var(--text-3)',
-        },
-        {
-          icon: 'ph-fill ph-bell-ringing',
-          iconBg: 'color-mix(in srgb,var(--color-warning) 12%,var(--surface))',
-          iconColor: 'var(--color-warning)',
-          value: String(followups),
-          label: t['dashboard.stats.followups'],
-          caption: t['dashboard.stats.open'],
-          capColor: followups > 0 ? 'var(--color-warning)' : 'var(--color-success)',
-        },
-      ];
     });
   }
 
