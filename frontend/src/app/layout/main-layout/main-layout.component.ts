@@ -114,7 +114,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     { route: '/dashboard',      icon: 'ph-fill ph-squares-four',  labelKey: 'navigation.dashboard',      exact: true },
     { route: '/clients',        icon: 'ph-fill ph-users',         labelKey: 'navigation.clients'                     },
     { route: '/properties',     icon: 'ph-fill ph-buildings',     labelKey: 'navigation.properties'                  },
-    { route: '/matching',       icon: 'ph-fill ph-shuffle',       labelKey: 'navigation.matching'                    },
     { route: '/analytics',      icon: 'ph-fill ph-chart-line-up', labelKey: 'navigation.analytics'                   },
     { route: '/notifications',  icon: 'ph-fill ph-bell',          labelKey: 'navigation.notifications'               },
   ];

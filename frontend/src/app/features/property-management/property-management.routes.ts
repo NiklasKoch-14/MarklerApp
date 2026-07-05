@@ -24,12 +24,6 @@ export const propertyRoutes: Routes = [
     title: 'Search Properties'
   },
   {
-    path: 'match',
-    loadComponent: () => import('./components/property-matching/property-matching.component')
-      .then(c => c.PropertyMatchingComponent),
-    title: 'Property Matching'
-  },
-  {
     path: ':id',
     loadComponent: () => import('./components/property-detail/property-detail.component')
       .then(c => c.PropertyDetailComponent),

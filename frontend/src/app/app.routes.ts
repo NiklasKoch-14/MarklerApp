@@ -59,11 +59,6 @@ export const routes: Routes = [
         loadComponent: () => import('./features/notifications/notifications.component').then(c => c.NotificationsComponent)
       },
       {
-        path: 'matching',
-        redirectTo: '/properties/match',
-        pathMatch: 'full'
-      },
-      {
         path: 'settings',
         loadComponent: () => import('./features/settings/settings.component').then(c => c.SettingsComponent)
       }
