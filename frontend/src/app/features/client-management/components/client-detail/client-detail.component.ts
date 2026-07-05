@@ -24,6 +24,10 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
     .qm-item.danger:hover { background:var(--color-error-soft); }
     .note-form-enter { animation:slideDown .18s ease; }
     @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+    .detail-modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:999; animation:modalFade .15s ease; }
+    .detail-modal-card { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:1000; width:calc(100% - 32px); max-width:560px; max-height:calc(100vh - 48px); overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,.3); animation:modalPop .18s ease; }
+    @keyframes modalFade { from { opacity:0; } to { opacity:1; } }
+    @keyframes modalPop { from { opacity:0; transform:translate(-50%,-48%) scale(.98); } to { opacity:1; transform:translate(-50%,-50%) scale(1); } }
     .rec-dot { width:8px; height:8px; border-radius:50%; background:var(--color-error); display:inline-block; flex-shrink:0; animation:recPulse 1.1s ease infinite; }
     @keyframes recPulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.35; transform:scale(.8); } }
     .tl-row { display:flex; align-items:flex-start; gap:12px; padding:14px 0; border-bottom:1px solid var(--border); }
@@ -155,9 +159,10 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
           </div>
         </div>
 
-        <!-- ── Inline Notiz-Formular ────────────────────────────── -->
-        <div *ngIf="showQuickNoteForm" class="note-form-enter"
-             style="background:var(--surface);border:2px solid var(--primary);border-radius:14px;padding:20px 24px;margin-bottom:16px;">
+        <!-- ── Notiz-Dialog ─────────────────────────────────────── -->
+        <div *ngIf="showQuickNoteForm" class="detail-modal-backdrop" (click)="showQuickNoteForm = false"></div>
+        <div *ngIf="showQuickNoteForm" class="detail-modal-card"
+             style="background:var(--surface);border:2px solid var(--primary);border-radius:14px;padding:20px 24px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
             <i class="ph-fill ph-note-pencil" style="font-size:16px;color:var(--primary);"></i>
             <span style="font-size:14px;font-weight:700;color:var(--text);">Gesprächsnotiz</span>
@@ -232,9 +237,10 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
           </div>
         </div>
 
-        <!-- ── Guided Follow-up Panel ──────────────────────────── -->
-        <div *ngIf="showFollowUpPanel" class="note-form-enter"
-             style="background:var(--surface);border:2px solid var(--color-amber);border-radius:14px;padding:20px 24px;margin-bottom:16px;">
+        <!-- ── Guided Follow-up Dialog ─────────────────────────── -->
+        <div *ngIf="showFollowUpPanel" class="detail-modal-backdrop" (click)="showFollowUpPanel = false"></div>
+        <div *ngIf="showFollowUpPanel" class="detail-modal-card"
+             style="background:var(--surface);border:2px solid var(--color-amber);border-radius:14px;padding:20px 24px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
             <i class="ph-fill ph-bell-ringing" style="font-size:16px;color:var(--color-amber);"></i>
             <span style="font-size:14px;font-weight:700;color:var(--text);">Follow-up abschließen</span>
@@ -294,10 +300,9 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
           </div>
         </div>
 
-        <!-- ── Inline Besichtigungs-Formular ───────────────────────── -->
+        <!-- ── Besichtigungs-Dialog ───────────────────────── -->
         <app-viewing-add-dialog
           *ngIf="showViewingForm && client"
-          [inline]="true"
           mode="from-client"
           [preselectedClientId]="client.id"
           [preselectedClientName]="client.firstName + ' ' + client.lastName"
