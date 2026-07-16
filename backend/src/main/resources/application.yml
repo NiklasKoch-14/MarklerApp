@@ -30,7 +30,7 @@ spring:
   sql:
     init:
       mode: always
-      continue-on-error: true
+      continue-on-error: false
 
   flyway:
     enabled: false  # Disabled for SQLite in dev mode

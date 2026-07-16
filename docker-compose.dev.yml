@@ -1,9 +1,8 @@
-version: '3.8'
-
 services:
   database:
     image: postgres:15-alpine
     container_name: realestate-db-dev
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-realestate_crm_dev}
       POSTGRES_USER: ${POSTGRES_USER:-crmuser}
@@ -24,6 +23,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile.dev
     container_name: realestate-backend-dev
+    restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: docker
       POSTGRES_HOST: database
@@ -54,6 +54,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.dev
     container_name: realestate-frontend-dev
+    restart: unless-stopped
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/angular.json:/app/angular.json
