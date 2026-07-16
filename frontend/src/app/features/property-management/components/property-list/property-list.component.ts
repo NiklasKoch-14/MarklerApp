@@ -1,44 +1,58 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 import {
   PropertyService,
   Property,
   PagedResponse,
   PropertySearchFilter,
   PropertyType,
-  ListingType,
   PropertyStatus
 } from '../../services/property.service';
+
+type SortDir = 'asc' | 'desc';
 
 @Component({
   selector: 'app-property-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, TranslateModule],
+  imports: [CommonModule, RouterLink, FormsModule, TranslateModule, TranslateEnumPipe],
   templateUrl: './property-list.component.html',
   styleUrls: ['./property-list.component.scss']
 })
-export class PropertyListComponent implements OnInit {
+export class PropertyListComponent implements OnInit, OnDestroy {
   properties: Property[] = [];
   isLoading = false;
 
   // Pagination
   currentPage = 0;
-  pageSize = 12;
+  pageSize = 20;
   totalElements = 0;
   totalPages = 0;
 
-  // Filter state bound to the selects in the template
+  // Filter / search / sort state
+  searchQuery = '';
   selectedStatus = '';
   selectedType = '';
   searchFilter: PropertySearchFilter = {};
+  sortBy = 'createdAt';
+  sortDir: SortDir = 'desc';
 
-  constructor(public propertyService: PropertyService) {}
+  private searchTimer?: ReturnType<typeof setTimeout>;
+
+  constructor(
+    public propertyService: PropertyService,
+    private translate: TranslateService
+  ) {}
 
   ngOnInit(): void {
     this.loadProperties();
+  }
+
+  ngOnDestroy(): void {
+    clearTimeout(this.searchTimer);
   }
 
   private loadProperties(): void {
@@ -47,8 +61,8 @@ export class PropertyListComponent implements OnInit {
     const hasFilters = Object.keys(this.searchFilter).some(k => (this.searchFilter as any)[k]);
 
     const observable = hasFilters
-      ? this.propertyService.searchProperties(this.searchFilter, this.currentPage, this.pageSize)
-      : this.propertyService.getProperties(this.currentPage, this.pageSize);
+      ? this.propertyService.searchProperties(this.searchFilter, this.currentPage, this.pageSize, this.sortBy, this.sortDir)
+      : this.propertyService.getProperties(this.currentPage, this.pageSize, this.sortBy, this.sortDir);
 
     observable.subscribe({
       next: (response: PagedResponse<Property>) => {
@@ -64,15 +78,50 @@ export class PropertyListComponent implements OnInit {
     });
   }
 
-  onFilterChange(): void {
+  /** Rebuild the filter object from the bound controls (search + status + type). */
+  private rebuildFilter(): void {
     this.searchFilter = {};
+    const q = this.searchQuery.trim();
+    if (q) this.searchFilter.query = q;
     if (this.selectedStatus) this.searchFilter.status = this.selectedStatus as PropertyStatus;
     if (this.selectedType) this.searchFilter.propertyType = this.selectedType as PropertyType;
+  }
+
+  onSearchInput(): void {
+    clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => {
+      this.rebuildFilter();
+      this.currentPage = 0;
+      this.loadProperties();
+    }, 350);
+  }
+
+  onFilterChange(): void {
+    this.rebuildFilter();
     this.currentPage = 0;
     this.loadProperties();
   }
 
-  applyFilters(): void {
+  clearAll(): void {
+    this.searchQuery = '';
+    this.selectedStatus = '';
+    this.selectedType = '';
+    this.searchFilter = {};
+    this.currentPage = 0;
+    this.loadProperties();
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!(this.searchQuery.trim() || this.selectedStatus || this.selectedType);
+  }
+
+  toggleSort(field: string): void {
+    if (this.sortBy === field) {
+      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortBy = field;
+      this.sortDir = field === 'title' ? 'asc' : 'desc';
+    }
     this.currentPage = 0;
     this.loadProperties();
   }
@@ -91,72 +140,26 @@ export class PropertyListComponent implements OnInit {
     }
   }
 
-  getStatusLabel(status?: PropertyStatus): string {
-    switch (status) {
-      case PropertyStatus.AVAILABLE:          return 'Verfügbar';
-      case PropertyStatus.RESERVED:           return 'Reserviert';
-      case PropertyStatus.SOLD:               return 'Verkauft';
-      case PropertyStatus.RENTED:             return 'Vermietet';
-      case PropertyStatus.WITHDRAWN:          return 'Zurückgezogen';
-      case PropertyStatus.UNDER_CONSTRUCTION: return 'Im Bau';
-      default:                                return status ?? '—';
-    }
-  }
-
+  // Status is the single color-coded badge for a property (mirrors pipeline stage for clients)
   getStatusBg(status?: PropertyStatus): string {
     switch (status) {
-      case PropertyStatus.AVAILABLE:          return 'rgba(220,252,231,0.95)';
-      case PropertyStatus.RESERVED:           return 'rgba(254,243,199,0.95)';
-      case PropertyStatus.SOLD:               return 'rgba(219,234,254,0.95)';
-      case PropertyStatus.RENTED:             return 'rgba(237,233,254,0.95)';
-      case PropertyStatus.UNDER_CONSTRUCTION: return 'rgba(254,243,199,0.95)';
-      default:                                return 'rgba(243,244,246,0.95)';
+      case PropertyStatus.AVAILABLE:          return 'color-mix(in srgb,var(--color-green) 14%,var(--surface))';
+      case PropertyStatus.RESERVED:           return 'color-mix(in srgb,var(--color-amber) 16%,var(--surface))';
+      case PropertyStatus.SOLD:               return 'color-mix(in srgb,var(--color-blue) 14%,var(--surface))';
+      case PropertyStatus.RENTED:             return 'color-mix(in srgb,var(--color-purple) 14%,var(--surface))';
+      case PropertyStatus.UNDER_CONSTRUCTION: return 'color-mix(in srgb,var(--color-amber) 16%,var(--surface))';
+      default:                                return 'var(--surface-2)';
     }
   }
 
   getStatusColor(status?: PropertyStatus): string {
     switch (status) {
-      case PropertyStatus.AVAILABLE:          return '#16a34a';
-      case PropertyStatus.RESERVED:           return '#d97706';
-      case PropertyStatus.SOLD:               return '#2563eb';
-      case PropertyStatus.RENTED:             return '#7c3aed';
-      case PropertyStatus.UNDER_CONSTRUCTION: return '#d97706';
-      default:                                return '#6b7280';
-    }
-  }
-
-  getPropertyTypeLabel(type?: PropertyType): string {
-    switch (type) {
-      case PropertyType.APARTMENT:     return 'Wohnung';
-      case PropertyType.HOUSE:         return 'Haus';
-      case PropertyType.TOWNHOUSE:     return 'Reihenhaus';
-      case PropertyType.VILLA:         return 'Villa';
-      case PropertyType.PENTHOUSE:     return 'Penthouse';
-      case PropertyType.LOFT:          return 'Loft';
-      case PropertyType.DUPLEX:        return 'Duplex';
-      case PropertyType.STUDIO:        return 'Studio';
-      case PropertyType.OFFICE:        return 'Büro';
-      case PropertyType.RETAIL:        return 'Einzelhandel';
-      case PropertyType.WAREHOUSE:     return 'Lager';
-      case PropertyType.INDUSTRIAL:    return 'Industrie';
-      case PropertyType.RESTAURANT:    return 'Restaurant';
-      case PropertyType.HOTEL:         return 'Hotel';
-      case PropertyType.PARKING_SPACE: return 'Stellplatz';
-      case PropertyType.GARAGE:        return 'Garage';
-      case PropertyType.LAND:          return 'Grundstück';
-      case PropertyType.FARM:          return 'Bauernhof';
-      case PropertyType.CASTLE:        return 'Schloss';
-      case PropertyType.OTHER:         return 'Sonstige';
-      default:                         return type ?? '—';
-    }
-  }
-
-  getListingTypeLabel(type?: ListingType): string {
-    switch (type) {
-      case ListingType.SALE:  return 'Kauf';
-      case ListingType.RENT:  return 'Miete';
-      case ListingType.LEASE: return 'Pacht';
-      default:                return type ?? '—';
+      case PropertyStatus.AVAILABLE:          return 'var(--color-green)';
+      case PropertyStatus.RESERVED:           return 'var(--color-amber)';
+      case PropertyStatus.SOLD:               return 'var(--color-blue)';
+      case PropertyStatus.RENTED:             return 'var(--color-purple)';
+      case PropertyStatus.UNDER_CONSTRUCTION: return 'var(--color-amber)';
+      default:                                return 'var(--text-3)';
     }
   }
 
@@ -166,6 +169,26 @@ export class PropertyListComponent implements OnInit {
       return primaryImage?.imageUrl || property.images[0]?.imageUrl || null;
     }
     return null;
+  }
+
+  daysOnMarket(property: Property): number | null {
+    if (!property.createdAt) return null;
+    const ms = Date.now() - new Date(property.createdAt).getTime();
+    return Math.max(0, Math.floor(ms / (1000 * 60 * 60 * 24)));
+  }
+
+  daysOnMarketLabel(property: Property): string {
+    const d = this.daysOnMarket(property);
+    if (d === null) return '—';
+    if (d === 0) return this.translate.instant('properties.today');
+    return this.translate.instant('properties.daysOnMarketValue').replace('{{days}}', String(d));
+  }
+
+  specsLabel(property: Property): string {
+    const parts: string[] = [];
+    if (property.livingAreaSqm) parts.push(`${property.livingAreaSqm} m²`);
+    if (property.rooms) parts.push(`${property.rooms} ${this.translate.instant('properties.roomsShort')}`);
+    return parts.join(' · ') || '—';
   }
 
   trackById(index: number, item: Property): string | undefined {

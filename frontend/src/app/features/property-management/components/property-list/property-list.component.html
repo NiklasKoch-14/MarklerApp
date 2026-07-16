@@ -1,42 +1,15 @@
 <div style="padding:28px 32px;">
 
   <!-- Header -->
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
     <div>
       <h1 style="font-size:24px;font-weight:800;color:var(--text);margin:0;">{{ 'properties.title' | translate }}</h1>
       <p style="font-size:14px;color:var(--text-2);margin-top:4px;">{{ 'properties.management' | translate }}</p>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <!-- Status filter -->
-      <select [(ngModel)]="selectedStatus" (change)="onFilterChange()"
-              style="padding:8px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;outline:none;">
-        <option value="">Alle Status</option>
-        <option value="AVAILABLE">Verfügbar</option>
-        <option value="RESERVED">Reserviert</option>
-        <option value="SOLD">Verkauft</option>
-        <option value="RENTED">Vermietet</option>
-        <option value="WITHDRAWN">Zurückgezogen</option>
-      </select>
-      <!-- Type filter -->
-      <select [(ngModel)]="selectedType" (change)="onFilterChange()"
-              style="padding:8px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;outline:none;">
-        <option value="">Alle Typen</option>
-        <option value="HOUSE">Haus</option>
-        <option value="APARTMENT">Wohnung</option>
-        <option value="TOWNHOUSE">Reihenhaus</option>
-        <option value="VILLA">Villa</option>
-        <option value="OFFICE">Büro</option>
-        <option value="LAND">Grundstück</option>
-        <option value="GARAGE">Garage</option>
-        <option value="OTHER">Sonstige</option>
-      </select>
-      <!-- Add button -->
-      <a routerLink="/properties/new"
-         style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;">
-        <i class="ph ph-plus" style="font-size:14px;"></i>
-        + Neues Objekt
-      </a>
-    </div>
+    <a routerLink="/properties/new" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;">
+      <i class="ph ph-plus"></i>
+      {{ 'properties.add' | translate }}
+    </a>
   </div>
 
   <!-- Loading -->
@@ -44,106 +17,152 @@
     <div style="width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;"></div>
   </div>
 
-  <!-- Empty State -->
-  <div *ngIf="!isLoading && properties.length === 0"
+  <!-- Empty State (no properties at all) -->
+  <div *ngIf="!isLoading && properties.length === 0 && !hasActiveFilters"
        style="text-align:center;padding:56px 24px;background:var(--surface);border:1px solid var(--border);border-radius:14px;">
     <i class="ph ph-house" style="font-size:48px;color:var(--text-3);display:block;margin-bottom:12px;"></i>
     <h3 style="font-size:15px;font-weight:600;color:var(--text);margin:0 0 6px;">{{ 'properties.noPropertiesFound' | translate }}</h3>
     <p style="font-size:13px;color:var(--text-2);margin:0 0 20px;">{{ 'properties.noPropertiesHint' | translate }}</p>
-    <a routerLink="/properties/new"
-       style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--primary);color:#fff;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;">
+    <a routerLink="/properties/new" class="btn-primary" style="display:inline-flex;">
       <i class="ph ph-plus"></i>
       {{ 'properties.add' | translate }}
     </a>
   </div>
 
-  <!-- Card Grid -->
-  <div *ngIf="!isLoading && properties.length > 0" class="property-grid">
-
-    <div *ngFor="let property of properties; trackBy: trackById"
-         [routerLink]="['/properties', property.id]"
-         class="prop-card">
-
-      <!-- Photo area -->
-      <div style="position:relative;height:180px;overflow:hidden;border-radius:14px 14px 0 0;">
-
-        <!-- Real image -->
-        <img *ngIf="getPrimaryImage(property)"
-             [src]="getPrimaryImage(property)"
-             [alt]="property.title"
-             class="prop-img">
-
-        <!-- Placeholder (hatched) -->
-        <div *ngIf="!getPrimaryImage(property)" class="prop-placeholder">
-          <span style="font-size:12px;color:var(--text-3);">objektfoto</span>
-        </div>
-
-        <!-- Status badge overlay -->
-        <div style="position:absolute;top:10px;left:10px;">
-          <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;"
-                [style.background]="getStatusBg(property.status)"
-                [style.color]="getStatusColor(property.status)">
-            <span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;flex-shrink:0;"></span>
-            {{ getStatusLabel(property.status) }}
-          </span>
-        </div>
-
+  <!-- Toolbar + Table -->
+  <ng-container *ngIf="!isLoading && (properties.length > 0 || hasActiveFilters)">
+    <div class="toolbar">
+      <div class="search-box">
+        <i class="ph ph-magnifying-glass"></i>
+        <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchInput()"
+               [placeholder]="'properties.quickSearchPlaceholder' | translate" />
       </div>
 
-      <!-- Card body -->
-      <div style="padding:14px 16px 16px;">
+      <select [(ngModel)]="selectedStatus" (change)="onFilterChange()" class="filter-select">
+        <option value="">{{ 'properties.allStatuses' | translate }}</option>
+        <option value="AVAILABLE">{{ 'enums.propertyStatus.AVAILABLE' | translate }}</option>
+        <option value="RESERVED">{{ 'enums.propertyStatus.RESERVED' | translate }}</option>
+        <option value="SOLD">{{ 'enums.propertyStatus.SOLD' | translate }}</option>
+        <option value="RENTED">{{ 'enums.propertyStatus.RENTED' | translate }}</option>
+        <option value="WITHDRAWN">{{ 'enums.propertyStatus.WITHDRAWN' | translate }}</option>
+      </select>
 
-        <!-- Type chips -->
-        <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
-          <span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:6px;background:var(--surface-2);color:var(--text-2);">
-            {{ getPropertyTypeLabel(property.propertyType) }}
-          </span>
-          <span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:6px;background:var(--surface-2);color:var(--text-2);">
-            {{ getListingTypeLabel(property.listingType) }}
-          </span>
-        </div>
+      <select [(ngModel)]="selectedType" (change)="onFilterChange()" class="filter-select">
+        <option value="">{{ 'properties.allTypes' | translate }}</option>
+        <option value="HOUSE">{{ 'enums.propertyType.HOUSE' | translate }}</option>
+        <option value="APARTMENT">{{ 'enums.propertyType.APARTMENT' | translate }}</option>
+        <option value="TOWNHOUSE">{{ 'enums.propertyType.TOWNHOUSE' | translate }}</option>
+        <option value="VILLA">{{ 'enums.propertyType.VILLA' | translate }}</option>
+        <option value="OFFICE">{{ 'enums.propertyType.OFFICE' | translate }}</option>
+        <option value="LAND">{{ 'enums.propertyType.LAND' | translate }}</option>
+        <option value="GARAGE">{{ 'enums.propertyType.GARAGE' | translate }}</option>
+        <option value="OTHER">{{ 'enums.propertyType.OTHER' | translate }}</option>
+      </select>
 
-        <!-- Title -->
-        <div class="prop-title">{{ property.title }}</div>
-
-        <!-- Location -->
-        <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-3);margin-bottom:14px;">
-          <i class="ph ph-map-pin" style="font-size:12px;flex-shrink:0;"></i>
-          <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-            <ng-container *ngIf="property.addressDistrict">{{ property.addressDistrict }}, </ng-container>{{ property.addressCity }}
-          </span>
-        </div>
-
-        <!-- Footer: price + specs -->
-        <div style="display:flex;align-items:baseline;justify-content:space-between;border-top:1px solid var(--border);padding-top:10px;">
-          <div style="font-size:16px;font-weight:800;color:var(--text);">
-            {{ propertyService.formatPrice(property.price, property.listingType) }}
-          </div>
-          <div style="font-size:12px;color:var(--text-3);">
-            <ng-container *ngIf="property.livingAreaSqm">{{ property.livingAreaSqm }} m²</ng-container>
-            <ng-container *ngIf="property.livingAreaSqm && property.rooms"> · </ng-container>
-            <ng-container *ngIf="property.rooms">{{ property.rooms }} Zi.</ng-container>
-          </div>
-        </div>
-
-      </div>
+      <span class="result-count">{{ 'properties.resultCount' | translate:{ count: totalElements } }}</span>
     </div>
-  </div>
 
-  <!-- Pagination -->
-  <div *ngIf="!isLoading && totalPages > 1"
-       style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:24px;">
-    <button (click)="previousPage()" [disabled]="currentPage === 0"
-            style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-2);font-size:13px;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"
-            [style.opacity]="currentPage === 0 ? '0.4' : '1'">
-      <i class="ph ph-arrow-left"></i> Zurück
-    </button>
-    <span style="font-size:13px;color:var(--text-2);">Seite {{ currentPage + 1 }} von {{ totalPages }}</span>
-    <button (click)="nextPage()" [disabled]="currentPage >= totalPages - 1"
-            style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-2);font-size:13px;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"
-            [style.opacity]="currentPage >= totalPages - 1 ? '0.4' : '1'">
-      Weiter <i class="ph ph-arrow-right"></i>
-    </button>
-  </div>
+    <!-- No filter matches -->
+    <div *ngIf="properties.length === 0"
+      style="text-align:center;padding:44px 24px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);">
+      <i class="ph ph-funnel" style="font-size:36px;color:var(--text-3);display:block;margin-bottom:10px;"></i>
+      <p style="font-size:14px;color:var(--text-2);margin:0 0 14px;">{{ 'properties.noMatchingProperties' | translate }}</p>
+      <button (click)="clearAll()" class="btn-secondary" style="display:inline-flex;">
+        {{ 'properties.clearFilters' | translate }}
+      </button>
+    </div>
+
+    <div *ngIf="properties.length > 0" class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th class="sortable" (click)="toggleSort('title')">
+              {{ 'properties.col.property' | translate }}
+              <i *ngIf="sortBy === 'title'" class="ph sort-caret"
+                 [class.ph-caret-up]="sortDir === 'asc'" [class.ph-caret-down]="sortDir === 'desc'"></i>
+            </th>
+            <th class="hide-md">{{ 'properties.col.type' | translate }}</th>
+            <th class="sortable" (click)="toggleSort('price')">
+              {{ 'properties.col.price' | translate }}
+              <i *ngIf="sortBy === 'price'" class="ph sort-caret"
+                 [class.ph-caret-up]="sortDir === 'asc'" [class.ph-caret-down]="sortDir === 'desc'"></i>
+            </th>
+            <th class="hide-md">{{ 'properties.col.specs' | translate }}</th>
+            <th class="sortable" (click)="toggleSort('createdAt')">
+              {{ 'properties.col.daysOnMarket' | translate }}
+              <i *ngIf="sortBy === 'createdAt'" class="ph sort-caret"
+                 [class.ph-caret-up]="sortDir === 'asc'" [class.ph-caret-down]="sortDir === 'desc'"></i>
+            </th>
+            <th>{{ 'properties.col.status' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let property of properties; trackBy: trackById" [routerLink]="['/properties', property.id]">
+
+            <!-- Objekt: thumbnail + title + location -->
+            <td>
+              <div class="obj-cell">
+                <img *ngIf="getPrimaryImage(property)" [src]="getPrimaryImage(property)" [alt]="property.title" class="obj-thumb" />
+                <div *ngIf="!getPrimaryImage(property)" class="obj-thumb obj-thumb-empty">
+                  <i class="ph ph-image"></i>
+                </div>
+                <div style="min-width:0;">
+                  <div class="obj-title">{{ property.title }}</div>
+                  <div class="obj-loc">
+                    <i class="ph ph-map-pin" style="font-size:11px;"></i>
+                    <ng-container *ngIf="property.addressDistrict">{{ property.addressDistrict }}, </ng-container>{{ property.addressCity }}
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Typ · Vermarktung (plain text, no colored chips) -->
+            <td class="hide-md">
+              {{ property.propertyType | translateEnum:'propertyType' }}
+              <span style="color:var(--text-3);"> · {{ property.listingType | translateEnum:'listingType' }}</span>
+            </td>
+
+            <!-- Preis -->
+            <td style="font-weight:700;color:var(--text);white-space:nowrap;">
+              {{ propertyService.formatPrice(property.price, property.listingType) }}
+            </td>
+
+            <!-- Fläche / Zimmer -->
+            <td class="hide-md" style="white-space:nowrap;">{{ specsLabel(property) }}</td>
+
+            <!-- Tage am Markt -->
+            <td style="white-space:nowrap;">{{ daysOnMarketLabel(property) }}</td>
+
+            <!-- Status — the single colored badge -->
+            <td>
+              <span class="pill-status"
+                    [style.background]="getStatusBg(property.status)"
+                    [style.color]="getStatusColor(property.status)">
+                <span class="dot"></span>
+                {{ property.status | translateEnum:'propertyStatus' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="totalPages > 1"
+         style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:20px;">
+      <button (click)="previousPage()" [disabled]="currentPage === 0"
+              style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-2);font-size:13px;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"
+              [style.opacity]="currentPage === 0 ? '0.4' : '1'">
+        <i class="ph ph-arrow-left"></i> {{ 'common.previous' | translate }}
+      </button>
+      <span style="font-size:13px;color:var(--text-2);">{{ 'properties.showingPage' | translate:{ current: currentPage + 1, total: totalPages } }}</span>
+      <button (click)="nextPage()" [disabled]="currentPage >= totalPages - 1"
+              style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-2);font-size:13px;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"
+              [style.opacity]="currentPage >= totalPages - 1 ? '0.4' : '1'">
+        {{ 'common.next' | translate }} <i class="ph ph-arrow-right"></i>
+      </button>
+    </div>
+
+  </ng-container>
 
 </div>
