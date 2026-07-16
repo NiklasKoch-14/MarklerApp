@@ -17,15 +17,10 @@ export class ThemeService {
   }
 
   private getInitialTheme(): Theme {
-    // Check localStorage first
+    // Light is the product default (Design-Audit 2026-07); dark only on explicit user choice
     const storedTheme = localStorage.getItem(this.THEME_KEY) as Theme;
     if (storedTheme && (storedTheme === 'light' || storedTheme === 'dark')) {
       return storedTheme;
-    }
-
-    // Check system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
     }
 
     return 'light';

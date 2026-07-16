@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 
@@ -143,7 +144,9 @@ public class ViewingService {
         Agent agent = agentRepository.findById(agentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Agent not found: " + agentId));
 
-        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        // Viewing dates are stored as naive German-local timestamps; the server clock
+        // runs UTC (Docker/Railway), so "today" must be resolved in German time
+        LocalDateTime startOfDay = LocalDate.now(ZoneId.of("Europe/Berlin")).atStartOfDay();
         LocalDateTime endOfDay = startOfDay.plusDays(1);
 
         List<Viewing> viewings = viewingRepository.findByAgentAndViewingDateBetween(agent, startOfDay, endOfDay);

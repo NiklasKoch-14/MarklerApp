@@ -12,19 +12,23 @@ export const routes: Routes = [
       },
       {
         path: 'login',
-        loadComponent: () => import('./features/auth/login/login.component').then(c => c.LoginComponent)
+        loadComponent: () => import('./features/auth/login/login.component').then(c => c.LoginComponent),
+        title: 'pageTitles.login'
       },
       {
         path: 'register',
-        loadComponent: () => import('./features/auth/register/register.component').then(c => c.RegisterComponent)
+        loadComponent: () => import('./features/auth/register/register.component').then(c => c.RegisterComponent),
+        title: 'pageTitles.register'
       },
       {
         path: 'forgot-password',
-        loadComponent: () => import('./features/auth/forgot-password/forgot-password.component').then(c => c.ForgotPasswordComponent)
+        loadComponent: () => import('./features/auth/forgot-password/forgot-password.component').then(c => c.ForgotPasswordComponent),
+        title: 'pageTitles.forgotPassword'
       },
       {
         path: 'reset-password',
-        loadComponent: () => import('./features/auth/reset-password/reset-password.component').then(c => c.ResetPasswordComponent)
+        loadComponent: () => import('./features/auth/reset-password/reset-password.component').then(c => c.ResetPasswordComponent),
+        title: 'pageTitles.resetPassword'
       }
     ]
   },
@@ -40,11 +44,13 @@ export const routes: Routes = [
       },
       {
         path: 'dashboard',
-        loadComponent: () => import('./features/dashboard/dashboard.component').then(c => c.DashboardComponent)
+        loadComponent: () => import('./features/dashboard/dashboard.component').then(c => c.DashboardComponent),
+        title: 'pageTitles.dashboard'
       },
       {
         path: 'analytics',
-        loadComponent: () => import('./features/analytics/analytics.component').then(c => c.AnalyticsComponent)
+        loadComponent: () => import('./features/analytics/analytics.component').then(c => c.AnalyticsComponent),
+        title: 'pageTitles.analytics'
       },
       {
         path: 'clients',
@@ -56,11 +62,13 @@ export const routes: Routes = [
       },
       {
         path: 'notifications',
-        loadComponent: () => import('./features/notifications/notifications.component').then(c => c.NotificationsComponent)
+        loadComponent: () => import('./features/notifications/notifications.component').then(c => c.NotificationsComponent),
+        title: 'pageTitles.notifications'
       },
       {
         path: 'settings',
-        loadComponent: () => import('./features/settings/settings.component').then(c => c.SettingsComponent)
+        loadComponent: () => import('./features/settings/settings.component').then(c => c.SettingsComponent),
+        title: 'pageTitles.settings'
       }
     ]
   },

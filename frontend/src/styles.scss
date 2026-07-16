@@ -769,9 +769,9 @@
   align-items: start;
 }
 
-/* Only visible in the mobile bottom bar */
-.mobile-settings-link {
-  display: none;
+/* Desktop: pinned to the bottom of the nav column, above the user chip */
+.sidebar-settings-link {
+  margin-top: auto;
 }
 
 @media (max-width: 1024px) {
@@ -829,7 +829,7 @@
     text-overflow: ellipsis;
   }
 
-  .mobile-settings-link { display: flex; flex: 1; min-width: 0; }
+  .sidebar-settings-link { flex: 1; min-width: 0; margin-top: 0; }
 
   .page-content { padding: 16px 14px 32px; }
 

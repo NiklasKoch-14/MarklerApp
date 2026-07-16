@@ -74,9 +74,8 @@ interface NavItem {
                  (mousedown)="$event.preventDefault()"></i>
             </a>
           </div>
-          <!-- Settings entry — only shown in the mobile bottom bar (desktop reaches settings via the user chip) -->
           <a routerLink="/settings" routerLinkActive="active"
-             class="sidebar-nav-item mobile-settings-link">
+             class="sidebar-nav-item sidebar-settings-link">
             <i class="ph-fill ph-gear" style="font-size:19px; width:22px; text-align:center;"></i>
             <span style="flex:1; text-align:left;">{{ 'navigation.settings' | translate }}</span>
           </a>

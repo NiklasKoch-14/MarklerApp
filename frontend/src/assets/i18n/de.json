@@ -151,8 +151,26 @@
     "toggleTheme": "Design wechseln",
     "matching": "Matching",
     "analytics": "Analyse",
-    "settings": "Einstellungen",
     "notifications": "Benachrichtigungen"
+  },
+  "pageTitles": {
+    "dashboard": "Dashboard",
+    "analytics": "Analyse",
+    "notifications": "Benachrichtigungen",
+    "settings": "Einstellungen",
+    "clients": "Kunden",
+    "clientNew": "Neuer Kunde",
+    "clientDetail": "Kundendetails",
+    "clientEdit": "Kunde bearbeiten",
+    "properties": "Immobilien",
+    "propertyNew": "Neue Immobilie",
+    "propertySearch": "Immobiliensuche",
+    "propertyDetail": "Objektdetails",
+    "propertyEdit": "Immobilie bearbeiten",
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "forgotPassword": "Passwort vergessen",
+    "resetPassword": "Passwort zurücksetzen"
   },
   "analytics": {
     "title": "Analyse",

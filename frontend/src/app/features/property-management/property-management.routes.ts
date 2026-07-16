@@ -9,30 +9,30 @@ export const propertyRoutes: Routes = [
     path: '',
     loadComponent: () => import('./components/property-list/property-list.component')
       .then(c => c.PropertyListComponent),
-    title: 'Properties'
+    title: 'pageTitles.properties'
   },
   {
     path: 'new',
     loadComponent: () => import('./components/property-form/property-form.component')
       .then(c => c.PropertyFormComponent),
-    title: 'Create Property'
+    title: 'pageTitles.propertyNew'
   },
   {
     path: 'search',
     loadComponent: () => import('./components/property-search/property-search.component')
       .then(c => c.PropertySearchComponent),
-    title: 'Search Properties'
+    title: 'pageTitles.propertySearch'
   },
   {
     path: ':id',
     loadComponent: () => import('./components/property-detail/property-detail.component')
       .then(c => c.PropertyDetailComponent),
-    title: 'Property Details'
+    title: 'pageTitles.propertyDetail'
   },
   {
     path: ':id/edit',
     loadComponent: () => import('./components/property-form/property-form.component')
       .then(c => c.PropertyFormComponent),
-    title: 'Edit Property'
+    title: 'pageTitles.propertyEdit'
   }
 ];

@@ -151,8 +151,26 @@
     "toggleTheme": "Toggle theme",
     "matching": "Matching",
     "analytics": "Analytics",
-    "settings": "Settings",
     "notifications": "Notifications"
+  },
+  "pageTitles": {
+    "dashboard": "Dashboard",
+    "analytics": "Analytics",
+    "notifications": "Notifications",
+    "settings": "Settings",
+    "clients": "Clients",
+    "clientNew": "New Client",
+    "clientDetail": "Client Details",
+    "clientEdit": "Edit Client",
+    "properties": "Properties",
+    "propertyNew": "New Property",
+    "propertySearch": "Property Search",
+    "propertyDetail": "Property Details",
+    "propertyEdit": "Edit Property",
+    "login": "Sign In",
+    "register": "Register",
+    "forgotPassword": "Forgot Password",
+    "resetPassword": "Reset Password"
   },
   "analytics": {
     "title": "Analytics",
