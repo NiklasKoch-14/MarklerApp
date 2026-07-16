@@ -262,6 +262,36 @@
     "addClient": "Kunde hinzufügen",
     "addFirstClient": "Ersten Kunden hinzufügen",
     "noClientsFound": "Keine Kunden gefunden.",
+    "searchPlaceholder": "Name, E-Mail, Telefon, Ort …",
+    "allStages": "Alle Phasen",
+    "allTypes": "Alle Typen",
+    "resultCount": "{{count}} Kunden",
+    "noMatchingClients": "Keine Kunden passen zu den Filtern.",
+    "clearFilters": "Filter zurücksetzen",
+    "neverContacted": "Nie kontaktiert",
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "daysAgo": "vor {{days}} Tagen",
+    "col": {
+      "client": "Kunde",
+      "type": "Typ",
+      "searching": "Sucht",
+      "stage": "Phase",
+      "lastContact": "Zuletzt kontaktiert",
+      "consent": "DSGVO"
+    },
+    "stage": {
+      "PROSPECT": "Neu",
+      "ACTIVE_SEARCH": "Aktive Suche",
+      "VIEWING": "Besichtigung",
+      "CLOSED": "Abgeschlossen",
+      "none": "Keine Phase"
+    },
+    "type": {
+      "BUYER": "Käufer",
+      "RENTER": "Mieter",
+      "SELLER": "Verkäufer"
+    },
     "add": "Kunde hinzufügen",
     "edit": "Kunde bearbeiten",
     "view": "Kunde anzeigen",

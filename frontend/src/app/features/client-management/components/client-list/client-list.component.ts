@@ -1,36 +1,68 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
-import { ClientService, Client, PagedResponse, PipelineStage } from '../../services/client.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { ClientService, Client, PipelineStage, ClientType } from '../../services/client.service';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+
+type SortKey = 'name' | 'stage' | 'lastContact';
+type SortDir = 'asc' | 'desc';
 
 @Component({
   selector: 'app-client-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule, LoadingSpinnerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, LoadingSpinnerComponent],
   styles: [`
-    .client-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow); cursor:pointer; transition:box-shadow 0.15s, border-color 0.15s; display:flex; flex-direction:column; }
-    .client-card:hover { border-color:var(--primary); box-shadow:0 4px 16px rgba(20,40,45,0.12); }
+    .toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:16px; }
+    .search-box { position:relative; flex:1; min-width:220px; max-width:340px; }
+    .search-box input { width:100%; padding:9px 12px 9px 36px; border:1px solid var(--border); border-radius:10px; background:var(--surface); color:var(--text); font-size:14px; font-family:inherit; box-sizing:border-box; }
+    .search-box input:focus { outline:none; border-color:var(--primary); }
+    .search-box > i { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-3); font-size:16px; }
+    .seg { display:inline-flex; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:2px; gap:2px; }
+    .seg button { border:none; background:none; padding:6px 11px; border-radius:8px; font-size:13px; font-weight:600; color:var(--text-2); cursor:pointer; font-family:inherit; white-space:nowrap; }
+    .seg button.active { background:var(--surface); color:var(--text); box-shadow:var(--shadow); }
+    .type-select { padding:8px 12px; border:1px solid var(--border); border-radius:10px; background:var(--surface); color:var(--text); font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; }
+    .type-select:focus { outline:none; border-color:var(--primary); }
+    .result-count { font-size:13px; color:var(--text-3); margin-left:auto; white-space:nowrap; }
+
+    .table-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow); }
+    table.data { width:100%; border-collapse:separate; border-spacing:0; background:var(--surface); min-width:720px; }
+    table.data thead th { text-align:left; font-size:12px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:0.03em; padding:11px 14px; border-bottom:1px solid var(--border); background:var(--surface-2); white-space:nowrap; }
+    table.data th.sortable { cursor:pointer; user-select:none; }
+    table.data th.sortable:hover { color:var(--text); }
+    table.data th .sort-caret { font-size:11px; margin-left:3px; }
+    table.data tbody tr { cursor:pointer; transition:background 0.12s; }
+    table.data tbody tr:hover { background:var(--surface-2); }
+    table.data tbody td { padding:10px 14px; border-bottom:1px solid var(--border); font-size:13px; color:var(--text-2); vertical-align:middle; }
+    table.data tbody tr:last-child td { border-bottom:none; }
+    table.data tbody tr.overdue { background:color-mix(in srgb,#b23a55 3%,var(--surface)); }
+
+    .avatar { width:34px; height:34px; border-radius:50%; background:var(--primary); display:inline-flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; color:#fff; flex-shrink:0; letter-spacing:0.4px; }
+    .client-cell { display:flex; align-items:center; gap:11px; }
+    .client-name { font-weight:600; font-size:14px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .client-city { font-size:12px; color:var(--text-3); margin-top:1px; }
+    .truncate { max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    /* Pipeline stage — the ONLY color-coded badge in the row */
+    .pill-stage { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:20px; border:none; cursor:pointer; font-size:11px; font-weight:600; font-family:inherit; }
     .stage-opt:hover { background:var(--surface-2) !important; }
-    /* Card sections — padding lives here so the mobile media query can compact height */
-    .cc-avatar { width:42px; height:42px; }
-    .cc-head { padding:16px 16px 12px; }
-    .cc-body { padding:0 16px 12px; gap:7px; }
-    .cc-meta { padding:0 16px 10px; }
-    .cc-foot { padding:10px 16px; }
-    @media (max-width:640px) {
-      .cc-avatar { width:34px; height:34px; font-size:12px !important; }
-      .cc-head { padding:10px 13px 6px; }
-      .cc-body { padding:0 13px 6px; gap:3px; }
-      .cc-meta { padding:0 13px 6px; }
-      .cc-foot { padding:7px 13px; }
-    }
+
+    /* Last contact — muted by default, red only when overdue (actionable) */
+    .contact-cell { display:flex; align-items:center; gap:6px; white-space:nowrap; }
+    .contact-cell.od { color:#b23a55; font-weight:600; }
+
+    /* Consent — subtle icon, no colored pill (demoted per design audit) */
+    .consent-icon { font-size:17px; }
+    .consent-icon.ok { color:var(--text-3); }
+    .consent-icon.missing { color:var(--color-amber, #c98a00); }
+
+    @media (max-width:900px) { .hide-md { display:none !important; } }
   `],
   template: `
     <div style="padding:28px 32px;">
       <!-- Header -->
-      <div class="page-header" style="margin-bottom:24px;">
+      <div class="page-header" style="margin-bottom:20px;">
         <div>
           <h1 class="page-title">{{ 'clients.title' | translate }}</h1>
           <p style="font-size:14px; color:var(--text-2); margin-top:4px;">{{ 'clients.listDescription' | translate }}</p>
@@ -47,8 +79,8 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
         <p style="font-size:14px; color:var(--text-3);">{{ 'common.loading' | translate }}</p>
       </div>
 
-      <!-- Empty State -->
-      <div *ngIf="!isLoading && clients.length === 0"
+      <!-- Empty State (no clients at all) -->
+      <div *ngIf="!isLoading && allClients.length === 0"
         style="text-align:center; padding:56px 24px; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow);">
         <i class="ph ph-users" style="font-size:48px; color:var(--text-3); display:block; margin-bottom:12px;"></i>
         <h3 style="font-size:15px; font-weight:600; color:var(--text); margin:0 0 6px;">{{ 'clients.noClientsFound' | translate }}</h3>
@@ -59,104 +91,176 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
         </a>
       </div>
 
-      <!-- Card Grid -->
-      <div *ngIf="!isLoading && clients.length > 0" class="grid-3col">
-        <div *ngFor="let client of clients; trackBy: trackById"
-          [routerLink]="['/clients', client.id]"
-          class="client-card"
-          [style.border-color]="isOverdue(client) ? 'rgba(178,58,85,0.35)' : ''"
-          [style.background]="isOverdue(client) ? 'color-mix(in srgb,#b23a55 3%,var(--surface))' : ''">
-
-          <!-- Card Header: Avatar + Name + Chevron -->
-          <div class="cc-head" style="display:flex; align-items:center; gap:12px;">
-            <div class="cc-avatar" style="border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:#fff; flex-shrink:0; letter-spacing:0.5px;">
-              {{ getInitials(client) }}
-            </div>
-            <div style="flex:1; min-width:0; overflow:hidden;">
-              <div style="font-weight:700; font-size:14px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                {{ client.firstName }} {{ client.lastName }}
-              </div>
-              <div style="font-size:12px; color:var(--text-3); margin-top:1px;">{{ client.addressCity || '—' }}</div>
-            </div>
-            <i class="ph ph-caret-right" style="color:var(--text-3); font-size:16px; flex-shrink:0;"></i>
+      <!-- Toolbar + Table -->
+      <ng-container *ngIf="!isLoading && allClients.length > 0">
+        <div class="toolbar">
+          <div class="search-box">
+            <i class="ph ph-magnifying-glass"></i>
+            <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="applyView()"
+                   [placeholder]="'clients.searchPlaceholder' | translate" />
           </div>
 
-          <!-- Contact Info -->
-          <div class="cc-body" style="display:flex; flex-direction:column; flex:1;">
-            <div *ngIf="client.phone" style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);">
-              <i class="ph ph-phone" style="color:var(--text-3); font-size:14px; flex-shrink:0;"></i>
-              <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ client.phone }}</span>
-            </div>
-            <div *ngIf="client.email" style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);">
-              <i class="ph ph-envelope" style="color:var(--text-3); font-size:14px; flex-shrink:0;"></i>
-              <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ client.email }}</span>
-            </div>
-            <div *ngIf="client.searchCriteria || client.clientType" style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2);">
-              <i class="ph ph-magnifying-glass" style="color:var(--text-3); font-size:14px; flex-shrink:0;"></i>
-              <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ getSearchSummary(client) }}</span>
-            </div>
+          <div class="seg">
+            <button [class.active]="stageFilter === 'ALL'" (click)="setStageFilter('ALL')">
+              {{ 'clients.allStages' | translate }}
+            </button>
+            <button *ngFor="let s of stageOptions"
+                    [class.active]="stageFilter === s.value"
+                    (click)="setStageFilter(s.value)">
+              {{ s.labelKey | translate }}
+            </button>
           </div>
 
-          <!-- Last Contact -->
-          <div class="cc-meta" style="display:flex; align-items:center; gap:6px; font-size:12px;"
-               [style.color]="isOverdue(client) ? '#b23a55' : 'var(--text-3)'">
-            <i class="ph" [class.ph-clock]="!isOverdue(client)" [class.ph-warning]="isOverdue(client)" style="font-size:13px;"></i>
-            {{ lastContactLabel(client) }}
-          </div>
+          <select class="type-select" [(ngModel)]="typeFilter" (ngModelChange)="applyView()">
+            <option value="ALL">{{ 'clients.allTypes' | translate }}</option>
+            <option *ngFor="let t of typeOptions" [value]="t.value">{{ t.labelKey | translate }}</option>
+          </select>
 
-          <!-- Footer: Stage + DSGVO -->
-          <div class="cc-foot" style="border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:8px;">
-            <!-- Stage badge with dropdown -->
-            <div style="position:relative;" (click)="$event.stopPropagation(); $event.preventDefault()">
-              <button (click)="toggleStagePicker(client.id!, $event)"
-                      [style.background]="getStageBg(client.pipelineStage)"
-                      [style.color]="getStageColor(client.pipelineStage)"
-                      style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;border:none;cursor:pointer;font-size:11px;font-weight:600;">
-                {{ getStageLabel(client.pipelineStage) }}
-                <i class="ph ph-caret-down" style="font-size:10px;"></i>
-              </button>
-              <div *ngIf="activeStagePicker === client.id"
-                   style="position:absolute;bottom:100%;left:0;margin-bottom:4px;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);z-index:100;min-width:170px;overflow:hidden;">
-                <div *ngIf="activeStagePicker === client.id" (click)="activeStagePicker = null"
-                     style="position:fixed;inset:0;z-index:99;"></div>
-                <button *ngFor="let s of stageOptions"
-                        (click)="setStage(client.id!, s.value, $event)"
-                        class="stage-opt"
-                        style="width:100%;text-align:left;padding:8px 13px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:500;position:relative;z-index:100;"
-                        [style.color]="getStageColor(s.value)">
-                  {{ s.label }}
-                </button>
-              </div>
-            </div>
-            <span *ngIf="client.gdprConsentGiven"
-              style="display:flex; align-items:center; gap:4px; font-size:12px; font-weight:600; color:#1f8a5b;">
-              <i class="ph ph-shield-check"></i>
-              {{ 'clients.consent' | translate }}
-            </span>
-            <span *ngIf="!client.gdprConsentGiven"
-              style="display:flex; align-items:center; gap:4px; font-size:12px; font-weight:600; color:#b23a55;">
-              <i class="ph ph-shield-warning"></i>
-              {{ 'clients.gdprPending' | translate }}
-            </span>
-          </div>
+          <span class="result-count">{{ 'clients.resultCount' | translate:{ count: filtered.length } }}</span>
         </div>
-      </div>
+
+        <!-- No filter matches -->
+        <div *ngIf="filtered.length === 0"
+          style="text-align:center; padding:44px 24px; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow);">
+          <i class="ph ph-funnel" style="font-size:36px; color:var(--text-3); display:block; margin-bottom:10px;"></i>
+          <p style="font-size:14px; color:var(--text-2); margin:0 0 14px;">{{ 'clients.noMatchingClients' | translate }}</p>
+          <button (click)="clearFilters()" class="btn-secondary" style="display:inline-flex;">
+            {{ 'clients.clearFilters' | translate }}
+          </button>
+        </div>
+
+        <div *ngIf="filtered.length > 0" class="table-wrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th class="sortable" (click)="toggleSort('name')">
+                  {{ 'clients.col.client' | translate }}
+                  <i *ngIf="sortKey === 'name'" class="ph sort-caret"
+                     [class.ph-caret-up]="sortDir === 'asc'" [class.ph-caret-down]="sortDir === 'desc'"></i>
+                </th>
+                <th class="hide-md">{{ 'clients.col.type' | translate }}</th>
+                <th class="hide-md">{{ 'clients.col.searching' | translate }}</th>
+                <th class="sortable" (click)="toggleSort('stage')">
+                  {{ 'clients.col.stage' | translate }}
+                  <i *ngIf="sortKey === 'stage'" class="ph sort-caret"
+                     [class.ph-caret-up]="sortDir === 'asc'" [class.ph-caret-down]="sortDir === 'desc'"></i>
+                </th>
+                <th class="sortable" (click)="toggleSort('lastContact')">
+                  {{ 'clients.col.lastContact' | translate }}
+                  <i *ngIf="sortKey === 'lastContact'" class="ph sort-caret"
+                     [class.ph-caret-up]="sortDir === 'asc'" [class.ph-caret-down]="sortDir === 'desc'"></i>
+                </th>
+                <th style="text-align:center;">{{ 'clients.col.consent' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let client of filtered; trackBy: trackById"
+                  [routerLink]="['/clients', client.id]"
+                  [class.overdue]="isOverdue(client)">
+
+                <!-- Kunde -->
+                <td>
+                  <div class="client-cell">
+                    <div class="avatar">{{ getInitials(client) }}</div>
+                    <div style="min-width:0;">
+                      <div class="client-name">{{ client.firstName }} {{ client.lastName }}</div>
+                      <div class="client-city">{{ client.addressCity || '—' }}</div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Typ -->
+                <td class="hide-md">{{ client.clientType ? ('clients.type.' + client.clientType | translate) : '—' }}</td>
+
+                <!-- Sucht -->
+                <td class="hide-md"><div class="truncate">{{ getSearchSummary(client) }}</div></td>
+
+                <!-- Phase (inline stage picker, the only colored badge) -->
+                <td (click)="$event.stopPropagation(); $event.preventDefault()">
+                  <button class="pill-stage" (click)="toggleStagePicker(client.id!, $event)"
+                          [style.background]="getStageBg(client.pipelineStage)"
+                          [style.color]="getStageColor(client.pipelineStage)">
+                    {{ stageLabelKey(client.pipelineStage) | translate }}
+                    <i class="ph ph-caret-down" style="font-size:10px;"></i>
+                  </button>
+                </td>
+
+                <!-- Zuletzt kontaktiert -->
+                <td>
+                  <div class="contact-cell" [class.od]="isOverdue(client)">
+                    <i class="ph" [class.ph-clock]="!isOverdue(client)" [class.ph-warning]="isOverdue(client)" style="font-size:13px;"></i>
+                    {{ lastContactLabel(client) }}
+                  </div>
+                </td>
+
+                <!-- DSGVO — subtle icon only -->
+                <td style="text-align:center;">
+                  <i *ngIf="client.gdprConsentGiven" class="ph ph-shield-check consent-icon ok"
+                     [title]="'clients.consent' | translate"></i>
+                  <i *ngIf="!client.gdprConsentGiven" class="ph ph-shield-warning consent-icon missing"
+                     [title]="'clients.gdprPending' | translate"></i>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Stage picker overlay — fixed so it escapes the table's overflow clip -->
+        <ng-container *ngIf="activeStagePicker as pickerId">
+          <div (click)="activeStagePicker = null" style="position:fixed; inset:0; z-index:199;"></div>
+          <div style="position:fixed; z-index:200; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.16); min-width:170px; overflow:hidden;"
+               [style.top.px]="pickerTop" [style.left.px]="pickerLeft">
+            <button *ngFor="let s of stageOptions"
+                    (click)="setStage(pickerId, s.value, $event)"
+                    class="stage-opt"
+                    style="width:100%; text-align:left; padding:9px 13px; border:none; background:none; cursor:pointer; font-size:13px; font-weight:500;"
+                    [style.color]="getStageColor(s.value)">
+              {{ s.labelKey | translate }}
+            </button>
+          </div>
+        </ng-container>
+      </ng-container>
     </div>
   `
 })
 export class ClientListComponent implements OnInit {
-  clients: Client[] = [];
+  allClients: Client[] = [];
+  filtered: Client[] = [];
   isLoading = false;
   activeStagePicker: string | null = null;
+  pickerTop = 0;
+  pickerLeft = 0;
+
+  searchTerm = '';
+  stageFilter: PipelineStage | 'ALL' = 'ALL';
+  typeFilter: ClientType | 'ALL' = 'ALL';
+  sortKey: SortKey = 'lastContact';
+  sortDir: SortDir = 'desc';
 
   readonly stageOptions = [
-    { value: PipelineStage.PROSPECT,      label: 'Neu' },
-    { value: PipelineStage.ACTIVE_SEARCH, label: 'Aktiv' },
-    { value: PipelineStage.VIEWING,       label: 'Besichtigt' },
-    { value: PipelineStage.CLOSED,        label: 'Abgeschlossen' },
+    { value: PipelineStage.PROSPECT,      labelKey: 'clients.stage.PROSPECT' },
+    { value: PipelineStage.ACTIVE_SEARCH, labelKey: 'clients.stage.ACTIVE_SEARCH' },
+    { value: PipelineStage.VIEWING,       labelKey: 'clients.stage.VIEWING' },
+    { value: PipelineStage.CLOSED,        labelKey: 'clients.stage.CLOSED' },
   ];
 
-  constructor(private clientService: ClientService) {}
+  readonly typeOptions = [
+    { value: ClientType.BUYER,  labelKey: 'clients.type.BUYER' },
+    { value: ClientType.RENTER, labelKey: 'clients.type.RENTER' },
+    { value: ClientType.SELLER, labelKey: 'clients.type.SELLER' },
+  ];
+
+  private readonly stageOrder: Record<string, number> = {
+    [PipelineStage.PROSPECT]: 0,
+    [PipelineStage.ACTIVE_SEARCH]: 1,
+    [PipelineStage.VIEWING]: 2,
+    [PipelineStage.CLOSED]: 3,
+  };
+
+  constructor(
+    private clientService: ClientService,
+    private translate: TranslateService
+  ) {}
 
   ngOnInit(): void {
     this.loadClients();
@@ -166,7 +270,8 @@ export class ClientListComponent implements OnInit {
     this.isLoading = true;
     this.clientService.getSortedByLastContact().subscribe({
       next: (clients: Client[]) => {
-        this.clients = clients;
+        this.allClients = clients;
+        this.applyView();
         this.isLoading = false;
       },
       error: (error) => {
@@ -174,6 +279,63 @@ export class ClientListComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  applyView(): void {
+    const term = this.searchTerm.trim().toLowerCase();
+    let list = this.allClients.filter(c => {
+      if (this.stageFilter !== 'ALL' && c.pipelineStage !== this.stageFilter) return false;
+      if (this.typeFilter !== 'ALL' && c.clientType !== this.typeFilter) return false;
+      if (term) {
+        const hay = [c.firstName, c.lastName, c.email, c.phone, c.addressCity]
+          .filter(Boolean).join(' ').toLowerCase();
+        if (!hay.includes(term)) return false;
+      }
+      return true;
+    });
+
+    const dir = this.sortDir === 'asc' ? 1 : -1;
+    list = list.sort((a, b) => {
+      let cmp = 0;
+      switch (this.sortKey) {
+        case 'name':
+          cmp = (a.lastName + a.firstName).localeCompare(b.lastName + b.firstName, 'de');
+          break;
+        case 'stage':
+          cmp = (this.stageOrder[a.pipelineStage ?? ''] ?? -1) - (this.stageOrder[b.pipelineStage ?? ''] ?? -1);
+          break;
+        case 'lastContact':
+          // never-contacted (null) counts as most overdue
+          cmp = (this.daysSinceContact(a) ?? Number.MAX_SAFE_INTEGER) - (this.daysSinceContact(b) ?? Number.MAX_SAFE_INTEGER);
+          break;
+      }
+      return cmp * dir;
+    });
+
+    this.filtered = list;
+  }
+
+  setStageFilter(stage: PipelineStage | 'ALL'): void {
+    this.stageFilter = stage;
+    this.applyView();
+  }
+
+  toggleSort(key: SortKey): void {
+    if (this.sortKey === key) {
+      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortKey = key;
+      // sensible default direction per column
+      this.sortDir = key === 'name' ? 'asc' : 'desc';
+    }
+    this.applyView();
+  }
+
+  clearFilters(): void {
+    this.searchTerm = '';
+    this.stageFilter = 'ALL';
+    this.typeFilter = 'ALL';
+    this.applyView();
   }
 
   daysSinceContact(client: Client): number | null {
@@ -184,10 +346,10 @@ export class ClientListComponent implements OnInit {
 
   lastContactLabel(client: Client): string {
     const days = this.daysSinceContact(client);
-    if (days === null) return 'Noch nie kontaktiert';
-    if (days === 0) return 'Heute';
-    if (days === 1) return 'Gestern';
-    return `vor ${days} Tagen`;
+    if (days === null) return this.tr('clients.neverContacted');
+    if (days === 0) return this.tr('clients.today');
+    if (days === 1) return this.tr('clients.yesterday');
+    return this.tr('clients.daysAgo').replace('{{days}}', String(days));
   }
 
   isOverdue(client: Client): boolean {
@@ -205,9 +367,6 @@ export class ClientListComponent implements OnInit {
     const parts: string[] = [];
     const c = client.searchCriteria;
     if (c?.propertyTypes?.length) parts.push(c.propertyTypes[0]);
-    if (client.clientType === 'BUYER') parts.push('Kauf');
-    else if (client.clientType === 'RENTER') parts.push('Miete');
-    else if (client.clientType === 'SELLER') parts.push('Verkauf');
     if (c?.maxBudget) parts.push(new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(c.maxBudget));
     return parts.join(' · ') || '—';
   }
@@ -215,17 +374,30 @@ export class ClientListComponent implements OnInit {
   toggleStagePicker(clientId: string, event: MouseEvent): void {
     event.stopPropagation();
     event.preventDefault();
-    this.activeStagePicker = this.activeStagePicker === clientId ? null : clientId;
+    if (this.activeStagePicker === clientId) {
+      this.activeStagePicker = null;
+      return;
+    }
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    // Flip upward if there isn't room below (dropdown ≈ 4 rows)
+    const estimatedHeight = 180;
+    this.pickerTop = rect.bottom + estimatedHeight > window.innerHeight
+      ? rect.top - estimatedHeight - 4
+      : rect.bottom + 4;
+    this.pickerLeft = rect.left;
+    this.activeStagePicker = clientId;
   }
 
   setStage(clientId: string, stage: PipelineStage, event: MouseEvent): void {
     event.stopPropagation();
     event.preventDefault();
     this.activeStagePicker = null;
-    const client = this.clients.find(c => c.id === clientId);
+    const client = this.allClients.find(c => c.id === clientId);
+    const previous = client?.pipelineStage;
     if (client) client.pipelineStage = stage;
+    this.applyView();
     this.clientService.updatePipelineStage(clientId, stage).subscribe({
-      error: () => { if (client) client.pipelineStage = undefined; }
+      error: () => { if (client) { client.pipelineStage = previous; this.applyView(); } }
     });
   }
 
@@ -249,11 +421,16 @@ export class ClientListComponent implements OnInit {
     }
   }
 
-  getStageLabel(stage?: PipelineStage): string {
-    return this.stageOptions.find(s => s.value === stage)?.label ?? 'Kein Stage';
+  stageLabelKey(stage?: PipelineStage): string {
+    return this.stageOptions.find(s => s.value === stage)?.labelKey ?? 'clients.stage.none';
   }
 
   trackById(index: number, item: Client): string | undefined {
     return item.id;
+  }
+
+  /** Synchronous translation lookup for values used in string composition. */
+  private tr(key: string): string {
+    return this.translate.instant(key);
   }
 }

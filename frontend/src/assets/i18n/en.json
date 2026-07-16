@@ -262,6 +262,36 @@
     "addClient": "Add Client",
     "addFirstClient": "Add your first client",
     "noClientsFound": "No clients found.",
+    "searchPlaceholder": "Name, email, phone, city …",
+    "allStages": "All stages",
+    "allTypes": "All types",
+    "resultCount": "{{count}} clients",
+    "noMatchingClients": "No clients match the filters.",
+    "clearFilters": "Clear filters",
+    "neverContacted": "Never contacted",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "{{days}} days ago",
+    "col": {
+      "client": "Client",
+      "type": "Type",
+      "searching": "Looking for",
+      "stage": "Stage",
+      "lastContact": "Last contact",
+      "consent": "GDPR"
+    },
+    "stage": {
+      "PROSPECT": "New",
+      "ACTIVE_SEARCH": "Active search",
+      "VIEWING": "Viewing",
+      "CLOSED": "Closed",
+      "none": "No stage"
+    },
+    "type": {
+      "BUYER": "Buyer",
+      "RENTER": "Renter",
+      "SELLER": "Seller"
+    },
     "add": "Add Client",
     "edit": "Edit Client",
     "view": "View Client",
