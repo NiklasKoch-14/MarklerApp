@@ -87,6 +87,18 @@ export class AuthService {
   }
 
   /**
+   * Sign in with a Google ID token obtained from Google Identity Services
+   */
+  loginWithGoogle(idToken: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/google`, { idToken })
+      .pipe(
+        tap(response => {
+          this.setAuthState(response.accessToken, response.agent);
+        })
+      );
+  }
+
+  /**
    * Register new user
    */
   register(userData: RegisterRequest): Observable<AuthResponse> {

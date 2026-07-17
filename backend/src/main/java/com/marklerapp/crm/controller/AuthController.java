@@ -3,11 +3,13 @@ package com.marklerapp.crm.controller;
 import com.marklerapp.crm.dto.AuthRequest;
 import com.marklerapp.crm.dto.AuthResponse;
 import com.marklerapp.crm.dto.ForgotPasswordRequest;
+import com.marklerapp.crm.dto.GoogleAuthRequest;
 import com.marklerapp.crm.dto.RegisterRequest;
 import com.marklerapp.crm.dto.ResetPasswordRequest;
 import com.marklerapp.crm.dto.VerifyResetTokenResponse;
 import com.marklerapp.crm.security.CustomUserDetails;
 import com.marklerapp.crm.service.AuthService;
+import com.marklerapp.crm.service.GoogleTokenVerifier;
 import com.marklerapp.crm.service.PasswordResetService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,6 +18,7 @@ import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +37,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final PasswordResetService passwordResetService;
+    private final GoogleTokenVerifier googleTokenVerifier;
 
     /**
      * User login
@@ -61,6 +65,26 @@ public class AuthController {
         log.info("Registration attempt for email: {}", registerRequest.getEmail());
 
         AuthResponse response = authService.register(registerRequest);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Google Sign-In
+     */
+    @PostMapping("/google")
+    @Operation(summary = "Google sign-in", description = "Authenticate with a Google ID token and return JWT token")
+    public ResponseEntity<AuthResponse> loginWithGoogle(
+            @Parameter(description = "Google ID token") @Valid @RequestBody GoogleAuthRequest request) {
+
+        if (!googleTokenVerifier.isEnabled()) {
+            log.warn("Google sign-in attempted but GOOGLE_CLIENT_ID is not configured");
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+        }
+
+        log.info("Google sign-in attempt");
+
+        AuthResponse response = authService.loginWithGoogle(request.getIdToken());
 
         return ResponseEntity.ok(response);
     }

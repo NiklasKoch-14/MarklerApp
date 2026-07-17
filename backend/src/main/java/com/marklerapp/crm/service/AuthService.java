@@ -10,6 +10,7 @@ import com.marklerapp.crm.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -32,6 +34,7 @@ public class AuthService {
     private final AgentRepository agentRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final GoogleTokenVerifier googleTokenVerifier;
 
     /**
      * Authenticate user and generate JWT token
@@ -103,6 +106,102 @@ public class AuthService {
                 .expiresIn(86400) // 24 hours
                 .agent(savedAgent)
                 .build();
+    }
+
+    /**
+     * Authenticate via a Google ID token, provisioning or linking the account as needed.
+     */
+    @Transactional
+    public AuthResponse loginWithGoogle(String idToken) {
+        GoogleTokenVerifier.GoogleUserInfo googleUser = googleTokenVerifier.verify(idToken);
+
+        Agent agent = agentRepository.findByGoogleSub(googleUser.sub())
+                .or(() -> linkExistingAccount(googleUser))
+                .orElseGet(() -> provisionAccount(googleUser));
+
+        if (!agent.isActive()) {
+            log.warn("Google sign-in rejected for inactive account: {}", agent.getEmail());
+            throw new BadCredentialsException("Google sign-in failed");
+        }
+
+        List<String> authorities = List.of("ROLE_AGENT");
+        String jwt = jwtUtil.generateToken(agent.getEmail(), authorities);
+
+        log.info("User {} authenticated via Google", agent.getEmail());
+
+        return AuthResponse.builder()
+                .accessToken(jwt)
+                .tokenType("Bearer")
+                .expiresIn(86400) // 24 hours
+                .agent(agent)
+                .build();
+    }
+
+    /**
+     * Attach the Google identity to a pre-existing password account with the same email,
+     * so the agent can subsequently use either sign-in method.
+     */
+    private Optional<Agent> linkExistingAccount(GoogleTokenVerifier.GoogleUserInfo googleUser) {
+        return agentRepository.findByEmail(googleUser.email())
+                .map(existing -> {
+                    existing.setGoogleSub(googleUser.sub());
+                    log.info("Linked Google identity to existing account: {}", existing.getEmail());
+                    return agentRepository.save(existing);
+                });
+    }
+
+    /**
+     * TODO Phase 5: registration will hang off organization/plan onboarding — auto-provisioning
+     * has to move into that flow rather than silently creating an agent here.
+     */
+    private Agent provisionAccount(GoogleTokenVerifier.GoogleUserInfo googleUser) {
+        Agent agent = Agent.builder()
+                .email(googleUser.email())
+                .firstName(resolveFirstName(googleUser))
+                .lastName(resolveLastName(googleUser))
+                .googleSub(googleUser.sub())
+                .passwordHash(null)
+                .isActive(true)
+                .build();
+
+        log.info("Provisioned new account from Google sign-in: {}", googleUser.email());
+
+        return agentRepository.save(agent);
+    }
+
+    // Only sub and email are guaranteed in a Google ID token — given_name/family_name are
+    // absent for some account types, so both fall back to the email local part rather than
+    // inventing a name. firstName/lastName are NOT NULL with a 2-char minimum.
+    private String resolveFirstName(GoogleTokenVerifier.GoogleUserInfo googleUser) {
+        if (isPresent(googleUser.firstName())) {
+            return googleUser.firstName();
+        }
+        if (isPresent(googleUser.fullName())) {
+            return googleUser.fullName().trim().split("\\s+")[0];
+        }
+        return emailLocalPart(googleUser.email());
+    }
+
+    private String resolveLastName(GoogleTokenVerifier.GoogleUserInfo googleUser) {
+        if (isPresent(googleUser.lastName())) {
+            return googleUser.lastName();
+        }
+        if (isPresent(googleUser.fullName())) {
+            String[] parts = googleUser.fullName().trim().split("\\s+", 2);
+            if (parts.length == 2) {
+                return parts[1];
+            }
+        }
+        return emailLocalPart(googleUser.email());
+    }
+
+    private String emailLocalPart(String email) {
+        int at = email.indexOf('@');
+        return at > 0 ? email.substring(0, at) : email;
+    }
+
+    private boolean isPresent(String value) {
+        return value != null && !value.isBlank();
     }
 
     /**

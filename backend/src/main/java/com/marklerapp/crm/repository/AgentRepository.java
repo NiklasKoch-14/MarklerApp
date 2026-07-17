@@ -26,6 +26,11 @@ public interface AgentRepository extends JpaRepository<Agent, UUID> {
     boolean existsByEmail(String email);
 
     /**
+     * Find agent by Google subject identifier
+     */
+    Optional<Agent> findByGoogleSub(String googleSub);
+
+    /**
      * Find active agent by email
      */
     @Query("SELECT a FROM Agent a WHERE a.email = :email AND a.isActive = true")

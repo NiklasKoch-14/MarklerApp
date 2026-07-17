@@ -33,6 +33,8 @@ services:
       JWT_SECRET: ${JWT_SECRET:-dev_secret_key_for_development_only}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200}
       FILE_UPLOAD_DIR: ${FILE_UPLOAD_DIR:-/app/uploads}
+      # Google Sign-In - set in .env to enable; must match frontend environment.ts googleClientId
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       # Email - Set SPRING_MAIL_USERNAME and SPRING_MAIL_PASSWORD to enable
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}

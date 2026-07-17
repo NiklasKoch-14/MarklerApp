@@ -42,9 +42,13 @@ public class Agent extends BaseEntity {
     @Builder.Default
     private LanguagePreference languagePreference = LanguagePreference.DE;
 
-    @Column(name = "password_hash", nullable = false)
-    @NotBlank(message = "Password hash is required")
+    /** Null for accounts that authenticate exclusively through Google. */
+    @Column(name = "password_hash")
     private String passwordHash;
+
+    /** Google's stable subject identifier; null for password-only accounts. */
+    @Column(name = "google_sub", unique = true)
+    private String googleSub;
 
     @Column(name = "is_active")
     @Builder.Default

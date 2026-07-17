@@ -57,6 +57,16 @@ SPRING_PROFILES_ACTIVE=prod
 JAVA_OPTS=-Xmx400m -Xms200m -XX:+UseG1GC
 ```
 
+Optional — Google Sign-In (`/auth/google` returns 503 while unset):
+
+```
+GOOGLE_CLIENT_ID=<OAuth Client ID from Google Cloud Console>
+```
+
+Must match `googleClientId` in `frontend/src/environments/environment.prod.ts`, and the
+frontend's domain must be listed under the OAuth client's *Authorized JavaScript origins*.
+The Client ID is not a secret — it ships in the frontend bundle by design.
+
 ### Supabase Connection — Critical Facts
 
 - **Direct DB host** (`db.kewmoozwpuqzaekjvamg.supabase.co:5432`) is **IPv6-only** → Railway can't reach it.

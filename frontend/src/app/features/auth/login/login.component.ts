@@ -1,11 +1,12 @@
-import { Component, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, AfterViewInit, ElementRef, NgZone, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { catchError, of } from 'rxjs';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -21,6 +22,10 @@ import { LoadingSpinnerComponent } from '../../../shared/components/loading-spin
     .auth-btn:disabled { opacity:0.55; cursor:not-allowed; }
     .auth-link { color:var(--primary); font-size:13px; font-weight:600; text-decoration:none; }
     .auth-link:hover { text-decoration:underline; }
+    .auth-divider { display:flex; align-items:center; gap:12px; margin:18px 0; }
+    .auth-divider::before, .auth-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+    .auth-divider span { font-size:12px; color:var(--text-3); }
+    .google-btn-host { display:flex; justify-content:center; min-height:44px; }
   `],
   template: `
     <div class="auth-page">
@@ -65,28 +70,39 @@ import { LoadingSpinnerComponent } from '../../../shared/components/loading-spin
             {{ isLoading ? ('auth.login.signingIn' | translate) : ('auth.login.signInButton' | translate) }}
           </button>
 
-          <p style="text-align:center;font-size:13px;color:var(--text-3);margin:4px 0 0;">
-            {{ 'auth.login.noAccount' | translate }}
-            <a routerLink="/auth/register" class="auth-link">{{ 'auth.login.signUp' | translate }}</a>
-          </p>
-
         </form>
+
+        <!-- Google Sign-In (hidden when no client ID is configured) -->
+        <ng-container *ngIf="googleEnabled">
+          <div class="auth-divider"><span>{{ 'auth.login.or' | translate }}</span></div>
+          <div class="google-btn-host"><div #googleBtn></div></div>
+        </ng-container>
+
+        <p style="text-align:center;font-size:13px;color:var(--text-3);margin:18px 0 0;">
+          {{ 'auth.login.noAccount' | translate }}
+          <a routerLink="/auth/register" class="auth-link">{{ 'auth.login.signUp' | translate }}</a>
+        </p>
+
       </div>
     </div>
   `
 })
 export class LoginComponent implements AfterViewInit {
   @ViewChild('emailInput') emailInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('googleBtn') googleBtn?: ElementRef<HTMLDivElement>;
 
   loginForm: FormGroup;
   isLoading = false;
   errorMessage = '';
+  readonly googleEnabled = !!environment.googleClientId;
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private zone: NgZone,
+    private translate: TranslateService
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -96,6 +112,61 @@ export class LoginComponent implements AfterViewInit {
 
   ngAfterViewInit(): void {
     this.emailInput.nativeElement.focus();
+    if (this.googleEnabled) {
+      this.renderGoogleButton();
+    }
+  }
+
+  /**
+   * The GIS script loads async, so retry briefly until it registers its global.
+   */
+  private renderGoogleButton(retries = 20): void {
+    const gis = (window as any).google?.accounts?.id;
+
+    if (!gis || !this.googleBtn) {
+      if (retries > 0) {
+        setTimeout(() => this.renderGoogleButton(retries - 1), 100);
+      } else {
+        console.warn('Google Identity Services failed to load — sign-in button unavailable');
+      }
+      return;
+    }
+
+    gis.initialize({
+      client_id: environment.googleClientId,
+      callback: (response: { credential: string }) => this.onGoogleCredential(response.credential)
+    });
+
+    gis.renderButton(this.googleBtn.nativeElement, {
+      theme: 'outline',
+      size: 'large',
+      shape: 'rectangular',
+      text: 'signin_with',
+      width: 336,
+      locale: this.translate.currentLang || 'de'
+    });
+  }
+
+  /** GIS invokes its callback outside Angular's zone, so re-enter it for change detection. */
+  private onGoogleCredential(idToken: string): void {
+    this.zone.run(() => {
+      this.isLoading = true;
+      this.errorMessage = '';
+
+      this.authService.loginWithGoogle(idToken).pipe(
+        catchError(() => {
+          this.errorMessage = this.translate.instant('auth.login.googleFailed');
+          this.isLoading = false;
+          return of(null);
+        })
+      ).subscribe(response => {
+        if (response) {
+          this.isLoading = false;
+          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+          this.router.navigateByUrl(returnUrl);
+        }
+      });
+    });
   }
 
   onSubmit(): void {

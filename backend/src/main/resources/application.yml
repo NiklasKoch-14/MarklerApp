@@ -110,6 +110,11 @@ anthropic:
   model: claude-haiku-4-5
   max-tokens: 1024
 
+# Google Sign-In (disabled when client-id is unset).
+# Not a secret: the same value is embedded in the frontend bundle.
+google:
+  client-id: ${GOOGLE_CLIENT_ID:}
+
 # File Storage Configuration
 app:
   file-storage:
