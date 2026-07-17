@@ -4,6 +4,7 @@ import { RouterOutlet } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from './core/auth/auth.service';
 import { ThemeService } from './core/services/theme.service';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -36,19 +37,21 @@ export class AppComponent implements OnInit {
   }
 
   private initializeLanguage(): void {
-    // Set default language
-    this.translate.setDefaultLang('en');
+    const supported = ['de', 'en'];
 
-    // Get stored language preference or detect browser language
+    this.translate.setDefaultLang(environment.defaultLanguage);
+
+    // Explicit choice wins over the browser; an unsupported browser locale falls
+    // back to the app default rather than to English.
     const storedLanguage = localStorage.getItem('app-language');
     const browserLanguage = this.translate.getBrowserLang();
 
-    let languageToUse = 'en'; // Default fallback
+    let languageToUse: string = environment.defaultLanguage;
 
-    if (storedLanguage && (storedLanguage === 'en' || storedLanguage === 'de')) {
+    if (storedLanguage && supported.includes(storedLanguage)) {
       languageToUse = storedLanguage;
-    } else if (browserLanguage === 'de') {
-      languageToUse = 'de';
+    } else if (browserLanguage && supported.includes(browserLanguage)) {
+      languageToUse = browserLanguage;
     }
 
     this.translate.use(languageToUse);
