@@ -181,6 +181,8 @@ public class AgentService {
                 .isActive(agent.isActive())
                 .createdAt(agent.getCreatedAt())
                 .updatedAt(agent.getUpdatedAt())
+                .googleLinked(agent.getGoogleSub() != null)
+                .passwordSet(agent.getPasswordHash() != null)
                 .build();
     }
 }

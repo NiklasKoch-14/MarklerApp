@@ -28,6 +28,12 @@ public class AgentDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    /** Account can sign in through Google. */
+    private boolean googleLinked;
+
+    /** Account has a password of its own; false for Google-only accounts. */
+    private boolean passwordSet;
+
     /**
      * Get full name
      */

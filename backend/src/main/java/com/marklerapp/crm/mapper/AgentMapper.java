@@ -41,6 +41,8 @@ public interface AgentMapper {
      * @return the agent DTO
      */
     @Mapping(target = "fullName", ignore = true)
+    @Mapping(target = "googleLinked", expression = "java(agent.getGoogleSub() != null)")
+    @Mapping(target = "passwordSet", expression = "java(agent.getPasswordHash() != null)")
     @BeanMapping(builder = @Builder(disableBuilder = true))
     AgentDto toDto(Agent agent);
 
@@ -53,6 +55,7 @@ public interface AgentMapper {
      */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "passwordHash", ignore = true)
+    @Mapping(target = "googleSub", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @BeanMapping(builder = @Builder(disableBuilder = true))
