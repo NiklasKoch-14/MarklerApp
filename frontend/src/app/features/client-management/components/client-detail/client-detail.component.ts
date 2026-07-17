@@ -50,7 +50,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
             <!-- Back arrow -->
             <a routerLink="/clients"
                style="width:34px;height:34px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-3);text-decoration:none;flex-shrink:0;margin-top:8px;">
-              <i class="ph ph-arrow-left" style="font-size:16px;"></i>
+              <i class="ri-arrow-left-line" style="font-size:16px;"></i>
             </a>
 
             <!-- Name + contact + stage -->
@@ -62,17 +62,17 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
               <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
                 <a *ngIf="client.phone" [href]="'tel:' + client.phone"
                    style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text-2);text-decoration:none;">
-                  <i class="ph ph-phone" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
+                  <i class="ri-phone-line" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
                   {{ client.phone }}
                 </a>
                 <a *ngIf="client.email" [href]="'mailto:' + client.email"
                    style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text-2);text-decoration:none;">
-                  <i class="ph ph-envelope" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
+                  <i class="ri-mail-line" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
                   {{ client.email }}
                 </a>
                 <span *ngIf="client.addressCity"
                       style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text-2);">
-                  <i class="ph ph-map-pin" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
+                  <i class="ri-map-pin-line" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
                   <span>{{ client.addressStreet ? client.addressStreet + ', ' : '' }}{{ client.addressCity }}</span>
                 </span>
               </div>
@@ -84,7 +84,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
                           [style.color]="getStageColor(client.pipelineStage)"
                           style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;">
                     {{ getStageLabel(client.pipelineStage) }}
-                    <i class="ph ph-caret-down" style="font-size:11px;"></i>
+                    <i class="ri-arrow-down-s-line" style="font-size:11px;"></i>
                   </button>
                   <div *ngIf="stageDropdownOpen" (click)="stageDropdownOpen = false"
                        style="position:fixed;inset:0;z-index:99;"></div>
@@ -100,7 +100,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
                 </div>
                 <span *ngIf="callNotesSummary?.lastCallDate"
                       style="font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:4px;">
-                  <i class="ph ph-clock" style="font-size:12px;"></i>
+                  <i class="ri-time-line" style="font-size:12px;"></i>
                   Letzter Kontakt {{ callNotesSummary!.lastCallDate | date:'dd.MM.yy' }}
                 </span>
                 <span *ngIf="!callNotesSummary?.lastCallDate"
@@ -114,7 +114,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
               <button *ngIf="(callNotesSummary?.pendingFollowUps || 0) > 0"
                       (click)="showFollowUpPanel = !showFollowUpPanel; showQuickNoteForm = false"
                       style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--color-amber);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;position:relative;">
-                <i class="ph-bold ph-bell-ringing" style="font-size:14px;"></i>
+                <i class="ri-notification-fill" style="font-size:14px;"></i>
                 Follow-up
                 <span style="background:rgba(0,0,0,.2);border-radius:8px;font-size:11px;padding:1px 6px;line-height:1.4;">{{ callNotesSummary!.pendingFollowUps }}</span>
               </button>
@@ -122,14 +122,14 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
               <!-- Neue Notiz -->
               <button (click)="showQuickNoteForm = !showQuickNoteForm; showFollowUpPanel = false"
                       style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">
-                <i class="ph-bold ph-note-pencil" style="font-size:14px;"></i>
+                <i class="ri-edit-2-fill" style="font-size:14px;"></i>
                 + Neue Notiz
               </button>
 
               <!-- Bearbeiten -->
               <a [routerLink]="['/clients', client.id, 'edit']"
                  style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;">
-                <i class="ph ph-pencil-simple" style="font-size:14px;"></i>
+                <i class="ri-pencil-line" style="font-size:14px;"></i>
                 Bearbeiten
               </a>
 
@@ -138,19 +138,19 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
                 <button (click)="showQuickMenu = !showQuickMenu"
                         style="width:38px;height:38px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);"
                         title="Weitere Aktionen">
-                  <i class="ph ph-dots-three" style="font-size:20px;"></i>
+                  <i class="ri-more-line" style="font-size:20px;"></i>
                 </button>
                 <div *ngIf="showQuickMenu" (click)="showQuickMenu = false"
                      style="position:fixed;inset:0;z-index:199;"></div>
                 <div *ngIf="showQuickMenu"
                      style="position:absolute;top:calc(100% + 6px);right:0;min-width:210px;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.14);z-index:200;overflow:hidden;">
                   <button class="qm-item" (click)="showAttachmentsDialog = true; showQuickMenu = false">
-                    <i class="ph ph-paperclip" style="font-size:16px;color:var(--text-3);"></i>
+                    <i class="ri-attachment-line" style="font-size:16px;color:var(--text-3);"></i>
                     Dokumente &amp; Anhänge
                   </button>
                   <div style="height:1px;background:var(--border);margin:4px 0;"></div>
                   <button class="qm-item danger" (click)="deleteClient(); showQuickMenu = false" [disabled]="isDeleting">
-                    <i class="ph ph-trash" style="font-size:16px;"></i>
+                    <i class="ri-delete-bin-line" style="font-size:16px;"></i>
                     {{ isDeleting ? 'Wird gelöscht…' : 'Kunde löschen' }}
                   </button>
                 </div>
@@ -165,25 +165,25 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
         <div *ngIf="showQuickNoteForm" class="detail-modal-card"
              style="background:var(--surface);border:2px solid var(--primary);border-radius:14px;padding:20px 24px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
-            <i class="ph-fill ph-note-pencil" style="font-size:16px;color:var(--primary);"></i>
+            <i class="ri-edit-2-fill" style="font-size:16px;color:var(--primary);"></i>
             <span style="font-size:14px;font-weight:700;color:var(--text);">Gesprächsnotiz</span>
             <div style="flex:1;"></div>
             <button *ngIf="voiceSupported" (click)="toggleVoiceRecording()" [disabled]="isParsingVoice"
                     [style.background]="isRecording ? 'var(--color-error)' : 'var(--accent-soft)'"
                     [style.color]="isRecording ? '#fff' : 'var(--primary)'"
                     style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">
-              <i [class]="isRecording ? 'ph-fill ph-stop-circle' : 'ph-fill ph-microphone'" style="font-size:14px;"></i>
+              <i [class]="isRecording ? 'ri-stop-circle-fill' : 'ri-mic-fill'" style="font-size:14px;"></i>
               {{ (isRecording ? 'callNotes.voice.stop' : 'callNotes.voice.start') | translate }}
             </button>
             <button (click)="showQuickNoteForm = false"
                     style="background:none;border:none;cursor:pointer;color:var(--text-3);font-size:18px;line-height:1;">
-              <i class="ph ph-x"></i>
+              <i class="ri-close-line"></i>
             </button>
           </div>
           <div *ngIf="isRecording || isParsingVoice"
                style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:9px 12px;border-radius:8px;background:var(--accent-soft);">
             <span *ngIf="isRecording" class="rec-dot"></span>
-            <i *ngIf="isParsingVoice" class="ph-fill ph-sparkle" style="font-size:13px;color:var(--primary);"></i>
+            <i *ngIf="isParsingVoice" class="ri-sparkling-fill" style="font-size:13px;color:var(--primary);"></i>
             <span style="font-size:12px;font-weight:600;color:var(--primary);">
               {{ (isRecording ? 'callNotes.voice.listening' : 'callNotes.voice.structuring') | translate }}
             </span>
@@ -220,19 +220,19 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
             </select>
             <div *ngIf="quickNoteFollowUpRequired"
                  style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:var(--color-amber-soft);border-radius:8px;">
-              <i class="ph-fill ph-bell-ringing" style="font-size:13px;color:var(--color-amber);"></i>
+              <i class="ri-notification-fill" style="font-size:13px;color:var(--color-amber);"></i>
               <span style="font-size:12px;font-weight:600;color:var(--color-amber);">{{ 'callNotes.voice.followUpDetected' | translate }}</span>
               <input type="date" [(ngModel)]="quickNoteFollowUpDate"
                      style="border:none;background:none;font-size:12px;color:var(--color-amber);font-weight:600;font-family:inherit;outline:none;cursor:pointer;">
               <button (click)="quickNoteFollowUpRequired = false; quickNoteFollowUpDate = ''"
                       style="background:none;border:none;cursor:pointer;color:var(--color-amber);padding:0;line-height:1;">
-                <i class="ph ph-x" style="font-size:12px;"></i>
+                <i class="ri-close-line" style="font-size:12px;"></i>
               </button>
             </div>
             <button (click)="saveQuickNote()" [disabled]="isSavingNote || isParsingVoice || !quickNoteText.trim()"
                     style="padding:9px 20px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;"
                     [style.opacity]="(isSavingNote || isParsingVoice || !quickNoteText.trim()) ? '0.45' : '1'">
-              <i class="ph ph-check" style="margin-right:5px;"></i>
+              <i class="ri-check-line" style="margin-right:5px;"></i>
               {{ isSavingNote ? 'Speichern…' : 'Notiz speichern' }}
             </button>
           </div>
@@ -243,14 +243,14 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
         <div *ngIf="showFollowUpPanel" class="detail-modal-card"
              style="background:var(--surface);border:2px solid var(--color-amber);border-radius:14px;padding:20px 24px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-            <i class="ph-fill ph-bell-ringing" style="font-size:16px;color:var(--color-amber);"></i>
+            <i class="ri-notification-fill" style="font-size:16px;color:var(--color-amber);"></i>
             <span style="font-size:14px;font-weight:700;color:var(--text);">Follow-up abschließen</span>
             <span style="font-size:12px;font-weight:600;color:var(--color-amber);background:var(--color-amber-soft);padding:2px 8px;border-radius:10px;">
               {{ callNotesSummary?.pendingFollowUps }} offen
             </span>
             <button (click)="showFollowUpPanel = false"
                     style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text-3);font-size:18px;line-height:1;">
-              <i class="ph ph-x"></i>
+              <i class="ri-close-line"></i>
             </button>
           </div>
           <div *ngIf="callNotesSummary?.mostRecentSubject"
@@ -295,7 +295,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
             <button (click)="saveFollowUp()" [disabled]="isSavingNote || !quickNoteText.trim()"
                     style="padding:9px 20px;background:var(--color-amber);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;"
                     [style.opacity]="(isSavingNote || !quickNoteText.trim()) ? '0.45' : '1'">
-              <i class="ph ph-check" style="margin-right:5px;"></i>
+              <i class="ri-check-line" style="margin-right:5px;"></i>
               {{ isSavingNote ? 'Speichern…' : 'Follow-up erledigt · Notiz speichern' }}
             </button>
           </div>
@@ -320,7 +320,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
             <!-- Besichtigungen -->
             <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-                <i class="ph-fill ph-door-open" style="font-size:17px;color:var(--color-purple);"></i>
+                <i class="ri-door-open-fill" style="font-size:17px;color:var(--color-purple);"></i>
                 <span style="font-size:15px;font-weight:700;color:var(--text);flex:1;">Besichtigungen</span>
                 <span *ngIf="viewings.length > 0"
                       style="font-size:12px;font-weight:700;color:var(--color-purple);background:var(--color-purple-soft);padding:2px 8px;border-radius:10px;">
@@ -328,7 +328,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
                 </span>
                 <button (click)="showViewingForm = !showViewingForm"
                         style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--color-purple-soft);color:var(--color-purple);border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
-                  <i class="ph-bold ph-plus" style="font-size:12px;"></i>
+                  <i class="ri-add-fill" style="font-size:12px;"></i>
                   Besichtigung
                 </button>
               </div>
@@ -344,15 +344,14 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
                     <a [routerLink]="['/properties', v.propertyId]"
                        style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px;text-decoration:none;">
                       <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ v.propertyTitle }}</span>
-                      <i class="ph ph-arrow-square-out" style="font-size:11px;color:var(--text-3);flex-shrink:0;"></i>
+                      <i class="ri-external-link-line" style="font-size:11px;color:var(--text-3);flex-shrink:0;"></i>
                     </a>
                     <div style="font-size:11px;color:var(--text-3);">{{ v.viewingDate | date:'HH:mm' }} Uhr · {{ v.propertyAddress }}</div>
                   </div>
                   <div *ngIf="v.feedback" style="font-size:16px;flex-shrink:0;" [title]="v.feedback">
-                    <i class="ph-fill"
-                       [class.ph-thumbs-up]="v.feedback === 'LIKED'"
-                       [class.ph-thumbs-down]="v.feedback === 'DISLIKED'"
-                       [class.ph-smiley-meh]="v.feedback !== 'LIKED' && v.feedback !== 'DISLIKED'"
+                    <i [class.ri-thumb-up-fill]="v.feedback === 'LIKED'"
+                       [class.ri-thumb-down-fill]="v.feedback === 'DISLIKED'"
+                       [class.ri-emotion-normal-fill]="v.feedback !== 'LIKED' && v.feedback !== 'DISLIKED'"
                        [style.color]="v.feedback === 'LIKED' ? 'var(--color-success)' : v.feedback === 'DISLIKED' ? 'var(--color-error)' : 'var(--color-warning)'"></i>
                   </div>
                   <span [style.background]="getViewingStatusBg(v.status)"
@@ -364,7 +363,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
               </div>
               <div *ngIf="!isLoadingViewings && viewings.length === 0"
                    style="text-align:center;padding:20px 0;color:var(--text-3);">
-                <i class="ph ph-door-open" style="font-size:28px;display:block;margin-bottom:6px;"></i>
+                <i class="ri-door-open-line" style="font-size:28px;display:block;margin-bottom:6px;"></i>
                 <div style="font-size:13px;">Noch keine Besichtigungen geplant</div>
               </div>
             </div>
@@ -372,7 +371,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
             <!-- Kontakthistorie -->
             <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-                <i class="ph ph-chat-circle-text" style="font-size:17px;color:var(--primary);"></i>
+                <i class="ri-chat-3-line" style="font-size:17px;color:var(--primary);"></i>
                 <span style="font-size:15px;font-weight:700;color:var(--text);">Kontakthistorie</span>
                 <span *ngIf="callNotesSummary"
                       style="font-size:12px;font-weight:700;color:var(--primary);background:var(--accent-soft);padding:2px 8px;border-radius:10px;">
@@ -426,7 +425,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
                         <span style="color:var(--border);font-size:10px;">·</span>
                         <a [routerLink]="['/properties', note.propertyId]"
                            style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--text-3);background:var(--surface-2);padding:2px 8px;border-radius:10px;text-decoration:none;">
-                          <i class="ph ph-house" style="font-size:11px;flex-shrink:0;"></i>
+                          <i class="ri-home-line" style="font-size:11px;flex-shrink:0;"></i>
                           {{ note.propertyTitle }}
                         </a>
                       </ng-container>
@@ -436,7 +435,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
               </div>
               <div *ngIf="!isLoadingCallNotes && recentCallNotes.length === 0"
                    style="text-align:center;padding:20px 0;color:var(--text-3);">
-                <i class="ph ph-chats-circle" style="font-size:28px;display:block;margin-bottom:6px;"></i>
+                <i class="ri-discuss-line" style="font-size:28px;display:block;margin-bottom:6px;"></i>
                 <div style="font-size:13px;">Noch keine Notizen</div>
               </div>
             </div>
@@ -451,7 +450,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
                  style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
                 <div style="display:flex;align-items:center;gap:8px;">
-                  <i class="ph ph-magnifying-glass" style="font-size:15px;color:var(--text-3);"></i>
+                  <i class="ri-search-line" style="font-size:15px;color:var(--text-3);"></i>
                   <span style="font-size:15px;font-weight:700;color:var(--text);">Suchprofil</span>
                 </div>
                 <a [routerLink]="['/clients', client.id, 'edit']"
@@ -469,9 +468,9 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
                   <span style="font-size:12px;color:var(--text-3);">Objekttyp</span>
                   <span style="font-size:13px;font-weight:600;color:var(--text);"><ng-container *ngFor="let pt of client.searchCriteria!.propertyTypes!; let last = last">{{ pt | translateEnum:'propertyType' }}{{ last ? '' : ', ' }}</ng-container></span>
                 </div>
-                <div *ngIf="client.searchCriteria?.minBudget || client.searchCriteria?.maxBudget"
+                <div *ngIf="hasBudgetOrRent()"
                      style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-                  <span style="font-size:12px;color:var(--text-3);">Budget</span>
+                  <span style="font-size:12px;color:var(--text-3);">{{ client.clientType === ClientType.RENTER ? 'Miete' : 'Kaufpreis' }}</span>
                   <span style="font-size:13px;font-weight:600;color:var(--text);">{{ formatBudget() }}</span>
                 </div>
                 <div *ngIf="client.searchCriteria?.minSquareMeters || client.searchCriteria?.maxSquareMeters"
@@ -506,7 +505,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
             <div *ngIf="client.searchCriteria"
                  style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-                <i class="ph-fill ph-shuffle" style="font-size:15px;color:var(--primary);"></i>
+                <i class="ri-shuffle-fill" style="font-size:15px;color:var(--primary);"></i>
                 <span style="font-size:15px;font-weight:700;color:var(--text);flex:1;">Passende Objekte</span>
                 <span *ngIf="!isLoadingMatches && matchingProperties.length > 0"
                       style="font-size:12px;font-weight:700;color:var(--primary);background:var(--accent-soft);padding:2px 8px;border-radius:10px;">
@@ -528,12 +527,12 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
                     <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ match.property.title }}</div>
                     <div style="font-size:11px;color:var(--text-3);">{{ match.property.addressCity }}</div>
                   </div>
-                  <i class="ph ph-arrow-right" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
+                  <i class="ri-arrow-right-line" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
                 </a>
               </div>
               <div *ngIf="!isLoadingMatches && matchingProperties.length === 0"
                    style="text-align:center;padding:16px 0;color:var(--text-3);">
-                <i class="ph ph-house-line" style="font-size:24px;display:block;margin-bottom:6px;"></i>
+                <i class="ri-home-line" style="font-size:24px;display:block;margin-bottom:6px;"></i>
                 <div style="font-size:13px;">Keine passenden Objekte gefunden</div>
               </div>
             </div>
@@ -543,7 +542,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
               <div style="display:flex;align-items:center;gap:12px;">
                 <div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
                      [style.background]="client.gdprConsentGiven ? 'var(--color-success-soft)' : 'var(--color-error-soft)'">
-                  <i [class]="client.gdprConsentGiven ? 'ph ph-shield-check' : 'ph ph-shield-warning'"
+                  <i [class]="client.gdprConsentGiven ? 'ri-shield-check-line' : 'ri-shield-line'"
                      [style.color]="client.gdprConsentGiven ? 'var(--color-success)' : 'var(--color-error)'"
                      style="font-size:17px;"></i>
                 </div>
@@ -576,7 +575,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
            (click)="$event.stopPropagation()">
         <div style="display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid var(--border);flex-shrink:0;">
           <div style="width:34px;height:34px;border-radius:9px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;">
-            <i class="ph ph-paperclip" style="font-size:16px;color:var(--text-3);"></i>
+            <i class="ri-attachment-line" style="font-size:16px;color:var(--text-3);"></i>
           </div>
           <div style="flex:1;">
             <div style="font-size:16px;font-weight:700;color:var(--text);">{{ 'attachments.sectionTitle' | translate }}</div>
@@ -584,7 +583,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
           </div>
           <button (click)="showAttachmentsDialog = false"
                   style="width:32px;height:32px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-3);font-size:16px;">
-            <i class="ph ph-x"></i>
+            <i class="ri-close-line"></i>
           </button>
         </div>
         <div style="overflow-y:auto;flex:1;padding:20px 22px;">
@@ -600,7 +599,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
     <div *ngIf="showStageUpgradeHint"
          style="position:fixed;bottom:24px;right:24px;background:var(--surface);border:1.5px solid var(--primary);border-radius:12px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,.15);z-index:500;max-width:320px;">
       <div style="display:flex;align-items:flex-start;gap:10px;">
-        <i class="ph ph-info" style="color:var(--primary);font-size:20px;flex-shrink:0;margin-top:1px;"></i>
+        <i class="ri-information-line" style="color:var(--primary);font-size:20px;flex-shrink:0;margin-top:1px;"></i>
         <div style="flex:1;">
           <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Pipeline-Stage aktualisieren?</div>
           <div style="font-size:12px;color:var(--text-2);margin-bottom:12px;">Besichtigung erfasst — soll der Stage auf "Besichtigungen" gesetzt werden?</div>
@@ -913,11 +912,11 @@ export class ClientDetailComponent implements OnInit {
 
   getCallTypeIcon(callType: CallType): string {
     switch (callType) {
-      case CallType.PHONE_INBOUND:  return 'ph ph-phone-incoming';
-      case CallType.PHONE_OUTBOUND: return 'ph ph-phone-outgoing';
-      case CallType.EMAIL:          return 'ph ph-envelope';
-      case CallType.MEETING:        return 'ph ph-handshake';
-      default:                      return 'ph ph-chat-circle';
+      case CallType.PHONE_INBOUND:  return 'ri-phone-line';
+      case CallType.PHONE_OUTBOUND: return 'ri-phone-line';
+      case CallType.EMAIL:          return 'ri-mail-line';
+      case CallType.MEETING:        return 'ri-shake-hands-line';
+      default:                      return 'ri-chat-1-line';
     }
   }
 
@@ -1005,14 +1004,32 @@ export class ClientDetailComponent implements OnInit {
     return 'var(--text-3)';
   }
 
+  hasBudgetOrRent(): boolean {
+    const sc = this.client?.searchCriteria;
+    if (!sc) return false;
+    return !!(sc.minBudget || sc.maxBudget || sc.minColdRent || sc.maxColdRent || sc.minWarmRent || sc.maxWarmRent);
+  }
+
   formatBudget(): string {
     const sc = this.client?.searchCriteria;
     if (!sc) return '';
     const fmt = (n: number) => n.toLocaleString('de-DE') + ' €';
-    if (sc.minBudget && sc.maxBudget) return `${fmt(sc.minBudget)} – ${fmt(sc.maxBudget)}`;
-    if (sc.minBudget)  return `ab ${fmt(sc.minBudget)}`;
-    if (sc.maxBudget)  return `bis ${fmt(sc.maxBudget)}`;
-    return '';
+    const range = (min?: number, max?: number): string => {
+      if (min && max) return `${fmt(min)} – ${fmt(max)}`;
+      if (min) return `ab ${fmt(min)}`;
+      if (max) return `bis ${fmt(max)}`;
+      return '';
+    };
+
+    if (this.client?.clientType === ClientType.RENTER) {
+      const warm = range(sc.minWarmRent, sc.maxWarmRent);
+      if (warm) return `${warm} (Warmmiete)`;
+      const cold = range(sc.minColdRent, sc.maxColdRent);
+      if (cold) return `${cold} (Kaltmiete)`;
+      return range(sc.minBudget, sc.maxBudget);
+    }
+
+    return range(sc.minBudget, sc.maxBudget);
   }
 
   formatSqm(): string {

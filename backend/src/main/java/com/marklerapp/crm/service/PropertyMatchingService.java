@@ -101,6 +101,16 @@ public class PropertyMatchingService {
                     .collect(Collectors.toList());
         }
 
+        // Only suggest properties that match what the client is actually looking for
+        // (buyers shouldn't see rentals and vice versa). SELLER clients have no implied
+        // listing type here, so they aren't restricted.
+        ListingType desiredListingType = desiredListingTypeFor(client.getClientType());
+        if (desiredListingType != null) {
+            availableProperties = availableProperties.stream()
+                    .filter(p -> p.getListingType() == desiredListingType)
+                    .collect(Collectors.toList());
+        }
+
         log.debug("Found {} properties to evaluate", availableProperties.size());
 
         // Score each property against the criteria
@@ -152,6 +162,7 @@ public class PropertyMatchingService {
         // Score each client based on how well the property matches their criteria
         List<PropertyMatchResponse.ClientMatchResult> matchResults = clientsWithCriteria.stream()
                 .filter(client -> client.getSearchCriteria() != null)
+                .filter(client -> matchesDesiredListingType(client.getClientType(), property.getListingType()))
                 .map(client -> scoreClient(client, property, request))
                 .filter(result -> result.getMatchScore() >= request.getEffectiveMatchThreshold())
                 .sorted(Comparator.comparingInt(PropertyMatchResponse.ClientMatchResult::getMatchScore).reversed())
@@ -203,6 +214,16 @@ public class PropertyMatchingService {
         if (!Boolean.TRUE.equals(request.getIncludeUnavailable())) {
             availableProperties = availableProperties.stream()
                     .filter(p -> p.getStatus() == PropertyStatus.AVAILABLE)
+                    .collect(Collectors.toList());
+        }
+
+        // No client is attached to an ad-hoc search, so infer the intended listing type from
+        // which budget fields were actually filled in. Ambiguous/empty criteria match any type,
+        // same as before this filter existed.
+        ListingType impliedListingType = impliedListingTypeFor(criteria);
+        if (impliedListingType != null) {
+            availableProperties = availableProperties.stream()
+                    .filter(p -> p.getListingType() == impliedListingType)
                     .collect(Collectors.toList());
         }
 
@@ -374,61 +395,131 @@ public class PropertyMatchingService {
             return 50; // Neutral score for missing price
         }
 
-        BigDecimal price = property.getPrice();
-        BigDecimal minBudget = criteria.getMinBudget();
-        BigDecimal maxBudget = criteria.getMaxBudget();
+        boolean allowFlexibility = Boolean.TRUE.equals(request.getAllowBudgetFlexibility());
 
-        // If no budget constraints, perfect score
-        if (minBudget == null && maxBudget == null) {
-            matchReasons.add("No budget constraints specified");
+        if (property.getListingType() == ListingType.SALE) {
+            return scoreValueAgainstRange(property.getPrice(), criteria.getMinBudget(), criteria.getMaxBudget(),
+                    allowFlexibility, "Purchase price", matchReasons, mismatchReasons);
+        }
+
+        // RENT / LEASE: price is the cold rent; warm rent adds additional/heating costs.
+        // Prefer whichever of warm/cold rent the client actually specified; fall back to the
+        // legacy generic budget fields for search criteria saved before this distinction existed.
+        BigDecimal coldRent = property.getPrice();
+        BigDecimal warmRent = coldRent
+                .add(property.getAdditionalCosts() != null ? property.getAdditionalCosts() : BigDecimal.ZERO)
+                .add(property.getHeatingCosts() != null ? property.getHeatingCosts() : BigDecimal.ZERO);
+
+        if (criteria.getMinWarmRent() != null || criteria.getMaxWarmRent() != null) {
+            return scoreValueAgainstRange(warmRent, criteria.getMinWarmRent(), criteria.getMaxWarmRent(),
+                    allowFlexibility, "Warm rent", matchReasons, mismatchReasons);
+        }
+        if (criteria.getMinColdRent() != null || criteria.getMaxColdRent() != null) {
+            return scoreValueAgainstRange(coldRent, criteria.getMinColdRent(), criteria.getMaxColdRent(),
+                    allowFlexibility, "Cold rent", matchReasons, mismatchReasons);
+        }
+        return scoreValueAgainstRange(coldRent, criteria.getMinBudget(), criteria.getMaxBudget(),
+                allowFlexibility, "Rent", matchReasons, mismatchReasons);
+    }
+
+    /**
+     * Score a monetary value against a min/max range (0-100). Shared by purchase price,
+     * cold rent, and warm rent scoring — the curve is identical, only the value and range differ.
+     *
+     * <p>Scoring logic:</p>
+     * <ul>
+     *   <li>100 points: value within range</li>
+     *   <li>80-99 points: value slightly over max (if flexibility allowed)</li>
+     *   <li>50-79 points: value within 20% of max</li>
+     *   <li>0-49 points: value significantly outside range</li>
+     * </ul>
+     */
+    private int scoreValueAgainstRange(BigDecimal value, BigDecimal min, BigDecimal max,
+                                       boolean allowFlexibility, String label,
+                                       List<String> matchReasons, List<String> mismatchReasons) {
+        if (min == null && max == null) {
+            matchReasons.add("No " + label.toLowerCase() + " constraints specified");
             return 100;
         }
 
-        // Apply budget flexibility if allowed
-        BigDecimal effectiveMaxBudget = maxBudget;
-        if (Boolean.TRUE.equals(request.getAllowBudgetFlexibility()) && maxBudget != null) {
-            effectiveMaxBudget = maxBudget.multiply(BUDGET_FLEXIBILITY_MULTIPLIER);
+        BigDecimal effectiveMax = max;
+        if (allowFlexibility && max != null) {
+            effectiveMax = max.multiply(BUDGET_FLEXIBILITY_MULTIPLIER);
         }
 
-        // Check if price is within budget
-        boolean withinMin = minBudget == null || price.compareTo(minBudget) >= 0;
-        boolean withinMax = maxBudget == null || price.compareTo(maxBudget) <= 0;
+        boolean withinMin = min == null || value.compareTo(min) >= 0;
+        boolean withinMax = max == null || value.compareTo(max) <= 0;
 
         if (withinMin && withinMax) {
-            matchReasons.add(String.format("Price €%,d is within budget range", price.intValue()));
+            matchReasons.add(String.format("%s €%,d is within budget range", label, value.intValue()));
             return 100;
         }
 
-        // Check if within flexible budget
-        boolean withinFlexibleMax = effectiveMaxBudget == null || price.compareTo(effectiveMaxBudget) <= 0;
+        boolean withinFlexibleMax = effectiveMax == null || value.compareTo(effectiveMax) <= 0;
         if (withinMin && withinFlexibleMax) {
-            matchReasons.add(String.format("Price €%,d is slightly over budget but within 10%% tolerance", price.intValue()));
+            matchReasons.add(String.format("%s €%,d is slightly over budget but within 10%% tolerance", label, value.intValue()));
             return 85;
         }
 
-        // Calculate distance from budget range
-        if (maxBudget != null && price.compareTo(maxBudget) > 0) {
-            BigDecimal percentOver = price.subtract(maxBudget)
-                    .divide(maxBudget, 4, RoundingMode.HALF_UP)
+        if (max != null && value.compareTo(max) > 0) {
+            BigDecimal percentOver = value.subtract(max)
+                    .divide(max, 4, RoundingMode.HALF_UP)
                     .multiply(BigDecimal.valueOf(100));
 
             if (percentOver.compareTo(BigDecimal.valueOf(20)) <= 0) {
-                mismatchReasons.add(String.format("Price €%,d is %.1f%% over budget",
-                        price.intValue(), percentOver.doubleValue()));
+                mismatchReasons.add(String.format("%s €%,d is %.1f%% over budget",
+                        label, value.intValue(), percentOver.doubleValue()));
                 return Math.max(50, 100 - percentOver.intValue());
             } else {
-                mismatchReasons.add(String.format("Price €%,d significantly exceeds budget (%.1f%% over)",
-                        price.intValue(), percentOver.doubleValue()));
+                mismatchReasons.add(String.format("%s €%,d significantly exceeds budget (%.1f%% over)",
+                        label, value.intValue(), percentOver.doubleValue()));
                 return Math.max(0, 50 - (percentOver.intValue() - 20));
             }
         }
 
-        if (minBudget != null && price.compareTo(minBudget) < 0) {
-            mismatchReasons.add(String.format("Price €%,d is below minimum budget", price.intValue()));
-            return 30; // Property is too cheap
+        if (min != null && value.compareTo(min) < 0) {
+            mismatchReasons.add(String.format("%s €%,d is below minimum budget", label, value.intValue()));
+            return 30;
         }
 
         return 50;
+    }
+
+    /**
+     * Map a client's stated intent to the listing type they should be shown.
+     * SELLER has no implied listing type (they aren't searching for a property here).
+     */
+    private ListingType desiredListingTypeFor(Client.ClientType clientType) {
+        if (clientType == Client.ClientType.BUYER) {
+            return ListingType.SALE;
+        }
+        if (clientType == Client.ClientType.RENTER) {
+            return ListingType.RENT;
+        }
+        return null;
+    }
+
+    private boolean matchesDesiredListingType(Client.ClientType clientType, ListingType propertyListingType) {
+        ListingType desired = desiredListingTypeFor(clientType);
+        return desired == null || desired == propertyListingType;
+    }
+
+    /**
+     * Ad-hoc searches have no client to read intent from, so infer it from which budget
+     * fields were actually filled in. Returns null (no filter) when ambiguous or empty.
+     */
+    private ListingType impliedListingTypeFor(PropertySearchCriteriaDto criteria) {
+        boolean hasRentSignal = criteria.getMinColdRent() != null || criteria.getMaxColdRent() != null
+                || criteria.getMinWarmRent() != null || criteria.getMaxWarmRent() != null;
+        boolean hasSaleSignal = criteria.getMinBudget() != null || criteria.getMaxBudget() != null;
+
+        if (hasRentSignal && !hasSaleSignal) {
+            return ListingType.RENT;
+        }
+        if (hasSaleSignal && !hasRentSignal) {
+            return ListingType.SALE;
+        }
+        return null;
     }
 
     /**
@@ -707,6 +798,10 @@ public class PropertyMatchingService {
                 .maxRooms(criteria.getMaxRooms())
                 .minBudget(criteria.getMinBudget())
                 .maxBudget(criteria.getMaxBudget())
+                .minColdRent(criteria.getMinColdRent())
+                .maxColdRent(criteria.getMaxColdRent())
+                .minWarmRent(criteria.getMinWarmRent())
+                .maxWarmRent(criteria.getMaxWarmRent())
                 .preferredLocations(criteria.getPreferredLocations() != null ?
                         Arrays.asList(criteria.getPreferredLocationsArray()) : null)
                 .propertyTypes(criteria.getPropertyTypes() != null ?

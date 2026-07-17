@@ -52,11 +52,18 @@ public interface ClientMapper {
      * Ignores computed fields, agent relationship, and audit timestamps.
      * The agent must be set separately after mapping.
      *
+     * <p>searchCriteria is intentionally ignored here: ClientService creates/updates it
+     * through a separate explicit save that sets the owning-side client_id (see
+     * ClientService#createSearchCriteria). Auto-mapping it onto the entity would let
+     * clientRepository.save() cascade an insert of the mapped-by side without client_id
+     * ever being set, which fails the NOT NULL constraint on property_search_criteria.</p>
+     *
      * @param dto the client DTO
      * @return the client entity
      */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "agent", ignore = true)
+    @Mapping(target = "searchCriteria", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @BeanMapping(builder = @Builder(disableBuilder = true))

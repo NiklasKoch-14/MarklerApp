@@ -50,6 +50,24 @@ public class PropertySearchCriteria extends BaseEntity {
     @DecimalMin(value = "0.0", inclusive = false, message = "Maximum budget must be positive")
     private BigDecimal maxBudget;
 
+    // Kaltmiete (rent excluding utilities/heating) — relevant when the client's clientType is RENTER
+    @Column(name = "min_cold_rent", precision = 10, scale = 2)
+    @DecimalMin(value = "0.0", inclusive = false, message = "Minimum cold rent must be positive")
+    private BigDecimal minColdRent;
+
+    @Column(name = "max_cold_rent", precision = 10, scale = 2)
+    @DecimalMin(value = "0.0", inclusive = false, message = "Maximum cold rent must be positive")
+    private BigDecimal maxColdRent;
+
+    // Warmmiete (rent including utilities/heating) — relevant when the client's clientType is RENTER
+    @Column(name = "min_warm_rent", precision = 10, scale = 2)
+    @DecimalMin(value = "0.0", inclusive = false, message = "Minimum warm rent must be positive")
+    private BigDecimal minWarmRent;
+
+    @Column(name = "max_warm_rent", precision = 10, scale = 2)
+    @DecimalMin(value = "0.0", inclusive = false, message = "Maximum warm rent must be positive")
+    private BigDecimal maxWarmRent;
+
     @Column(name = "preferred_locations", length = 500)
     private String preferredLocations; // Comma-separated list
 
@@ -109,6 +127,13 @@ public class PropertySearchCriteria extends BaseEntity {
     }
 
     /**
+     * Check if criteria has any rent constraints (cold or warm rent)
+     */
+    public boolean hasRentConstraints() {
+        return minColdRent != null || maxColdRent != null || minWarmRent != null || maxWarmRent != null;
+    }
+
+    /**
      * Check if criteria has any size constraints
      */
     public boolean hasSizeConstraints() {
@@ -138,6 +163,14 @@ public class PropertySearchCriteria extends BaseEntity {
 
         if (minBudget != null && maxBudget != null && minBudget.compareTo(maxBudget) > 0) {
             throw new IllegalArgumentException("Minimum budget cannot be greater than maximum");
+        }
+
+        if (minColdRent != null && maxColdRent != null && minColdRent.compareTo(maxColdRent) > 0) {
+            throw new IllegalArgumentException("Minimum cold rent cannot be greater than maximum");
+        }
+
+        if (minWarmRent != null && maxWarmRent != null && minWarmRent.compareTo(maxWarmRent) > 0) {
+            throw new IllegalArgumentException("Minimum warm rent cannot be greater than maximum");
         }
     }
 

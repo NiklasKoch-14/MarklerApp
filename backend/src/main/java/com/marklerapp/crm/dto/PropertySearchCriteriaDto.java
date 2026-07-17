@@ -48,6 +48,18 @@ public class PropertySearchCriteriaDto {
     @DecimalMin(value = "0.0", inclusive = false, message = "Maximum budget must be positive")
     private BigDecimal maxBudget;
 
+    @DecimalMin(value = "0.0", inclusive = false, message = "Minimum cold rent must be positive")
+    private BigDecimal minColdRent;
+
+    @DecimalMin(value = "0.0", inclusive = false, message = "Maximum cold rent must be positive")
+    private BigDecimal maxColdRent;
+
+    @DecimalMin(value = "0.0", inclusive = false, message = "Minimum warm rent must be positive")
+    private BigDecimal minWarmRent;
+
+    @DecimalMin(value = "0.0", inclusive = false, message = "Maximum warm rent must be positive")
+    private BigDecimal maxWarmRent;
+
     private List<String> preferredLocations;
 
     private List<String> propertyTypes;
@@ -60,6 +72,7 @@ public class PropertySearchCriteriaDto {
 
     // Validation flags
     private boolean hasBudgetConstraints;
+    private boolean hasRentConstraints;
     private boolean hasSizeConstraints;
     private boolean hasRoomConstraints;
 
@@ -68,6 +81,13 @@ public class PropertySearchCriteriaDto {
      */
     public boolean getHasBudgetConstraints() {
         return minBudget != null || maxBudget != null;
+    }
+
+    /**
+     * Check if criteria has rent constraints (cold or warm rent)
+     */
+    public boolean getHasRentConstraints() {
+        return minColdRent != null || maxColdRent != null || minWarmRent != null || maxWarmRent != null;
     }
 
     /**

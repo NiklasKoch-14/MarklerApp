@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { ClientService } from '../../services/client.service';
@@ -26,7 +26,6 @@ import { ClientService } from '../../services/client.service';
             <!-- Kontaktdaten -->
             <div class="widget-card">
               <div class="widget-header">
-                <i class="ph-fill ph-user" style="font-size:18px; color:var(--primary);"></i>
                 <h3 class="widget-title">{{ 'clients.contactData' | translate }}</h3>
                 <div style="position:relative; margin-left:auto;">
                   <button type="button" (click)="toggleHint('contact')"
@@ -104,7 +103,6 @@ import { ClientService } from '../../services/client.service';
             <div class="widget-card">
               <button type="button" (click)="toggleSearchCriteria()"
                 style="width:100%; display:flex; align-items:center; gap:10px; padding:15px 18px; background:none; border:none; border-bottom:1px solid var(--border); cursor:pointer; text-align:left;">
-                <i class="ph-fill ph-magnifying-glass" style="font-size:18px; color:var(--primary);"></i>
                 <h3 class="widget-title" style="margin:0; flex:1;">{{ 'clients.propertySearchCriteria' | translate }}</h3>
                 <div style="position:relative;" (click)="$event.stopPropagation()">
                   <button type="button" (click)="toggleHint('search')"
@@ -116,11 +114,22 @@ import { ClientService } from '../../services/client.service';
                     <p style="margin:0; font-size:13px; color:var(--text-2); line-height:1.5;">{{ 'clients.hints.searchCriteria' | translate }}</p>
                   </div>
                 </div>
-                <i [class]="'ph ph-caret-' + (searchCriteriaExpanded ? 'up' : 'down')"
+                <i [class]="'ri-arrow-' + (searchCriteriaExpanded ? 'up' : 'down') + '-s-line'"
                    style="font-size:16px; color:var(--text-3);"></i>
               </button>
+              <div *ngIf="searchCriteriaExpanded" style="padding:20px 20px 0; display:flex; flex-direction:column; gap:16px;">
+                <div>
+                  <label class="form-label">{{ 'clients.clientType' | translate }}</label>
+                  <select [formControl]="clientTypeControl" class="form-select">
+                    <option value="BUYER">{{ 'clients.clientTypeBuyer' | translate }}</option>
+                    <option value="RENTER">{{ 'clients.clientTypeRenter' | translate }}</option>
+                    <option value="SELLER">{{ 'clients.clientTypeSeller' | translate }}</option>
+                  </select>
+                  <p style="margin-top:5px; font-size:12px; color:var(--text-3);">{{ 'clients.clientTypeHint' | translate }}</p>
+                </div>
+              </div>
               <div *ngIf="searchCriteriaExpanded" [formGroup]="searchCriteriaGroup"
-                   style="padding:20px; display:flex; flex-direction:column; gap:16px;">
+                   style="padding:0 20px 20px; display:flex; flex-direction:column; gap:16px;">
                 <div class="form-grid-2">
                   <div>
                     <label class="form-label">{{ 'clients.searchCriteria.minSquareMeters' | translate }}</label>
@@ -151,27 +160,73 @@ import { ClientService } from '../../services/client.service';
                 <div *ngIf="searchCriteriaGroup.hasError('roomsRange')" class="form-error">
                   {{ 'clients.searchCriteria.minMaxError' | translate }}
                 </div>
-                <div class="form-grid-2">
-                  <div>
-                    <label class="form-label">{{ 'clients.searchCriteria.minBudget' | translate }}</label>
-                    <div style="position:relative;">
-                      <input type="number" formControlName="minBudget" min="0" class="form-input" style="padding-right:46px;"
-                        [placeholder]="'clients.searchCriteria.minBudgetPlaceholder' | translate">
-                      <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:13px; font-weight:600; color:var(--text-3);">EUR</span>
+                <ng-container *ngIf="!isRenter">
+                  <div class="form-grid-2">
+                    <div>
+                      <label class="form-label">{{ 'clients.searchCriteria.minBudget' | translate }}</label>
+                      <div style="position:relative;">
+                        <input type="number" formControlName="minBudget" min="0" class="form-input" style="padding-right:46px;"
+                          [placeholder]="'clients.searchCriteria.minBudgetPlaceholder' | translate">
+                        <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:13px; font-weight:600; color:var(--text-3);">EUR</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label class="form-label">{{ 'clients.searchCriteria.maxBudget' | translate }}</label>
+                      <div style="position:relative;">
+                        <input type="number" formControlName="maxBudget" min="0" class="form-input" style="padding-right:46px;"
+                          [placeholder]="'clients.searchCriteria.maxBudgetPlaceholder' | translate">
+                        <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:13px; font-weight:600; color:var(--text-3);">EUR</span>
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <label class="form-label">{{ 'clients.searchCriteria.maxBudget' | translate }}</label>
-                    <div style="position:relative;">
-                      <input type="number" formControlName="maxBudget" min="0" class="form-input" style="padding-right:46px;"
-                        [placeholder]="'clients.searchCriteria.maxBudgetPlaceholder' | translate">
-                      <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:13px; font-weight:600; color:var(--text-3);">EUR</span>
+                  <div *ngIf="searchCriteriaGroup.hasError('budgetRange')" class="form-error">
+                    {{ 'clients.searchCriteria.minMaxError' | translate }}
+                  </div>
+                </ng-container>
+                <ng-container *ngIf="isRenter">
+                  <div class="form-grid-2">
+                    <div>
+                      <label class="form-label">{{ 'clients.searchCriteria.minColdRent' | translate }}</label>
+                      <div style="position:relative;">
+                        <input type="number" formControlName="minColdRent" min="0" class="form-input" style="padding-right:46px;"
+                          [placeholder]="'clients.searchCriteria.minColdRentPlaceholder' | translate">
+                        <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:13px; font-weight:600; color:var(--text-3);">EUR</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label class="form-label">{{ 'clients.searchCriteria.maxColdRent' | translate }}</label>
+                      <div style="position:relative;">
+                        <input type="number" formControlName="maxColdRent" min="0" class="form-input" style="padding-right:46px;"
+                          [placeholder]="'clients.searchCriteria.maxColdRentPlaceholder' | translate">
+                        <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:13px; font-weight:600; color:var(--text-3);">EUR</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div *ngIf="searchCriteriaGroup.hasError('budgetRange')" class="form-error">
-                  {{ 'clients.searchCriteria.minMaxError' | translate }}
-                </div>
+                  <div *ngIf="searchCriteriaGroup.hasError('coldRentRange')" class="form-error">
+                    {{ 'clients.searchCriteria.minMaxError' | translate }}
+                  </div>
+                  <div class="form-grid-2">
+                    <div>
+                      <label class="form-label">{{ 'clients.searchCriteria.minWarmRent' | translate }}</label>
+                      <div style="position:relative;">
+                        <input type="number" formControlName="minWarmRent" min="0" class="form-input" style="padding-right:46px;"
+                          [placeholder]="'clients.searchCriteria.minWarmRentPlaceholder' | translate">
+                        <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:13px; font-weight:600; color:var(--text-3);">EUR</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label class="form-label">{{ 'clients.searchCriteria.maxWarmRent' | translate }}</label>
+                      <div style="position:relative;">
+                        <input type="number" formControlName="maxWarmRent" min="0" class="form-input" style="padding-right:46px;"
+                          [placeholder]="'clients.searchCriteria.maxWarmRentPlaceholder' | translate">
+                        <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:13px; font-weight:600; color:var(--text-3);">EUR</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div *ngIf="searchCriteriaGroup.hasError('warmRentRange')" class="form-error">
+                    {{ 'clients.searchCriteria.minMaxError' | translate }}
+                  </div>
+                </ng-container>
                 <div>
                   <label class="form-label">{{ 'clients.searchCriteria.preferredLocations' | translate }}</label>
                   <input type="text" formControlName="preferredLocations" class="form-input"
@@ -195,7 +250,6 @@ import { ClientService } from '../../services/client.service';
             <!-- DSGVO -->
             <div class="widget-card">
               <div class="widget-header">
-                <i class="ph-fill ph-shield-check" style="font-size:18px; color:var(--primary);"></i>
                 <h3 class="widget-title">DSGVO</h3>
                 <div style="position:relative; margin-left:auto;">
                   <button type="button" (click)="toggleHint('dsgvo')"
@@ -267,6 +321,7 @@ export class ClientFormComponent implements OnInit {
       addressCity: [''],
       addressPostalCode: ['', [Validators.pattern('^[0-9]{5}$')]],
       addressCountry: ['Germany'],
+      clientType: ['BUYER'],
       gdprConsentGiven: [false, [Validators.requiredTrue]],
       searchCriteria: this.fb.group({
         minSquareMeters: [null, [Validators.min(0)]],
@@ -275,11 +330,23 @@ export class ClientFormComponent implements OnInit {
         maxRooms: [null, [Validators.min(0)]],
         minBudget: [null, [Validators.min(0)]],
         maxBudget: [null, [Validators.min(0)]],
+        minColdRent: [null, [Validators.min(0)]],
+        maxColdRent: [null, [Validators.min(0)]],
+        minWarmRent: [null, [Validators.min(0)]],
+        maxWarmRent: [null, [Validators.min(0)]],
         preferredLocations: [''],
         propertyTypes: [''],
         additionalRequirements: ['']
       }, { validators: this.rangeValidator })
     });
+  }
+
+  get isRenter(): boolean {
+    return this.clientForm.get('clientType')?.value === 'RENTER';
+  }
+
+  get clientTypeControl() {
+    return this.clientForm.get('clientType') as FormControl;
   }
 
   ngOnInit(): void {
@@ -305,6 +372,7 @@ export class ClientFormComponent implements OnInit {
           addressCity: client.addressCity,
           addressPostalCode: client.addressPostalCode,
           addressCountry: client.addressCountry,
+          clientType: client.clientType || 'BUYER',
           gdprConsentGiven: client.gdprConsentGiven,
           searchCriteria: {
             minSquareMeters: client.searchCriteria?.minSquareMeters || null,
@@ -313,6 +381,10 @@ export class ClientFormComponent implements OnInit {
             maxRooms: client.searchCriteria?.maxRooms || null,
             minBudget: client.searchCriteria?.minBudget || null,
             maxBudget: client.searchCriteria?.maxBudget || null,
+            minColdRent: client.searchCriteria?.minColdRent || null,
+            maxColdRent: client.searchCriteria?.maxColdRent || null,
+            minWarmRent: client.searchCriteria?.minWarmRent || null,
+            maxWarmRent: client.searchCriteria?.maxWarmRent || null,
             preferredLocations: client.searchCriteria?.preferredLocations?.join(', ') || '',
             propertyTypes: client.searchCriteria?.propertyTypes?.join(', ') || '',
             additionalRequirements: client.searchCriteria?.additionalRequirements || ''
@@ -378,6 +450,8 @@ export class ClientFormComponent implements OnInit {
     const hasAnyValue = criteria.minSquareMeters || criteria.maxSquareMeters ||
                         criteria.minRooms || criteria.maxRooms ||
                         criteria.minBudget || criteria.maxBudget ||
+                        criteria.minColdRent || criteria.maxColdRent ||
+                        criteria.minWarmRent || criteria.maxWarmRent ||
                         preferredLocations.length > 0 || propertyTypes.length > 0 ||
                         criteria.additionalRequirements;
 
@@ -390,6 +464,10 @@ export class ClientFormComponent implements OnInit {
       maxRooms: criteria.maxRooms || null,
       minBudget: criteria.minBudget || null,
       maxBudget: criteria.maxBudget || null,
+      minColdRent: criteria.minColdRent || null,
+      maxColdRent: criteria.maxColdRent || null,
+      minWarmRent: criteria.minWarmRent || null,
+      maxWarmRent: criteria.maxWarmRent || null,
       preferredLocations: preferredLocations.length > 0 ? preferredLocations : null,
       propertyTypes: propertyTypes.length > 0 ? propertyTypes : null,
       additionalRequirements: criteria.additionalRequirements || null
@@ -403,6 +481,10 @@ export class ClientFormComponent implements OnInit {
     const maxRooms = group.get('maxRooms')?.value;
     const minBudget = group.get('minBudget')?.value;
     const maxBudget = group.get('maxBudget')?.value;
+    const minColdRent = group.get('minColdRent')?.value;
+    const maxColdRent = group.get('maxColdRent')?.value;
+    const minWarmRent = group.get('minWarmRent')?.value;
+    const maxWarmRent = group.get('maxWarmRent')?.value;
 
     const errors: any = {};
 
@@ -414,6 +496,12 @@ export class ClientFormComponent implements OnInit {
     }
     if (minBudget && maxBudget && minBudget > maxBudget) {
       errors.budgetRange = true;
+    }
+    if (minColdRent && maxColdRent && minColdRent > maxColdRent) {
+      errors.coldRentRange = true;
+    }
+    if (minWarmRent && maxWarmRent && minWarmRent > maxWarmRent) {
+      errors.warmRentRange = true;
     }
 
     return Object.keys(errors).length > 0 ? errors : null;

@@ -67,6 +67,10 @@ export interface PropertySearchCriteria {
   maxRooms?: number;
   minBudget?: number;
   maxBudget?: number;
+  minColdRent?: number;
+  maxColdRent?: number;
+  minWarmRent?: number;
+  maxWarmRent?: number;
   preferredLocations?: string[];
   propertyTypes?: string[];
   additionalRequirements?: string;

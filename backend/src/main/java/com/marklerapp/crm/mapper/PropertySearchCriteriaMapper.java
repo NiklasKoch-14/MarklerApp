@@ -46,6 +46,7 @@ public interface PropertySearchCriteriaMapper {
     @Mapping(target = "preferredLocations", expression = "java(arrayToList(criteria.getPreferredLocationsArray()))")
     @Mapping(target = "propertyTypes", expression = "java(arrayToList(criteria.getPropertyTypesArray()))")
     @Mapping(target = "hasBudgetConstraints", expression = "java(criteria.hasBudgetConstraints())")
+    @Mapping(target = "hasRentConstraints", expression = "java(criteria.hasRentConstraints())")
     @Mapping(target = "hasSizeConstraints", expression = "java(criteria.hasSizeConstraints())")
     @Mapping(target = "hasRoomConstraints", expression = "java(criteria.hasRoomConstraints())")
     PropertySearchCriteriaDto toDto(PropertySearchCriteria criteria);

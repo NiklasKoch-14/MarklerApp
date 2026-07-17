@@ -69,7 +69,7 @@ type SortDir = 'asc' | 'desc';
           <p style="font-size:14px; color:var(--text-2); margin-top:4px;">{{ 'clients.listDescription' | translate }}</p>
         </div>
         <a routerLink="/clients/new" class="btn-primary">
-          <i class="ph ph-user-plus"></i>
+          <i class="ri-user-add-line"></i>
           {{ 'clients.addClient' | translate }}
         </a>
       </div>
@@ -83,11 +83,11 @@ type SortDir = 'asc' | 'desc';
       <!-- Empty State (no clients at all) -->
       <div *ngIf="!isLoading && allClients.length === 0"
         style="text-align:center; padding:56px 24px; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow);">
-        <i class="ph ph-users" style="font-size:48px; color:var(--text-3); display:block; margin-bottom:12px;"></i>
+        <i class="ri-group-line" style="font-size:48px; color:var(--text-3); display:block; margin-bottom:12px;"></i>
         <h3 style="font-size:15px; font-weight:600; color:var(--text); margin:0 0 6px;">{{ 'clients.noClientsFound' | translate }}</h3>
         <p style="font-size:13px; color:var(--text-2); margin:0 0 20px;">{{ 'clients.addFirstClient' | translate }}</p>
         <a routerLink="/clients/new" class="btn-primary" style="display:inline-flex;">
-          <i class="ph ph-user-plus"></i>
+          <i class="ri-user-add-line"></i>
           {{ 'clients.addClient' | translate }}
         </a>
       </div>
@@ -96,7 +96,7 @@ type SortDir = 'asc' | 'desc';
       <ng-container *ngIf="!isLoading && allClients.length > 0">
         <div class="toolbar">
           <div class="search-box">
-            <i class="ph ph-magnifying-glass"></i>
+            <i class="ri-search-line"></i>
             <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="applyView()"
                    [placeholder]="'clients.searchPlaceholder' | translate" />
           </div>
@@ -123,7 +123,7 @@ type SortDir = 'asc' | 'desc';
         <!-- No filter matches -->
         <div *ngIf="filtered.length === 0"
           style="text-align:center; padding:44px 24px; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow);">
-          <i class="ph ph-funnel" style="font-size:36px; color:var(--text-3); display:block; margin-bottom:10px;"></i>
+          <i class="ri-filter-3-line" style="font-size:36px; color:var(--text-3); display:block; margin-bottom:10px;"></i>
           <p style="font-size:14px; color:var(--text-2); margin:0 0 14px;">{{ 'clients.noMatchingClients' | translate }}</p>
           <button (click)="clearFilters()" class="btn-secondary" style="display:inline-flex;">
             {{ 'clients.clearFilters' | translate }}
@@ -136,20 +136,20 @@ type SortDir = 'asc' | 'desc';
               <tr>
                 <th class="sortable" (click)="toggleSort('name')">
                   {{ 'clients.col.client' | translate }}
-                  <i *ngIf="sortKey === 'name'" class="ph sort-caret"
-                     [class.ph-caret-up]="sortDir === 'asc'" [class.ph-caret-down]="sortDir === 'desc'"></i>
+                  <i *ngIf="sortKey === 'name'" class="sort-caret"
+                     [class.ri-arrow-up-s-line]="sortDir === 'asc'" [class.ri-arrow-down-s-line]="sortDir === 'desc'"></i>
                 </th>
                 <th class="hide-md">{{ 'clients.col.type' | translate }}</th>
                 <th class="hide-md">{{ 'clients.col.searching' | translate }}</th>
                 <th class="sortable" (click)="toggleSort('stage')">
                   {{ 'clients.col.stage' | translate }}
-                  <i *ngIf="sortKey === 'stage'" class="ph sort-caret"
-                     [class.ph-caret-up]="sortDir === 'asc'" [class.ph-caret-down]="sortDir === 'desc'"></i>
+                  <i *ngIf="sortKey === 'stage'" class="sort-caret"
+                     [class.ri-arrow-up-s-line]="sortDir === 'asc'" [class.ri-arrow-down-s-line]="sortDir === 'desc'"></i>
                 </th>
                 <th class="sortable" (click)="toggleSort('lastContact')">
                   {{ 'clients.col.lastContact' | translate }}
-                  <i *ngIf="sortKey === 'lastContact'" class="ph sort-caret"
-                     [class.ph-caret-up]="sortDir === 'asc'" [class.ph-caret-down]="sortDir === 'desc'"></i>
+                  <i *ngIf="sortKey === 'lastContact'" class="sort-caret"
+                     [class.ri-arrow-up-s-line]="sortDir === 'asc'" [class.ri-arrow-down-s-line]="sortDir === 'desc'"></i>
                 </th>
                 <th style="text-align:center;">{{ 'clients.col.consent' | translate }}</th>
               </tr>
@@ -182,23 +182,23 @@ type SortDir = 'asc' | 'desc';
                           [style.background]="getStageBg(client.pipelineStage)"
                           [style.color]="getStageColor(client.pipelineStage)">
                     {{ stageLabelKey(client.pipelineStage) | translate }}
-                    <i class="ph ph-caret-down" style="font-size:10px;"></i>
+                    <i class="ri-arrow-down-s-line" style="font-size:10px;"></i>
                   </button>
                 </td>
 
                 <!-- Zuletzt kontaktiert -->
                 <td>
                   <div class="contact-cell" [class.od]="isOverdue(client)">
-                    <i class="ph" [class.ph-clock]="!isOverdue(client)" [class.ph-warning]="isOverdue(client)" style="font-size:13px;"></i>
+                    <i [class.ri-time-line]="!isOverdue(client)" [class.ri-alert-line]="isOverdue(client)" style="font-size:13px;"></i>
                     {{ lastContactLabel(client) }}
                   </div>
                 </td>
 
                 <!-- DSGVO — subtle icon only -->
                 <td style="text-align:center;">
-                  <i *ngIf="client.gdprConsentGiven" class="ph ph-shield-check consent-icon ok"
+                  <i *ngIf="client.gdprConsentGiven" class="ri-shield-check-line consent-icon ok"
                      [title]="'clients.consent' | translate"></i>
-                  <i *ngIf="!client.gdprConsentGiven" class="ph ph-shield-warning consent-icon missing"
+                  <i *ngIf="!client.gdprConsentGiven" class="ri-shield-line consent-icon missing"
                      [title]="'clients.gdprPending' | translate"></i>
                 </td>
               </tr>
@@ -372,7 +372,14 @@ export class ClientListComponent implements OnInit {
       const key = this.enumTranslation.getTranslationKey('propertyType', c.propertyTypes[0]);
       parts.push(this.translate.instant(key));
     }
-    if (c?.maxBudget) parts.push(new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(c.maxBudget));
+    const fmt = (n: number) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
+    if (client.clientType === ClientType.RENTER) {
+      if (c?.maxWarmRent) parts.push(fmt(c.maxWarmRent));
+      else if (c?.maxColdRent) parts.push(fmt(c.maxColdRent));
+      else if (c?.maxBudget) parts.push(fmt(c.maxBudget));
+    } else if (c?.maxBudget) {
+      parts.push(fmt(c.maxBudget));
+    }
     return parts.join(' · ') || '—';
   }
 
