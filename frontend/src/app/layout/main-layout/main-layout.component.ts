@@ -28,7 +28,7 @@ interface NavItem {
         <!-- Brand -->
         <div class="sidebar-brand">
           <div class="sidebar-logo">
-            <i class="ph-bold ph-house-line" style="font-size:20px; color:#fff;"></i>
+            <i class="ri-home-fill" style="font-size:20px; color:#fff;"></i>
           </div>
           <div>
             <div class="sidebar-brand-name">MarklerApp</div>
@@ -68,7 +68,7 @@ interface NavItem {
               <span style="flex:1; text-align:left;">{{ item.labelKey | translate }}</span>
               <!-- Drag handle — visible on hover -->
               <i cdkDragHandle
-                 class="ph ph-dots-six-vertical"
+                 class="ri-draggable"
                  *ngIf="item['_hover'] && !isMobile"
                  style="font-size:16px; color:rgba(255,255,255,0.35); cursor:grab; margin-left:4px;"
                  (mousedown)="$event.preventDefault()"></i>
@@ -76,7 +76,7 @@ interface NavItem {
           </div>
           <a routerLink="/settings" routerLinkActive="active"
              class="sidebar-nav-item sidebar-settings-link">
-            <i class="ph-fill ph-gear" style="font-size:19px; width:22px; text-align:center;"></i>
+            <i class="ri-settings-fill" style="font-size:19px; width:22px; text-align:center;"></i>
             <span style="flex:1; text-align:left;">{{ 'navigation.settings' | translate }}</span>
           </a>
         </nav>
@@ -90,7 +90,7 @@ interface NavItem {
           <button class="sidebar-icon-btn"
                   (click)="$event.stopPropagation(); logout()"
                   [title]="'auth.logout' | translate">
-            <i class="ph ph-sign-out" style="font-size:17px;"></i>
+            <i class="ri-logout-box-line" style="font-size:17px;"></i>
           </button>
         </div>
 
@@ -110,11 +110,11 @@ interface NavItem {
 })
 export class MainLayoutComponent implements OnInit, OnDestroy {
   private readonly defaultNavItems: NavItem[] = [
-    { route: '/dashboard',      icon: 'ph-fill ph-squares-four',  labelKey: 'navigation.dashboard',      exact: true },
-    { route: '/clients',        icon: 'ph-fill ph-users',         labelKey: 'navigation.clients'                     },
-    { route: '/properties',     icon: 'ph-fill ph-buildings',     labelKey: 'navigation.properties'                  },
-    { route: '/analytics',      icon: 'ph-fill ph-chart-line-up', labelKey: 'navigation.analytics'                   },
-    { route: '/notifications',  icon: 'ph-fill ph-bell',          labelKey: 'navigation.notifications'               },
+    { route: '/dashboard',      icon: 'ri-grid-fill',  labelKey: 'navigation.dashboard',      exact: true },
+    { route: '/clients',        icon: 'ri-group-fill',         labelKey: 'navigation.clients'                     },
+    { route: '/properties',     icon: 'ri-building-2-fill',     labelKey: 'navigation.properties'                  },
+    { route: '/analytics',      icon: 'ri-line-chart-fill', labelKey: 'navigation.analytics'                   },
+    { route: '/notifications',  icon: 'ri-notification-fill',          labelKey: 'navigation.notifications'               },
   ];
 
   navItems: NavItem[] = [...this.defaultNavItems];

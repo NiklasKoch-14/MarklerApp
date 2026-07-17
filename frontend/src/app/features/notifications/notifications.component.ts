@@ -33,7 +33,7 @@ interface Notification {
           <h1 class="page-title">{{ 'notifications.title' | translate }}</h1>
         </div>
         <button class="btn-secondary" (click)="markAllRead()">
-          <i class="ph ph-checks" style="font-size:16px;"></i>
+          <i class="ri-check-double-line" style="font-size:16px;"></i>
           {{ 'notifications.markAllRead' | translate }}
         </button>
       </div>
@@ -41,13 +41,13 @@ interface Notification {
       <!-- Filter tabs -->
       <div class="view-tabs" style="margin-bottom:24px; display:inline-flex;">
         <button class="view-tab" [class.active]="activeFilter === 'all'" (click)="setFilter('all')">
-          <i class="ph ph-bell" style="font-size:15px;"></i>
+          <i class="ri-notification-line" style="font-size:15px;"></i>
           {{ 'notifications.all' | translate }}
           <span *ngIf="unreadCount > 0"
             style="background:var(--primary); color:#fff; font-size:11px; font-weight:700; padding:1px 7px; border-radius:10px; margin-left:4px;">{{ unreadCount }}</span>
         </button>
         <button class="view-tab" [class.active]="activeFilter === 'followup'" (click)="setFilter('followup')">
-          <i class="ph ph-calendar" style="font-size:15px;"></i>
+          <i class="ri-calendar-line" style="font-size:15px;"></i>
           {{ 'notifications.followUps' | translate }}
         </button>
       </div>
@@ -87,7 +87,7 @@ interface Notification {
                 </div>
                 <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
                   <span style="font-size:12px; color:var(--text-3); white-space:nowrap; margin-top:2px;">{{ item.time }}</span>
-                  <i class="ph ph-arrow-right" style="font-size:14px;"
+                  <i class="ri-arrow-right-line" style="font-size:14px;"
                      [style.color]="item.unread ? 'var(--primary)' : 'var(--text-3)'"></i>
                 </div>
               </div>
@@ -119,7 +119,7 @@ interface Notification {
                 </div>
                 <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
                   <span style="font-size:12px; color:var(--text-3); white-space:nowrap; margin-top:2px;">{{ item.time }}</span>
-                  <i class="ph ph-arrow-right" style="font-size:14px;"
+                  <i class="ri-arrow-right-line" style="font-size:14px;"
                      [style.color]="item.unread ? 'var(--primary)' : 'var(--text-3)'"></i>
                 </div>
               </div>
@@ -129,7 +129,7 @@ interface Notification {
 
         <!-- Empty state -->
         <div *ngIf="filteredItems.length === 0" class="widget-card" style="text-align:center; padding:48px 24px;">
-          <i class="ph ph-bell-slash" style="font-size:40px; color:var(--text-3);"></i>
+          <i class="ri-notification-off-line" style="font-size:40px; color:var(--text-3);"></i>
           <p style="margin:12px 0 0; font-size:15px; font-weight:600; color:var(--text);">{{ 'notifications.empty' | translate }}</p>
         </div>
 
@@ -168,7 +168,7 @@ export class NotificationsComponent implements OnInit {
       text: r.subject + this.formatDueText(r),
       time: this.formatTime(r.followUpDate, r.isOverdue),
       unread: r.isOverdue || this.isDueToday(r.followUpDate),
-      icon: r.isOverdue ? 'ph-fill ph-warning' : 'ph-fill ph-calendar-check',
+      icon: r.isOverdue ? 'ri-alert-fill' : 'ri-calendar-check-fill',
       iconColor: r.isOverdue ? '#d9534f' : '#c07a1e',
       isOverdue: r.isOverdue,
       followUpDate: r.followUpDate

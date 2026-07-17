@@ -6,7 +6,7 @@
     <div style="position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.2);padding:24px;width:100%;max-width:420px;">
       <div style="display:flex;align-items:flex-start;gap:14px;">
         <div style="flex-shrink:0;width:40px;height:40px;border-radius:50%;background:rgba(192,122,30,0.12);display:flex;align-items:center;justify-content:center;">
-          <i class="ph ph-warning" style="font-size:20px;color:var(--color-amber);"></i>
+          <i class="ri-alert-line" style="font-size:20px;color:var(--color-amber);"></i>
         </div>
         <div>
           <h3 style="font-size:16px;font-weight:700;color:var(--text);margin:0 0 6px;">{{ 'formDraft.restoreTitle' | translate }}</h3>
@@ -43,7 +43,7 @@
       <div class="card animation-fade-in">
         <button type="button" class="card-header section-toggle" (click)="toggleSection('basic')">
           <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.basicInfo' | translate }}</h3>
-          <i class="ph ph-caret-down section-caret" [class.open]="sectionOpen['basic']"></i>
+          <i class="ri-arrow-down-s-line section-caret" [class.open]="sectionOpen['basic']"></i>
         </button>
         <div class="card-body space-y-6" *ngIf="sectionOpen['basic']">
           <!-- Title -->
@@ -130,7 +130,7 @@
       <div class="card animation-fade-in">
         <button type="button" class="card-header section-toggle" (click)="toggleSection('location')">
           <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.location' | translate }}</h3>
-          <i class="ph ph-caret-down section-caret" [class.open]="sectionOpen['location']"></i>
+          <i class="ri-arrow-down-s-line section-caret" [class.open]="sectionOpen['location']"></i>
         </button>
         <div class="card-body space-y-6" *ngIf="sectionOpen['location']">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -230,7 +230,7 @@
       <div class="card animation-fade-in">
         <button type="button" class="card-header section-toggle" (click)="toggleSection('specs')">
           <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.specifications' | translate }}</h3>
-          <i class="ph ph-caret-down section-caret" [class.open]="sectionOpen['specs']"></i>
+          <i class="ri-arrow-down-s-line section-caret" [class.open]="sectionOpen['specs']"></i>
         </button>
         <div class="card-body space-y-6" *ngIf="sectionOpen['specs']">
           <!-- Area Fields -->
@@ -385,7 +385,7 @@
       <div class="card animation-fade-in">
         <button type="button" class="card-header section-toggle" (click)="toggleSection('financial')">
           <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.financial' | translate }}</h3>
-          <i class="ph ph-caret-down section-caret" [class.open]="sectionOpen['financial']"></i>
+          <i class="ri-arrow-down-s-line section-caret" [class.open]="sectionOpen['financial']"></i>
         </button>
         <div class="card-body space-y-6" *ngIf="sectionOpen['financial']">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -473,7 +473,7 @@
       <div class="card animation-fade-in">
         <button type="button" class="card-header section-toggle" (click)="toggleSection('features')">
           <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.featuresEnergy' | translate }}</h3>
-          <i class="ph ph-caret-down section-caret" [class.open]="sectionOpen['features']"></i>
+          <i class="ri-arrow-down-s-line section-caret" [class.open]="sectionOpen['features']"></i>
         </button>
         <div class="card-body space-y-6" *ngIf="sectionOpen['features']">
           <!-- Features Checkboxes -->
@@ -656,7 +656,7 @@
               {{ 'placeholders.imagesUploadInfo' | translate }}
             </p>
           </div>
-          <i class="ph ph-caret-down section-caret" [class.open]="sectionOpen['images']"></i>
+          <i class="ri-arrow-down-s-line section-caret" [class.open]="sectionOpen['images']"></i>
         </button>
         <div class="card-body" *ngIf="sectionOpen['images']">
           <app-property-image-upload
@@ -666,7 +666,7 @@
             (imagesChanged)="onImagesChanged($event)">
           </app-property-image-upload>
           <div *ngIf="!propertyId" style="text-align:center;padding:32px 0;color:var(--text-3);">
-            <i class="ph ph-image" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+            <i class="ri-image-line" style="font-size:32px;display:block;margin-bottom:8px;"></i>
             <p style="font-size:13px;margin:0;">
               {{ 'placeholders.imagesSaveFirst' | translate }}
             </p>
@@ -683,7 +683,7 @@
               {{ 'placeholders.exposeUploadInfo' | translate }}
             </p>
           </div>
-          <i class="ph ph-caret-down section-caret" [class.open]="sectionOpen['expose']"></i>
+          <i class="ri-arrow-down-s-line section-caret" [class.open]="sectionOpen['expose']"></i>
         </button>
         <div class="card-body" *ngIf="sectionOpen['expose']">
           <app-property-expose
@@ -691,7 +691,7 @@
             [propertyId]="propertyId">
           </app-property-expose>
           <div *ngIf="!propertyId" style="text-align:center;padding:32px 0;color:var(--text-3);">
-            <i class="ph ph-file-pdf" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+            <i class="ri-file-pdf-line" style="font-size:32px;display:block;margin-bottom:8px;"></i>
             <p style="font-size:13px;margin:0;">
               {{ 'placeholders.exposeSaveFirst' | translate }}
             </p>
@@ -702,7 +702,7 @@
       <!-- Error Message -->
       <div *ngIf="errorMessage"
            style="padding:14px 16px;border-radius:10px;background:var(--color-error-soft);border:1px solid var(--color-error);display:flex;align-items:flex-start;gap:10px;">
-        <i class="ph ph-warning-circle" style="font-size:18px;color:var(--color-error);flex-shrink:0;margin-top:1px;"></i>
+        <i class="ri-error-warning-line" style="font-size:18px;color:var(--color-error);flex-shrink:0;margin-top:1px;"></i>
         <div>
           <div style="font-size:13px;font-weight:600;color:var(--color-error);margin-bottom:2px;">{{ 'errors.validationError' | translate }}</div>
           <div style="font-size:13px;color:var(--color-error);">{{ errorMessage }}</div>

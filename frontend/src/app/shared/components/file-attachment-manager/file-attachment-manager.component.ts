@@ -253,12 +253,12 @@ export class FileAttachmentManagerComponent implements OnInit, OnDestroy {
   }
 
   getPhosphorIcon(attachment: FileAttachmentDto): string {
-    if (attachment.isPdf) return 'ph ph-file-pdf';
-    if (attachment.isImage) return 'ph ph-image';
+    if (attachment.isPdf) return 'ri-file-pdf-line';
+    if (attachment.isImage) return 'ri-image-line';
     const ext = attachment.fileExtension?.toLowerCase();
-    if (ext === 'doc' || ext === 'docx') return 'ph ph-microsoft-word-logo';
-    if (ext === 'xls' || ext === 'xlsx') return 'ph ph-microsoft-excel-logo';
-    return 'ph ph-file';
+    if (ext === 'doc' || ext === 'docx') return 'ri-file-word-line';
+    if (ext === 'xls' || ext === 'xlsx') return 'ri-file-excel-line';
+    return 'ri-file-line';
   }
 
   getFileTypeBg(attachment: FileAttachmentDto): string {

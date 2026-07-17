@@ -3,7 +3,7 @@
   <!-- Back + Hero -->
   <a routerLink="/properties"
      style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-3);text-decoration:none;margin-bottom:20px;">
-    <i class="ph ph-arrow-left" style="font-size:14px;"></i>
+    <i class="ri-arrow-left-line" style="font-size:14px;"></i>
     Zurück zur Übersicht
   </a>
 
@@ -23,7 +23,7 @@
                   [style.opacity]="isUpdatingStatus ? '0.6' : '1'">
             <span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;flex-shrink:0;"></span>
             {{ getStatusLabel(property.status) }}
-            <i class="ph ph-caret-down" style="font-size:10px;margin-left:2px;"></i>
+            <i class="ri-arrow-down-s-line" style="font-size:10px;margin-left:2px;"></i>
           </button>
 
           <div *ngIf="showStatusDropdown"
@@ -38,7 +38,7 @@
               <span style="width:7px;height:7px;border-radius:50%;flex-shrink:0;"
                     [style.background]="getStatusColor(s)"></span>
               {{ getStatusLabel(s) }}
-              <i *ngIf="s === property.status" class="ph ph-check" style="margin-left:auto;font-size:12px;"></i>
+              <i *ngIf="s === property.status" class="ri-check-line" style="margin-left:auto;font-size:12px;"></i>
             </button>
           </div>
 
@@ -58,7 +58,7 @@
         <!-- Tage am Markt -->
         <span *ngIf="getDaysOnMarket() !== null"
               style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:6px;background:var(--surface-2);color:var(--text-3);">
-          <i class="ph ph-clock" style="font-size:13px;"></i>
+          <i class="ri-time-line" style="font-size:13px;"></i>
           {{ getDaysOnMarket() }} {{ getDaysOnMarket() === 1 ? 'Tag' : 'Tage' }} am Markt
         </span>
       </div>
@@ -73,7 +73,7 @@
 
       <!-- Address -->
       <div style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text-3);">
-        <i class="ph ph-map-pin" style="font-size:14px;"></i>
+        <i class="ri-map-pin-line" style="font-size:14px;"></i>
         {{ property.formattedAddress || joinAddressParts() }}
       </div>
     </div>
@@ -84,12 +84,12 @@
               (click)="previewExpose()"
               [disabled]="isLoadingExpose"
               style="display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
-        <i class="ph ph-file-pdf" style="font-size:14px;color:var(--color-error);"></i>
+        <i class="ri-file-pdf-line" style="font-size:14px;color:var(--color-error);"></i>
         Exposé
       </button>
       <a [routerLink]="['/properties', property.id, 'edit']"
          style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:1.5px solid var(--primary);border-radius:10px;background:var(--surface);color:var(--primary);font-size:13px;font-weight:700;text-decoration:none;">
-        <i class="ph ph-pencil-simple" style="font-size:14px;"></i>
+        <i class="ri-pencil-line" style="font-size:14px;"></i>
         Bearbeiten
       </a>
     </div>
@@ -113,11 +113,11 @@
           <!-- Arrows -->
           <button *ngIf="property.images.length > 1" (click)="previousImage()"
                   style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.8);border:none;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;">
-            <i class="ph ph-caret-left"></i>
+            <i class="ri-arrow-left-s-line"></i>
           </button>
           <button *ngIf="property.images.length > 1" (click)="nextImage()"
                   style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.8);border:none;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;">
-            <i class="ph ph-caret-right"></i>
+            <i class="ri-arrow-right-s-line"></i>
           </button>
           <div style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.55);color:#fff;font-size:12px;font-weight:600;padding:3px 10px;border-radius:10px;">
             {{ selectedImageIndex + 1 }} / {{ property.images.length }}
@@ -150,57 +150,57 @@
         <div style="display:flex;flex-wrap:wrap;gap:8px;">
           <span *ngIf="property.hasElevator"
                 style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ph ph-elevator" style="color:var(--primary);"></i>
+            <i class="ri-expand-up-down-line" style="color:var(--primary);"></i>
             Aufzug
           </span>
           <span *ngIf="property.hasBalcony"
                 style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ph ph-sun-horizon" style="color:var(--primary);"></i>
+            <i class="ri-cloudy-line" style="color:var(--primary);"></i>
             Balkon
           </span>
           <span *ngIf="property.hasTerrace"
                 style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ph ph-sun" style="color:var(--primary);"></i>
+            <i class="ri-sun-line" style="color:var(--primary);"></i>
             Terrasse
           </span>
           <span *ngIf="property.hasGarden"
                 style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ph ph-tree" style="color:var(--primary);"></i>
+            <i class="ri-tree-line" style="color:var(--primary);"></i>
             Garten
           </span>
           <span *ngIf="property.hasGarage"
                 style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ph ph-car" style="color:var(--primary);"></i>
+            <i class="ri-car-line" style="color:var(--primary);"></i>
             Garage
           </span>
           <span *ngIf="property.hasParking"
                 style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ph ph-parking-sign" style="color:var(--primary);"></i>
+            <i class="ri-parking-line" style="color:var(--primary);"></i>
             Parkplatz
           </span>
           <span *ngIf="property.hasBasement"
                 style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ph ph-warehouse" style="color:var(--primary);"></i>
+            <i class="ri-archive-line" style="color:var(--primary);"></i>
             Keller
           </span>
           <span *ngIf="property.hasAttic"
                 style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ph ph-house-line" style="color:var(--primary);"></i>
+            <i class="ri-home-line" style="color:var(--primary);"></i>
             Dachboden
           </span>
           <span *ngIf="property.isBarrierFree"
                 style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ph ph-wheelchair" style="color:var(--primary);"></i>
+            <i class="ri-wheelchair-line" style="color:var(--primary);"></i>
             Barrierefrei
           </span>
           <span *ngIf="property.petsAllowed"
                 style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ph ph-paw-print" style="color:var(--primary);"></i>
+            <i class="ri-footprint-line" style="color:var(--primary);"></i>
             Haustiere erlaubt
           </span>
           <span *ngIf="property.furnished"
                 style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ph ph-armchair" style="color:var(--primary);"></i>
+            <i class="ri-armchair-line" style="color:var(--primary);"></i>
             Möbliert
           </span>
         </div>
@@ -209,7 +209,7 @@
       <!-- Interne Notizen -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
         <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
-          <i class="ph ph-lock" style="color:var(--primary);font-size:16px;"></i>
+          <i class="ri-lock-line" style="color:var(--primary);font-size:16px;"></i>
           <span style="font-size:14px;font-weight:700;color:var(--text);">Interne Notizen</span>
           <span style="font-size:11px;color:var(--text-3);">(nur für dich sichtbar)</span>
         </div>
@@ -227,7 +227,7 @@
               <button (click)="saveNote()" [disabled]="!newNoteText.trim() || isSavingNote"
                       style="padding:7px 18px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;"
                       [style.opacity]="!newNoteText.trim() || isSavingNote ? '0.5' : '1'">
-                <i *ngIf="!isSavingNote" class="ph ph-check"></i>
+                <i *ngIf="!isSavingNote" class="ri-check-line"></i>
                 {{ isSavingNote ? 'Speichern…' : 'Notiz speichern' }}
               </button>
             </div>
@@ -250,7 +250,7 @@
                 </div>
                 <button (click)="deleteNote(note.id)"
                         style="border:none;background:none;cursor:pointer;padding:4px;color:var(--text-3);font-size:16px;flex-shrink:0;">
-                  <i class="ph ph-trash"></i>
+                  <i class="ri-delete-bin-line"></i>
                 </button>
               </div>
               <div style="font-size:11px;color:var(--text-3);margin-top:8px;">{{ note.createdAt | date:'dd.MM.yyyy HH:mm' }}</div>
@@ -267,7 +267,7 @@
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
         <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;">
           <div style="display:flex;align-items:center;gap:8px;">
-            <i class="ph ph-users" style="color:var(--primary);font-size:16px;"></i>
+            <i class="ri-group-line" style="color:var(--primary);font-size:16px;"></i>
             <span style="font-size:14px;font-weight:700;color:var(--text);">Besichtigungen</span>
             <span *ngIf="viewings.length > 0"
                   style="font-size:12px;font-weight:600;padding:2px 8px;background:rgba(47,107,122,0.12);color:var(--primary);border-radius:10px;">
@@ -276,7 +276,7 @@
           </div>
           <button (click)="showViewingDialog = true"
                   style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
-            <i class="ph ph-plus"></i>
+            <i class="ri-add-line"></i>
             Besichtigung erfassen
           </button>
         </div>
@@ -296,10 +296,9 @@
                 <div style="font-size:12px;color:var(--text-3);margin-top:2px;">{{ v.viewingDate | date:'HH:mm' }} Uhr</div>
               </div>
               <div *ngIf="v.feedback" style="font-size:16px;flex-shrink:0;" [title]="v.feedback">
-                <i class="ph-fill"
-                   [class.ph-thumbs-up]="v.feedback === 'LIKED'"
-                   [class.ph-thumbs-down]="v.feedback === 'DISLIKED'"
-                   [class.ph-smiley-meh]="v.feedback !== 'LIKED' && v.feedback !== 'DISLIKED'"
+                <i [class.ri-thumb-up-fill]="v.feedback === 'LIKED'"
+                   [class.ri-thumb-down-fill]="v.feedback === 'DISLIKED'"
+                   [class.ri-emotion-normal-fill]="v.feedback !== 'LIKED' && v.feedback !== 'DISLIKED'"
                    [style.color]="v.feedback === 'LIKED' ? 'var(--color-success)' : v.feedback === 'DISLIKED' ? 'var(--color-error)' : 'var(--color-warning)'"></i>
               </div>
               <span [style.background]="getViewingStatusBg(v.status)"
@@ -311,7 +310,7 @@
           </div>
           <div *ngIf="!isLoadingViewings && viewings.length === 0"
                style="text-align:center;padding:20px 0;color:var(--text-3);">
-            <i class="ph ph-users" style="font-size:28px;display:block;margin-bottom:8px;"></i>
+            <i class="ri-group-line" style="font-size:28px;display:block;margin-bottom:8px;"></i>
             <div style="font-size:13px;">Noch keine Besichtigungen erfasst</div>
           </div>
         </div>
@@ -320,7 +319,7 @@
       <!-- File Attachments -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
         <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
-          <i class="ph ph-paperclip" style="color:var(--primary);font-size:16px;"></i>
+          <i class="ri-attachment-line" style="color:var(--primary);font-size:16px;"></i>
           <span style="font-size:14px;font-weight:700;color:var(--text);">{{ 'attachments.sectionTitle' | translate }}</span>
         </div>
         <div style="padding:16px 20px;">
@@ -332,13 +331,13 @@
       <div style="display:flex;align-items:center;justify-content:space-between;padding-top:4px;">
         <a routerLink="/properties"
            style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-2);font-size:13px;font-weight:600;text-decoration:none;">
-          <i class="ph ph-arrow-left" style="font-size:14px;"></i>
+          <i class="ri-arrow-left-line" style="font-size:14px;"></i>
           Zurück
         </a>
         <button (click)="deleteProperty()" [disabled]="isDeleting"
                 style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:none;border-radius:10px;background:var(--color-error-soft);color:var(--color-error);font-size:13px;font-weight:600;cursor:pointer;"
                 [style.opacity]="isDeleting ? '0.5' : '1'">
-          <i class="ph ph-trash" style="font-size:14px;"></i>
+          <i class="ri-delete-bin-line" style="font-size:14px;"></i>
           {{ isDeleting ? 'Löschen…' : 'Objekt löschen' }}
         </button>
       </div>
@@ -437,7 +436,7 @@
         </div>
         <div style="padding:14px 18px;display:flex;flex-direction:column;gap:8px;">
           <div *ngIf="property.addressStreet" style="display:flex;gap:8px;">
-            <i class="ph ph-map-pin" style="color:var(--text-3);font-size:14px;flex-shrink:0;margin-top:1px;"></i>
+            <i class="ri-map-pin-line" style="color:var(--text-3);font-size:14px;flex-shrink:0;margin-top:1px;"></i>
             <span style="font-size:13px;color:var(--text);">
               {{ property.addressStreet }}{{ property.addressHouseNumber ? ' ' + property.addressHouseNumber : '' }}<br>
               {{ property.addressPostalCode }} {{ property.addressCity }}
@@ -476,19 +475,19 @@
       <div *ngIf="property.ownerName || property.ownerPhone"
            style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
         <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
-          <i class="ph ph-user-circle" style="font-size:15px;color:var(--text-3);"></i>
+          <i class="ri-account-circle-line" style="font-size:15px;color:var(--text-3);"></i>
           <span style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.5px;">Eigentümer</span>
           <span style="margin-left:auto;font-size:11px;color:var(--text-3);font-style:italic;">intern</span>
         </div>
         <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
           <span *ngIf="property.ownerName"
                 style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);">
-            <i class="ph ph-user" style="font-size:14px;flex-shrink:0;color:var(--text-3);"></i>
+            <i class="ri-user-line" style="font-size:14px;flex-shrink:0;color:var(--text-3);"></i>
             {{ property.ownerName }}
           </span>
           <a *ngIf="property.ownerPhone" [href]="'tel:' + property.ownerPhone"
              style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--primary);text-decoration:none;font-weight:600;">
-            <i class="ph ph-phone" style="font-size:14px;flex-shrink:0;"></i>
+            <i class="ri-phone-line" style="font-size:14px;flex-shrink:0;"></i>
             {{ property.ownerPhone }}
           </a>
         </div>
@@ -497,7 +496,7 @@
       <!-- Passende Käufer -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
         <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
-          <i class="ph-fill ph-users-three" style="font-size:15px;color:var(--primary);"></i>
+          <i class="ri-group-3-fill" style="font-size:15px;color:var(--primary);"></i>
           <span style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.5px;flex:1;">Passende Käufer</span>
           <span *ngIf="!isLoadingMatchingClients && matchingClients.length > 0"
                 style="font-size:11px;font-weight:700;color:var(--primary);background:var(--accent-soft);padding:2px 7px;border-radius:10px;">
@@ -523,12 +522,12 @@
                 <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ m.client.firstName }} {{ m.client.lastName }}</div>
                 <div *ngIf="m.client.searchCriteria?.maxBudget" style="font-size:11px;color:var(--text-3);">bis {{ m.client.searchCriteria.maxBudget | number:'1.0-0' }} €</div>
               </div>
-              <i class="ph ph-arrow-right" style="font-size:12px;color:var(--text-3);flex-shrink:0;"></i>
+              <i class="ri-arrow-right-line" style="font-size:12px;color:var(--text-3);flex-shrink:0;"></i>
             </a>
           </div>
           <div *ngIf="!isLoadingMatchingClients && matchingClients.length === 0"
                style="text-align:center;padding:12px 0;color:var(--text-3);">
-            <i class="ph ph-users" style="font-size:22px;display:block;margin-bottom:4px;"></i>
+            <i class="ri-group-line" style="font-size:22px;display:block;margin-bottom:4px;"></i>
             <div style="font-size:12px;">Keine passenden Käufer</div>
           </div>
         </div>
@@ -543,17 +542,17 @@
         <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
           <a *ngIf="property.contactPhone" [href]="'tel:' + property.contactPhone"
              style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--primary);text-decoration:none;">
-            <i class="ph ph-phone" style="font-size:14px;flex-shrink:0;"></i>
+            <i class="ri-phone-line" style="font-size:14px;flex-shrink:0;"></i>
             {{ property.contactPhone }}
           </a>
           <a *ngIf="property.contactEmail" [href]="'mailto:' + property.contactEmail"
              style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--primary);text-decoration:none;">
-            <i class="ph ph-envelope" style="font-size:14px;flex-shrink:0;"></i>
+            <i class="ri-mail-line" style="font-size:14px;flex-shrink:0;"></i>
             {{ property.contactEmail }}
           </a>
           <a *ngIf="property.virtualTourUrl" [href]="property.virtualTourUrl" target="_blank"
              style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--text-2);text-decoration:none;">
-            <i class="ph ph-video-camera" style="font-size:14px;"></i>
+            <i class="ri-camera-line" style="font-size:14px;"></i>
             Virtuelle Tour öffnen
           </a>
         </div>
@@ -566,11 +565,11 @@
 <!-- Not found state -->
 <div *ngIf="!isLoading && !property"
      style="padding:80px 32px;text-align:center;">
-  <i class="ph ph-house" style="font-size:48px;color:var(--text-3);display:block;margin-bottom:12px;"></i>
+  <i class="ri-home-line" style="font-size:48px;color:var(--text-3);display:block;margin-bottom:12px;"></i>
   <h3 style="font-size:15px;font-weight:600;color:var(--text);margin:0 0 6px;">Objekt nicht gefunden</h3>
   <a routerLink="/properties"
      style="font-size:13px;color:var(--primary);text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
-     <i class="ph ph-arrow-left"></i> Zurück zur Übersicht</a>
+     <i class="ri-arrow-left-line"></i> Zurück zur Übersicht</a>
 </div>
 
 <!-- Loading -->

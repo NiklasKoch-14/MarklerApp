@@ -7,7 +7,7 @@
       <p style="font-size:14px;color:var(--text-2);margin-top:4px;">{{ 'properties.management' | translate }}</p>
     </div>
     <a routerLink="/properties/new" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;">
-      <i class="ph ph-plus"></i>
+      <i class="ri-add-line"></i>
       {{ 'properties.add' | translate }}
     </a>
   </div>
@@ -20,11 +20,11 @@
   <!-- Empty State (no properties at all) -->
   <div *ngIf="!isLoading && properties.length === 0 && !hasActiveFilters"
        style="text-align:center;padding:56px 24px;background:var(--surface);border:1px solid var(--border);border-radius:14px;">
-    <i class="ph ph-house" style="font-size:48px;color:var(--text-3);display:block;margin-bottom:12px;"></i>
+    <i class="ri-home-line" style="font-size:48px;color:var(--text-3);display:block;margin-bottom:12px;"></i>
     <h3 style="font-size:15px;font-weight:600;color:var(--text);margin:0 0 6px;">{{ 'properties.noPropertiesFound' | translate }}</h3>
     <p style="font-size:13px;color:var(--text-2);margin:0 0 20px;">{{ 'properties.noPropertiesHint' | translate }}</p>
     <a routerLink="/properties/new" class="btn-primary" style="display:inline-flex;">
-      <i class="ph ph-plus"></i>
+      <i class="ri-add-line"></i>
       {{ 'properties.add' | translate }}
     </a>
   </div>
@@ -33,7 +33,7 @@
   <ng-container *ngIf="!isLoading && (properties.length > 0 || hasActiveFilters)">
     <div class="toolbar">
       <div class="search-box">
-        <i class="ph ph-magnifying-glass"></i>
+        <i class="ri-search-line"></i>
         <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchInput()"
                [placeholder]="'properties.quickSearchPlaceholder' | translate" />
       </div>
@@ -65,7 +65,7 @@
     <!-- No filter matches -->
     <div *ngIf="properties.length === 0"
       style="text-align:center;padding:44px 24px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);">
-      <i class="ph ph-funnel" style="font-size:36px;color:var(--text-3);display:block;margin-bottom:10px;"></i>
+      <i class="ri-filter-3-line" style="font-size:36px;color:var(--text-3);display:block;margin-bottom:10px;"></i>
       <p style="font-size:14px;color:var(--text-2);margin:0 0 14px;">{{ 'properties.noMatchingProperties' | translate }}</p>
       <button (click)="clearAll()" class="btn-secondary" style="display:inline-flex;">
         {{ 'properties.clearFilters' | translate }}
@@ -78,20 +78,20 @@
           <tr>
             <th class="sortable" (click)="toggleSort('title')">
               {{ 'properties.col.property' | translate }}
-              <i *ngIf="sortBy === 'title'" class="ph sort-caret"
-                 [class.ph-caret-up]="sortDir === 'asc'" [class.ph-caret-down]="sortDir === 'desc'"></i>
+              <i *ngIf="sortBy === 'title'" class="sort-caret"
+                 [class.ri-arrow-up-s-line]="sortDir === 'asc'" [class.ri-arrow-down-s-line]="sortDir === 'desc'"></i>
             </th>
             <th class="hide-md">{{ 'properties.col.type' | translate }}</th>
             <th class="sortable" (click)="toggleSort('price')">
               {{ 'properties.col.price' | translate }}
-              <i *ngIf="sortBy === 'price'" class="ph sort-caret"
-                 [class.ph-caret-up]="sortDir === 'asc'" [class.ph-caret-down]="sortDir === 'desc'"></i>
+              <i *ngIf="sortBy === 'price'" class="sort-caret"
+                 [class.ri-arrow-up-s-line]="sortDir === 'asc'" [class.ri-arrow-down-s-line]="sortDir === 'desc'"></i>
             </th>
             <th class="hide-md">{{ 'properties.col.specs' | translate }}</th>
             <th class="sortable" (click)="toggleSort('createdAt')">
               {{ 'properties.col.daysOnMarket' | translate }}
-              <i *ngIf="sortBy === 'createdAt'" class="ph sort-caret"
-                 [class.ph-caret-up]="sortDir === 'asc'" [class.ph-caret-down]="sortDir === 'desc'"></i>
+              <i *ngIf="sortBy === 'createdAt'" class="sort-caret"
+                 [class.ri-arrow-up-s-line]="sortDir === 'asc'" [class.ri-arrow-down-s-line]="sortDir === 'desc'"></i>
             </th>
             <th>{{ 'properties.col.status' | translate }}</th>
           </tr>
@@ -104,12 +104,12 @@
               <div class="obj-cell">
                 <img *ngIf="getPrimaryImage(property)" [src]="getPrimaryImage(property)" [alt]="property.title" class="obj-thumb" />
                 <div *ngIf="!getPrimaryImage(property)" class="obj-thumb obj-thumb-empty">
-                  <i class="ph ph-image"></i>
+                  <i class="ri-image-line"></i>
                 </div>
                 <div style="min-width:0;">
                   <div class="obj-title">{{ property.title }}</div>
                   <div class="obj-loc">
-                    <i class="ph ph-map-pin" style="font-size:11px;"></i>
+                    <i class="ri-map-pin-line" style="font-size:11px;"></i>
                     <ng-container *ngIf="property.addressDistrict">{{ property.addressDistrict }}, </ng-container>{{ property.addressCity }}
                   </div>
                 </div>
@@ -153,13 +153,13 @@
       <button (click)="previousPage()" [disabled]="currentPage === 0"
               style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-2);font-size:13px;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"
               [style.opacity]="currentPage === 0 ? '0.4' : '1'">
-        <i class="ph ph-arrow-left"></i> {{ 'common.previous' | translate }}
+        <i class="ri-arrow-left-line"></i> {{ 'common.previous' | translate }}
       </button>
       <span style="font-size:13px;color:var(--text-2);">{{ 'properties.showingPage' | translate:{ current: currentPage + 1, total: totalPages } }}</span>
       <button (click)="nextPage()" [disabled]="currentPage >= totalPages - 1"
               style="padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text-2);font-size:13px;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"
               [style.opacity]="currentPage >= totalPages - 1 ? '0.4' : '1'">
-        {{ 'common.next' | translate }} <i class="ph ph-arrow-right"></i>
+        {{ 'common.next' | translate }} <i class="ri-arrow-right-line"></i>
       </button>
     </div>
 

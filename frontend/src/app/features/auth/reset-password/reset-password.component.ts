@@ -35,7 +35,7 @@ import { LoadingSpinnerComponent } from '../../../shared/components/loading-spin
 
         <!-- Invalid token -->
         <div *ngIf="!isValid && !isVerifying" style="padding:20px 0;">
-          <i class="ph ph-warning-circle" style="font-size:48px;color:var(--color-error);display:block;margin-bottom:12px;"></i>
+          <i class="ri-error-warning-line" style="font-size:48px;color:var(--color-error);display:block;margin-bottom:12px;"></i>
           <h2 style="font-size:18px;font-weight:700;color:var(--text);margin:0 0 8px;">{{ 'auth.resetPassword.invalidToken' | translate }}</h2>
           <p style="font-size:13px;color:var(--text-3);margin:0 0 20px;">{{ 'auth.resetPassword.expiredToken' | translate }}</p>
           <a routerLink="/auth/forgot-password" class="auth-link">{{ 'auth.resetPassword.requestNewLink' | translate }}</a>
@@ -93,7 +93,7 @@ import { LoadingSpinnerComponent } from '../../../shared/components/loading-spin
 
         <!-- Success -->
         <div *ngIf="successMessage" style="padding:20px 0;">
-          <i class="ph ph-check-circle" style="font-size:48px;color:var(--color-success);display:block;margin-bottom:12px;"></i>
+          <i class="ri-checkbox-circle-line" style="font-size:48px;color:var(--color-success);display:block;margin-bottom:12px;"></i>
           <h2 style="font-size:18px;font-weight:700;color:var(--text);margin:0 0 8px;">{{ successMessage }}</h2>
           <p style="font-size:13px;color:var(--text-3);margin:0;">{{ 'auth.resetPassword.redirecting' | translate }}</p>
         </div>

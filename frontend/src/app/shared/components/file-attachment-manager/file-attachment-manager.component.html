@@ -8,7 +8,7 @@
        (drop)="onDrop($event)"
        (click)="fileInput.click()">
     <div style="display:flex;align-items:center;justify-content:center;gap:12px;">
-      <i class="ph ph-upload-simple" style="font-size:24px;" [style.color]="isDragOver ? 'var(--primary)' : 'var(--text-3)'"></i>
+      <i class="ri-upload-line" style="font-size:24px;" [style.color]="isDragOver ? 'var(--primary)' : 'var(--text-3)'"></i>
       <div style="text-align:left;">
         <p style="font-size:13px;color:var(--text-2);margin:0;">
           <span style="font-weight:700;">{{ 'attachments.clickToUpload' | translate }}</span>
@@ -35,7 +35,7 @@
       </div>
       <div *ngIf="state.error" style="font-size:11px;color:var(--color-error);margin-top:3px;">{{ state.error }}</div>
       <div *ngIf="!state.uploading && !state.error" style="font-size:11px;color:var(--color-success);margin-top:3px;">
-        <i class="ph ph-check-circle"></i> {{ 'attachments.uploadSuccess' | translate }}
+        <i class="ri-checkbox-circle-line"></i> {{ 'attachments.uploadSuccess' | translate }}
       </div>
     </div>
   </div>
@@ -55,7 +55,7 @@
     <!-- Empty -->
     <div *ngIf="!isLoading && attachments.length === 0"
          style="text-align:center;padding:20px;background:var(--surface-2);border-radius:10px;">
-      <i class="ph ph-file-x" style="font-size:28px;color:var(--text-3);display:block;margin-bottom:8px;"></i>
+      <i class="ri-file-close-line" style="font-size:28px;color:var(--text-3);display:block;margin-bottom:8px;"></i>
       <p style="font-size:13px;color:var(--text-3);margin:0;">{{ 'attachments.noDocuments' | translate }}</p>
     </div>
 
@@ -96,13 +96,13 @@
     <button (click)="downloadAttachment(contextMenuAttachment!); closeContextMenu()"
             style="width:100%;text-align:left;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:13px;color:var(--text-2);font-family:inherit;display:flex;align-items:center;gap:8px;"
             class="ctx-btn">
-      <i class="ph ph-download-simple" style="font-size:14px;"></i>
+      <i class="ri-download-line" style="font-size:14px;"></i>
       {{ 'common.download' | translate }}
     </button>
     <button (click)="deleteAttachment(contextMenuAttachment!); closeContextMenu()"
             style="width:100%;text-align:left;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:13px;color:var(--color-error);font-family:inherit;display:flex;align-items:center;gap:8px;"
             class="ctx-btn">
-      <i class="ph ph-trash" style="font-size:14px;"></i>
+      <i class="ri-delete-bin-line" style="font-size:14px;"></i>
       {{ 'common.delete' | translate }}
     </button>
   </div>

@@ -97,7 +97,7 @@ interface MarketBar {
         <!-- Zu wenig Daten Hinweis -->
         <div *ngIf="tooFewData"
              style="background:var(--surface); border:1px dashed var(--border); border-radius:16px; padding:22px 24px; margin-bottom:20px; display:flex; align-items:center; gap:14px;">
-          <i class="ph ph-chart-line-up" style="font-size:26px; color:var(--text-3);"></i>
+          <i class="ri-line-chart-line" style="font-size:26px; color:var(--text-3);"></i>
           <div>
             <div style="font-size:14px; font-weight:600; color:var(--text);">{{ 'analytics.tooFewTitle' | translate }}</div>
             <div style="font-size:13px; color:var(--text-3); margin-top:2px;">{{ 'analytics.tooFewBody' | translate }}</div>
@@ -109,14 +109,14 @@ interface MarketBar {
           <!-- ══ Conversion Funnel — wo versickern die Leads ══ -->
           <div class="an-card">
             <div class="an-card-head">
-              <div class="an-title"><i class="ph-fill ph-funnel" style="color:var(--primary);"></i>{{ 'analytics.funnelTitle' | translate }}</div>
+              <div class="an-title"><i class="ri-filter-3-fill" style="color:var(--primary);"></i>{{ 'analytics.funnelTitle' | translate }}</div>
               <div class="an-sub">{{ 'analytics.funnelSub' | translate }}</div>
             </div>
             <div style="padding:14px 20px 20px;">
               <div *ngFor="let s of funnelStages; let i = index" style="margin-bottom:2px;">
                 <!-- Drop-off connector -->
                 <div *ngIf="i > 0" style="display:flex; align-items:center; gap:7px; padding:5px 0 5px 4px;">
-                  <i class="ph ph-arrow-bend-down-right" style="font-size:13px;" [style.color]="s.isLeak ? 'var(--color-error)' : 'var(--text-3)'"></i>
+                  <i class="ri-corner-down-right-line" style="font-size:13px;" [style.color]="s.isLeak ? 'var(--color-error)' : 'var(--text-3)'"></i>
                   <span style="font-size:12px; font-weight:600;" [style.color]="s.isLeak ? 'var(--color-error)' : 'var(--text-3)'">
                     {{ s.dropLabel }} {{ 'analytics.convertFurther' | translate }}
                   </span>
@@ -141,7 +141,7 @@ interface MarketBar {
           <!-- ══ Aktivitätsverlauf — telefoniere ich genug ══ -->
           <div class="an-card">
             <div class="an-card-head">
-              <div class="an-title"><i class="ph-fill ph-pulse" style="color:var(--color-viewing);"></i>{{ 'analytics.activityTitle' | translate }}</div>
+              <div class="an-title"><i class="ri-pulse-fill" style="color:var(--color-viewing);"></i>{{ 'analytics.activityTitle' | translate }}</div>
               <div class="an-sub">
                 {{ data.activityTrends.callNotesThisMonth }} {{ 'analytics.callsThisMonth' | translate }}
                 <span [style.color]="data.activityTrends.callNotesGrowthPercent >= 0 ? 'var(--color-closed)' : 'var(--color-error)'" style="font-weight:700;">
@@ -182,7 +182,7 @@ interface MarketBar {
         <!-- ══ Objekte am längsten am Markt — Preisdruck-Gespräch ══ -->
         <div class="an-card" style="margin-bottom:20px;">
           <div class="an-card-head">
-            <div class="an-title"><i class="ph-fill ph-timer" style="color:var(--color-warning);"></i>{{ 'analytics.longestTitle' | translate }}</div>
+            <div class="an-title"><i class="ri-timer-fill" style="color:var(--color-warning);"></i>{{ 'analytics.longestTitle' | translate }}</div>
             <div class="an-sub">{{ 'analytics.longestSub' | translate }}</div>
           </div>
           <div style="padding:8px 20px 14px;">
@@ -211,7 +211,7 @@ interface MarketBar {
         <!-- ══ Pipeline-Gesundheit — mein Gewissen ══ -->
         <div class="an-card">
           <div class="an-card-head">
-            <div class="an-title"><i class="ph-fill ph-heartbeat" style="color:var(--color-error);"></i>{{ 'analytics.healthTitle' | translate }}</div>
+            <div class="an-title"><i class="ri-heart-pulse-fill" style="color:var(--color-error);"></i>{{ 'analytics.healthTitle' | translate }}</div>
           </div>
           <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:0; padding:12px 8px 16px;">
             <div style="padding:8px 16px; text-align:center; border-right:1px solid var(--border);">

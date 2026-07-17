@@ -21,7 +21,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
         <div *ngIf="mode === 'from-client' && preselectedClientName" style="margin-bottom:20px;">
           <label style="font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px;">Kunde</label>
           <div style="padding:10px 14px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);font-size:14px;color:var(--text-1);display:flex;align-items:center;gap:8px;">
-            <i class="ph ph-user" style="color:var(--primary);"></i>
+            <i class="ri-user-line" style="color:var(--primary);"></i>
             {{ preselectedClientName }}
           </div>
         </div>
@@ -29,7 +29,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
         <div *ngIf="mode === 'from-property' && preselectedPropertyTitle" style="margin-bottom:20px;">
           <label style="font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px;">Immobilie</label>
           <div style="padding:10px 14px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);font-size:14px;color:var(--text-1);display:flex;align-items:center;gap:8px;">
-            <i class="ph ph-house" style="color:var(--primary);"></i>
+            <i class="ri-home-line" style="color:var(--primary);"></i>
             {{ preselectedPropertyTitle }}
           </div>
         </div>
@@ -45,14 +45,14 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
                style="padding:12px 14px;background:var(--surface-2);border-radius:10px;border:1.5px solid var(--primary);display:flex;align-items:center;justify-content:space-between;gap:10px;">
             <div style="display:flex;align-items:center;gap:12px;min-width:0;">
               <div style="width:36px;height:36px;border-radius:8px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <i class="ph-fill ph-buildings" style="color:var(--primary);font-size:18px;"></i>
+                <i class="ri-building-2-fill" style="color:var(--primary);font-size:18px;"></i>
               </div>
               <div style="min-width:0;">
                 <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ selectedProperty.title }}</div>
                 <div style="font-size:12px;color:var(--text-3);">{{ selectedProperty.addressCity }} · {{ formatPropertyPrice(selectedProperty) }}</div>
               </div>
             </div>
-            <button type="button" (click)="clearProperty()" style="border:none;background:none;cursor:pointer;color:var(--text-3);font-size:18px;flex-shrink:0;"><i class="ph ph-x"></i></button>
+            <button type="button" (click)="clearProperty()" style="border:none;background:none;cursor:pointer;color:var(--text-3);font-size:18px;flex-shrink:0;"><i class="ri-close-line"></i></button>
           </div>
 
           <!-- Picker trigger button -->
@@ -60,9 +60,9 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
                   style="width:100%;padding:12px 14px;border:1.5px dashed var(--border);border-radius:10px;
                          background:none;cursor:pointer;display:flex;align-items:center;gap:10px;color:var(--text-2);
                          transition:border-color .15s,color .15s;">
-            <i class="ph ph-buildings" style="font-size:20px;color:var(--text-3);"></i>
+            <i class="ri-building-2-line" style="font-size:20px;color:var(--text-3);"></i>
             <span style="font-size:14px;">Immobilie auswählen...</span>
-            <i class="ph ph-caret-right" style="margin-left:auto;font-size:14px;color:var(--text-3);"></i>
+            <i class="ri-arrow-right-s-line" style="margin-left:auto;font-size:14px;color:var(--text-3);"></i>
           </button>
         </div>
 
@@ -75,15 +75,15 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
 
             <!-- Header -->
             <div style="padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;">
-              <i class="ph-fill ph-buildings" style="color:var(--primary);font-size:20px;"></i>
+              <i class="ri-building-2-fill" style="color:var(--primary);font-size:20px;"></i>
               <span style="font-size:16px;font-weight:700;color:var(--text);flex:1;">Immobilie auswählen</span>
-              <button type="button" (click)="closePropertyPicker()" style="border:none;background:none;cursor:pointer;color:var(--text-3);font-size:20px;line-height:1;"><i class="ph ph-x"></i></button>
+              <button type="button" (click)="closePropertyPicker()" style="border:none;background:none;cursor:pointer;color:var(--text-3);font-size:20px;line-height:1;"><i class="ri-close-line"></i></button>
             </div>
 
             <!-- Search -->
             <div style="padding:14px 20px;border-bottom:1px solid var(--border);">
               <div style="position:relative;">
-                <i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:15px;"></i>
+                <i class="ri-search-line" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:15px;"></i>
                 <input type="text" [(ngModel)]="propertyPickerSearch" (input)="onPropertyPickerSearch()"
                        placeholder="Titel, Ort oder Typ suchen..."
                        autofocus
@@ -98,7 +98,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
             <div style="overflow-y:auto;padding:14px 20px;display:flex;flex-direction:column;gap:10px;">
               <div *ngIf="pickerPropertyList.length === 0 && !searchingProperties"
                    style="text-align:center;padding:32px;color:var(--text-3);font-size:13px;">
-                <i class="ph ph-house-simple" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+                <i class="ri-home-line" style="font-size:32px;display:block;margin-bottom:8px;"></i>
                 Keine Immobilien gefunden
               </div>
 
@@ -116,7 +116,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
                 <div style="flex:1;min-width:0;">
                   <div style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;">{{ p.title }}</div>
                   <div style="font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                    <span><i class="ph ph-map-pin" style="font-size:11px;"></i> {{ p.addressCity }}{{ p.addressPostalCode ? ' ' + p.addressPostalCode : '' }}</span>
+                    <span><i class="ri-map-pin-line" style="font-size:11px;"></i> {{ p.addressCity }}{{ p.addressPostalCode ? ' ' + p.addressPostalCode : '' }}</span>
                     <span *ngIf="p.rooms">· {{ p.rooms }} Zi.</span>
                     <span *ngIf="p.livingAreaSqm">· {{ p.livingAreaSqm }} m²</span>
                   </div>
@@ -158,14 +158,14 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
                 {{ getClientStageLabel(selectedClient.pipelineStage) }}
               </span>
             </div>
-            <button type="button" (click)="clearClient()" style="border:none;background:none;cursor:pointer;color:var(--text-3);font-size:16px;"><i class="ph ph-x"></i></button>
+            <button type="button" (click)="clearClient()" style="border:none;background:none;cursor:pointer;color:var(--text-3);font-size:16px;"><i class="ri-close-line"></i></button>
           </div>
 
           <!-- Search + list -->
           <div *ngIf="!selectedClient">
             <!-- Search input -->
             <div style="position:relative;margin-bottom:10px;">
-              <i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:15px;"></i>
+              <i class="ri-search-line" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:15px;"></i>
               <input type="text" [(ngModel)]="clientSearchText" (input)="onClientSearchInput()"
                      placeholder="Nach Namen suchen..."
                      style="width:100%;padding:9px 14px 9px 36px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--surface);color:var(--text-1);outline:none;box-sizing:border-box;">
@@ -177,7 +177,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
             <!-- Hot leads section (no search active) -->
             <div *ngIf="!clientSearchText && hotLeadClients.length > 0">
               <div style="font-size:11px;font-weight:700;color:var(--color-error);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:5px;">
-                <i class="ph-fill ph-fire" style="font-size:13px;"></i> Heiße Interessenten
+                <i class="ri-fire-fill" style="font-size:13px;"></i> Heiße Interessenten
               </div>
               <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px;">
                 <button type="button" *ngFor="let c of hotLeadClients; let last = last"
@@ -258,7 +258,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
                     [style.border-color]="form.get('feedback')?.value === option.value ? option.color : 'var(--border)'"
                     [style.color]="form.get('feedback')?.value === option.value ? option.color : 'var(--text-2)'"
                     style="flex:1;padding:8px 12px;border-radius:8px;border:1.5px solid;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;">
-              <i class="ph-fill" [ngClass]="option.icon" style="font-size:15px;"></i> {{ option.label }}
+              <i [ngClass]="option.icon" style="font-size:15px;"></i> {{ option.label }}
             </button>
           </div>
         </div>
@@ -310,11 +310,11 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
       <div class="viewing-form-enter"
            style="background:var(--surface);border:2px solid var(--color-purple);border-radius:14px;padding:20px 24px;margin-bottom:16px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
-          <i class="ph-fill ph-door-open" style="font-size:16px;color:var(--color-purple);"></i>
+          <i class="ri-door-open-fill" style="font-size:16px;color:var(--color-purple);"></i>
           <span style="font-size:14px;font-weight:700;color:var(--text);">Besichtigung planen</span>
           <button (click)="cancel()"
                   style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text-3);font-size:18px;line-height:1;">
-            <i class="ph ph-x"></i>
+            <i class="ri-close-line"></i>
           </button>
         </div>
         <ng-container *ngTemplateOutlet="formBody"></ng-container>
@@ -335,7 +335,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
               </p>
             </div>
             <button (click)="cancel()" style="border:none;background:none;cursor:pointer;padding:8px;color:var(--text-3);font-size:20px;line-height:1;">
-              <i class="ph ph-x"></i>
+              <i class="ri-close-line"></i>
             </button>
           </div>
           <ng-container *ngTemplateOutlet="formBody"></ng-container>
@@ -391,9 +391,9 @@ export class ViewingAddDialogComponent implements OnInit, OnDestroy {
   errorMessage = '';
 
   feedbackOptions = [
-    { value: ViewingFeedback.LIKED,    label: 'Gefällt',   icon: 'ph-thumbs-up',   color: 'var(--color-success)', bg: 'var(--color-success-soft)' },
-    { value: ViewingFeedback.NEUTRAL,  label: 'Neutral',   icon: 'ph-smiley-meh',  color: 'var(--color-warning)', bg: 'var(--color-warning-soft)' },
-    { value: ViewingFeedback.DISLIKED, label: 'Gefällt nicht', icon: 'ph-thumbs-down', color: 'var(--color-error)', bg: 'var(--color-error-soft)' }
+    { value: ViewingFeedback.LIKED,    label: 'Gefällt',   icon: 'ri-thumb-up-fill',   color: 'var(--color-success)', bg: 'var(--color-success-soft)' },
+    { value: ViewingFeedback.NEUTRAL,  label: 'Neutral',   icon: 'ri-emotion-normal-fill',  color: 'var(--color-warning)', bg: 'var(--color-warning-soft)' },
+    { value: ViewingFeedback.DISLIKED, label: 'Gefällt nicht', icon: 'ri-thumb-down-fill', color: 'var(--color-error)', bg: 'var(--color-error-soft)' }
   ];
 
   private destroy$ = new Subject<void>();
@@ -539,11 +539,11 @@ export class ViewingAddDialogComponent implements OnInit, OnDestroy {
 
   getPropertyTypeIcon(prop: Property): string {
     switch (prop.propertyType) {
-      case 'APARTMENT':  return 'ph-fill ph-buildings';
-      case 'HOUSE':      return 'ph-fill ph-house';
-      case 'TOWNHOUSE':  return 'ph-fill ph-house-line';
-      case 'PENTHOUSE':  return 'ph-fill ph-building-apartment';
-      default:           return 'ph-fill ph-buildings';
+      case 'APARTMENT':  return 'ri-building-2-fill';
+      case 'HOUSE':      return 'ri-home-fill';
+      case 'TOWNHOUSE':  return 'ri-home-fill';
+      case 'PENTHOUSE':  return 'ri-building-4-fill';
+      default:           return 'ri-building-2-fill';
     }
   }
 

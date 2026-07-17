@@ -70,11 +70,11 @@ interface ViewingRow {
         </div>
         <div style="display:flex; gap:10px;">
           <button class="btn-secondary" [routerLink]="['/clients/new']">
-            <i class="ph-bold ph-user-plus" style="font-size:15px;"></i>
+            <i class="ri-user-add-fill" style="font-size:15px;"></i>
             {{ 'dashboard.newCustomer' | translate }}
           </button>
           <button class="btn-secondary" [routerLink]="['/properties/new']">
-            <i class="ph-bold ph-buildings" style="font-size:15px;"></i>
+            <i class="ri-building-2-fill" style="font-size:15px;"></i>
             {{ 'dashboard.newObject' | translate }}
           </button>
         </div>
@@ -90,7 +90,7 @@ interface ViewingRow {
                          box-shadow:var(--shadow); transition:transform .1s;"
                   [style.background]="overdueCount > 0 ? 'var(--color-error-soft)' : 'var(--surface)'"
                   [style.border]="overdueCount > 0 ? '1px solid var(--color-error)' : '1px solid var(--border)'">
-            <i class="ph-fill ph-phone-x" style="font-size:23px;"
+            <i class="ri-phone-fill" style="font-size:23px;"
                [style.color]="overdueCount > 0 ? 'var(--color-error)' : 'var(--text-3)'"></i>
             <div>
               <div style="font-size:23px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums;"
@@ -104,7 +104,7 @@ interface ViewingRow {
                   style="flex:1; min-width:150px; display:flex; align-items:center; gap:13px; padding:15px 17px;
                          background:var(--surface); border:1px solid var(--border); border-radius:14px; cursor:pointer;
                          text-align:left; font-family:inherit; box-shadow:var(--shadow); transition:transform .1s;">
-            <i class="ph-fill ph-door-open" style="font-size:23px; color:var(--color-purple);"></i>
+            <i class="ri-door-open-fill" style="font-size:23px; color:var(--color-purple);"></i>
             <div>
               <div style="font-size:23px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; color:var(--text);">{{ todayViewingRows.length }}</div>
               <div style="font-size:12px; font-weight:600; color:var(--text-2); margin-top:4px;">Besichtigungen heute</div>
@@ -116,7 +116,7 @@ interface ViewingRow {
                   style="flex:1; min-width:150px; display:flex; align-items:center; gap:13px; padding:15px 17px;
                          background:var(--surface); border:1px solid var(--border); border-radius:14px; cursor:pointer;
                          text-align:left; font-family:inherit; box-shadow:var(--shadow); transition:transform .1s;">
-            <i class="ph-fill ph-clock-countdown" style="font-size:23px;"
+            <i class="ri-hourglass-fill" style="font-size:23px;"
                [style.color]="staleClientRows.length > 0 ? 'var(--color-warning)' : 'var(--text-3)'"></i>
             <div>
               <div style="font-size:23px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums;"
@@ -131,7 +131,7 @@ interface ViewingRow {
       @if (allClear && !loading) {
         <div style="display:flex; align-items:center; gap:13px; margin-bottom:20px; padding:16px 18px;
                     background:var(--color-success-soft); border:1px solid var(--color-success); border-radius:14px;">
-          <i class="ph-fill ph-check-circle" style="font-size:26px; color:var(--color-success);"></i>
+          <i class="ri-checkbox-circle-fill" style="font-size:26px; color:var(--color-success);"></i>
           <div>
             <div style="font-size:15px; font-weight:700; color:var(--text);">Alles im Griff</div>
             <div style="font-size:13px; color:var(--text-2);">Keine überfälligen Rückrufe und keine Besichtigungen heute.</div>
@@ -142,7 +142,7 @@ interface ViewingRow {
       <!-- Heutige Besichtigungen — Tagesagenda, immer als erstes sichtbar -->
       <div id="sec-today-viewings" class="widget-card" style="margin-bottom:20px; scroll-margin-top:16px;">
         <div class="widget-header">
-          <i class="ph-fill ph-door-open" style="color:#7c3aed; font-size:18px;"></i>
+          <i class="ri-door-open-fill" style="color:#7c3aed; font-size:18px;"></i>
           <h3 class="widget-title">Heutige Besichtigungen</h3>
           @if (todayViewingRows.length > 0) {
             <span style="background:color-mix(in srgb,#7c3aed 14%,var(--surface)); color:#7c3aed;
@@ -153,7 +153,7 @@ interface ViewingRow {
 
         @if (todayViewingRows.length === 0 && !loading) {
           <div style="padding:11px 18px 13px; display:flex; align-items:center; gap:10px; color:var(--text-3); font-size:13px;">
-            <i class="ph ph-calendar-blank" style="font-size:16px;"></i>
+            <i class="ri-calendar-line" style="font-size:16px;"></i>
             <span>Keine Besichtigungen heute geplant</span>
           </div>
         }
@@ -176,7 +176,7 @@ interface ViewingRow {
                     <span style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ v.clientName }}</span>
                   </div>
                   <div style="font-size:12px; color:var(--text-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:8px;">
-                    <i class="ph ph-buildings" style="font-size:11px;"></i>
+                    <i class="ri-building-2-line" style="font-size:11px;"></i>
                     {{ v.propertyLabel }}
                   </div>
                   <span style="font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px;"
@@ -189,12 +189,12 @@ interface ViewingRow {
                     <button (click)="openViewingDone(v)"
                             style="flex:1; padding:5px 8px; border:1.5px solid var(--color-success); border-radius:7px;
                                    background:none; color:var(--color-success); font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:5px;">
-                      <i class="ph ph-check" style="font-size:13px;"></i> Erledigt
+                      <i class="ri-check-line" style="font-size:13px;"></i> Erledigt
                     </button>
                     <button (click)="quickCancelViewing(v, $event)"
                             style="padding:5px 10px; border:1.5px solid var(--border); border-radius:7px;
                                    background:none; color:var(--text-3); font-size:12px; cursor:pointer; display:inline-flex; align-items:center;" title="Absagen">
-                      <i class="ph ph-x"></i>
+                      <i class="ri-close-line"></i>
                     </button>
                   </div>
                 }
@@ -211,11 +211,11 @@ interface ViewingRow {
         </h2>
         <div class="view-tabs">
           <button class="view-tab" [class.active]="view === 'cards'" (click)="view = 'cards'">
-            <i class="ph ph-squares-four" style="font-size:15px;"></i>
+            <i class="ri-grid-line" style="font-size:15px;"></i>
             {{ 'dashboard.tabCards' | translate }}
           </button>
           <button class="view-tab" [class.active]="view === 'pipeline'" (click)="view = 'pipeline'">
-            <i class="ph ph-kanban" style="font-size:15px;"></i>
+            <i class="ri-kanban-view" style="font-size:15px;"></i>
             {{ 'dashboard.tabPipeline' | translate }}
           </button>
         </div>
@@ -228,7 +228,7 @@ interface ViewingRow {
           <!-- Follow-ups widget -->
           <div id="sec-followups" class="widget-card" style="scroll-margin-top:16px;">
             <div class="widget-header">
-              <i class="ph-fill ph-bell-ringing" style="color:#c07a1e; font-size:18px;"></i>
+              <i class="ri-notification-fill" style="color:#c07a1e; font-size:18px;"></i>
               <h3 class="widget-title">{{ 'dashboard.openFollowups' | translate }}</h3>
               <span style="background:color-mix(in srgb,#c07a1e 14%,var(--surface)); color:#c07a1e;
                            font-size:12px; font-weight:700; padding:3px 9px; border-radius:20px;
@@ -256,18 +256,18 @@ interface ViewingRow {
                         style="padding:4px 10px; border:1.5px solid var(--color-success); border-radius:7px;
                                background:none; color:var(--color-success); font-size:12px; font-weight:600;
                                cursor:pointer; white-space:nowrap; flex-shrink:0; display:inline-flex; align-items:center; gap:5px;">
-                  <i class="ph ph-check" style="font-size:12px;"></i> Erledigt
+                  <i class="ri-check-line" style="font-size:12px;"></i> Erledigt
                 </button>
                 <button class="btn-icon" [routerLink]="['/clients', f.clientId]"
                         title="{{ 'dashboard.openCustomer' | translate }}">
-                  <i class="ph ph-arrow-right"></i>
+                  <i class="ri-arrow-right-line"></i>
                 </button>
               </div>
             }
 
             @if (followUps.length === 0 && !loading) {
               <div style="padding:40px 18px; text-align:center; color:var(--text-3);">
-                <i class="ph ph-check-circle" style="font-size:32px; color:#1f8a5b;"></i>
+                <i class="ri-checkbox-circle-line" style="font-size:32px; color:#1f8a5b;"></i>
                 <div style="margin-top:10px; font-size:14px; font-weight:500;">
                   {{ 'dashboard.noFollowups' | translate }}
                 </div>
@@ -278,7 +278,7 @@ interface ViewingRow {
           <!-- Recent activity widget -->
           <div class="widget-card">
             <div class="widget-header">
-              <i class="ph ph-clock-counter-clockwise" style="color:var(--primary); font-size:18px;"></i>
+              <i class="ri-history-line" style="color:var(--primary); font-size:18px;"></i>
               <h3 class="widget-title">{{ 'dashboard.recentActivity' | translate }}</h3>
               <button [routerLink]="['/notifications']"
                       style="background:none; border:none; color:var(--primary); font-size:13px;
@@ -310,7 +310,7 @@ interface ViewingRow {
 
             @if (recentActivity.length === 0 && !loading) {
               <div style="padding:40px 18px; text-align:center; color:var(--text-3);">
-                <i class="ph ph-chats-circle" style="font-size:32px;"></i>
+                <i class="ri-discuss-line" style="font-size:32px;"></i>
                 <div style="margin-top:10px; font-size:14px; font-weight:500;">
                   {{ 'dashboard.noActivity' | translate }}
                 </div>
@@ -323,7 +323,7 @@ interface ViewingRow {
         <!-- Kunden ohne Kontakt >30 Tage -->
         <div id="sec-stale" class="widget-card" style="margin-top:20px; scroll-margin-top:16px;">
           <div class="widget-header">
-            <i class="ph-fill ph-user-minus" style="color:var(--color-warning); font-size:18px;"></i>
+            <i class="ri-user-minus-fill" style="color:var(--color-warning); font-size:18px;"></i>
             <h3 class="widget-title">Kunden ohne Kontakt &gt;30 Tage</h3>
             <span style="background:color-mix(in srgb,var(--color-warning) 14%,var(--surface)); color:var(--color-warning);
                          font-size:12px; font-weight:700; padding:3px 9px; border-radius:20px;
@@ -332,7 +332,7 @@ interface ViewingRow {
 
           @if (staleClientRows.length === 0 && !loading) {
             <div style="padding:32px 18px; text-align:center; color:var(--text-3);">
-              <i class="ph ph-check-circle" style="font-size:28px; color:var(--color-success);"></i>
+              <i class="ri-checkbox-circle-line" style="font-size:28px; color:var(--color-success);"></i>
               <div style="margin-top:8px; font-size:14px; font-weight:500;">Alle Kunden aktuell kontaktiert</div>
             </div>
           }
@@ -364,14 +364,14 @@ interface ViewingRow {
                          style="width:30px; height:30px; display:flex; align-items:center; justify-content:center;
                                 border:1.5px solid var(--primary); border-radius:7px; color:var(--primary);
                                 font-size:14px; text-decoration:none;" title="Anrufen">
-                        <i class="ph ph-phone"></i>
+                        <i class="ri-phone-line"></i>
                       </a>
                     }
                     <button (click)="setClientInactive(c.id, $event)"
                             style="width:30px; height:30px; display:flex; align-items:center; justify-content:center;
                                    border:1.5px solid var(--border); border-radius:7px; background:none;
                                    color:var(--text-3); font-size:14px; cursor:pointer;" title="Als inaktiv markieren">
-                      <i class="ph ph-user-minus"></i>
+                      <i class="ri-user-minus-line"></i>
                     </button>
                   </div>
                 </div>
@@ -462,7 +462,7 @@ interface ViewingRow {
                            color:#fff;font-size:13px;font-weight:600;cursor:pointer;
                            display:inline-flex;align-items:center;justify-content:center;gap:6px;"
                     [style.opacity]="isSubmittingFollowUp ? '0.6' : '1'">
-              <i class="ph ph-check" *ngIf="!isSubmittingFollowUp" style="font-size:14px;"></i>
+              <i class="ri-check-line" *ngIf="!isSubmittingFollowUp" style="font-size:14px;"></i>
               {{ isSubmittingFollowUp ? 'Speichern...' : 'Als erledigt speichern' }}
             </button>
           </div>
@@ -487,21 +487,21 @@ interface ViewingRow {
                     [style.border-color]="viewingPopoverFeedback === 'LIKED' ? 'var(--color-success)' : 'var(--border)'"
                     [style.color]="viewingPopoverFeedback === 'LIKED' ? 'var(--color-success)' : 'var(--text-2)'"
                     style="flex:1;padding:8px 10px;border-radius:8px;border:1.5px solid;cursor:pointer;font-size:13px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:6px;">
-              <i class="ph ph-thumbs-up" style="font-size:15px;"></i> Gefällt
+              <i class="ri-thumb-up-line" style="font-size:15px;"></i> Gefällt
             </button>
             <button (click)="viewingPopoverFeedback = viewingPopoverFeedback === 'NEUTRAL' ? null : 'NEUTRAL'"
                     [style.background]="viewingPopoverFeedback === 'NEUTRAL' ? 'var(--color-warning-soft)' : 'var(--surface-2)'"
                     [style.border-color]="viewingPopoverFeedback === 'NEUTRAL' ? 'var(--color-warning)' : 'var(--border)'"
                     [style.color]="viewingPopoverFeedback === 'NEUTRAL' ? 'var(--color-warning)' : 'var(--text-2)'"
                     style="flex:1;padding:8px 10px;border-radius:8px;border:1.5px solid;cursor:pointer;font-size:13px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:6px;">
-              <i class="ph ph-smiley-meh" style="font-size:15px;"></i> Neutral
+              <i class="ri-emotion-normal-line" style="font-size:15px;"></i> Neutral
             </button>
             <button (click)="viewingPopoverFeedback = viewingPopoverFeedback === 'DISLIKED' ? null : 'DISLIKED'"
                     [style.background]="viewingPopoverFeedback === 'DISLIKED' ? 'var(--color-error-soft)' : 'var(--surface-2)'"
                     [style.border-color]="viewingPopoverFeedback === 'DISLIKED' ? 'var(--color-error)' : 'var(--border)'"
                     [style.color]="viewingPopoverFeedback === 'DISLIKED' ? 'var(--color-error)' : 'var(--text-2)'"
                     style="flex:1;padding:8px 10px;border-radius:8px;border:1.5px solid;cursor:pointer;font-size:13px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:6px;">
-              <i class="ph ph-thumbs-down" style="font-size:15px;"></i> Nicht
+              <i class="ri-thumb-down-line" style="font-size:15px;"></i> Nicht
             </button>
           </div>
           <textarea [(ngModel)]="viewingPopoverNote" placeholder="Notiz zur Besichtigung..." rows="2"
@@ -520,7 +520,7 @@ interface ViewingRow {
                            color:#fff;font-size:13px;font-weight:600;cursor:pointer;
                            display:inline-flex;align-items:center;justify-content:center;gap:6px;"
                     [style.opacity]="isUpdatingViewing ? '0.6' : '1'">
-              <i class="ph ph-check" *ngIf="!isUpdatingViewing" style="font-size:14px;"></i>
+              <i class="ri-check-line" *ngIf="!isUpdatingViewing" style="font-size:14px;"></i>
               {{ isUpdatingViewing ? 'Speichern...' : 'Als erledigt speichern' }}
             </button>
           </div>
@@ -709,7 +709,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
             customerName: (c.firstName ?? '') + ' ' + (c.lastName ?? ''),
             initials,
             subject: c.searchCriteria?.additionalRequirements ?? (c.addressCity ? c.addressCity : ''),
-            typeIcon: 'ph ph-user',
+            typeIcon: 'ri-user-line',
             dateFmt: c.updatedAt ? new Date(c.updatedAt).toLocaleDateString('de-DE', { day: '2-digit', month: 'short' }) : '',
           };
         }),
@@ -733,11 +733,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private typeIcon(type: CallType): string {
     switch (type) {
-      case CallType.PHONE_INBOUND:  return 'ph ph-phone-incoming';
-      case CallType.PHONE_OUTBOUND: return 'ph ph-phone-outgoing';
-      case CallType.EMAIL:          return 'ph ph-envelope-simple';
-      case CallType.MEETING:        return 'ph ph-handshake';
-      default:                      return 'ph ph-chat-dots';
+      case CallType.PHONE_INBOUND:  return 'ri-phone-line';
+      case CallType.PHONE_OUTBOUND: return 'ri-phone-line';
+      case CallType.EMAIL:          return 'ri-mail-line';
+      case CallType.MEETING:        return 'ri-shake-hands-line';
+      default:                      return 'ri-chat-4-line';
     }
   }
 
