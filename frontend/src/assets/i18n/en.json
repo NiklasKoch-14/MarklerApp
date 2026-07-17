@@ -54,6 +54,8 @@
       "passwordPlaceholder": "Password",
       "rememberMe": "Remember me",
       "forgotPassword": "Forgot your password?",
+      "or": "or",
+      "googleFailed": "Google sign-in failed. Please try again.",
       "signInButton": "Sign in",
       "signingIn": "Signing in...",
       "noAccount": "Don't have an account?",
@@ -327,6 +329,11 @@
     "postalCodeInvalid": "Postal code must be 5 digits",
     "country": "Country",
     "countryDefault": "Germany",
+    "clientType": "Listing Type",
+    "clientTypeHint": "Determines whether purchase price or rent fields are shown in the search profile.",
+    "clientTypeBuyer": "Buying",
+    "clientTypeRenter": "Renting",
+    "clientTypeSeller": "Selling",
     "notes": "Notes",
     "createdAt": "Created At",
     "updatedAt": "Updated At",
@@ -380,10 +387,18 @@
       "maxRooms": "Max Rooms",
       "minRoomsPlaceholder": "e.g. 2",
       "maxRoomsPlaceholder": "e.g. 5",
-      "minBudget": "Min Budget (EUR)",
-      "maxBudget": "Max Budget (EUR)",
+      "minBudget": "Min Purchase Price (EUR)",
+      "maxBudget": "Max Purchase Price (EUR)",
       "minBudgetPlaceholder": "e.g. 200000",
       "maxBudgetPlaceholder": "e.g. 500000",
+      "minColdRent": "Min Cold Rent (EUR)",
+      "maxColdRent": "Max Cold Rent (EUR)",
+      "minColdRentPlaceholder": "e.g. 800",
+      "maxColdRentPlaceholder": "e.g. 1200",
+      "minWarmRent": "Min Warm Rent (EUR)",
+      "maxWarmRent": "Max Warm Rent (EUR)",
+      "minWarmRentPlaceholder": "e.g. 1000",
+      "maxWarmRentPlaceholder": "e.g. 1500",
       "preferredLocations": "Preferred Locations",
       "preferredLocationsPlaceholder": "e.g. Munich, Berlin, Hamburg",
       "preferredLocationsHint": "Enter locations separated by commas",
@@ -920,6 +935,15 @@
     "german": "Deutsch",
     "english": "English"
   },
+  "settings": {
+    "signInMethod": {
+      "label": "Sign-in method",
+      "password": "Email",
+      "passwordHint": "You sign in with your email and password.",
+      "googleOnlyHint": "You are signed in with your Google account — no password is set for this account.",
+      "googleAndPasswordHint": "Your Google account is linked. You can sign in with it or with your password."
+    }
+  },
   "gdpr": {
     "title": "Data Protection (GDPR)",
     "consent": "Consent Declaration",
@@ -1002,12 +1026,8 @@
     },
     "clientType": {
       "BUYER": "Buyer",
-      "SELLER": "Seller",
-      "TENANT": "Tenant",
-      "LANDLORD": "Landlord",
-      "INVESTOR": "Investor",
-      "DEVELOPER": "Developer",
-      "OTHER": "Other"
+      "RENTER": "Renter",
+      "SELLER": "Seller"
     },
     "preferredContactMethod": {
       "EMAIL": "Email",

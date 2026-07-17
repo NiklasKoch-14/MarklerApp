@@ -54,6 +54,8 @@
       "passwordPlaceholder": "Passwort",
       "rememberMe": "Angemeldet bleiben",
       "forgotPassword": "Passwort vergessen?",
+      "or": "oder",
+      "googleFailed": "Google-Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.",
       "signInButton": "Anmelden",
       "signingIn": "Anmelden...",
       "noAccount": "Noch kein Konto?",
@@ -327,6 +329,11 @@
     "postalCodeInvalid": "Postleitzahl muss 5 Ziffern haben",
     "country": "Land",
     "countryDefault": "Deutschland",
+    "clientType": "Angebotsart",
+    "clientTypeHint": "Bestimmt, ob Kaufpreis- oder Mietfelder im Suchprofil angezeigt werden.",
+    "clientTypeBuyer": "Kaufen",
+    "clientTypeRenter": "Mieten",
+    "clientTypeSeller": "Verkaufen",
     "notes": "Notizen",
     "createdAt": "Erstellt am",
     "updatedAt": "Aktualisiert am",
@@ -380,10 +387,18 @@
       "maxRooms": "Maximalzimmer",
       "minRoomsPlaceholder": "z.B. 2",
       "maxRoomsPlaceholder": "z.B. 5",
-      "minBudget": "Mindestbudget (EUR)",
-      "maxBudget": "Maximalbudget (EUR)",
+      "minBudget": "Mindestkaufpreis (EUR)",
+      "maxBudget": "Maximalkaufpreis (EUR)",
       "minBudgetPlaceholder": "z.B. 200000",
       "maxBudgetPlaceholder": "z.B. 500000",
+      "minColdRent": "Mindeste Kaltmiete (EUR)",
+      "maxColdRent": "Maximale Kaltmiete (EUR)",
+      "minColdRentPlaceholder": "z.B. 800",
+      "maxColdRentPlaceholder": "z.B. 1200",
+      "minWarmRent": "Mindeste Warmmiete (EUR)",
+      "maxWarmRent": "Maximale Warmmiete (EUR)",
+      "minWarmRentPlaceholder": "z.B. 1000",
+      "maxWarmRentPlaceholder": "z.B. 1500",
       "preferredLocations": "Bevorzugte Standorte",
       "preferredLocationsPlaceholder": "z.B. München, Berlin, Hamburg",
       "preferredLocationsHint": "Standorte durch Komma getrennt eingeben",
@@ -920,6 +935,15 @@
     "german": "Deutsch",
     "english": "English"
   },
+  "settings": {
+    "signInMethod": {
+      "label": "Anmeldemethode",
+      "password": "E-Mail",
+      "passwordHint": "Sie melden sich mit E-Mail und Passwort an.",
+      "googleOnlyHint": "Sie sind über Ihr Google-Konto angemeldet — für dieses Konto ist kein Passwort gesetzt.",
+      "googleAndPasswordHint": "Ihr Google-Konto ist verknüpft. Sie können sich damit oder mit Ihrem Passwort anmelden."
+    }
+  },
   "gdpr": {
     "title": "Datenschutz (DSGVO)",
     "consent": "Einverständniserklärung",
@@ -1002,12 +1026,8 @@
     },
     "clientType": {
       "BUYER": "Käufer",
-      "SELLER": "Verkäufer",
-      "TENANT": "Mieter",
-      "LANDLORD": "Vermieter",
-      "INVESTOR": "Investor",
-      "DEVELOPER": "Bauträger",
-      "OTHER": "Sonstiges"
+      "RENTER": "Mieter",
+      "SELLER": "Verkäufer"
     },
     "preferredContactMethod": {
       "EMAIL": "E-Mail",
