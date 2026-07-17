@@ -176,7 +176,10 @@ spring:
 
   flyway:
     enabled: true
-    locations: classpath:db/migration
+    # migration-dev holds fixture/seed-data fixes for local Docker only — never
+    # applied to prod (see prod profile below), so they can never touch real
+    # tenant data or credentials.
+    locations: classpath:db/migration,classpath:db/migration-dev
     baseline-on-migrate: false
 
 server:
