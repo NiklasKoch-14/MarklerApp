@@ -11,11 +11,12 @@ import { FileAttachmentManagerComponent } from '../../../../shared/components/fi
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { PropertyMatchingService } from '../../../property-management/services/property-matching.service';
 import { PropertyMatchResult } from '../../../property-management/models/property-match.model';
+import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent, TranslateEnumPipe],
   styles: [`
     .stage-option:hover { background:var(--surface-2) !important; }
     .qm-item { display:flex; align-items:center; gap:10px; width:100%; padding:10px 14px; border:none; background:none; cursor:pointer; font-size:13px; font-weight:500; color:var(--text); text-align:left; font-family:inherit; transition:background 0.1s; }
@@ -466,7 +467,7 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
                 <div *ngIf="client.searchCriteria?.propertyTypes?.length"
                      style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
                   <span style="font-size:12px;color:var(--text-3);">Objekttyp</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ client.searchCriteria!.propertyTypes!.join(', ') }}</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--text);"><ng-container *ngFor="let pt of client.searchCriteria!.propertyTypes!; let last = last">{{ pt | translateEnum:'propertyType' }}{{ last ? '' : ', ' }}</ng-container></span>
                 </div>
                 <div *ngIf="client.searchCriteria?.minBudget || client.searchCriteria?.maxBudget"
                      style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">

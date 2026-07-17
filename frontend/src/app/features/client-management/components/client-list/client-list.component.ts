@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ClientService, Client, PipelineStage, ClientType } from '../../services/client.service';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { EnumTranslationService } from '../../../../shared/services/enum-translation.service';
 
 type SortKey = 'name' | 'stage' | 'lastContact';
 type SortDir = 'asc' | 'desc';
@@ -259,7 +260,8 @@ export class ClientListComponent implements OnInit {
 
   constructor(
     private clientService: ClientService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private enumTranslation: EnumTranslationService
   ) {}
 
   ngOnInit(): void {
@@ -366,7 +368,10 @@ export class ClientListComponent implements OnInit {
   getSearchSummary(client: Client): string {
     const parts: string[] = [];
     const c = client.searchCriteria;
-    if (c?.propertyTypes?.length) parts.push(c.propertyTypes[0]);
+    if (c?.propertyTypes?.length) {
+      const key = this.enumTranslation.getTranslationKey('propertyType', c.propertyTypes[0]);
+      parts.push(this.translate.instant(key));
+    }
     if (c?.maxBudget) parts.push(new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(c.maxBudget));
     return parts.join(' · ') || '—';
   }
