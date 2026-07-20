@@ -162,6 +162,7 @@ public class PropertyMatchingService {
         // Score each client based on how well the property matches their criteria
         List<PropertyMatchResponse.ClientMatchResult> matchResults = clientsWithCriteria.stream()
                 .filter(client -> client.getSearchCriteria() != null)
+                .filter(client -> client.getPipelineStage() != Client.PipelineStage.CLOSED)
                 .filter(client -> matchesDesiredListingType(client.getClientType(), property.getListingType()))
                 .map(client -> scoreClient(client, property, request))
                 .filter(result -> result.getMatchScore() >= request.getEffectiveMatchThreshold())
