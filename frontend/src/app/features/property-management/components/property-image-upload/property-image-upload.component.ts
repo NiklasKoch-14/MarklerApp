@@ -2,14 +2,15 @@ import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpEventType } from '@angular/common/http';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PropertyImageService } from '../../services/property-image.service';
 import { PropertyImageDto, PropertyImageType, getImageTypeName } from '../../models/property-image.model';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-property-image-upload',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, ConfirmDialogComponent],
   template: `
     <div class="property-image-upload">
       <!-- Image Gallery -->
@@ -182,6 +183,16 @@ import { PropertyImageDto, PropertyImageType, getImageTypeName } from '../../mod
         <span>{{ errorMessage }}</span>
       </div>
     </div>
+
+    <app-confirm-dialog
+      [open]="pendingDeleteImage !== null"
+      [danger]="true"
+      icon="ri-delete-bin-line"
+      [title]="'properties.images.deleteImage' | translate"
+      [message]="'properties.images.deleteConfirm' | translate"
+      (cancel)="pendingDeleteImage = null"
+      (confirm)="deleteImage()">
+    </app-confirm-dialog>
   `,
   styles: [`
     .aspect-square {
@@ -200,8 +211,9 @@ export class PropertyImageUploadComponent implements OnInit {
   uploadProgress = 0;
   errorMessage = '';
   currentLanguage = 'en';
+  pendingDeleteImage: PropertyImageDto | null = null;
 
-  constructor(private imageService: PropertyImageService) {}
+  constructor(private imageService: PropertyImageService, private translate: TranslateService) {}
 
   ngOnInit(): void {
     if (!this.propertyId) {
@@ -394,18 +406,24 @@ export class PropertyImageUploadComponent implements OnInit {
 
   onDeleteImage(image: PropertyImageDto): void {
     if (!image.id || !this.propertyId) return;
+    this.pendingDeleteImage = image;
+  }
 
-    if (confirm('Are you sure you want to delete this image?')) {
-      this.imageService.deleteImage(this.propertyId, image.id).subscribe({
-        next: () => {
-          this.loadImages();
-        },
-        error: (error) => {
-          console.error('Error deleting image:', error);
-          this.errorMessage = 'Error deleting image.';
-        }
-      });
-    }
+  deleteImage(): void {
+    const image = this.pendingDeleteImage;
+    if (!image?.id || !this.propertyId) return;
+
+    this.imageService.deleteImage(this.propertyId, image.id).subscribe({
+      next: () => {
+        this.pendingDeleteImage = null;
+        this.loadImages();
+      },
+      error: (error) => {
+        console.error('Error deleting image:', error);
+        this.pendingDeleteImage = null;
+        this.errorMessage = this.translate.instant('properties.images.deleteFailed');
+      }
+    });
   }
 
   formatFileSize(bytes: number): string {

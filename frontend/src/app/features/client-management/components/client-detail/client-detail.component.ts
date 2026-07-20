@@ -9,6 +9,7 @@ import { ViewingService, ViewingSummary, ViewingStatus } from '../../../viewing-
 import { ViewingAddDialogComponent } from '../../../viewing-management/components/viewing-add-dialog/viewing-add-dialog.component';
 import { FileAttachmentManagerComponent } from '../../../../shared/components/file-attachment-manager/file-attachment-manager.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { PropertyMatchingService } from '../../../property-management/services/property-matching.service';
 import { PropertyMatchResult } from '../../../property-management/models/property-match.model';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
@@ -16,7 +17,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent, TranslateEnumPipe],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent, TranslateEnumPipe, ConfirmDialogComponent],
   styles: [`
     .stage-option:hover { background:var(--surface-2) !important; }
     .qm-item { display:flex; align-items:center; gap:10px; width:100%; padding:10px 14px; border:none; background:none; cursor:pointer; font-size:13px; font-weight:500; color:var(--text); text-align:left; font-family:inherit; transition:background 0.1s; }
@@ -608,34 +609,28 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
     </div>
 
     <!-- Delete Confirmation Dialog -->
-    <div *ngIf="showDeleteConfirm && client"
-         style="position:fixed;inset:0;z-index:700;display:flex;align-items:center;justify-content:center;padding:20px;"
-         (click)="showDeleteConfirm = false">
-      <div style="position:absolute;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);"></div>
-      <div style="position:relative;width:100%;max-width:420px;background:var(--surface);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.25);padding:24px;"
-           (click)="$event.stopPropagation()">
-        <div style="display:flex;align-items:flex-start;gap:14px;">
-          <div style="flex-shrink:0;width:42px;height:42px;border-radius:50%;background:var(--color-error-soft);display:flex;align-items:center;justify-content:center;">
-            <i class="ri-delete-bin-line" style="font-size:20px;color:var(--color-error);"></i>
-          </div>
-          <div style="flex:1;">
-            <h3 style="font-size:16px;font-weight:700;color:var(--text);margin:0 0 6px;">{{ 'clients.delete' | translate }}</h3>
-            <p style="font-size:13px;color:var(--text-2);margin:0;line-height:1.5;">{{ 'clients.deleteConfirm' | translate }}</p>
-          </div>
-        </div>
-        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:22px;">
-          <button (click)="showDeleteConfirm = false"
-                  style="padding:9px 16px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">
-            {{ 'common.cancel' | translate }}
-          </button>
-          <button (click)="deleteClient()" [disabled]="isDeleting"
-                  style="padding:9px 16px;background:var(--color-error);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;opacity:1;"
-                  [style.opacity]="isDeleting ? 0.7 : 1">
-            {{ isDeleting ? ('clients.deleting' | translate) : ('common.delete' | translate) }}
-          </button>
-        </div>
-      </div>
-    </div>
+    <app-confirm-dialog
+      [open]="showDeleteConfirm && !!client"
+      [danger]="true"
+      icon="ri-delete-bin-line"
+      [title]="'clients.delete' | translate"
+      [message]="'clients.deleteConfirm' | translate"
+      [busy]="isDeleting"
+      (cancel)="showDeleteConfirm = false"
+      (confirm)="deleteClient()">
+    </app-confirm-dialog>
+
+    <!-- Terminal Stage Change Confirmation (won/lost — same friction as delete/mark-inactive) -->
+    <app-confirm-dialog
+      [open]="pendingStageChange !== null"
+      [danger]="pendingStageChange === PipelineStage.LOST"
+      [icon]="pendingStageChange === PipelineStage.WON ? 'ri-trophy-line' : 'ri-close-circle-line'"
+      [title]="(pendingStageChange === PipelineStage.WON ? 'clients.confirmWonTitle' : 'clients.confirmLostTitle') | translate"
+      [message]="client ? ((pendingStageChange === PipelineStage.WON ? 'clients.confirmWonMessage' : 'clients.confirmLostMessage') | translate:{ name: client.firstName + ' ' + client.lastName }) : ''"
+      [confirmLabel]="(pendingStageChange === PipelineStage.WON ? 'clients.confirmWonTitle' : 'clients.confirmLostTitle') | translate"
+      (cancel)="cancelStageChange()"
+      (confirm)="confirmStageChange()">
+    </app-confirm-dialog>
 
     <!-- Stage Upgrade Hint -->
     <div *ngIf="showStageUpgradeHint"
@@ -698,6 +693,7 @@ export class ClientDetailComponent implements OnInit {
 
   showAttachmentsDialog = false;
   stageDropdownOpen = false;
+  pendingStageChange: PipelineStage | null = null;
   showQuickMenu = false;
   showStageUpgradeHint = false;
   showDeleteConfirm = false;
@@ -918,11 +914,38 @@ export class ClientDetailComponent implements OnInit {
     }
   }
 
+  /**
+   * Same interaction cost for the same category of action everywhere: moving a client to a
+   * terminal stage (won/lost) gets a confirmation, just like the dashboard's "mark inactive"
+   * and the delete flow do — normal forward progress through the pipeline stays frictionless.
+   */
   setStage(stage: PipelineStage): void {
     if (!this.client?.id) return;
     this.stageDropdownOpen = false;
+
+    if (stage === PipelineStage.WON || stage === PipelineStage.LOST) {
+      this.pendingStageChange = stage;
+      return;
+    }
+
+    this.applyStage(stage);
+  }
+
+  cancelStageChange(): void {
+    this.pendingStageChange = null;
+  }
+
+  confirmStageChange(): void {
+    if (this.pendingStageChange) this.applyStage(this.pendingStageChange);
+  }
+
+  private applyStage(stage: PipelineStage): void {
+    if (!this.client?.id) return;
     this.clientService.updatePipelineStage(this.client.id, stage).subscribe({
-      next: (updated) => { this.client = updated; }
+      next: (updated) => {
+        this.client = updated;
+        this.pendingStageChange = null;
+      }
     });
   }
 

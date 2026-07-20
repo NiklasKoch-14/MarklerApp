@@ -311,6 +311,10 @@
     "deleting": "Wird gelöscht...",
     "deleteConfirm": "Sind Sie sicher, dass Sie diesen Kunden löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
     "duplicateWarningTitle": "Möglicherweise bereits vorhanden — bitte prüfen, bevor Sie speichern:",
+    "confirmWonTitle": "Als gewonnen markieren?",
+    "confirmWonMessage": "{{name}} wird als abgeschlossener Erfolg markiert und aus der aktiven Pipeline entfernt.",
+    "confirmLostTitle": "Als verloren markieren?",
+    "confirmLostMessage": "{{name}} wird aus der aktiven Pipeline entfernt. Die Daten bleiben erhalten — Sie finden den Kontakt über den Kunden-Filter „Verloren“ wieder.",
     "deleteSuccess": "Kunde erfolgreich gelöscht",
     "deleteError": "Kunde konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
     "list": "Kundenliste",
@@ -470,6 +474,11 @@
     "notFound": "Objekt nicht gefunden.",
     "backToProperties": "Zurück zur Übersicht",
     "delete": "Immobilie löschen",
+    "deleteFailed": "Löschen fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "notes": {
+      "delete": "Notiz löschen",
+      "deleteConfirm": "Möchten Sie diese Notiz wirklich löschen?"
+    },
     "list": "Immobilienliste",
     "details": "Immobiliendetails",
     "create": "Immobilie erstellen",
@@ -779,6 +788,7 @@
       "uploadError": "Fehler beim Hochladen",
       "deleteImage": "Bild löschen",
       "deleteConfirm": "Sind Sie sicher, dass Sie dieses Bild löschen möchten?",
+      "deleteFailed": "Löschen des Bildes fehlgeschlagen.",
       "setPrimary": "Als Hauptbild festlegen",
       "primaryImageSet": "Hauptbild festgelegt",
       "reorderImages": "Bilder neu anordnen",
@@ -810,7 +820,9 @@
       "replace": "PDF ersetzen",
       "uploading": "PDF wird hochgeladen...",
       "deleteConfirmTitle": "Exposé löschen",
-      "deleteConfirmMessage": "Sind Sie sicher, dass Sie dieses Immobilien-Exposé löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
+      "deleteConfirmMessage": "Sind Sie sicher, dass Sie dieses Immobilien-Exposé löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "previewFailed": "Vorschau fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "downloadFailed": "Download fehlgeschlagen. Bitte versuchen Sie es erneut."
     }
   },
   "call-notes": {

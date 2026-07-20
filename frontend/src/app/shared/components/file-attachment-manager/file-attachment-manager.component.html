@@ -22,6 +22,16 @@
            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif">
   </div>
 
+  <!-- Error Message -->
+  <div *ngIf="errorMessage"
+       style="display:flex;align-items:flex-start;gap:8px;background:var(--color-error-soft);border:1px solid var(--color-error);border-radius:8px;padding:10px 12px;margin-top:10px;">
+    <i class="ri-error-warning-line" style="font-size:15px;color:var(--color-error);flex-shrink:0;margin-top:1px;"></i>
+    <span style="font-size:12px;color:var(--color-error);flex:1;">{{ errorMessage }}</span>
+    <button (click)="errorMessage = ''" style="border:none;background:none;color:var(--color-error);cursor:pointer;font-size:14px;line-height:1;flex-shrink:0;">
+      <i class="ri-close-line"></i>
+    </button>
+  </div>
+
   <!-- Upload Progress -->
   <div *ngIf="uploadStates.length > 0" style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
     <div *ngFor="let state of uploadStates"
@@ -99,11 +109,21 @@
       <i class="ri-download-line" style="font-size:14px;"></i>
       {{ 'common.download' | translate }}
     </button>
-    <button (click)="deleteAttachment(contextMenuAttachment!); closeContextMenu()"
+    <button (click)="confirmDeleteAttachment(contextMenuAttachment!); closeContextMenu()"
             style="width:100%;text-align:left;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:13px;color:var(--color-error);font-family:inherit;display:flex;align-items:center;gap:8px;"
             class="ctx-btn">
       <i class="ri-delete-bin-line" style="font-size:14px;"></i>
       {{ 'common.delete' | translate }}
     </button>
   </div>
+
+  <app-confirm-dialog
+    [open]="pendingDeleteAttachment !== null"
+    [danger]="true"
+    icon="ri-delete-bin-line"
+    [title]="'common.delete' | translate"
+    [message]="pendingDeleteAttachment ? ('attachments.confirmDelete' | translate:{ fileName: pendingDeleteAttachment.originalFileName }) : ''"
+    (cancel)="pendingDeleteAttachment = null"
+    (confirm)="deleteAttachment()">
+  </app-confirm-dialog>
 </div>

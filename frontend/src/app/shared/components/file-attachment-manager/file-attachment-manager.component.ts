@@ -6,6 +6,7 @@ import { HttpEventType } from '@angular/common/http';
 import { Subject, takeUntil } from 'rxjs';
 
 import { FileAttachmentService } from '../../services/file-attachment.service';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import {
   FileAttachmentDto,
   FileAttachmentType,
@@ -22,7 +23,7 @@ import {
 @Component({
   selector: 'app-file-attachment-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, ConfirmDialogComponent],
   templateUrl: './file-attachment-manager.component.html',
   styleUrls: ['./file-attachment-manager.component.scss']
 })
@@ -40,6 +41,8 @@ export class FileAttachmentManagerComponent implements OnInit, OnDestroy {
   contextMenuX = 0;
   contextMenuY = 0;
   contextMenuAttachment: FileAttachmentDto | null = null;
+  pendingDeleteAttachment: FileAttachmentDto | null = null;
+  errorMessage = '';
 
   // File type metadata
   fileTypeMetadata = FILE_TYPE_METADATA;
@@ -136,9 +139,10 @@ export class FileAttachmentManagerComponent implements OnInit, OnDestroy {
     // Validate file
     const validation = this.fileAttachmentService.validateFile(file);
     if (!validation.valid) {
-      alert(validation.error);
+      this.errorMessage = validation.error || '';
       return;
     }
+    this.errorMessage = '';
 
     // Create upload state
     const uploadState: FileUploadState = {
@@ -207,7 +211,7 @@ export class FileAttachmentManagerComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error downloading file:', error);
-          alert(this.translate.instant('attachments.errors.downloadFailed'));
+          this.errorMessage = this.translate.instant('attachments.errors.downloadFailed');
         }
       });
   }
@@ -215,25 +219,27 @@ export class FileAttachmentManagerComponent implements OnInit, OnDestroy {
   /**
    * Delete attachment
    */
-  deleteAttachment(attachment: FileAttachmentDto): void {
+  confirmDeleteAttachment(attachment: FileAttachmentDto): void {
     if (!attachment.id) return;
+    this.pendingDeleteAttachment = attachment;
+  }
 
-    const confirmMessage = this.translate.instant('attachments.confirmDelete', {
-      fileName: attachment.originalFileName
-    });
-
-    if (!confirm(confirmMessage)) return;
+  deleteAttachment(): void {
+    const attachment = this.pendingDeleteAttachment;
+    if (!attachment?.id) return;
 
     this.fileAttachmentService
       .deleteAttachment(attachment.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
+          this.pendingDeleteAttachment = null;
           this.loadAttachments();
         },
         error: (error) => {
           console.error('Error deleting file:', error);
-          alert(this.translate.instant('attachments.errors.deleteFailed'));
+          this.pendingDeleteAttachment = null;
+          this.errorMessage = this.translate.instant('attachments.errors.deleteFailed');
         }
       });
   }

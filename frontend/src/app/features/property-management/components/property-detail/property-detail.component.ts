@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   PropertyService,
   Property,
@@ -13,6 +13,7 @@ import {
 } from '../../services/property.service';
 import { FileAttachmentManagerComponent } from '../../../../shared/components/file-attachment-manager/file-attachment-manager.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { FormsModule } from '@angular/forms';
 import { ViewingService, ViewingSummary, ViewingStatus } from '../../../viewing-management/services/viewing.service';
 import { ViewingAddDialogComponent } from '../../../viewing-management/components/viewing-add-dialog/viewing-add-dialog.component';
@@ -23,7 +24,7 @@ import { ClientMatchResult } from '../../models/property-match.model';
 @Component({
   selector: 'app-property-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent, ConfirmDialogComponent],
   templateUrl: './property-detail.component.html',
   styleUrls: ['./property-detail.component.scss']
 })
@@ -31,6 +32,9 @@ export class PropertyDetailComponent implements OnInit {
   property: Property | null = null;
   isLoading = false;
   isDeleting = false;
+  showDeletePropertyConfirm = false;
+  pageError = '';
+  pendingDeleteNoteId: string | null = null;
   isLoadingExpose = false;
   selectedImage: PropertyImage | null = null;
   selectedImageIndex = 0;
@@ -77,7 +81,8 @@ export class PropertyDetailComponent implements OnInit {
     public propertyService: PropertyService,
     private viewingService: ViewingService,
     private propertyNoteService: PropertyNoteService,
-    private propertyMatchingService: PropertyMatchingService
+    private propertyMatchingService: PropertyMatchingService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -196,12 +201,23 @@ export class PropertyDetailComponent implements OnInit {
     });
   }
 
-  deleteNote(noteId: string): void {
-    if (!confirm('Notiz löschen?')) return;
+  confirmDeleteNote(noteId: string): void {
+    this.pendingDeleteNoteId = noteId;
+  }
+
+  cancelDeleteNote(): void {
+    this.pendingDeleteNoteId = null;
+  }
+
+  deleteNote(): void {
+    if (!this.pendingDeleteNoteId) return;
+    const noteId = this.pendingDeleteNoteId;
     this.propertyNoteService.deleteNote(noteId).subscribe({
       next: () => {
         this.propertyNotes = this.propertyNotes.filter(n => n.id !== noteId);
-      }
+        this.pendingDeleteNoteId = null;
+      },
+      error: () => { this.pendingDeleteNoteId = null; }
     });
   }
 
@@ -236,19 +252,20 @@ export class PropertyDetailComponent implements OnInit {
   }
 
   deleteProperty(): void {
-    if (this.property && confirm('Are you sure you want to delete this property? This action cannot be undone.')) {
-      this.isDeleting = true;
-      this.propertyService.deleteProperty(this.property.id!).subscribe({
-        next: () => {
-          this.router.navigate(['/properties']);
-        },
-        error: (error) => {
-          console.error('Error deleting property:', error);
-          this.isDeleting = false;
-          alert('Failed to delete property. Please try again.');
-        }
-      });
-    }
+    if (!this.property) return;
+    this.isDeleting = true;
+    this.pageError = '';
+    this.propertyService.deleteProperty(this.property.id!).subscribe({
+      next: () => {
+        this.router.navigate(['/properties']);
+      },
+      error: (error) => {
+        console.error('Error deleting property:', error);
+        this.isDeleting = false;
+        this.showDeletePropertyConfirm = false;
+        this.pageError = this.translate.instant('properties.deleteFailed');
+      }
+    });
   }
 
   selectImage(image: PropertyImage, index: number): void {
@@ -413,7 +430,7 @@ export class PropertyDetailComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error previewing expose:', err);
-        alert('Failed to preview expose. Please try again.');
+        this.pageError = this.translate.instant('properties.expose.previewFailed');
         this.isLoadingExpose = false;
       }
     });
@@ -435,7 +452,7 @@ export class PropertyDetailComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error downloading expose:', err);
-        alert('Failed to download expose. Please try again.');
+        this.pageError = this.translate.instant('properties.expose.downloadFailed');
         this.isLoadingExpose = false;
       }
     });

@@ -17,6 +17,7 @@ import {
   CallNoteCreateRequest,
 } from '../call-notes/services/call-notes.service';
 import { ViewingService, ViewingSummary, ViewingFeedback, ViewingStatus } from '../viewing-management/services/viewing.service';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
 
 interface FollowUpRow {
@@ -58,7 +59,7 @@ interface ViewingRow {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, DatePipe],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, DatePipe, ConfirmDialogComponent],
   template: `
     <div style="max-width:1180px; margin:0 auto;">
 
@@ -529,41 +530,17 @@ interface ViewingRow {
     }
 
     <!-- ── Als-inaktiv-markieren Bestätigung ───────────────────── -->
-    @if (pendingInactiveClient !== null) {
-      <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;"
-           (click)="cancelSetInactive()">
-        <div style="background:var(--surface);border-radius:14px;width:380px;max-width:95vw;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3);"
-             (click)="$event.stopPropagation()">
-          <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;">
-            <div style="flex-shrink:0;width:40px;height:40px;border-radius:50%;background:var(--color-warning-soft);display:flex;align-items:center;justify-content:center;">
-              <i class="ri-user-minus-line" style="font-size:18px;color:var(--color-warning);"></i>
-            </div>
-            <div>
-              <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">
-                {{ 'dashboard.markInactiveTitle' | translate }}
-              </div>
-              <div style="font-size:13px;color:var(--text-2);line-height:1.5;">
-                {{ 'dashboard.markInactiveMessage' | translate:{ name: pendingInactiveClient.name } }}
-              </div>
-            </div>
-          </div>
-          <div style="display:flex;gap:10px;">
-            <button (click)="cancelSetInactive()"
-                    style="flex:1;padding:9px;border:1px solid var(--border);border-radius:8px;
-                           background:var(--surface-2);color:var(--text-2);font-size:13px;cursor:pointer;">
-              {{ 'common.cancel' | translate }}
-            </button>
-            <button (click)="setClientInactive(pendingInactiveClient.id)"
-                    [disabled]="isMarkingInactive"
-                    style="flex:2;padding:9px;border:none;border-radius:8px;background:var(--color-warning);
-                           color:#fff;font-size:13px;font-weight:600;cursor:pointer;"
-                    [style.opacity]="isMarkingInactive ? '0.6' : '1'">
-              {{ 'dashboard.markInactiveConfirm' | translate }}
-            </button>
-          </div>
-        </div>
-      </div>
-    }
+    <app-confirm-dialog
+      [open]="pendingInactiveClient !== null"
+      [danger]="false"
+      icon="ri-user-minus-line"
+      [title]="'dashboard.markInactiveTitle' | translate"
+      [message]="pendingInactiveClient ? ('dashboard.markInactiveMessage' | translate:{ name: pendingInactiveClient.name }) : ''"
+      [confirmLabel]="'dashboard.markInactiveConfirm' | translate"
+      [busy]="isMarkingInactive"
+      (cancel)="cancelSetInactive()"
+      (confirm)="setClientInactive()">
+    </app-confirm-dialog>
   `
 })
 export class DashboardComponent implements OnInit, OnDestroy {
@@ -895,9 +872,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.pendingInactiveClient = null;
   }
 
-  setClientInactive(clientId: string): void {
+  setClientInactive(): void {
+    if (!this.pendingInactiveClient) return;
     this.isMarkingInactive = true;
-    this.clientService.updatePipelineStage(clientId, PipelineStage.LOST).pipe(
+    this.clientService.updatePipelineStage(this.pendingInactiveClient.id, PipelineStage.LOST).pipe(
       takeUntil(this.destroy$)
     ).subscribe(() => {
       this.isMarkingInactive = false;
