@@ -367,10 +367,10 @@ interface ViewingRow {
                         <i class="ri-phone-line"></i>
                       </a>
                     }
-                    <button (click)="setClientInactive(c.id, $event)"
+                    <button (click)="confirmSetInactive(c.id, c.name, $event)"
                             style="width:30px; height:30px; display:flex; align-items:center; justify-content:center;
                                    border:1.5px solid var(--border); border-radius:7px; background:none;
-                                   color:var(--text-3); font-size:14px; cursor:pointer;" title="Als inaktiv markieren">
+                                   color:var(--text-3); font-size:14px; cursor:pointer;" title="{{ 'dashboard.markInactiveConfirm' | translate }}">
                       <i class="ri-user-minus-line"></i>
                     </button>
                   </div>
@@ -527,6 +527,43 @@ interface ViewingRow {
         </div>
       </div>
     }
+
+    <!-- ── Als-inaktiv-markieren Bestätigung ───────────────────── -->
+    @if (pendingInactiveClient !== null) {
+      <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;"
+           (click)="cancelSetInactive()">
+        <div style="background:var(--surface);border-radius:14px;width:380px;max-width:95vw;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3);"
+             (click)="$event.stopPropagation()">
+          <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;">
+            <div style="flex-shrink:0;width:40px;height:40px;border-radius:50%;background:var(--color-warning-soft);display:flex;align-items:center;justify-content:center;">
+              <i class="ri-user-minus-line" style="font-size:18px;color:var(--color-warning);"></i>
+            </div>
+            <div>
+              <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">
+                {{ 'dashboard.markInactiveTitle' | translate }}
+              </div>
+              <div style="font-size:13px;color:var(--text-2);line-height:1.5;">
+                {{ 'dashboard.markInactiveMessage' | translate:{ name: pendingInactiveClient.name } }}
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button (click)="cancelSetInactive()"
+                    style="flex:1;padding:9px;border:1px solid var(--border);border-radius:8px;
+                           background:var(--surface-2);color:var(--text-2);font-size:13px;cursor:pointer;">
+              {{ 'common.cancel' | translate }}
+            </button>
+            <button (click)="setClientInactive(pendingInactiveClient.id)"
+                    [disabled]="isMarkingInactive"
+                    style="flex:2;padding:9px;border:none;border-radius:8px;background:var(--color-warning);
+                           color:#fff;font-size:13px;font-weight:600;cursor:pointer;"
+                    [style.opacity]="isMarkingInactive ? '0.6' : '1'">
+              {{ 'dashboard.markInactiveConfirm' | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `
 })
 export class DashboardComponent implements OnInit, OnDestroy {
@@ -537,6 +574,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   recentActivity: ActivityRow[] = [];
   todayViewingRows: ViewingRow[] = [];
   staleClientRows: { id: string; name: string; initials: string; daysSince: string; phone?: string }[] = [];
+  pendingInactiveClient: { id: string; name: string } | null = null;
+  isMarkingInactive = false;
 
   pipelineCols: { label: string; color: string; items: any[] }[] = [];
 
@@ -847,11 +886,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // ── Stale clients ─────────────────────────────────────────────
 
-  setClientInactive(clientId: string, event: MouseEvent): void {
+  confirmSetInactive(clientId: string, name: string, event: MouseEvent): void {
     event.stopPropagation();
     event.preventDefault();
+    this.pendingInactiveClient = { id: clientId, name };
+  }
+
+  cancelSetInactive(): void {
+    this.pendingInactiveClient = null;
+  }
+
+  setClientInactive(clientId: string): void {
+    this.isMarkingInactive = true;
     this.clientService.updatePipelineStage(clientId, PipelineStage.CLOSED).pipe(
       takeUntil(this.destroy$)
-    ).subscribe(() => this.loadData());
+    ).subscribe(() => {
+      this.isMarkingInactive = false;
+      this.pendingInactiveClient = null;
+      this.loadData();
+    });
   }
 }

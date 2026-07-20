@@ -250,6 +250,9 @@
     "openCustomer": "Open client",
     "noFollowups": "No open follow-ups!",
     "noActivity": "No activity yet",
+    "markInactiveTitle": "Mark client as inactive?",
+    "markInactiveMessage": "{{name}} will be removed from this overview and the active client list. Their data is kept — you can find them again via the client filter \"Closed\".",
+    "markInactiveConfirm": "Mark as inactive",
     "stats": {
       "clients": "Clients",
       "notes": "Call Notes",

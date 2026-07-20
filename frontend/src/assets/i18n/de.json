@@ -250,6 +250,9 @@
     "openCustomer": "Kunde öffnen",
     "noFollowups": "Keine offenen Nachfassaktionen!",
     "noActivity": "Noch keine Aktivität",
+    "markInactiveTitle": "Kunde als inaktiv markieren?",
+    "markInactiveMessage": "{{name}} wird aus dieser Übersicht und der aktiven Kundenliste entfernt. Die Daten bleiben erhalten — Sie finden den Kunden über den Kunden-Filter „Abgeschlossen" wieder.",
+    "markInactiveConfirm": "Als inaktiv markieren",
     "stats": {
       "clients": "Kunden",
       "notes": "Gesprächsnotizen",
