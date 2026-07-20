@@ -525,7 +525,15 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
                     {{ match.matchScore }}%
                   </span>
                   <div style="flex:1;min-width:0;">
-                    <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ match.property.title }}</div>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                      <span style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ match.property.title }}</span>
+                      <span *ngIf="match.previouslyContacted"
+                            title="{{ 'properties.matching.alreadyContactedHint' | translate }}"
+                            style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--color-neutral);background:var(--color-neutral-soft);padding:2px 6px;border-radius:8px;flex-shrink:0;">
+                        <i class="ri-checkbox-circle-line" style="font-size:11px;"></i>
+                        {{ 'properties.matching.alreadyContacted' | translate }}
+                      </span>
+                    </div>
                     <div style="font-size:11px;color:var(--text-3);">{{ match.property.addressCity }}</div>
                   </div>
                   <i class="ri-arrow-right-line" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
@@ -698,7 +706,8 @@ export class ClientDetailComponent implements OnInit {
     { value: PipelineStage.PROSPECT,      label: 'Interessent',    color: 'var(--stage-prospect)',      bg: 'var(--stage-prospect-bg)' },
     { value: PipelineStage.ACTIVE_SEARCH, label: 'Aktive Suche',   color: 'var(--stage-active-search)', bg: 'var(--stage-active-search-bg)' },
     { value: PipelineStage.VIEWING,       label: 'Besichtigungen', color: 'var(--stage-viewing)',       bg: 'var(--stage-viewing-bg)' },
-    { value: PipelineStage.CLOSED,        label: 'Abschluss',      color: 'var(--stage-closed)',        bg: 'var(--stage-closed-bg)' },
+    { value: PipelineStage.WON,           label: 'Gewonnen',       color: 'var(--stage-won)',           bg: 'var(--stage-won-bg)' },
+    { value: PipelineStage.LOST,          label: 'Verloren',       color: 'var(--stage-lost)',          bg: 'var(--stage-lost-bg)' },
   ];
 
   constructor(

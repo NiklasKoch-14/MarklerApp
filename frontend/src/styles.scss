@@ -45,19 +45,19 @@
   --color-closed:         var(--color-success);
   --color-not-interested: var(--color-error);
 
-  /* Pipeline stage colours — same aliasing, no stage gets its own hue. */
+  /* Pipeline stage colours — same aliasing, no stage gets its own hue.
+     WON and LOST are both terminal stages: WON shares the success hue,
+     LOST shares the neutral hue (a lost/inactive lead isn't an error). */
   --stage-prospect:          var(--color-neutral);
   --stage-prospect-bg:       var(--color-neutral-soft);
   --stage-active-search:     var(--primary);
   --stage-active-search-bg:  var(--accent-soft);
   --stage-viewing:           var(--color-warning);
   --stage-viewing-bg:        var(--color-warning-soft);
-  --stage-offer:             var(--color-warning);
-  --stage-offer-bg:          var(--color-warning-soft);
-  --stage-closed:            var(--color-success);
-  --stage-closed-bg:         var(--color-success-soft);
-  --stage-inactive:          var(--color-neutral);
-  --stage-inactive-bg:       rgba(107,114,128,.07);
+  --stage-won:               var(--color-success);
+  --stage-won-bg:            var(--color-success-soft);
+  --stage-lost:              var(--color-neutral);
+  --stage-lost-bg:           var(--color-neutral-soft);
 }
 
 .dark {

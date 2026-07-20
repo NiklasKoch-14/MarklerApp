@@ -614,7 +614,8 @@ export class ViewingAddDialogComponent implements OnInit, OnDestroy {
     switch (stage) {
       case PipelineStage.ACTIVE_SEARCH: return 'color-mix(in srgb,var(--stage-active-search) 14%,var(--surface))';
       case PipelineStage.VIEWING:       return 'color-mix(in srgb,var(--stage-viewing) 14%,var(--surface))';
-      case PipelineStage.CLOSED:        return 'color-mix(in srgb,var(--color-success) 14%,var(--surface))';
+      case PipelineStage.WON:           return 'color-mix(in srgb,var(--stage-won) 14%,var(--surface))';
+      case PipelineStage.LOST:          return 'color-mix(in srgb,var(--stage-lost) 14%,var(--surface))';
       default:                          return 'var(--surface-2)';
     }
   }
@@ -624,7 +625,8 @@ export class ViewingAddDialogComponent implements OnInit, OnDestroy {
       case PipelineStage.PROSPECT:      return 'var(--stage-prospect)';
       case PipelineStage.ACTIVE_SEARCH: return 'var(--stage-active-search)';
       case PipelineStage.VIEWING:       return 'var(--stage-viewing)';
-      case PipelineStage.CLOSED:        return 'var(--color-success)';
+      case PipelineStage.WON:           return 'var(--stage-won)';
+      case PipelineStage.LOST:          return 'var(--stage-lost)';
       default:                          return 'var(--text-3)';
     }
   }
@@ -634,7 +636,8 @@ export class ViewingAddDialogComponent implements OnInit, OnDestroy {
       case PipelineStage.PROSPECT:      return 'Interessent';
       case PipelineStage.ACTIVE_SEARCH: return 'Aktive Suche';
       case PipelineStage.VIEWING:       return 'Besichtigung';
-      case PipelineStage.CLOSED:        return 'Abgeschlossen';
+      case PipelineStage.WON:           return 'Gewonnen';
+      case PipelineStage.LOST:          return 'Verloren';
       default:                          return '—';
     }
   }

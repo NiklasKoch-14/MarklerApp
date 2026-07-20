@@ -6,6 +6,7 @@ import com.marklerapp.crm.mapper.ClientMapper;
 import com.marklerapp.crm.mapper.PropertyMapper;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.PropertyRepository;
+import com.marklerapp.crm.repository.ViewingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -54,6 +55,7 @@ public class PropertyMatchingService {
 
     private final PropertyRepository propertyRepository;
     private final ClientRepository clientRepository;
+    private final ViewingRepository viewingRepository;
     private final PropertyMapper propertyMapper;
     private final ClientMapper clientMapper;
     private final ClientService clientService;
@@ -113,9 +115,15 @@ public class PropertyMatchingService {
 
         log.debug("Found {} properties to evaluate", availableProperties.size());
 
+        // Cross-reference against existing viewings for this client in one query, so the
+        // frontend can flag properties already proposed to this client.
+        Map<UUID, List<Viewing>> viewingsByPropertyId = viewingRepository.findByClient_Id(clientId).stream()
+                .collect(Collectors.groupingBy(v -> v.getProperty().getId()));
+
         // Score each property against the criteria
         List<PropertyMatchResponse.PropertyMatchResult> matchResults = availableProperties.stream()
-                .map(property -> scoreProperty(property, criteria, request))
+                .map(property -> scoreProperty(property, criteria, request,
+                        viewingsByPropertyId.getOrDefault(property.getId(), List.of())))
                 .filter(result -> result.getMatchScore() >= request.getEffectiveMatchThreshold())
                 .sorted(Comparator.comparingInt(PropertyMatchResponse.PropertyMatchResult::getMatchScore).reversed())
                 .limit(request.getEffectiveMaxResults())
@@ -159,12 +167,20 @@ public class PropertyMatchingService {
 
         log.debug("Found {} clients with search criteria to evaluate", clientsWithCriteria.size());
 
+        // Cross-reference against existing viewings for this property in one query, so the
+        // frontend can flag "already contacted" clients instead of letting an agent propose
+        // the same property to the same person twice from two different match lists.
+        Map<UUID, List<Viewing>> viewingsByClientId = viewingRepository.findByProperty_Id(propertyId).stream()
+                .collect(Collectors.groupingBy(v -> v.getClient().getId()));
+
         // Score each client based on how well the property matches their criteria
         List<PropertyMatchResponse.ClientMatchResult> matchResults = clientsWithCriteria.stream()
                 .filter(client -> client.getSearchCriteria() != null)
-                .filter(client -> client.getPipelineStage() != Client.PipelineStage.CLOSED)
+                .filter(client -> client.getPipelineStage() != Client.PipelineStage.WON
+                        && client.getPipelineStage() != Client.PipelineStage.LOST)
                 .filter(client -> matchesDesiredListingType(client.getClientType(), property.getListingType()))
-                .map(client -> scoreClient(client, property, request))
+                .map(client -> scoreClient(client, property, request,
+                        viewingsByClientId.getOrDefault(client.getId(), List.of())))
                 .filter(result -> result.getMatchScore() >= request.getEffectiveMatchThreshold())
                 .sorted(Comparator.comparingInt(PropertyMatchResponse.ClientMatchResult::getMatchScore).reversed())
                 .limit(request.getEffectiveMaxResults())
@@ -230,9 +246,10 @@ public class PropertyMatchingService {
 
         log.debug("Found {} properties to evaluate", availableProperties.size());
 
-        // Score each property against the criteria
+        // Score each property against the criteria (no client attached to an ad-hoc search,
+        // so there is nothing to cross-reference against past viewings)
         List<PropertyMatchResponse.PropertyMatchResult> matchResults = availableProperties.stream()
-                .map(property -> scoreProperty(property, criteria, request))
+                .map(property -> scoreProperty(property, criteria, request, List.of()))
                 .filter(result -> result.getMatchScore() >= request.getEffectiveMatchThreshold())
                 .sorted(Comparator.comparingInt(PropertyMatchResponse.PropertyMatchResult::getMatchScore).reversed())
                 .limit(request.getEffectiveMaxResults())
@@ -261,10 +278,14 @@ public class PropertyMatchingService {
      * @param property the property to score
      * @param criteria the search criteria to match against
      * @param request the matching request with weights and options
+     * @param priorViewings existing viewings linking this property to the client this match is
+     *                      being scored for (empty when there is no specific client, e.g. an
+     *                      ad-hoc custom-criteria search)
      * @return PropertyMatchResult with score and breakdown
      */
     private PropertyMatchResponse.PropertyMatchResult scoreProperty(
-            Property property, PropertySearchCriteriaDto criteria, PropertyMatchRequest request) {
+            Property property, PropertySearchCriteriaDto criteria, PropertyMatchRequest request,
+            List<Viewing> priorViewings) {
 
         List<String> matchReasons = new ArrayList<>();
         List<String> mismatchReasons = new ArrayList<>();
@@ -309,7 +330,22 @@ public class PropertyMatchingService {
                 .scoreBreakdown(breakdown)
                 .matchReasons(matchReasons)
                 .mismatchReasons(mismatchReasons)
+                .previouslyContacted(!priorViewings.isEmpty())
+                .viewCount(priorViewings.size())
+                .lastContactDate(latestViewingDate(priorViewings))
                 .build();
+    }
+
+    /**
+     * Latest viewing date across a set of prior viewings, as an ISO string for the DTO — or
+     * null if there is no viewing history.
+     */
+    private static String latestViewingDate(List<Viewing> viewings) {
+        return viewings.stream()
+                .map(Viewing::getViewingDate)
+                .max(Comparator.naturalOrder())
+                .map(Object::toString)
+                .orElse(null);
     }
 
     /**
@@ -318,10 +354,11 @@ public class PropertyMatchingService {
      * @param client the client with search criteria
      * @param property the property to match
      * @param request the matching request with weights and options
+     * @param priorViewings existing viewings linking this client to this property
      * @return ClientMatchResult with score and breakdown
      */
     private PropertyMatchResponse.ClientMatchResult scoreClient(
-            Client client, PropertyDto property, PropertyMatchRequest request) {
+            Client client, PropertyDto property, PropertyMatchRequest request, List<Viewing> priorViewings) {
 
         PropertySearchCriteriaDto criteria = convertCriteriaToDto(client.getSearchCriteria());
         List<String> matchReasons = new ArrayList<>();
@@ -370,6 +407,9 @@ public class PropertyMatchingService {
                 .scoreBreakdown(breakdown)
                 .matchReasons(matchReasons)
                 .mismatchReasons(mismatchReasons)
+                .previouslyContacted(!priorViewings.isEmpty())
+                .viewCount(priorViewings.size())
+                .lastContactDate(latestViewingDate(priorViewings))
                 .build();
     }
 

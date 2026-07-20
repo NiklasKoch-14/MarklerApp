@@ -732,7 +732,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       { stage: PipelineStage.PROSPECT,      label: 'Interessent',    color: 'var(--stage-prospect)' },
       { stage: PipelineStage.ACTIVE_SEARCH, label: 'Aktive Suche',   color: 'var(--stage-active-search)' },
       { stage: PipelineStage.VIEWING,       label: 'Besichtigung',   color: 'var(--stage-viewing)' },
-      { stage: PipelineStage.CLOSED,        label: 'Abgeschlossen',  color: 'var(--color-success)' },
     ];
 
     this.pipelineCols = stageMeta.map(meta => {
@@ -898,7 +897,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   setClientInactive(clientId: string): void {
     this.isMarkingInactive = true;
-    this.clientService.updatePipelineStage(clientId, PipelineStage.CLOSED).pipe(
+    this.clientService.updatePipelineStage(clientId, PipelineStage.LOST).pipe(
       takeUntil(this.destroy$)
     ).subscribe(() => {
       this.isMarkingInactive = false;

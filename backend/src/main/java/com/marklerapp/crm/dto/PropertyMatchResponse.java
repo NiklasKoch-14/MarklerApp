@@ -105,6 +105,11 @@ public class PropertyMatchResponse {
          * Number of times this property has been shown to the client
          */
         private Integer viewCount;
+
+        /**
+         * Last contact date for this property (i.e. most recent viewing with the client)
+         */
+        private String lastContactDate;
     }
 
     /**

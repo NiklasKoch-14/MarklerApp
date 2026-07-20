@@ -71,6 +71,16 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
     List<Client> findByAgentAndAddressCity(Agent agent, String city);
 
     /**
+     * Find clients with the same name within agent's clients (duplicate-lead check)
+     */
+    List<Client> findByAgentAndFirstNameIgnoreCaseAndLastNameIgnoreCase(Agent agent, String firstName, String lastName);
+
+    /**
+     * Find clients with the same phone number within agent's clients (duplicate-lead check)
+     */
+    List<Client> findByAgentAndPhone(Agent agent, String phone);
+
+    /**
      * Find clients with GDPR consent
      * Uses JOIN FETCH to prevent N+1 query problem
      */
@@ -133,7 +143,7 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
      */
     @Query("SELECT c FROM Client c " +
            "LEFT JOIN FETCH c.searchCriteria " +
-           "WHERE c.agent = :agent AND c.pipelineStage != 'CLOSED' " +
+           "WHERE c.agent = :agent AND c.pipelineStage NOT IN ('WON', 'LOST') " +
            "ORDER BY c.updatedAt DESC")
     List<Client> findActiveClientsByAgent(@Param("agent") Agent agent);
 
@@ -141,7 +151,7 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
      * Find clients without recent update (proxy for no-contact — replaced by lastContactDate in service)
      */
     @Query("SELECT c FROM Client c WHERE c.agent = :agent " +
-           "AND c.pipelineStage != 'CLOSED' " +
+           "AND c.pipelineStage NOT IN ('WON', 'LOST') " +
            "ORDER BY c.updatedAt ASC")
     List<Client> findActiveClientsOrderedByUpdatedAt(@Param("agent") Agent agent);
 

@@ -251,7 +251,7 @@
     "noFollowups": "No open follow-ups!",
     "noActivity": "No activity yet",
     "markInactiveTitle": "Mark client as inactive?",
-    "markInactiveMessage": "{{name}} will be removed from this overview and the active client list. Their data is kept — you can find them again via the client filter \"Closed\".",
+    "markInactiveMessage": "{{name}} will be removed from this overview and the active client list, and marked \"Lost\". Their data is kept — you can find them again via the client filter \"Lost\".",
     "markInactiveConfirm": "Mark as inactive",
     "stats": {
       "clients": "Clients",
@@ -291,7 +291,8 @@
       "PROSPECT": "New",
       "ACTIVE_SEARCH": "Active search",
       "VIEWING": "Viewing",
-      "CLOSED": "Closed",
+      "WON": "Won",
+      "LOST": "Lost",
       "none": "No stage"
     },
     "type": {
@@ -309,6 +310,7 @@
     "delete": "Delete Client",
     "deleting": "Deleting...",
     "deleteConfirm": "Are you sure you want to delete this client? This action cannot be undone.",
+    "duplicateWarningTitle": "Possibly already exists — please check before saving:",
     "deleteSuccess": "Client deleted successfully",
     "deleteError": "Failed to delete client. Please try again.",
     "list": "Client List",
@@ -724,6 +726,8 @@
       "locationExactness": "Exact Location",
       "featureFlexibility": "Feature Flexibility",
       "includeContacted": "Include Already Contacted",
+      "alreadyContacted": "Already contacted",
+      "alreadyContactedHint": "A viewing already exists linking this contact to this property.",
       "advancedWeights": "Advanced Weights",
       "priceWeight": "Price",
       "locationWeight": "Location",

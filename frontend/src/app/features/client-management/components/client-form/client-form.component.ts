@@ -1,14 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { ClientService } from '../../services/client.service';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { ClientService, Client } from '../../services/client.service';
 
 @Component({
   selector: 'app-client-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, RouterLink],
   template: `
     <div>
       <div class="page-header">
@@ -73,6 +74,25 @@ import { ClientService } from '../../services/client.service';
                       [placeholder]="'clients.phonePlaceholder' | translate">
                   </div>
                 </div>
+
+                <!-- Dubletten-Warnung: nicht blockierend, direkt bei den Feldern die sie ausgelöst haben -->
+                <div *ngIf="duplicateWarnings.length > 0"
+                     style="background:var(--color-warning-soft); border:1px solid var(--color-warning); border-radius:10px; padding:12px 14px; display:flex; gap:10px; align-items:flex-start;">
+                  <i class="ri-alert-line" style="font-size:16px; color:var(--color-warning); flex-shrink:0; margin-top:1px;"></i>
+                  <div style="flex:1;">
+                    <div style="font-size:13px; font-weight:600; color:var(--text); margin-bottom:4px;">
+                      {{ 'clients.duplicateWarningTitle' | translate }}
+                    </div>
+                    <div *ngFor="let d of duplicateWarnings" style="font-size:13px; color:var(--text-2); margin-bottom:2px;">
+                      <a [routerLink]="['/clients', d.id]" target="_blank" style="color:var(--primary); font-weight:600; text-decoration:none;">
+                        {{ d.firstName }} {{ d.lastName }}
+                      </a>
+                      <span *ngIf="d.phone"> · {{ d.phone }}</span>
+                      <span *ngIf="d.email"> · {{ d.email }}</span>
+                    </div>
+                  </div>
+                </div>
+
                 <div>
                   <label class="form-label">{{ 'clients.street' | translate }}</label>
                   <input type="text" formControlName="addressStreet" class="form-input"
@@ -344,6 +364,7 @@ export class ClientFormComponent implements OnInit {
   searchCriteriaExpanded = false;
   activeHint: string | null = null;
   activeSection: 'contact' | 'search' | 'gdpr' = 'contact';
+  duplicateWarnings: Client[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -425,7 +446,37 @@ export class ClientFormComponent implements OnInit {
     if (this.isEditMode && this.clientId) {
       this.loadClient(this.clientId);
       this.searchCriteriaExpanded = true;
+    } else {
+      this.watchForDuplicates();
     }
+  }
+
+  /** Non-blocking duplicate-lead check while a new client is being entered (create mode only). */
+  private watchForDuplicates(): void {
+    this.clientForm.get('lastName')!.valueChanges.pipe(
+      debounceTime(400),
+      distinctUntilChanged()
+    ).subscribe(() => this.checkForDuplicates());
+
+    this.clientForm.get('phone')!.valueChanges.pipe(
+      debounceTime(400),
+      distinctUntilChanged()
+    ).subscribe(() => this.checkForDuplicates());
+  }
+
+  private checkForDuplicates(): void {
+    const firstName = this.clientForm.get('firstName')?.value?.trim() || '';
+    const lastName = this.clientForm.get('lastName')?.value?.trim() || '';
+    const phone = this.clientForm.get('phone')?.value?.trim() || '';
+
+    if (!(firstName && lastName) && !phone) {
+      this.duplicateWarnings = [];
+      return;
+    }
+
+    this.clientService.checkDuplicateClients(firstName, lastName, phone).subscribe(matches => {
+      this.duplicateWarnings = matches;
+    });
   }
 
   loadClient(id: string): void {

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
@@ -30,7 +30,8 @@ export enum PipelineStage {
   PROSPECT = 'PROSPECT',
   ACTIVE_SEARCH = 'ACTIVE_SEARCH',
   VIEWING = 'VIEWING',
-  CLOSED = 'CLOSED'
+  WON = 'WON',
+  LOST = 'LOST'
 }
 
 export interface Client {
@@ -194,6 +195,20 @@ export class ClientService {
   deleteClient(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
       catchError(err => this.errorHandler.handleError(err))
+    );
+  }
+
+  /**
+   * Soft duplicate check — existing clients with the same name or phone number.
+   * Non-blocking: used to warn while a new client is being entered.
+   */
+  checkDuplicateClients(firstName: string, lastName: string, phone: string): Observable<Client[]> {
+    let params = new HttpParams();
+    if (firstName) params = params.set('firstName', firstName);
+    if (lastName) params = params.set('lastName', lastName);
+    if (phone) params = params.set('phone', phone);
+    return this.http.get<Client[]>(`${this.apiUrl}/check-duplicate`, { params }).pipe(
+      catchError(() => of([]))
     );
   }
 

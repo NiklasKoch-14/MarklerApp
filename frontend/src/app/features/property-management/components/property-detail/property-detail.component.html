@@ -522,7 +522,15 @@
                 {{ m.matchScore }}%
               </span>
               <div style="flex:1;min-width:0;">
-                <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ m.client.firstName }} {{ m.client.lastName }}</div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ m.client.firstName }} {{ m.client.lastName }}</span>
+                  <span *ngIf="m.previouslyContacted"
+                        title="{{ 'properties.matching.alreadyContactedHint' | translate }}"
+                        style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--color-neutral);background:var(--color-neutral-soft);padding:2px 6px;border-radius:8px;flex-shrink:0;">
+                    <i class="ri-checkbox-circle-line" style="font-size:11px;"></i>
+                    {{ 'properties.matching.alreadyContacted' | translate }}
+                  </span>
+                </div>
                 <div *ngIf="m.client.searchCriteria?.maxBudget" style="font-size:11px;color:var(--text-3);">bis {{ m.client.searchCriteria.maxBudget | number:'1.0-0' }} €</div>
               </div>
               <i class="ri-arrow-right-line" style="font-size:12px;color:var(--text-3);flex-shrink:0;"></i>

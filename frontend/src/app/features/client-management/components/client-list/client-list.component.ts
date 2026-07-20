@@ -242,7 +242,8 @@ export class ClientListComponent implements OnInit {
     { value: PipelineStage.PROSPECT,      labelKey: 'clients.stage.PROSPECT' },
     { value: PipelineStage.ACTIVE_SEARCH, labelKey: 'clients.stage.ACTIVE_SEARCH' },
     { value: PipelineStage.VIEWING,       labelKey: 'clients.stage.VIEWING' },
-    { value: PipelineStage.CLOSED,        labelKey: 'clients.stage.CLOSED' },
+    { value: PipelineStage.WON,           labelKey: 'clients.stage.WON' },
+    { value: PipelineStage.LOST,          labelKey: 'clients.stage.LOST' },
   ];
 
   readonly typeOptions = [
@@ -255,7 +256,8 @@ export class ClientListComponent implements OnInit {
     [PipelineStage.PROSPECT]: 0,
     [PipelineStage.ACTIVE_SEARCH]: 1,
     [PipelineStage.VIEWING]: 2,
-    [PipelineStage.CLOSED]: 3,
+    [PipelineStage.WON]: 3,
+    [PipelineStage.LOST]: 4,
   };
 
   constructor(
@@ -418,7 +420,8 @@ export class ClientListComponent implements OnInit {
       case PipelineStage.PROSPECT:      return 'color-mix(in srgb,var(--stage-prospect) 14%,var(--surface))';
       case PipelineStage.ACTIVE_SEARCH: return 'color-mix(in srgb,var(--stage-active-search) 14%,var(--surface))';
       case PipelineStage.VIEWING:       return 'color-mix(in srgb,var(--stage-viewing) 14%,var(--surface))';
-      case PipelineStage.CLOSED:        return 'color-mix(in srgb,var(--color-success) 14%,var(--surface))';
+      case PipelineStage.WON:           return 'color-mix(in srgb,var(--stage-won) 14%,var(--surface))';
+      case PipelineStage.LOST:          return 'color-mix(in srgb,var(--stage-lost) 14%,var(--surface))';
       default:                          return 'var(--surface-2)';
     }
   }
@@ -428,7 +431,8 @@ export class ClientListComponent implements OnInit {
       case PipelineStage.PROSPECT:      return 'var(--stage-prospect)';
       case PipelineStage.ACTIVE_SEARCH: return 'var(--stage-active-search)';
       case PipelineStage.VIEWING:       return 'var(--stage-viewing)';
-      case PipelineStage.CLOSED:        return 'var(--color-success)';
+      case PipelineStage.WON:           return 'var(--stage-won)';
+      case PipelineStage.LOST:          return 'var(--stage-lost)';
       default:                          return 'var(--text-3)';
     }
   }

@@ -55,6 +55,7 @@ export interface PropertyMatchResult {
   mismatchReasons?: string[];
   previouslyContacted?: boolean;
   viewCount?: number;
+  lastContactDate?: string;
 }
 
 /**

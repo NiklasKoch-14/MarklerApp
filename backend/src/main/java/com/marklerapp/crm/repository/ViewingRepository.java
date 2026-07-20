@@ -40,4 +40,12 @@ public interface ViewingRepository extends JpaRepository<Viewing, UUID> {
 
     @Query("SELECT COUNT(v) FROM Viewing v WHERE v.client = :client")
     long countByClient(@Param("client") Client client);
+
+    /**
+     * Lightweight lookup (no JOIN FETCH) for cross-referencing matching results against
+     * existing viewings, to flag clients/properties that were already proposed to each other.
+     */
+    List<Viewing> findByProperty_Id(UUID propertyId);
+
+    List<Viewing> findByClient_Id(UUID clientId);
 }

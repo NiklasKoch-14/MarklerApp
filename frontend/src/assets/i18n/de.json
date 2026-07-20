@@ -251,7 +251,7 @@
     "noFollowups": "Keine offenen Nachfassaktionen!",
     "noActivity": "Noch keine Aktivität",
     "markInactiveTitle": "Kunde als inaktiv markieren?",
-    "markInactiveMessage": "{{name}} wird aus dieser Übersicht und der aktiven Kundenliste entfernt. Die Daten bleiben erhalten — Sie finden den Kunden über den Kunden-Filter „Abgeschlossen“ wieder.",
+    "markInactiveMessage": "{{name}} wird aus dieser Übersicht und der aktiven Kundenliste entfernt und als „Verloren“ markiert. Die Daten bleiben erhalten — Sie finden den Kunden über den Kunden-Filter „Verloren“ wieder.",
     "markInactiveConfirm": "Als inaktiv markieren",
     "stats": {
       "clients": "Kunden",
@@ -291,7 +291,8 @@
       "PROSPECT": "Neu",
       "ACTIVE_SEARCH": "Aktive Suche",
       "VIEWING": "Besichtigung",
-      "CLOSED": "Abgeschlossen",
+      "WON": "Gewonnen",
+      "LOST": "Verloren",
       "none": "Keine Phase"
     },
     "type": {
@@ -309,6 +310,7 @@
     "delete": "Kunde löschen",
     "deleting": "Wird gelöscht...",
     "deleteConfirm": "Sind Sie sicher, dass Sie diesen Kunden löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "duplicateWarningTitle": "Möglicherweise bereits vorhanden — bitte prüfen, bevor Sie speichern:",
     "deleteSuccess": "Kunde erfolgreich gelöscht",
     "deleteError": "Kunde konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
     "list": "Kundenliste",
@@ -724,6 +726,8 @@
       "locationExactness": "Exakter Standort",
       "featureFlexibility": "Ausstattungs-Flexibilität",
       "includeContacted": "Bereits kontaktierte einschließen",
+      "alreadyContacted": "Bereits kontaktiert",
+      "alreadyContactedHint": "Für diese Immobilie wurde bereits eine Besichtigung mit diesem Kontakt angelegt.",
       "advancedWeights": "Erweiterte Gewichtung",
       "priceWeight": "Preis",
       "locationWeight": "Standort",

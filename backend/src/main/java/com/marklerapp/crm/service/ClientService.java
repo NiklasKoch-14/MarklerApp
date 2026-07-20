@@ -138,6 +138,29 @@ public class ClientService {
     }
 
     /**
+     * Find existing clients of this agent that look like the same lead — same name or same
+     * phone number. Used as a soft, non-blocking duplicate warning while a client is being
+     * entered (the hard block is the existing e-mail check in {@link #createClient}, which
+     * only fires when an e-mail was actually given).
+     */
+    @Transactional(readOnly = true)
+    public List<ClientDto> findPotentialDuplicateClients(UUID agentId, String firstName, String lastName, String phone) {
+        Agent agent = getAgentById(agentId);
+        Map<UUID, Client> matches = new java.util.LinkedHashMap<>();
+
+        if (firstName != null && !firstName.trim().isEmpty() && lastName != null && !lastName.trim().isEmpty()) {
+            clientRepository.findByAgentAndFirstNameIgnoreCaseAndLastNameIgnoreCase(agent, firstName.trim(), lastName.trim())
+                    .forEach(c -> matches.put(c.getId(), c));
+        }
+        if (phone != null && !phone.trim().isEmpty()) {
+            clientRepository.findByAgentAndPhone(agent, phone.trim())
+                    .forEach(c -> matches.put(c.getId(), c));
+        }
+
+        return matches.values().stream().map(clientMapper::toDto).collect(Collectors.toList());
+    }
+
+    /**
      * Update an existing client
      */
     @Transactional
@@ -274,7 +297,7 @@ public class ClientService {
         List<Client> clients = clientRepository.findActiveClientsByAgent(agent);
         Map<Client.PipelineStage, List<ClientDto>> result = new java.util.LinkedHashMap<>();
         for (Client.PipelineStage stage : Client.PipelineStage.values()) {
-            if (stage == Client.PipelineStage.CLOSED) continue;
+            if (stage == Client.PipelineStage.WON || stage == Client.PipelineStage.LOST) continue;
             result.put(stage, new java.util.ArrayList<>());
         }
         for (Client c : clients) {

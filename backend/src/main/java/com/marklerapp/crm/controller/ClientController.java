@@ -76,6 +76,23 @@ public class ClientController extends BaseController {
     }
 
     /**
+     * Soft duplicate check — find existing clients with the same name or phone number.
+     * Non-blocking: the frontend uses this to warn while a new client is being entered.
+     */
+    @GetMapping("/check-duplicate")
+    @Operation(summary = "Check for potential duplicate clients", description = "Find existing clients with the same name or phone number")
+    public ResponseEntity<List<ClientDto>> checkDuplicateClients(
+            @RequestParam(required = false) String firstName,
+            @RequestParam(required = false) String lastName,
+            @RequestParam(required = false) String phone,
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        List<ClientDto> matches = clientService.findPotentialDuplicateClients(agentId, firstName, lastName, phone);
+        return ResponseEntity.ok(matches);
+    }
+
+    /**
      * Get client by ID
      */
     @GetMapping("/{clientId}")
