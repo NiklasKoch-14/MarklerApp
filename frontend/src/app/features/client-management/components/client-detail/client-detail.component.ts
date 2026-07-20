@@ -150,9 +150,9 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
                     Dokumente &amp; Anhänge
                   </button>
                   <div style="height:1px;background:var(--border);margin:4px 0;"></div>
-                  <button class="qm-item danger" (click)="deleteClient(); showQuickMenu = false" [disabled]="isDeleting">
+                  <button class="qm-item danger" (click)="showDeleteConfirm = true; showQuickMenu = false" [disabled]="isDeleting">
                     <i class="ri-delete-bin-line" style="font-size:16px;"></i>
-                    {{ isDeleting ? 'Wird gelöscht…' : 'Kunde löschen' }}
+                    {{ isDeleting ? ('clients.deleting' | translate) : ('clients.delete' | translate) }}
                   </button>
                 </div>
               </div>
@@ -599,6 +599,36 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
       </div>
     </div>
 
+    <!-- Delete Confirmation Dialog -->
+    <div *ngIf="showDeleteConfirm && client"
+         style="position:fixed;inset:0;z-index:700;display:flex;align-items:center;justify-content:center;padding:20px;"
+         (click)="showDeleteConfirm = false">
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);"></div>
+      <div style="position:relative;width:100%;max-width:420px;background:var(--surface);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.25);padding:24px;"
+           (click)="$event.stopPropagation()">
+        <div style="display:flex;align-items:flex-start;gap:14px;">
+          <div style="flex-shrink:0;width:42px;height:42px;border-radius:50%;background:var(--color-error-soft);display:flex;align-items:center;justify-content:center;">
+            <i class="ri-delete-bin-line" style="font-size:20px;color:var(--color-error);"></i>
+          </div>
+          <div style="flex:1;">
+            <h3 style="font-size:16px;font-weight:700;color:var(--text);margin:0 0 6px;">{{ 'clients.delete' | translate }}</h3>
+            <p style="font-size:13px;color:var(--text-2);margin:0;line-height:1.5;">{{ 'clients.deleteConfirm' | translate }}</p>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:22px;">
+          <button (click)="showDeleteConfirm = false"
+                  style="padding:9px 16px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">
+            {{ 'common.cancel' | translate }}
+          </button>
+          <button (click)="deleteClient()" [disabled]="isDeleting"
+                  style="padding:9px 16px;background:var(--color-error);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;opacity:1;"
+                  [style.opacity]="isDeleting ? 0.7 : 1">
+            {{ isDeleting ? ('clients.deleting' | translate) : ('common.delete' | translate) }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Stage Upgrade Hint -->
     <div *ngIf="showStageUpgradeHint"
          style="position:fixed;bottom:24px;right:24px;background:var(--surface);border:1.5px solid var(--primary);border-radius:12px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,.15);z-index:500;max-width:320px;">
@@ -662,6 +692,7 @@ export class ClientDetailComponent implements OnInit {
   stageDropdownOpen = false;
   showQuickMenu = false;
   showStageUpgradeHint = false;
+  showDeleteConfirm = false;
 
   pipelineStages = [
     { value: PipelineStage.PROSPECT,      label: 'Interessent',    color: 'var(--stage-prospect)',      bg: 'var(--stage-prospect-bg)' },
@@ -1055,16 +1086,16 @@ export class ClientDetailComponent implements OnInit {
   }
 
   deleteClient(): void {
-    if (this.client && confirm('Diesen Kunden wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) {
-      this.isDeleting = true;
-      this.clientService.deleteClient(this.client.id!).subscribe({
-        next: () => {
-          this.router.navigate(['/clients']);
-        },
-        error: () => {
-          this.isDeleting = false;
-        }
-      });
-    }
+    if (!this.client) return;
+    this.isDeleting = true;
+    this.clientService.deleteClient(this.client.id!).subscribe({
+      next: () => {
+        this.router.navigate(['/clients']);
+      },
+      error: () => {
+        this.isDeleting = false;
+        this.showDeleteConfirm = false;
+      }
+    });
   }
 }
