@@ -538,7 +538,7 @@ export class ClientFormComponent implements OnInit {
           },
           error: (error) => {
             this.isLoading = false;
-            this.errorMessage = error.error?.message || 'Failed to update client. Please try again.';
+            this.errorMessage = error.message || 'Failed to update client. Please try again.';
           }
         });
       } else {
@@ -549,7 +549,7 @@ export class ClientFormComponent implements OnInit {
           },
           error: (error) => {
             this.isLoading = false;
-            this.errorMessage = error.error?.message || 'Failed to create client. Please try again.';
+            this.errorMessage = error.message || 'Failed to create client. Please try again.';
           }
         });
       }

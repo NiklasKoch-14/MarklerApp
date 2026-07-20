@@ -337,7 +337,7 @@ export class PropertyExposeComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('Error downloading expose:', err);
         console.error('Full error:', JSON.stringify(err, null, 2));
-        this.error = err.error?.message || 'Failed to download expose';
+        this.error = err.message || 'Failed to download expose';
         this.downloading = false;
       }
     });
@@ -389,7 +389,7 @@ export class PropertyExposeComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('Error previewing expose:', err);
         console.error('Full error:', JSON.stringify(err, null, 2));
-        this.error = err.error?.message || 'Failed to preview expose';
+        this.error = err.message || 'Failed to preview expose';
         this.previewing = false;
       }
     });

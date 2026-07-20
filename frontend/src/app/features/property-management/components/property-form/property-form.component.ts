@@ -284,8 +284,8 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
     console.error('Error submitting property:', error);
 
     // Check if backend sent field-specific errors
-    if (error.error?.fieldErrors) {
-      this.fieldErrors = error.error.fieldErrors;
+    if (error.fieldErrors) {
+      this.fieldErrors = error.fieldErrors;
 
       // Build a detailed error message listing which fields failed
       const fieldNames = Object.keys(this.fieldErrors);
@@ -295,7 +295,7 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
           .join(', ');
         this.errorMessage = `Validation failed for the following field(s): ${fieldList}. Please check the highlighted fields below.`;
       } else {
-        this.errorMessage = error.error?.message || 'Failed to save property. Please try again.';
+        this.errorMessage = error.message || 'Failed to save property. Please try again.';
       }
 
       // Mark fields with errors as touched
@@ -310,7 +310,7 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
       this.openAllSections();
       this.scrollToFirstError();
     } else {
-      this.errorMessage = error.error?.message || 'Failed to save property. Please try again.';
+      this.errorMessage = error.message || 'Failed to save property. Please try again.';
     }
   }
 

@@ -185,7 +185,7 @@ export class FileAttachmentManagerComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Error uploading file:', error);
         uploadState.uploading = false;
-        uploadState.error = error.error?.message || 'Upload failed';
+        uploadState.error = error.message || 'Upload failed';
         // Remove upload state after a delay
         setTimeout(() => {
           this.uploadStates = this.uploadStates.filter((s) => s !== uploadState);
