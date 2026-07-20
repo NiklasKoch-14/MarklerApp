@@ -177,6 +177,12 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
               <i [class]="isRecording ? 'ri-stop-circle-fill' : 'ri-mic-fill'" style="font-size:14px;"></i>
               {{ (isRecording ? 'callNotes.voice.stop' : 'callNotes.voice.start') | translate }}
             </button>
+            <span *ngIf="!voiceSupported"
+                  [title]="'callNotes.voice.notSupported' | translate"
+                  style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;color:var(--text-3);cursor:default;">
+              <i class="ri-mic-off-line" style="font-size:14px;"></i>
+              {{ 'callNotes.voice.start' | translate }}
+            </span>
             <button (click)="showQuickNoteForm = false"
                     style="background:none;border:none;cursor:pointer;color:var(--text-3);font-size:18px;line-height:1;">
               <i class="ri-close-line"></i>

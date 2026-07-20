@@ -23,6 +23,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
             class="relative group border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
             [class.ring-2]="image.isPrimary"
             [class.ring-primary]="image.isPrimary"
+            (click)="toggleImageOverlay(image.id!)"
           >
             <!-- Image -->
             <div style="aspect-ratio:1;background:var(--surface-2);">
@@ -44,12 +45,14 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
               </div>
             </div>
 
-            <!-- Overlay Actions -->
-            <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <!-- Overlay Actions: visible on hover (mouse) AND on tap (touch, no hover available) -->
+            <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
+                 [class.opacity-100]="activeImageId === image.id">
               <button
                 *ngIf="!image.isPrimary"
-                (click)="onSetPrimary(image)"
+                (click)="$event.stopPropagation(); onSetPrimary(image)"
                 class="btn btn-sm btn-circle btn-primary"
+                style="min-width:44px;min-height:44px;"
                 title="Set as primary"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,8 +60,9 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
                 </svg>
               </button>
               <button
-                (click)="onEditImage(image)"
+                (click)="$event.stopPropagation(); onEditImage(image)"
                 class="btn btn-sm btn-circle btn-info"
+                style="min-width:44px;min-height:44px;"
                 title="Edit metadata"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,8 +70,9 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
                 </svg>
               </button>
               <button
-                (click)="onDeleteImage(image)"
+                (click)="$event.stopPropagation(); onDeleteImage(image)"
                 class="btn btn-sm btn-circle btn-error"
+                style="min-width:44px;min-height:44px;"
                 title="Delete image"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,6 +217,12 @@ export class PropertyImageUploadComponent implements OnInit {
   errorMessage = '';
   currentLanguage = 'en';
   pendingDeleteImage: PropertyImageDto | null = null;
+  activeImageId: string | null = null;
+
+  /** Touch has no hover — tap the image to reveal its actions, tap again to hide. */
+  toggleImageOverlay(imageId: string): void {
+    this.activeImageId = this.activeImageId === imageId ? null : imageId;
+  }
 
   constructor(private imageService: PropertyImageService, private translate: TranslateService) {}
 

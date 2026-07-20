@@ -128,15 +128,32 @@ interface ViewingRow {
         </div>
       }
 
-      <!-- Positiver Zustand: nichts brennt -->
-      @if (allClear && !loading) {
+      <!-- Positiver Zustand: nichts brennt (nur wenn es überhaupt schon Daten zum Abarbeiten gab) -->
+      @if (allClear && hasAnyClients && !loading) {
         <div style="display:flex; align-items:center; gap:13px; margin-bottom:20px; padding:16px 18px;
                     background:var(--color-success-soft); border:1px solid var(--color-success); border-radius:14px;">
           <i class="ri-checkbox-circle-fill" style="font-size:26px; color:var(--color-success);"></i>
           <div>
-            <div style="font-size:15px; font-weight:700; color:var(--text);">Alles im Griff</div>
-            <div style="font-size:13px; color:var(--text-2);">Keine überfälligen Rückrufe und keine Besichtigungen heute.</div>
+            <div style="font-size:15px; font-weight:700; color:var(--text);">{{ 'dashboard.allClearTitle' | translate }}</div>
+            <div style="font-size:13px; color:var(--text-2);">{{ 'dashboard.allClearMessage' | translate }}</div>
           </div>
+        </div>
+      }
+
+      <!-- Echt leerer Account: kein "alles erledigt", sondern ein klarer erster Schritt -->
+      @if (allClear && !hasAnyClients && !loading) {
+        <div style="display:flex; align-items:center; gap:13px; margin-bottom:20px; padding:16px 18px;
+                    background:var(--accent-soft); border:1px solid var(--primary); border-radius:14px;">
+          <i class="ri-flag-line" style="font-size:26px; color:var(--primary);"></i>
+          <div style="flex:1;">
+            <div style="font-size:15px; font-weight:700; color:var(--text);">{{ 'dashboard.emptyStateTitle' | translate }}</div>
+            <div style="font-size:13px; color:var(--text-2);">{{ 'dashboard.emptyStateMessage' | translate }}</div>
+          </div>
+          <a routerLink="/clients/new"
+             style="flex-shrink:0; padding:9px 16px; background:var(--primary); color:#fff; border-radius:10px;
+                    font-size:13px; font-weight:600; text-decoration:none; white-space:nowrap;">
+            {{ 'clients.addFirstClient' | translate }}
+          </a>
         </div>
       }
 
@@ -188,13 +205,13 @@ interface ViewingRow {
                 @if (v.viewingStatus === 'SCHEDULED') {
                   <div style="display:flex; gap:6px; margin-top:10px;" (click)="$event.stopPropagation()">
                     <button (click)="openViewingDone(v)"
-                            style="flex:1; padding:5px 8px; border:1.5px solid var(--color-success); border-radius:7px;
-                                   background:none; color:var(--color-success); font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:5px;">
-                      <i class="ri-check-line" style="font-size:13px;"></i> Erledigt
+                            style="flex:1; min-height:44px; padding:11px 14px; border:1.5px solid var(--color-success); border-radius:7px;
+                                   background:none; color:var(--color-success); font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:5px;">
+                      <i class="ri-check-line" style="font-size:14px;"></i> Erledigt
                     </button>
                     <button (click)="quickCancelViewing(v, $event)"
-                            style="padding:5px 10px; border:1.5px solid var(--border); border-radius:7px;
-                                   background:none; color:var(--text-3); font-size:12px; cursor:pointer; display:inline-flex; align-items:center;" title="Absagen">
+                            style="min-width:44px; min-height:44px; padding:11px 14px; border:1.5px solid var(--border); border-radius:7px;
+                                   background:none; color:var(--text-3); font-size:13px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;" title="Absagen">
                       <i class="ri-close-line"></i>
                     </button>
                   </div>
@@ -362,14 +379,14 @@ interface ViewingRow {
                   <div style="display:flex; gap:6px; flex-shrink:0;" (click)="$event.stopPropagation()">
                     @if (c.phone) {
                       <a [href]="'tel:' + c.phone"
-                         style="width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+                         style="width:44px; height:44px; display:flex; align-items:center; justify-content:center;
                                 border:1.5px solid var(--primary); border-radius:7px; color:var(--primary);
                                 font-size:14px; text-decoration:none;" title="Anrufen">
                         <i class="ri-phone-line"></i>
                       </a>
                     }
                     <button (click)="confirmSetInactive(c.id, c.name, $event)"
-                            style="width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+                            style="width:44px; height:44px; display:flex; align-items:center; justify-content:center;
                                    border:1.5px solid var(--border); border-radius:7px; background:none;
                                    color:var(--text-3); font-size:14px; cursor:pointer;" title="{{ 'dashboard.markInactiveConfirm' | translate }}">
                       <i class="ri-user-minus-line"></i>
@@ -564,6 +581,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Nichts brennt: keine überfälligen Rückrufe, keine Besichtigungen heute, keine liegengebliebenen Kunden. */
   get allClear(): boolean {
     return this.overdueCount === 0 && this.todayViewingRows.length === 0 && this.staleClientRows.length === 0;
+  }
+
+  /** Unterscheidet "wirklich abgearbeitet" von "noch nie Daten angelegt" — sonst wirkt ein
+   *  brandneuer, leerer Account mit denselben Erfolgsmeldungen wie ein erfahrener Nutzer,
+   *  der seinen Tag durchgearbeitet hat. */
+  get hasAnyClients(): boolean {
+    return this.pipelineCols.some(col => col.items.length > 0) || this.recentActivity.length > 0;
   }
 
   /** Aktions-Zeile klickbar: zur passenden Sektion springen (in Cards-Ansicht, da manche Widgets nur dort liegen). */

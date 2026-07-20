@@ -36,7 +36,7 @@ import { ClientService, Client } from '../../services/client.service';
                     [style.color]="activeHint === 'contact' ? 'var(--primary)' : 'var(--text-3)'">?</button>
                   <div *ngIf="activeHint === 'contact'"
                     style="position:absolute; right:0; top:30px; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:0 4px 16px rgba(20,40,45,0.12); padding:12px 14px; width:280px; z-index:100;">
-                    <p style="margin:0; font-size:13px; color:var(--text-2); line-height:1.5;">{{ 'clients.hints.gdpr' | translate }}</p>
+                    <p style="margin:0; font-size:13px; color:var(--text-2); line-height:1.5;">{{ 'clients.hints.matching' | translate }}</p>
                   </div>
                 </div>
               </div>
@@ -279,7 +279,7 @@ import { ClientService, Client } from '../../services/client.service';
                     [style.color]="activeHint === 'dsgvo' ? 'var(--primary)' : 'var(--text-3)'">?</button>
                   <div *ngIf="activeHint === 'dsgvo'"
                     style="position:absolute; right:0; top:30px; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:0 4px 16px rgba(20,40,45,0.12); padding:12px 14px; width:280px; z-index:100;">
-                    <p style="margin:0; font-size:13px; color:var(--text-2); line-height:1.5;">{{ 'clients.hints.matching' | translate }}</p>
+                    <p style="margin:0; font-size:13px; color:var(--text-2); line-height:1.5;">{{ 'clients.hints.gdpr' | translate }}</p>
                   </div>
                 </div>
               </div>
