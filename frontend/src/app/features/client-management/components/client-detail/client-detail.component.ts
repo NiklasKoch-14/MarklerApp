@@ -165,7 +165,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
         <!-- ── Notiz-Dialog ─────────────────────────────────────── -->
         <div *ngIf="showQuickNoteForm" class="detail-modal-backdrop" (click)="showQuickNoteForm = false"></div>
         <div *ngIf="showQuickNoteForm" class="detail-modal-card"
-             style="background:var(--surface);border:2px solid var(--primary);border-radius:14px;padding:20px 24px;">
+             style="background:var(--surface);border-radius:14px;padding:20px 24px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
             <i class="ri-edit-2-fill" style="font-size:16px;color:var(--primary);"></i>
             <span style="font-size:14px;font-weight:700;color:var(--text);">Gesprächsnotiz</span>
@@ -243,7 +243,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
         <!-- ── Guided Follow-up Dialog ─────────────────────────── -->
         <div *ngIf="showFollowUpPanel" class="detail-modal-backdrop" (click)="showFollowUpPanel = false"></div>
         <div *ngIf="showFollowUpPanel" class="detail-modal-card"
-             style="background:var(--surface);border:2px solid var(--color-warning);border-radius:14px;padding:20px 24px;">
+             style="background:var(--surface);border-radius:14px;padding:20px 24px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
             <i class="ri-notification-fill" style="font-size:16px;color:var(--color-warning);"></i>
             <span style="font-size:14px;font-weight:700;color:var(--text);">Follow-up abschließen</span>

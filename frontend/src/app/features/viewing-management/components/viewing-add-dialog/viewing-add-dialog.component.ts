@@ -308,7 +308,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
     <!-- ══ INLINE MODE ══════════════════════════════════════════════ -->
     <ng-container *ngIf="inline">
       <div class="viewing-form-enter"
-           style="background:var(--surface);border:2px solid var(--color-warning);border-radius:14px;padding:20px 24px;margin-bottom:16px;">
+           style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:16px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
           <i class="ri-door-open-fill" style="font-size:16px;color:var(--color-warning);"></i>
           <span style="font-size:14px;font-weight:700;color:var(--text);">Besichtigung planen</span>
