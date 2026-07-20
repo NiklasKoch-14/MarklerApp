@@ -62,10 +62,10 @@ export class PropertyDetailComponent implements OnInit {
   };
 
   noteCategoryColors: Record<NoteCategory, string> = {
-    [NoteCategory.GENERAL]:      'var(--color-gray-soft)',
-    [NoteCategory.SELLER_INFO]:  'var(--color-amber-soft)',
+    [NoteCategory.GENERAL]:      'var(--color-neutral-soft)',
+    [NoteCategory.SELLER_INFO]:  'var(--color-warning-soft)',
     [NoteCategory.PRICE_NOTE]:   'var(--color-success-soft)',
-    [NoteCategory.VIEWING_NOTE]: 'var(--color-blue-soft)',
+    [NoteCategory.VIEWING_NOTE]: 'var(--accent-soft)',
     [NoteCategory.LEGAL_NOTE]:   'var(--color-error-soft)',
   };
 
@@ -157,13 +157,13 @@ export class PropertyDetailComponent implements OnInit {
 
   getMatchScoreBg(score: number): string {
     if (score >= 75) return 'var(--accent-soft)';
-    if (score >= 50) return 'var(--color-amber-soft)';
+    if (score >= 50) return 'var(--color-warning-soft)';
     return 'var(--surface-2)';
   }
 
   getMatchScoreColor(score: number): string {
     if (score >= 75) return 'var(--primary)';
-    if (score >= 50) return 'var(--color-amber)';
+    if (score >= 50) return 'var(--color-warning)';
     return 'var(--text-3)';
   }
 
@@ -284,23 +284,23 @@ export class PropertyDetailComponent implements OnInit {
 
   getStatusBg(status?: PropertyStatus): string {
     switch (status) {
-      case PropertyStatus.AVAILABLE:          return 'rgba(220,252,231,0.95)';
-      case PropertyStatus.RESERVED:           return 'rgba(254,243,199,0.95)';
-      case PropertyStatus.SOLD:               return 'rgba(219,234,254,0.95)';
-      case PropertyStatus.RENTED:             return 'rgba(237,233,254,0.95)';
-      case PropertyStatus.UNDER_CONSTRUCTION: return 'rgba(254,243,199,0.95)';
-      default:                                return 'rgba(243,244,246,0.95)';
+      case PropertyStatus.AVAILABLE:          return 'var(--accent-soft)';
+      case PropertyStatus.RESERVED:           return 'var(--color-warning-soft)';
+      case PropertyStatus.SOLD:               return 'var(--color-success-soft)';
+      case PropertyStatus.RENTED:             return 'var(--color-success-soft)';
+      case PropertyStatus.UNDER_CONSTRUCTION: return 'var(--color-warning-soft)';
+      default:                                return 'var(--color-neutral-soft)';
     }
   }
 
   getStatusColor(status?: PropertyStatus): string {
     switch (status) {
-      case PropertyStatus.AVAILABLE:          return '#16a34a';
-      case PropertyStatus.RESERVED:           return '#d97706';
-      case PropertyStatus.SOLD:               return '#2563eb';
-      case PropertyStatus.RENTED:             return '#7c3aed';
-      case PropertyStatus.UNDER_CONSTRUCTION: return '#d97706';
-      default:                                return '#6b7280';
+      case PropertyStatus.AVAILABLE:          return 'var(--primary)';
+      case PropertyStatus.RESERVED:           return 'var(--color-warning)';
+      case PropertyStatus.SOLD:               return 'var(--color-success)';
+      case PropertyStatus.RENTED:             return 'var(--color-success)';
+      case PropertyStatus.UNDER_CONSTRUCTION: return 'var(--color-warning)';
+      default:                                return 'var(--color-neutral)';
     }
   }
 

@@ -285,7 +285,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
         </div>
 
         <!-- Error -->
-        <div *ngIf="errorMessage" style="margin-bottom:16px;padding:12px 14px;background:var(--error-bg,#fef2f2);border-radius:8px;border:1px solid var(--error);font-size:13px;color:var(--error);">
+        <div *ngIf="errorMessage" style="margin-bottom:16px;padding:12px 14px;background:var(--color-error-soft);border-radius:8px;border:1px solid var(--color-error);font-size:13px;color:var(--color-error);">
           {{ errorMessage }}
         </div>
 
@@ -308,9 +308,9 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
     <!-- ══ INLINE MODE ══════════════════════════════════════════════ -->
     <ng-container *ngIf="inline">
       <div class="viewing-form-enter"
-           style="background:var(--surface);border:2px solid var(--color-purple);border-radius:14px;padding:20px 24px;margin-bottom:16px;">
+           style="background:var(--surface);border:2px solid var(--color-warning);border-radius:14px;padding:20px 24px;margin-bottom:16px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
-          <i class="ri-door-open-fill" style="font-size:16px;color:var(--color-purple);"></i>
+          <i class="ri-door-open-fill" style="font-size:16px;color:var(--color-warning);"></i>
           <span style="font-size:14px;font-weight:700;color:var(--text);">Besichtigung planen</span>
           <button (click)="cancel()"
                   style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text-3);font-size:18px;line-height:1;">

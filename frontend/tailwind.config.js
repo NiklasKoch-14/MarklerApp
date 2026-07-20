@@ -31,13 +31,6 @@ module.exports = {
         border: {
           DEFAULT: '#e4e8e9',
         },
-        accent: {
-          soft: '#e9f1f2',
-          amber: '#c07a1e',
-          green: '#1f8a5b',
-          red:   '#b23a55',
-          purple: '#9f5aaa',
-        },
       },
       fontFamily: {
         'sans': [

@@ -42,7 +42,9 @@
     "results": "Ergebnisse",
     "page": "Seite",
     "rooms": "Zimmer",
-    "bed": "Schlafzimmer"
+    "bed": "Schlafzimmer",
+    "overview": "Übersicht",
+    "sections": "Abschnitte"
   },
   "auth": {
     "login": {
@@ -295,7 +297,11 @@
       "SELLER": "Verkäufer"
     },
     "add": "Kunde hinzufügen",
+    "addSubtitle": "Erfassen Sie Kontaktdaten und Suchkriterien für einen neuen Kunden.",
     "edit": "Kunde bearbeiten",
+    "editSubtitle": "Aktualisieren Sie Kontaktdaten und Suchkriterien dieses Kunden.",
+    "newClientPlaceholder": "Neuer Kunde",
+    "gdprSectionTitle": "DSGVO",
     "view": "Kunde anzeigen",
     "delete": "Kunde löschen",
     "deleting": "Wird gelöscht...",
@@ -451,10 +457,13 @@
     },
     "new": "Neue Immobilie",
     "newSubtitle": "Füllen Sie alle relevanten Felder aus und speichern Sie die Immobilie.",
+    "newPropertyPlaceholder": "Neue Immobilie",
     "edit": "Immobilie bearbeiten",
     "editSubtitle": "Änderungen werden automatisch als Entwurf gespeichert.",
     "editProperty": "Immobilie bearbeiten",
     "view": "Immobilie anzeigen",
+    "notFound": "Objekt nicht gefunden.",
+    "backToProperties": "Zurück zur Übersicht",
     "delete": "Immobilie löschen",
     "list": "Immobilienliste",
     "details": "Immobiliendetails",

@@ -143,22 +143,22 @@ export class PropertyListComponent implements OnInit, OnDestroy {
   // Status is the single color-coded badge for a property (mirrors pipeline stage for clients)
   getStatusBg(status?: PropertyStatus): string {
     switch (status) {
-      case PropertyStatus.AVAILABLE:          return 'color-mix(in srgb,var(--color-green) 14%,var(--surface))';
-      case PropertyStatus.RESERVED:           return 'color-mix(in srgb,var(--color-amber) 16%,var(--surface))';
-      case PropertyStatus.SOLD:               return 'color-mix(in srgb,var(--color-blue) 14%,var(--surface))';
-      case PropertyStatus.RENTED:             return 'color-mix(in srgb,var(--color-purple) 14%,var(--surface))';
-      case PropertyStatus.UNDER_CONSTRUCTION: return 'color-mix(in srgb,var(--color-amber) 16%,var(--surface))';
+      case PropertyStatus.AVAILABLE:          return 'var(--accent-soft)';
+      case PropertyStatus.RESERVED:           return 'var(--color-warning-soft)';
+      case PropertyStatus.SOLD:               return 'var(--color-success-soft)';
+      case PropertyStatus.RENTED:             return 'var(--color-success-soft)';
+      case PropertyStatus.UNDER_CONSTRUCTION: return 'var(--color-warning-soft)';
       default:                                return 'var(--surface-2)';
     }
   }
 
   getStatusColor(status?: PropertyStatus): string {
     switch (status) {
-      case PropertyStatus.AVAILABLE:          return 'var(--color-green)';
-      case PropertyStatus.RESERVED:           return 'var(--color-amber)';
-      case PropertyStatus.SOLD:               return 'var(--color-blue)';
-      case PropertyStatus.RENTED:             return 'var(--color-purple)';
-      case PropertyStatus.UNDER_CONSTRUCTION: return 'var(--color-amber)';
+      case PropertyStatus.AVAILABLE:          return 'var(--primary)';
+      case PropertyStatus.RESERVED:           return 'var(--color-warning)';
+      case PropertyStatus.SOLD:               return 'var(--color-success)';
+      case PropertyStatus.RENTED:             return 'var(--color-success)';
+      case PropertyStatus.UNDER_CONSTRUCTION: return 'var(--color-warning)';
       default:                                return 'var(--text-3)';
     }
   }

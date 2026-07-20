@@ -59,9 +59,9 @@ import { LoadingSpinnerComponent } from '../../../shared/components/loading-spin
               <div *ngIf="resetPasswordForm.get('newPassword')?.value" style="margin-top:8px;display:flex;align-items:center;gap:10px;">
                 <div style="flex:1;background:var(--surface-2);border-radius:4px;overflow:hidden;height:4px;">
                   <div class="strength-bar" [style.width.%]="getPasswordStrengthWidth()"
-                       [style.background]="getPasswordStrengthWidth() < 40 ? 'var(--color-error)' : getPasswordStrengthWidth() < 75 ? 'var(--color-amber)' : 'var(--color-success)'"></div>
+                       [style.background]="getPasswordStrengthWidth() < 40 ? 'var(--color-error)' : getPasswordStrengthWidth() < 75 ? 'var(--color-warning)' : 'var(--color-success)'"></div>
                 </div>
-                <span style="font-size:11px;font-weight:600;" [style.color]="getPasswordStrengthWidth() < 40 ? 'var(--color-error)' : getPasswordStrengthWidth() < 75 ? 'var(--color-amber)' : 'var(--color-success)'">
+                <span style="font-size:11px;font-weight:600;" [style.color]="getPasswordStrengthWidth() < 40 ? 'var(--color-error)' : getPasswordStrengthWidth() < 75 ? 'var(--color-warning)' : 'var(--color-success)'">
                   {{ getPasswordStrengthText() | translate }}
                 </span>
               </div>

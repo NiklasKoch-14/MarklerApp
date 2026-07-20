@@ -56,7 +56,7 @@ type SortDir = 'asc' | 'desc';
     /* Consent — subtle icon, no colored pill (demoted per design audit) */
     .consent-icon { font-size:17px; }
     .consent-icon.ok { color:var(--text-3); }
-    .consent-icon.missing { color:var(--color-amber, #c98a00); }
+    .consent-icon.missing { color:var(--color-warning); }
 
     @media (max-width:900px) { .hide-md { display:none !important; } }
   `],

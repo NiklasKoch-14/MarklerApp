@@ -6,7 +6,7 @@
     <div style="position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.2);padding:24px;width:100%;max-width:420px;">
       <div style="display:flex;align-items:flex-start;gap:14px;">
         <div style="flex-shrink:0;width:40px;height:40px;border-radius:50%;background:rgba(192,122,30,0.12);display:flex;align-items:center;justify-content:center;">
-          <i class="ri-alert-line" style="font-size:20px;color:var(--color-amber);"></i>
+          <i class="ri-alert-line" style="font-size:20px;color:var(--color-warning);"></i>
         </div>
         <div>
           <h3 style="font-size:16px;font-weight:700;color:var(--text);margin:0 0 6px;">{{ 'formDraft.restoreTitle' | translate }}</h3>
@@ -27,8 +27,9 @@
   </div>
 
   <!-- Page Header -->
-  <div class="page-header" style="margin-bottom:24px;">
+  <div class="page-header">
     <div>
+      <div class="page-subtitle">{{ 'navigation.properties' | translate }}</div>
       <h1 class="page-title">{{ isEditMode ? ('properties.edit' | translate) : ('properties.new' | translate) }}</h1>
       <p style="font-size:14px; color:var(--text-2); margin-top:4px;">
         {{ isEditMode ? ('properties.editSubtitle' | translate) : ('properties.newSubtitle' | translate) }}
@@ -36,11 +37,11 @@
     </div>
   </div>
 
-  <div style="max-width:720px; margin:0 auto;">
-    <form [formGroup]="propertyForm" (ngSubmit)="onSubmit()" class="space-y-6">
+  <div class="form-layout">
+    <form [formGroup]="propertyForm" (ngSubmit)="onSubmit()" class="space-y-6" style="min-width:0;">
 
       <!-- Basic Information Section -->
-      <div class="card animation-fade-in">
+      <div class="card animation-fade-in" id="section-basic">
         <button type="button" class="card-header section-toggle" (click)="toggleSection('basic')">
           <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.basicInfo' | translate }}</h3>
           <i class="ri-arrow-down-s-line section-caret" [class.open]="sectionOpen['basic']"></i>
@@ -127,7 +128,7 @@
       </div>
 
       <!-- Location Section -->
-      <div class="card animation-fade-in">
+      <div class="card animation-fade-in" id="section-location">
         <button type="button" class="card-header section-toggle" (click)="toggleSection('location')">
           <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.location' | translate }}</h3>
           <i class="ri-arrow-down-s-line section-caret" [class.open]="sectionOpen['location']"></i>
@@ -227,7 +228,7 @@
       </div>
 
       <!-- Specifications Section -->
-      <div class="card animation-fade-in">
+      <div class="card animation-fade-in" id="section-specs">
         <button type="button" class="card-header section-toggle" (click)="toggleSection('specs')">
           <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.specifications' | translate }}</h3>
           <i class="ri-arrow-down-s-line section-caret" [class.open]="sectionOpen['specs']"></i>
@@ -382,7 +383,7 @@
       </div>
 
       <!-- Financial Section -->
-      <div class="card animation-fade-in">
+      <div class="card animation-fade-in" id="section-financial">
         <button type="button" class="card-header section-toggle" (click)="toggleSection('financial')">
           <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.financial' | translate }}</h3>
           <i class="ri-arrow-down-s-line section-caret" [class.open]="sectionOpen['financial']"></i>
@@ -470,7 +471,7 @@
       </div>
 
       <!-- Features & Energy Section -->
-      <div class="card animation-fade-in">
+      <div class="card animation-fade-in" id="section-features">
         <button type="button" class="card-header section-toggle" (click)="toggleSection('features')">
           <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.form.featuresEnergy' | translate }}</h3>
           <i class="ri-arrow-down-s-line section-caret" [class.open]="sectionOpen['features']"></i>
@@ -648,7 +649,7 @@
       </div>
 
       <!-- Images Section -->
-      <div *ngIf="isEditMode" class="card animation-fade-in">
+      <div *ngIf="isEditMode" class="card animation-fade-in" id="section-images">
         <button type="button" class="card-header section-toggle" (click)="toggleSection('images')">
           <div>
             <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.images.title' | translate }}</h3>
@@ -675,7 +676,7 @@
       </div>
 
       <!-- Expose/Brochure Section -->
-      <div *ngIf="isEditMode" class="card animation-fade-in">
+      <div *ngIf="isEditMode" class="card animation-fade-in" id="section-expose">
         <button type="button" class="card-header section-toggle" (click)="toggleSection('expose')">
           <div>
             <h3 style="font-size:15px;font-weight:700;color:var(--text);">{{ 'properties.expose.title' | translate }}</h3>
@@ -728,5 +729,68 @@
         </button>
       </div>
     </form>
+
+    <!-- Context rail: live summary + section jump-nav -->
+    <aside class="form-aside">
+      <div class="card">
+        <div class="card-header">
+          <i class="ri-home-4-line" style="font-size:16px;color:var(--text-3);"></i>
+          <h3 style="font-size:15px;font-weight:700;color:var(--text);margin:0;">{{ 'common.overview' | translate }}</h3>
+        </div>
+        <div style="padding:20px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;">
+          <div class="form-summary-avatar"><i class="ri-home-4-line"></i></div>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:var(--text);">
+              {{ propertyForm.get('title')?.value || ('properties.newPropertyPlaceholder' | translate) }}
+            </div>
+            <div *ngIf="propertyForm.get('addressCity')?.value" style="font-size:12px;color:var(--text-3);margin-top:2px;">
+              <i class="ri-map-pin-line"></i> {{ propertyForm.get('addressCity')?.value }}
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
+            <span *ngIf="propertyForm.get('propertyType')?.value"
+                  style="display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;background:var(--accent-soft);color:var(--primary);font-size:12px;font-weight:600;">
+              {{ propertyForm.get('propertyType')?.value | translateEnum:'propertyType' }}
+            </span>
+            <span *ngIf="propertyForm.get('listingType')?.value"
+                  style="display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;background:var(--surface-2);color:var(--text-2);font-size:12px;font-weight:600;border:1px solid var(--border);">
+              {{ propertyForm.get('listingType')?.value | translateEnum:'listingType' }}
+            </span>
+          </div>
+          <div *ngIf="propertyForm.get('price')?.value" style="font-size:16px;font-weight:800;color:var(--text);margin-top:4px;">
+            {{ propertyService.formatPrice(propertyForm.get('price')?.value, propertyForm.get('listingType')?.value) }}
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 style="font-size:15px;font-weight:700;color:var(--text);margin:0;">{{ 'common.sections' | translate }}</h3>
+        </div>
+        <nav class="form-nav-list">
+          <button type="button" class="form-nav-item" [class.active]="currentSection === 'basic'" (click)="goToSection('basic')">
+            <i class="ri-file-list-3-line"></i>{{ 'properties.form.basicInfo' | translate }}
+          </button>
+          <button type="button" class="form-nav-item" [class.active]="currentSection === 'location'" (click)="goToSection('location')">
+            <i class="ri-map-pin-line"></i>{{ 'properties.form.location' | translate }}
+          </button>
+          <button type="button" class="form-nav-item" [class.active]="currentSection === 'specs'" (click)="goToSection('specs')">
+            <i class="ri-ruler-2-line"></i>{{ 'properties.form.specifications' | translate }}
+          </button>
+          <button type="button" class="form-nav-item" [class.active]="currentSection === 'financial'" (click)="goToSection('financial')">
+            <i class="ri-money-euro-circle-line"></i>{{ 'properties.form.financial' | translate }}
+          </button>
+          <button type="button" class="form-nav-item" [class.active]="currentSection === 'features'" (click)="goToSection('features')">
+            <i class="ri-flashlight-line"></i>{{ 'properties.form.featuresEnergy' | translate }}
+          </button>
+          <button *ngIf="isEditMode" type="button" class="form-nav-item" [class.active]="currentSection === 'images'" (click)="goToSection('images')">
+            <i class="ri-image-line"></i>{{ 'properties.images.title' | translate }}
+          </button>
+          <button *ngIf="isEditMode" type="button" class="form-nav-item" [class.active]="currentSection === 'expose'" (click)="goToSection('expose')">
+            <i class="ri-file-pdf-line"></i>{{ 'properties.expose.title' | translate }}
+          </button>
+        </nav>
+      </div>
+    </aside>
   </div>
 </div>

@@ -83,37 +83,37 @@ export interface FileTypeMetadata {
 export const FILE_TYPE_METADATA: Record<FileAttachmentType, FileTypeMetadata> = {
   [FileAttachmentType.CONTRACT]: {
     icon: 'description',
-    color: 'text-blue-600',
+    color: 'text-[var(--primary)]',
     acceptedExtensions: ['.pdf', '.doc', '.docx'],
     description: 'Contract documents'
   },
   [FileAttachmentType.FLOOR_PLAN]: {
     icon: 'map',
-    color: 'text-purple-600',
+    color: 'text-[var(--color-neutral)]',
     acceptedExtensions: ['.pdf', '.jpg', '.png', '.dwg'],
     description: 'Floor plans and architectural drawings'
   },
   [FileAttachmentType.ID_DOCUMENT]: {
     icon: 'badge',
-    color: 'text-orange-600',
+    color: 'text-[var(--color-warning)]',
     acceptedExtensions: ['.pdf', '.jpg', '.png'],
     description: 'Identity documents'
   },
   [FileAttachmentType.CERTIFICATE]: {
     icon: 'verified',
-    color: 'text-green-600',
+    color: 'text-[var(--color-success)]',
     acceptedExtensions: ['.pdf', '.jpg', '.png'],
     description: 'Certificates and official documents'
   },
   [FileAttachmentType.FINANCIAL]: {
     icon: 'attach_money',
-    color: 'text-emerald-600',
+    color: 'text-[var(--color-success)]',
     acceptedExtensions: ['.pdf', '.xls', '.xlsx'],
     description: 'Financial documents'
   },
   [FileAttachmentType.INSPECTION_REPORT]: {
     icon: 'assignment',
-    color: 'text-indigo-600',
+    color: 'text-[var(--primary)]',
     acceptedExtensions: ['.pdf', '.doc', '.docx'],
     description: 'Property inspection reports'
   },

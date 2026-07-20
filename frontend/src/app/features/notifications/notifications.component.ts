@@ -169,7 +169,7 @@ export class NotificationsComponent implements OnInit {
       time: this.formatTime(r.followUpDate, r.isOverdue),
       unread: r.isOverdue || this.isDueToday(r.followUpDate),
       icon: r.isOverdue ? 'ri-alert-fill' : 'ri-calendar-check-fill',
-      iconColor: r.isOverdue ? '#d9534f' : '#c07a1e',
+      iconColor: r.isOverdue ? 'var(--color-error)' : 'var(--color-warning)',
       isOverdue: r.isOverdue,
       followUpDate: r.followUpDate
     };

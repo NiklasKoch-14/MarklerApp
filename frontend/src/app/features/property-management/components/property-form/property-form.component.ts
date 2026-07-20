@@ -467,10 +467,14 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Navigate to a specific form section
+   * Navigate to a specific form section: open it (if collapsed) and scroll it into view.
    */
   goToSection(section: 'basic' | 'location' | 'specs' | 'financial' | 'features' | 'images' | 'expose'): void {
     this.currentSection = section;
+    this.sectionOpen[section] = true;
+    setTimeout(() => {
+      document.getElementById(`section-${section}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   /** Toggle a collapsible form section open/closed. */

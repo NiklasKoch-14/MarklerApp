@@ -262,20 +262,20 @@ export class FileAttachmentManagerComponent implements OnInit, OnDestroy {
   }
 
   getFileTypeBg(attachment: FileAttachmentDto): string {
-    if (attachment.isPdf) return 'rgba(178,58,85,0.1)';
-    if (attachment.isImage) return 'rgba(37,99,235,0.1)';
+    if (attachment.isPdf) return 'var(--color-error-soft)';
+    if (attachment.isImage) return 'var(--accent-soft)';
     const ext = attachment.fileExtension?.toLowerCase();
-    if (ext === 'doc' || ext === 'docx') return 'rgba(37,99,235,0.1)';
-    if (ext === 'xls' || ext === 'xlsx') return 'rgba(22,163,74,0.1)';
+    if (ext === 'doc' || ext === 'docx') return 'var(--accent-soft)';
+    if (ext === 'xls' || ext === 'xlsx') return 'var(--color-success-soft)';
     return 'var(--surface-2)';
   }
 
   getFileTypeColor(attachment: FileAttachmentDto): string {
-    if (attachment.isPdf) return '#b23a55';
-    if (attachment.isImage) return '#2563eb';
+    if (attachment.isPdf) return 'var(--color-error)';
+    if (attachment.isImage) return 'var(--primary)';
     const ext = attachment.fileExtension?.toLowerCase();
-    if (ext === 'doc' || ext === 'docx') return '#3b82f6';
-    if (ext === 'xls' || ext === 'xlsx') return '#16a34a';
+    if (ext === 'doc' || ext === 'docx') return 'var(--primary)';
+    if (ext === 'xls' || ext === 'xlsx') return 'var(--color-success)';
     return 'var(--text-3)';
   }
 

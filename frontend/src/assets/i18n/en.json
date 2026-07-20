@@ -42,7 +42,9 @@
     "results": "results",
     "page": "page",
     "rooms": "rooms",
-    "bed": "bed"
+    "bed": "bed",
+    "overview": "Overview",
+    "sections": "Sections"
   },
   "auth": {
     "login": {
@@ -295,7 +297,11 @@
       "SELLER": "Seller"
     },
     "add": "Add Client",
+    "addSubtitle": "Enter contact details and search criteria for a new client.",
     "edit": "Edit Client",
+    "editSubtitle": "Update this client's contact details and search criteria.",
+    "newClientPlaceholder": "New client",
+    "gdprSectionTitle": "GDPR",
     "view": "View Client",
     "delete": "Delete Client",
     "deleting": "Deleting...",
@@ -451,10 +457,13 @@
     },
     "new": "New Property",
     "newSubtitle": "Fill in all relevant fields and save the property.",
+    "newPropertyPlaceholder": "New property",
     "edit": "Edit Property",
     "editSubtitle": "Changes are automatically saved as a draft.",
     "editProperty": "Edit Property",
     "view": "View Property",
+    "notFound": "Property not found.",
+    "backToProperties": "Back to Properties",
     "delete": "Delete Property",
     "list": "Property List",
     "details": "Property Details",

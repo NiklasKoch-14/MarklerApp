@@ -104,7 +104,7 @@ interface ViewingRow {
                   style="flex:1; min-width:150px; display:flex; align-items:center; gap:13px; padding:15px 17px;
                          background:var(--surface); border:1px solid var(--border); border-radius:14px; cursor:pointer;
                          text-align:left; font-family:inherit; box-shadow:var(--shadow); transition:transform .1s;">
-            <i class="ri-door-open-fill" style="font-size:23px; color:var(--color-purple);"></i>
+            <i class="ri-door-open-fill" style="font-size:23px; color:var(--color-warning);"></i>
             <div>
               <div style="font-size:23px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; color:var(--text);">{{ todayViewingRows.length }}</div>
               <div style="font-size:12px; font-weight:600; color:var(--text-2); margin-top:4px;">Besichtigungen heute</div>
@@ -142,10 +142,10 @@ interface ViewingRow {
       <!-- Heutige Besichtigungen — Tagesagenda, immer als erstes sichtbar -->
       <div id="sec-today-viewings" class="widget-card" style="margin-bottom:20px; scroll-margin-top:16px;">
         <div class="widget-header">
-          <i class="ri-door-open-fill" style="color:#7c3aed; font-size:18px;"></i>
+          <i class="ri-door-open-fill" style="color:var(--color-warning); font-size:18px;"></i>
           <h3 class="widget-title">Heutige Besichtigungen</h3>
           @if (todayViewingRows.length > 0) {
-            <span style="background:color-mix(in srgb,#7c3aed 14%,var(--surface)); color:#7c3aed;
+            <span style="background:color-mix(in srgb,var(--color-warning) 14%,var(--surface)); color:var(--color-warning);
                          font-size:12px; font-weight:700; padding:3px 9px; border-radius:20px;
                          font-variant-numeric:tabular-nums;">{{ todayViewingRows.length }}</span>
           }
@@ -164,12 +164,12 @@ interface ViewingRow {
               <div style="min-width:210px; background:var(--surface-2); border:1px solid var(--border);
                           border-radius:10px; padding:12px 14px; transition:box-shadow .15s; flex-shrink:0; display:flex; flex-direction:column; gap:0;">
                 <div [routerLink]="['/clients', v.clientId]" style="cursor:pointer;">
-                  <div style="font-size:20px; font-weight:800; color:#7c3aed; font-variant-numeric:tabular-nums; line-height:1; margin-bottom:8px;">
+                  <div style="font-size:20px; font-weight:800; color:var(--color-warning); font-variant-numeric:tabular-nums; line-height:1; margin-bottom:8px;">
                     {{ v.timeFmt }}
                   </div>
                   <div style="display:flex; align-items:center; gap:7px; margin-bottom:5px;">
-                    <div style="width:26px; height:26px; border-radius:50%; background:color-mix(in srgb,#7c3aed 12%,var(--surface));
-                                color:#7c3aed; display:flex; align-items:center; justify-content:center;
+                    <div style="width:26px; height:26px; border-radius:50%; background:color-mix(in srgb,var(--color-warning) 12%,var(--surface));
+                                color:var(--color-warning); display:flex; align-items:center; justify-content:center;
                                 font-weight:700; font-size:11px; flex-shrink:0;">
                       {{ v.initials }}
                     </div>

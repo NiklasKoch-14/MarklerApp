@@ -248,10 +248,10 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
                 {{ property.addressCity }}, {{ property.addressPostalCode }}
               </p>
               <div class="flex gap-2 mb-3">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [ngClass]="getListingTypeBadgeClass(property.listingType)">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [ngStyle]="getListingTypeBadgeStyle(property.listingType)">
                   {{ property.listingType | translateEnum:'listingType' }}
                 </span>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [ngClass]="getStatusBadgeClass(property.status)">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [ngStyle]="getStatusBadgeStyle(property.status)">
                   {{ (property.status || propertyStatuses[0]) | translateEnum:'propertyStatus' }}
                 </span>
               </div>
@@ -425,25 +425,22 @@ export class PropertySearchComponent implements OnInit {
     return null;
   }
 
-  getStatusBadgeClass(status?: PropertyStatus): string {
+  // Status carries the app's 5-colour semantic palette (mirrors property-list/property-detail).
+  getStatusBadgeStyle(status?: PropertyStatus): { background: string; color: string } {
     switch (status) {
-      case PropertyStatus.AVAILABLE: return 'bg-green-100 text-green-800';
-      case PropertyStatus.RESERVED: return 'bg-yellow-100 text-yellow-800';
-      case PropertyStatus.SOLD: return 'bg-blue-100 text-blue-800';
-      case PropertyStatus.RENTED: return 'bg-purple-100 text-purple-800';
-      case PropertyStatus.WITHDRAWN: return 'bg-gray-100 text-gray-800';
-      case PropertyStatus.UNDER_CONSTRUCTION: return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case PropertyStatus.AVAILABLE:          return { background: 'var(--accent-soft)',        color: 'var(--primary)' };
+      case PropertyStatus.RESERVED:           return { background: 'var(--color-warning-soft)', color: 'var(--color-warning)' };
+      case PropertyStatus.SOLD:               return { background: 'var(--color-success-soft)', color: 'var(--color-success)' };
+      case PropertyStatus.RENTED:             return { background: 'var(--color-success-soft)', color: 'var(--color-success)' };
+      case PropertyStatus.UNDER_CONSTRUCTION: return { background: 'var(--color-warning-soft)', color: 'var(--color-warning)' };
+      default:                                return { background: 'var(--color-neutral-soft)', color: 'var(--color-neutral)' };
     }
   }
 
-  getListingTypeBadgeClass(listingType: ListingType): string {
-    switch (listingType) {
-      case ListingType.SALE: return 'bg-indigo-100 text-indigo-800';
-      case ListingType.RENT: return 'bg-cyan-100 text-cyan-800';
-      case ListingType.LEASE: return 'bg-teal-100 text-teal-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  // Listing type is a plain category, not a status — kept neutral so the
+  // colour on the status badge next to it is the only signal that pops.
+  getListingTypeBadgeStyle(_listingType: ListingType): { background: string; color: string } {
+    return { background: 'var(--color-neutral-soft)', color: 'var(--color-neutral)' };
   }
 
   goToPage(page: number): void {

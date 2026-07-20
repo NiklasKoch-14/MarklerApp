@@ -273,20 +273,20 @@ export class FileAttachmentService {
    */
   getFileColorClass(attachment: FileAttachmentDto): string {
     if (attachment.isPdf) {
-      return 'text-red-600';
+      return 'text-[var(--color-error)]';
     }
     if (attachment.isImage) {
-      return 'text-blue-600';
+      return 'text-[var(--primary)]';
     }
     if (attachment.isDocument) {
       const ext = attachment.fileExtension?.toLowerCase();
       if (ext === 'doc' || ext === 'docx') {
-        return 'text-indigo-600';
+        return 'text-[var(--primary)]';
       }
       if (ext === 'xls' || ext === 'xlsx') {
-        return 'text-green-600';
+        return 'text-[var(--color-success)]';
       }
     }
-    return 'text-gray-600';
+    return 'text-[var(--color-neutral)]';
   }
 }

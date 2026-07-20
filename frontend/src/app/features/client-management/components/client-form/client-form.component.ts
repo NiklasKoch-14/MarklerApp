@@ -15,16 +15,17 @@ import { ClientService } from '../../services/client.service';
         <div>
           <div class="page-subtitle">{{ 'navigation.clients' | translate }}</div>
           <h1 class="page-title">{{ isEditMode ? ('clients.edit' | translate) : ('clients.add' | translate) }}</h1>
+          <p style="font-size:14px; color:var(--text-2); margin-top:4px;">
+            {{ isEditMode ? ('clients.editSubtitle' | translate) : ('clients.addSubtitle' | translate) }}
+          </p>
         </div>
       </div>
 
-      <form [formGroup]="clientForm" (ngSubmit)="onSubmit()">
-        <div style="display:flex; flex-direction:column; gap:20px;">
-
-          <div style="max-width:720px; display:flex; flex-direction:column; gap:20px;">
+      <div class="form-layout">
+        <form [formGroup]="clientForm" (ngSubmit)="onSubmit()" style="display:flex; flex-direction:column; gap:20px; min-width:0;">
 
             <!-- Kontaktdaten -->
-            <div class="widget-card">
+            <div class="widget-card" id="section-contact">
               <div class="widget-header">
                 <h3 class="widget-title">{{ 'clients.contactData' | translate }}</h3>
                 <div style="position:relative; margin-left:auto;">
@@ -100,7 +101,7 @@ import { ClientService } from '../../services/client.service';
             </div>
 
             <!-- Suchkriterien -->
-            <div class="widget-card">
+            <div class="widget-card" id="section-search">
               <button type="button" (click)="toggleSearchCriteria()"
                 style="width:100%; display:flex; align-items:center; gap:10px; padding:15px 18px; background:none; border:none; border-bottom:1px solid var(--border); cursor:pointer; text-align:left;">
                 <h3 class="widget-title" style="margin:0; flex:1;">{{ 'clients.propertySearchCriteria' | translate }}</h3>
@@ -248,9 +249,9 @@ import { ClientService } from '../../services/client.service';
             </div>
 
             <!-- DSGVO -->
-            <div class="widget-card">
+            <div class="widget-card" id="section-gdpr">
               <div class="widget-header">
-                <h3 class="widget-title">DSGVO</h3>
+                <h3 class="widget-title">{{ 'clients.gdprSectionTitle' | translate }}</h3>
                 <div style="position:relative; margin-left:auto;">
                   <button type="button" (click)="toggleHint('dsgvo')"
                     style="width:22px; height:22px; border-radius:50%; border:1.5px solid var(--text-3); background:none; color:var(--text-3); font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; transition:border-color 0.15s, color 0.15s;"
@@ -275,8 +276,8 @@ import { ClientService } from '../../services/client.service';
             </div>
 
             <!-- Error -->
-            <div *ngIf="errorMessage" style="background:#fef2f5; border:1px solid #f5c2cc; border-radius:10px; padding:14px 16px;">
-              <p style="margin:0; color:#b23a55; font-size:14px; font-weight:500;">{{ errorMessage }}</p>
+            <div *ngIf="errorMessage" style="background:var(--color-error-soft); border:1px solid var(--color-error); border-radius:10px; padding:14px 16px;">
+              <p style="margin:0; color:var(--color-error); font-size:14px; font-weight:500;">{{ errorMessage }}</p>
             </div>
 
             <!-- Actions -->
@@ -289,10 +290,47 @@ import { ClientService } from '../../services/client.service';
               </button>
             </div>
 
+        </form>
+
+        <!-- Context rail: live summary + section jump-nav -->
+        <aside class="form-aside">
+          <div class="widget-card">
+            <div class="widget-header">
+              <i class="ri-user-3-line" style="font-size:16px; color:var(--text-3);"></i>
+              <h3 class="widget-title">{{ 'common.overview' | translate }}</h3>
+            </div>
+            <div style="padding:20px; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center;">
+              <div class="form-summary-avatar">{{ initials }}</div>
+              <div>
+                <div style="font-size:15px; font-weight:700; color:var(--text);">{{ fullName || ('clients.newClientPlaceholder' | translate) }}</div>
+                <div *ngIf="clientForm.get('addressCity')?.value" style="font-size:12px; color:var(--text-3); margin-top:2px;">
+                  <i class="ri-map-pin-line"></i> {{ clientForm.get('addressCity')?.value }}
+                </div>
+              </div>
+              <span style="display:inline-flex; align-items:center; padding:4px 10px; border-radius:20px; background:var(--accent-soft); color:var(--primary); font-size:12px; font-weight:600;">
+                {{ clientTypeLabelKey | translate }}
+              </span>
+            </div>
           </div>
 
-        </div>
-      </form>
+          <div class="widget-card">
+            <div class="widget-header">
+              <h3 class="widget-title">{{ 'common.sections' | translate }}</h3>
+            </div>
+            <nav class="form-nav-list">
+              <button type="button" class="form-nav-item" [class.active]="activeSection === 'contact'" (click)="goToSection('contact')">
+                <i class="ri-contacts-line"></i>{{ 'clients.contactData' | translate }}
+              </button>
+              <button type="button" class="form-nav-item" [class.active]="activeSection === 'search'" (click)="goToSection('search')">
+                <i class="ri-search-2-line"></i>{{ 'clients.propertySearchCriteria' | translate }}
+              </button>
+              <button type="button" class="form-nav-item" [class.active]="activeSection === 'gdpr'" (click)="goToSection('gdpr')">
+                <i class="ri-shield-check-line"></i>{{ 'clients.gdprSectionTitle' | translate }}
+              </button>
+            </nav>
+          </div>
+        </aside>
+      </div>
     </div>
   `
 })
@@ -305,6 +343,7 @@ export class ClientFormComponent implements OnInit {
 
   searchCriteriaExpanded = false;
   activeHint: string | null = null;
+  activeSection: 'contact' | 'search' | 'gdpr' = 'contact';
 
   constructor(
     private fb: FormBuilder,
@@ -347,6 +386,36 @@ export class ClientFormComponent implements OnInit {
 
   get clientTypeControl() {
     return this.clientForm.get('clientType') as FormControl;
+  }
+
+  get fullName(): string {
+    const firstName = this.clientForm.get('firstName')?.value?.trim() || '';
+    const lastName = this.clientForm.get('lastName')?.value?.trim() || '';
+    return `${firstName} ${lastName}`.trim();
+  }
+
+  get initials(): string {
+    const firstName = this.clientForm.get('firstName')?.value?.trim() || '';
+    const lastName = this.clientForm.get('lastName')?.value?.trim() || '';
+    const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+    return initials || '?';
+  }
+
+  get clientTypeLabelKey(): string {
+    const type = (this.clientForm.get('clientType')?.value || 'BUYER') as string;
+    const suffix = type.charAt(0) + type.slice(1).toLowerCase();
+    return `clients.clientType${suffix}`;
+  }
+
+  /** Expand (if needed) and scroll to a form section from the context rail. */
+  goToSection(section: 'contact' | 'search' | 'gdpr'): void {
+    this.activeSection = section;
+    if (section === 'search') {
+      this.searchCriteriaExpanded = true;
+    }
+    setTimeout(() => {
+      document.getElementById(`section-${section}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   ngOnInit(): void {

@@ -43,15 +43,16 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
 
       <div *ngIf="!isLoading && client">
 
+        <!-- Back link -->
+        <a routerLink="/clients"
+           style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-3);text-decoration:none;margin-bottom:20px;">
+          <i class="ri-arrow-left-line" style="font-size:14px;"></i>
+          {{ 'clients.backToClients' | translate }}
+        </a>
+
         <!-- ══ HERO CARD ══════════════════════════════════════════ -->
         <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:24px 28px;margin-bottom:16px;">
           <div class="hero-row" style="display:flex;align-items:flex-start;gap:16px;">
-
-            <!-- Back arrow -->
-            <a routerLink="/clients"
-               style="width:34px;height:34px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-3);text-decoration:none;flex-shrink:0;margin-top:8px;">
-              <i class="ri-arrow-left-line" style="font-size:16px;"></i>
-            </a>
 
             <!-- Name + contact + stage -->
             <div style="flex:1;min-width:0;">
@@ -113,7 +114,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
               <!-- Follow-up button (only if pending) -->
               <button *ngIf="(callNotesSummary?.pendingFollowUps || 0) > 0"
                       (click)="showFollowUpPanel = !showFollowUpPanel; showQuickNoteForm = false"
-                      style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--color-amber);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;position:relative;">
+                      style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--color-warning);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;position:relative;">
                 <i class="ri-notification-fill" style="font-size:14px;"></i>
                 Follow-up
                 <span style="background:rgba(0,0,0,.2);border-radius:8px;font-size:11px;padding:1px 6px;line-height:1.4;">{{ callNotesSummary!.pendingFollowUps }}</span>
@@ -219,13 +220,13 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
               <option value="DEAL_CLOSED">Abschluss</option>
             </select>
             <div *ngIf="quickNoteFollowUpRequired"
-                 style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:var(--color-amber-soft);border-radius:8px;">
-              <i class="ri-notification-fill" style="font-size:13px;color:var(--color-amber);"></i>
-              <span style="font-size:12px;font-weight:600;color:var(--color-amber);">{{ 'callNotes.voice.followUpDetected' | translate }}</span>
+                 style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:var(--color-warning-soft);border-radius:8px;">
+              <i class="ri-notification-fill" style="font-size:13px;color:var(--color-warning);"></i>
+              <span style="font-size:12px;font-weight:600;color:var(--color-warning);">{{ 'callNotes.voice.followUpDetected' | translate }}</span>
               <input type="date" [(ngModel)]="quickNoteFollowUpDate"
-                     style="border:none;background:none;font-size:12px;color:var(--color-amber);font-weight:600;font-family:inherit;outline:none;cursor:pointer;">
+                     style="border:none;background:none;font-size:12px;color:var(--color-warning);font-weight:600;font-family:inherit;outline:none;cursor:pointer;">
               <button (click)="quickNoteFollowUpRequired = false; quickNoteFollowUpDate = ''"
-                      style="background:none;border:none;cursor:pointer;color:var(--color-amber);padding:0;line-height:1;">
+                      style="background:none;border:none;cursor:pointer;color:var(--color-warning);padding:0;line-height:1;">
                 <i class="ri-close-line" style="font-size:12px;"></i>
               </button>
             </div>
@@ -241,11 +242,11 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
         <!-- ── Guided Follow-up Dialog ─────────────────────────── -->
         <div *ngIf="showFollowUpPanel" class="detail-modal-backdrop" (click)="showFollowUpPanel = false"></div>
         <div *ngIf="showFollowUpPanel" class="detail-modal-card"
-             style="background:var(--surface);border:2px solid var(--color-amber);border-radius:14px;padding:20px 24px;">
+             style="background:var(--surface);border:2px solid var(--color-warning);border-radius:14px;padding:20px 24px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-            <i class="ri-notification-fill" style="font-size:16px;color:var(--color-amber);"></i>
+            <i class="ri-notification-fill" style="font-size:16px;color:var(--color-warning);"></i>
             <span style="font-size:14px;font-weight:700;color:var(--text);">Follow-up abschließen</span>
-            <span style="font-size:12px;font-weight:600;color:var(--color-amber);background:var(--color-amber-soft);padding:2px 8px;border-radius:10px;">
+            <span style="font-size:12px;font-weight:600;color:var(--color-warning);background:var(--color-warning-soft);padding:2px 8px;border-radius:10px;">
               {{ callNotesSummary?.pendingFollowUps }} offen
             </span>
             <button (click)="showFollowUpPanel = false"
@@ -254,7 +255,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
             </button>
           </div>
           <div *ngIf="callNotesSummary?.mostRecentSubject"
-               style="background:var(--surface-2);border-radius:8px;padding:10px 14px;margin-bottom:14px;border-left:3px solid var(--color-amber);">
+               style="background:var(--surface-2);border-radius:8px;padding:10px 14px;margin-bottom:14px;border-left:3px solid var(--color-warning);">
             <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Geplanter Follow-up</div>
             <div style="font-size:13px;font-weight:600;color:var(--text);">{{ callNotesSummary!.mostRecentSubject }}</div>
           </div>
@@ -293,7 +294,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
               <option value="DEAL_CLOSED">Abschluss</option>
             </select>
             <button (click)="saveFollowUp()" [disabled]="isSavingNote || !quickNoteText.trim()"
-                    style="padding:9px 20px;background:var(--color-amber);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;"
+                    style="padding:9px 20px;background:var(--color-warning);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;"
                     [style.opacity]="(isSavingNote || !quickNoteText.trim()) ? '0.45' : '1'">
               <i class="ri-check-line" style="margin-right:5px;"></i>
               {{ isSavingNote ? 'Speichern…' : 'Follow-up erledigt · Notiz speichern' }}
@@ -320,14 +321,14 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
             <!-- Besichtigungen -->
             <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-                <i class="ri-door-open-fill" style="font-size:17px;color:var(--color-purple);"></i>
+                <i class="ri-door-open-fill" style="font-size:17px;color:var(--color-warning);"></i>
                 <span style="font-size:15px;font-weight:700;color:var(--text);flex:1;">Besichtigungen</span>
                 <span *ngIf="viewings.length > 0"
-                      style="font-size:12px;font-weight:700;color:var(--color-purple);background:var(--color-purple-soft);padding:2px 8px;border-radius:10px;">
+                      style="font-size:12px;font-weight:700;color:var(--color-warning);background:var(--color-warning-soft);padding:2px 8px;border-radius:10px;">
                   {{ viewings.length }}
                 </span>
                 <button (click)="showViewingForm = !showViewingForm"
-                        style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--color-purple-soft);color:var(--color-purple);border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
+                        style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--color-warning-soft);color:var(--color-warning);border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
                   <i class="ri-add-fill" style="font-size:12px;"></i>
                   Besichtigung
                 </button>
@@ -407,7 +408,7 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
                       </span>
                       <ng-container *ngIf="note.followUpRequired">
                         <span style="color:var(--border);font-size:10px;">·</span>
-                        <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--color-amber-soft);color:var(--color-amber);">
+                        <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--color-warning-soft);color:var(--color-warning);">
                           <span style="width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block;flex-shrink:0;"></span>
                           Follow-up nötig
                         </span>
@@ -561,8 +562,11 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
       </div>
 
       <div *ngIf="!isLoading && !client" style="text-align:center;padding:48px 0;">
-        <p style="font-size:14px;color:var(--text-3);">{{ 'clients.notFound' | translate }}</p>
-        <a routerLink="/clients" style="font-size:13px;color:var(--primary);">{{ 'clients.backToClients' | translate }}</a>
+        <i class="ri-user-line" style="font-size:48px;color:var(--text-3);display:block;margin-bottom:12px;"></i>
+        <h3 style="font-size:15px;font-weight:600;color:var(--text);margin:0 0 6px;">{{ 'clients.notFound' | translate }}</h3>
+        <a routerLink="/clients"
+           style="font-size:13px;color:var(--primary);text-decoration:none;display:inline-flex;align-items:center;gap:6px;justify-content:center;">
+          <i class="ri-arrow-left-line"></i> {{ 'clients.backToClients' | translate }}</a>
       </div>
     </div>
 
@@ -932,22 +936,22 @@ export class ClientDetailComponent implements OnInit {
 
   getOutcomeBg(outcome: string): string {
     switch (outcome) {
-      case 'INTERESTED':        return 'var(--color-success-soft)';
+      case 'INTERESTED':        return 'var(--accent-soft)';
       case 'NOT_INTERESTED':    return 'var(--color-error-soft)';
-      case 'SCHEDULED_VIEWING': return 'var(--color-blue-soft)';
-      case 'OFFER_MADE':        return 'var(--color-amber-soft)';
-      case 'DEAL_CLOSED':       return 'var(--color-purple-soft)';
+      case 'SCHEDULED_VIEWING': return 'var(--color-warning-soft)';
+      case 'OFFER_MADE':        return 'var(--color-warning-soft)';
+      case 'DEAL_CLOSED':       return 'var(--color-success-soft)';
       default:                  return 'var(--surface-2)';
     }
   }
 
   getOutcomeColor(outcome: string): string {
     switch (outcome) {
-      case 'INTERESTED':        return 'var(--color-success)';
-      case 'NOT_INTERESTED':    return 'var(--color-error)';
-      case 'SCHEDULED_VIEWING': return 'var(--color-blue)';
-      case 'OFFER_MADE':        return 'var(--color-amber)';
-      case 'DEAL_CLOSED':       return 'var(--color-purple)';
+      case 'INTERESTED':        return 'var(--color-interested)';
+      case 'NOT_INTERESTED':    return 'var(--color-not-interested)';
+      case 'SCHEDULED_VIEWING': return 'var(--color-viewing)';
+      case 'OFFER_MADE':        return 'var(--color-offer)';
+      case 'DEAL_CLOSED':       return 'var(--color-closed)';
       default:                  return 'var(--text-3)';
     }
   }
@@ -994,13 +998,13 @@ export class ClientDetailComponent implements OnInit {
 
   getMatchScoreBg(score: number): string {
     if (score >= 75) return 'var(--accent-soft)';
-    if (score >= 50) return 'var(--color-amber-soft)';
+    if (score >= 50) return 'var(--color-warning-soft)';
     return 'var(--surface-2)';
   }
 
   getMatchScoreColor(score: number): string {
     if (score >= 75) return 'var(--primary)';
-    if (score >= 50) return 'var(--color-amber)';
+    if (score >= 50) return 'var(--color-warning)';
     return 'var(--text-3)';
   }
 

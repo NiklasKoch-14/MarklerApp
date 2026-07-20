@@ -1,14 +1,16 @@
 <div style="padding:28px 32px;" *ngIf="property">
 
-  <!-- Back + Hero -->
+  <!-- Back link -->
   <a routerLink="/properties"
      style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-3);text-decoration:none;margin-bottom:20px;">
     <i class="ri-arrow-left-line" style="font-size:14px;"></i>
-    Zurück zur Übersicht
+    {{ 'properties.backToProperties' | translate }}
   </a>
 
   <!-- Hero card -->
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px 24px;margin-bottom:24px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+  <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:24px 28px;margin-bottom:16px;">
+   <div class="hero-row" style="display:flex;align-items:flex-start;gap:16px;">
+
     <div style="flex:1;min-width:0;">
       <!-- Status + type chips -->
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
@@ -79,7 +81,7 @@
     </div>
 
     <!-- Action buttons -->
-    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+    <div class="hero-actions" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
       <button *ngIf="property.exposeFileName"
               (click)="previewExpose()"
               [disabled]="isLoadingExpose"
@@ -93,6 +95,7 @@
         Bearbeiten
       </a>
     </div>
+   </div>
   </div>
 
   <!-- 2-column body -->
@@ -456,7 +459,7 @@
         <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
           <div *ngIf="property.energyEfficiencyClass" style="display:flex;align-items:center;justify-content:space-between;">
             <span style="font-size:13px;color:var(--text-3);">Energieklasse</span>
-            <span style="font-size:13px;font-weight:800;padding:2px 10px;border-radius:6px;background:rgba(22,163,74,0.12);color:#16a34a;">
+            <span style="font-size:13px;font-weight:800;padding:2px 10px;border-radius:6px;background:var(--color-success-soft);color:var(--color-success);">
               {{ property.energyEfficiencyClass }}
             </span>
           </div>
@@ -566,10 +569,10 @@
 <div *ngIf="!isLoading && !property"
      style="padding:80px 32px;text-align:center;">
   <i class="ri-home-line" style="font-size:48px;color:var(--text-3);display:block;margin-bottom:12px;"></i>
-  <h3 style="font-size:15px;font-weight:600;color:var(--text);margin:0 0 6px;">Objekt nicht gefunden</h3>
+  <h3 style="font-size:15px;font-weight:600;color:var(--text);margin:0 0 6px;">{{ 'properties.notFound' | translate }}</h3>
   <a routerLink="/properties"
-     style="font-size:13px;color:var(--primary);text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
-     <i class="ri-arrow-left-line"></i> Zurück zur Übersicht</a>
+     style="font-size:13px;color:var(--primary);text-decoration:none;display:inline-flex;align-items:center;gap:6px;justify-content:center;">
+     <i class="ri-arrow-left-line"></i> {{ 'properties.backToProperties' | translate }}</a>
 </div>
 
 <!-- Loading -->
