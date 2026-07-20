@@ -87,6 +87,10 @@ export interface Property {
   addressCountry?: string;
   addressDistrict?: string;
 
+  // Geocoded coordinates, resolved server-side from the address fields above.
+  latitude?: number;
+  longitude?: number;
+
   // Property Specifications
   livingAreaSqm?: number;
   totalAreaSqm?: number;

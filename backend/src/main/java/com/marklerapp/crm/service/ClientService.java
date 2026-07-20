@@ -126,6 +126,25 @@ public class ClientService {
             client.setAddressCountry(ValidationConstants.DEFAULT_ADDRESS_COUNTRY);
         }
 
+        // Client's NOT NULL enum columns (pipelineStage/financingStatus/moveInTimeline)
+        // carry @Builder.Default values, but those only apply when constructed via
+        // Client.builder() — ClientMapper builds via `new Client()` + setters (MapStruct
+        // disableBuilder), which Lombok leaves at null for @Builder.Default fields. The
+        // client-form only ever sends clientType, so without this, creating a client
+        // fails on a NOT NULL violation for a field the form never shows the agent.
+        if (client.getPipelineStage() == null) {
+            client.setPipelineStage(Client.PipelineStage.PROSPECT);
+        }
+        if (client.getFinancingStatus() == null) {
+            client.setFinancingStatus(Client.FinancingStatus.UNKNOWN);
+        }
+        if (client.getMoveInTimeline() == null) {
+            client.setMoveInTimeline(Client.MoveInTimeline.FLEXIBLE);
+        }
+        if (client.getClientType() == null) {
+            client.setClientType(Client.ClientType.BUYER);
+        }
+
         Client savedClient = clientRepository.save(client);
 
         // Create search criteria if provided

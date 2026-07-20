@@ -357,7 +357,39 @@
     "createdAt": "Erstellt am",
     "updatedAt": "Aktualisiert am",
     "personalInformation": "Persönliche Informationen",
-    "searchCriteria": "Suchkriterien",
+    "searchCriteria": {
+      "minSquareMeters": "Mindestgröße (m²)",
+      "maxSquareMeters": "Maximalgröße (m²)",
+      "minSquareMetersPlaceholder": "z.B. 50",
+      "maxSquareMetersPlaceholder": "z.B. 150",
+      "minRooms": "Mindestzimmer",
+      "maxRooms": "Maximalzimmer",
+      "minRoomsPlaceholder": "z.B. 2",
+      "maxRoomsPlaceholder": "z.B. 5",
+      "minBudget": "Mindestkaufpreis (EUR)",
+      "maxBudget": "Maximalkaufpreis (EUR)",
+      "minBudgetPlaceholder": "z.B. 200000",
+      "maxBudgetPlaceholder": "z.B. 500000",
+      "minColdRent": "Mindeste Kaltmiete (EUR)",
+      "maxColdRent": "Maximale Kaltmiete (EUR)",
+      "minColdRentPlaceholder": "z.B. 800",
+      "maxColdRentPlaceholder": "z.B. 1200",
+      "minWarmRent": "Mindeste Warmmiete (EUR)",
+      "maxWarmRent": "Maximale Warmmiete (EUR)",
+      "minWarmRentPlaceholder": "z.B. 1000",
+      "maxWarmRentPlaceholder": "z.B. 1500",
+      "preferredLocations": "Bevorzugte Standorte",
+      "preferredLocationsPlaceholder": "z.B. München, Berlin, Hamburg",
+      "preferredLocationsHint": "Standorte durch Komma getrennt eingeben",
+      "propertyTypes": "Immobilientypen",
+      "propertyTypesPlaceholder": "z.B. APARTMENT, HOUSE, VILLA",
+      "propertyTypesHint": "Typen durch Komma getrennt eingeben (APARTMENT, HOUSE, CONDO, VILLA)",
+      "additionalRequirements": "Zusätzliche Anforderungen",
+      "additionalRequirementsPlaceholder": "Weitere Anforderungen oder Wünsche des Kunden...",
+      "minMaxError": "Der Mindestwert muss kleiner als der Maximalwert sein",
+      "restrictToRadius": "Nur Immobilien im Suchradius anzeigen",
+      "restrictToRadiusHint": "Deaktivieren, um beim Matching auch Immobilien außerhalb des Umkreises zuzulassen (niedriger bewertet)."
+    },
     "propertySearchCriteria": "Immobilien-Suchkriterien",
     "preferences": "Präferenzen",
     "sizeSqm": "Größe (m²)",
@@ -397,37 +429,6 @@
     "followUpBy": "Nachfassen bis",
     "viewAllCallNotes": "Alle Gesprächsnotizen anzeigen",
     "editSearchCriteria": "Suchkriterien bearbeiten",
-    "searchCriteria": {
-      "minSquareMeters": "Mindestgröße (m²)",
-      "maxSquareMeters": "Maximalgröße (m²)",
-      "minSquareMetersPlaceholder": "z.B. 50",
-      "maxSquareMetersPlaceholder": "z.B. 150",
-      "minRooms": "Mindestzimmer",
-      "maxRooms": "Maximalzimmer",
-      "minRoomsPlaceholder": "z.B. 2",
-      "maxRoomsPlaceholder": "z.B. 5",
-      "minBudget": "Mindestkaufpreis (EUR)",
-      "maxBudget": "Maximalkaufpreis (EUR)",
-      "minBudgetPlaceholder": "z.B. 200000",
-      "maxBudgetPlaceholder": "z.B. 500000",
-      "minColdRent": "Mindeste Kaltmiete (EUR)",
-      "maxColdRent": "Maximale Kaltmiete (EUR)",
-      "minColdRentPlaceholder": "z.B. 800",
-      "maxColdRentPlaceholder": "z.B. 1200",
-      "minWarmRent": "Mindeste Warmmiete (EUR)",
-      "maxWarmRent": "Maximale Warmmiete (EUR)",
-      "minWarmRentPlaceholder": "z.B. 1000",
-      "maxWarmRentPlaceholder": "z.B. 1500",
-      "preferredLocations": "Bevorzugte Standorte",
-      "preferredLocationsPlaceholder": "z.B. München, Berlin, Hamburg",
-      "preferredLocationsHint": "Standorte durch Komma getrennt eingeben",
-      "propertyTypes": "Immobilientypen",
-      "propertyTypesPlaceholder": "z.B. APARTMENT, HOUSE, VILLA",
-      "propertyTypesHint": "Typen durch Komma getrennt eingeben (APARTMENT, HOUSE, CONDO, VILLA)",
-      "additionalRequirements": "Zusätzliche Anforderungen",
-      "additionalRequirementsPlaceholder": "Weitere Anforderungen oder Wünsche des Kunden...",
-      "minMaxError": "Der Mindestwert muss kleiner als der Maximalwert sein"
-    },
     "contactData": "Kontaktdaten",
     "hints": {
       "title": "Tipps",
@@ -504,14 +505,12 @@
     "propertyCreatedSuccess": "Immobilie erfolgreich erstellt",
     "propertyUpdatedSuccess": "Immobilie erfolgreich aktualisiert",
     "propertyDeletedSuccess": "Immobilie erfolgreich gelöscht",
-
     "form": {
       "basicInfo": "Grundinformationen",
       "location": "Lage",
       "specifications": "Ausstattung",
       "financial": "Finanzielles",
       "featuresEnergy": "Ausstattung & Energie",
-
       "title": "Objekttitel",
       "titlePlaceholder": "Objekttitel eingeben...",
       "description": "Beschreibung",
@@ -520,7 +519,6 @@
       "listingType": "Vermarktungsart",
       "status": "Status",
       "availableFrom": "Verfügbar ab",
-
       "addressStreet": "Straße",
       "addressHouseNumber": "Hausnummer",
       "addressCity": "Stadt",
@@ -528,7 +526,6 @@
       "addressState": "Bundesland",
       "addressCountry": "Land",
       "addressDistrict": "Stadtteil",
-
       "livingArea": "Wohnfläche (m²)",
       "totalArea": "Gesamtfläche (m²)",
       "plotArea": "Grundstücksfläche (m²)",
@@ -539,13 +536,11 @@
       "floorNumber": "Etage",
       "constructionYear": "Baujahr",
       "renovationYear": "Letztes Renovierungsjahr",
-
       "price": "Preis (€)",
       "pricePerSqm": "Preis pro m² (€)",
       "additionalCosts": "Nebenkosten (€)",
       "heatingCosts": "Heizkosten (€)",
       "commission": "Provision (€)",
-
       "hasElevator": "Aufzug",
       "hasBalcony": "Balkon",
       "hasTerrace": "Terrasse",
@@ -557,7 +552,6 @@
       "isBarrierFree": "Barrierefrei",
       "petsAllowed": "Haustiere erlaubt",
       "furnished": "Möbliert",
-
       "energyClass": "Energieeffizienzklasse",
       "energyConsumption": "Energieverbrauch (kWh/m²a)",
       "heatingType": "Heizungstyp",
@@ -571,7 +565,6 @@
       "virtualTour": "Virtueller Rundgang URL",
       "notes": "Zusätzliche Notizen"
     },
-
     "filters": {
       "propertyType": "Immobilientyp",
       "listingType": "Vermarktungsart",
@@ -588,7 +581,6 @@
       "minRooms": "Min. Zimmer",
       "maxRooms": "Max. Zimmer"
     },
-
     "types": {
       "APARTMENT": "Wohnung",
       "HOUSE": "Haus",
@@ -611,13 +603,11 @@
       "CASTLE": "Schloss",
       "OTHER": "Sonstiges"
     },
-
     "listingTypes": {
       "SALE": "Kauf",
       "RENT": "Miete",
       "LEASE": "Pacht"
     },
-
     "statuses": {
       "AVAILABLE": "Verfügbar",
       "RESERVED": "Reserviert",
@@ -626,7 +616,6 @@
       "WITHDRAWN": "Zurückgezogen",
       "UNDER_CONSTRUCTION": "Im Bau"
     },
-
     "heatingTypes": {
       "GAS": "Gas",
       "OIL": "Öl",
@@ -639,7 +628,6 @@
       "COAL": "Kohle",
       "OTHER": "Sonstiges"
     },
-
     "imageTypes": {
       "GENERAL": "Allgemein",
       "EXTERIOR": "Außenansicht",
@@ -657,7 +645,6 @@
       "ENERGY_CERTIFICATE": "Energieausweis",
       "LOCATION_MAP": "Lageplan"
     },
-
     "detail": {
       "basicInformation": "Grundinformationen",
       "locationInfo": "Lage",
@@ -672,7 +659,6 @@
       "imageCounter": "Bild {{current}} von {{total}}",
       "primaryImage": "Hauptbild"
     },
-
     "stats": {
       "totalProperties": "Immobilien gesamt",
       "availableProperties": "Verfügbare Immobilien",
@@ -681,7 +667,6 @@
       "saleProperties": "Zum Verkauf",
       "rentalProperties": "Zur Miete"
     },
-
     "actions": {
       "viewDetails": "Details anzeigen",
       "editProperty": "Immobilie bearbeiten",
@@ -691,7 +676,6 @@
       "saveProperty": "Immobilie speichern",
       "cancelEdit": "Abbrechen"
     },
-
     "search": {
       "title": "Erweiterte Immobiliensuche",
       "description": "Immobilien mit erweiterten Filteroptionen suchen",
@@ -725,7 +709,6 @@
       "searchResults": "Suchergebnisse",
       "resultsFound": "{{count}} Immobilien gefunden"
     },
-
     "matching": {
       "title": "Immobilien-Matching",
       "subtitle": "Finden Sie die besten Übereinstimmungen zwischen Kunden und Immobilien",
@@ -780,7 +763,6 @@
       "scoreFair": "Akzeptabel",
       "scorePoor": "Niedrig"
     },
-
     "images": {
       "title": "Bilder",
       "upload": "Bilder hochladen",
@@ -811,7 +793,6 @@
       "invalidFileType": "Ungültiger Dateityp",
       "uploadLimit": "Maximal {{count}} Bilder erlaubt"
     },
-
     "expose": {
       "title": "Immobilien-Exposé",
       "noExpose": "Kein Exposé hochgeladen",
@@ -827,6 +808,13 @@
       "deleteConfirmMessage": "Sind Sie sicher, dass Sie dieses Immobilien-Exposé löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
       "previewFailed": "Vorschau fehlgeschlagen. Bitte versuchen Sie es erneut.",
       "downloadFailed": "Download fehlgeschlagen. Bitte versuchen Sie es erneut."
+    },
+    "location": {
+      "title": "Karte",
+      "notGeocoded": "Für dieses Objekt wurde noch kein Standort ermittelt.",
+      "geocodeNow": "Standort ermitteln",
+      "geocoding": "Wird ermittelt…",
+      "geocodeFailed": "Standort konnte nicht ermittelt werden."
     }
   },
   "call-notes": {
@@ -1138,5 +1126,10 @@
       "invalidFileType": "Ungültiger Dateityp. Nur PDF, DOC, DOCX, XLS, XLSX, JPG, PNG und GIF sind erlaubt.",
       "fileTooLarge": "Dateigröße überschreitet die maximale Grenze von 10MB."
     }
+  },
+  "location": {
+    "searchPlaceholder": "Adresse suchen…",
+    "radiusLabel": "Umkreis",
+    "noPinHint": "Klicke auf die Karte, um einen Standort-Pin zu setzen."
   }
 }

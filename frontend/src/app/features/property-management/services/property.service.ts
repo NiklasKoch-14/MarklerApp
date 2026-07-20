@@ -105,6 +105,10 @@ export interface Property {
   addressCountry?: string;
   addressDistrict?: string;
 
+  // Geocoded coordinates, resolved server-side from the address fields above.
+  latitude?: number;
+  longitude?: number;
+
   // Specifications
   livingAreaSqm?: number;
   totalAreaSqm?: number;
@@ -308,6 +312,16 @@ export class PropertyService {
    */
   patchProperty(id: string, partial: Partial<Property>): Observable<Property> {
     return this.http.patch<Property>(`${this.apiUrl}/${id}`, partial).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
+
+  /**
+   * Re-resolve a property's map coordinates from its current address fields.
+   * Backfill action for properties saved before the geocoding feature existed.
+   */
+  geocodeProperty(id: string): Observable<Property> {
+    return this.http.post<Property>(`${this.apiUrl}/${id}/geocode`, {}).pipe(
       catchError(err => this.errorHandler.handleError(err))
     );
   }

@@ -7,6 +7,7 @@ import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.List;
 
@@ -58,6 +59,14 @@ public interface ClientMapper {
      * clientRepository.save() cascade an insert of the mapped-by side without client_id
      * ever being set, which fails the NOT NULL constraint on property_search_criteria.</p>
      *
+     * <p>nullValuePropertyMappingStrategy=IGNORE: without it, MapStruct calls every setter
+     * unconditionally, so a null clientType/financingStatus/moveInTimeline/pipelineStage
+     * on the incoming DTO (client-form only ever sends clientType) overwrites the entity's
+     * own {@code @Builder.Default} values with null — those columns are NOT NULL, so
+     * creation fails with a generic "Required field is missing" for a field the create
+     * form never even shows. IGNORE leaves the entity's defaults in place whenever the
+     * DTO simply didn't specify a value.</p>
+     *
      * @param dto the client DTO
      * @return the client entity
      */
@@ -66,7 +75,8 @@ public interface ClientMapper {
     @Mapping(target = "searchCriteria", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @BeanMapping(builder = @Builder(disableBuilder = true))
+    @BeanMapping(builder = @Builder(disableBuilder = true),
+                 nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     Client toEntity(ClientDto dto);
 
     /**

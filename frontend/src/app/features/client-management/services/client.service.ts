@@ -73,6 +73,10 @@ export interface PropertySearchCriteria {
   minWarmRent?: number;
   maxWarmRent?: number;
   preferredLocations?: string[];
+  latitude?: number;
+  longitude?: number;
+  searchRadiusKm?: number;
+  restrictToSearchRadius?: boolean;
   propertyTypes?: string[];
   additionalRequirements?: string;
   createdAt?: string;

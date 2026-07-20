@@ -11,6 +11,10 @@ export interface PropertySearchCriteria {
   minBudget?: number;
   maxBudget?: number;
   preferredLocations?: string[];
+  latitude?: number;
+  longitude?: number;
+  searchRadiusKm?: number;
+  restrictToSearchRadius?: boolean;
   propertyTypes?: string[];
   additionalRequirements?: string;
   createdAt?: string;

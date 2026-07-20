@@ -13,11 +13,13 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
 import { PropertyMatchingService } from '../../../property-management/services/property-matching.service';
 import { PropertyMatchResult } from '../../../property-management/models/property-match.model';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
+import { LocationPickerMapComponent } from '../../../../shared/components/location-picker-map/location-picker-map.component';
+import { GeocodingService } from '../../../../shared/services/geocoding.service';
 
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent, TranslateEnumPipe, ConfirmDialogComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent, TranslateEnumPipe, ConfirmDialogComponent, LocationPickerMapComponent],
   styles: [`
     .stage-option:hover { background:var(--surface-2) !important; }
     .qm-item { display:flex; align-items:center; gap:10px; width:100%; padding:10px 14px; border:none; background:none; cursor:pointer; font-size:13px; font-weight:500; color:var(--text); text-align:left; font-family:inherit; transition:background 0.1s; }
@@ -509,6 +511,26 @@ import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe'
               </div>
             </div>
 
+            <!-- Suchradius -->
+            <div *ngIf="client.searchCriteria?.latitude != null && client.searchCriteria?.longitude != null"
+                 style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                <i class="ri-map-pin-line" style="font-size:15px;color:var(--text-3);"></i>
+                <span style="font-size:15px;font-weight:700;color:var(--text);">Suchradius</span>
+              </div>
+              <div *ngIf="searchLocationLabel" style="margin-bottom:12px;">
+                <span style="font-size:13px;color:var(--text);">{{ searchLocationLabel }}</span>
+              </div>
+              <app-location-picker-map
+                [latitude]="client.searchCriteria!.latitude!"
+                [longitude]="client.searchCriteria!.longitude!"
+                [radiusKm]="client.searchCriteria!.searchRadiusKm || 10"
+                [readOnly]="true"
+                [showRadiusControl]="true"
+                mapBorderRadius="0 0 12px 12px">
+              </app-location-picker-map>
+            </div>
+
             <!-- Passende Objekte -->
             <div *ngIf="client.searchCriteria"
                  style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
@@ -695,6 +717,7 @@ export class ClientDetailComponent implements OnInit {
   showViewingForm = false;
 
   matchingProperties: PropertyMatchResult[] = [];
+  searchLocationLabel: string | null = null;
   isLoadingMatches = false;
 
   showAttachmentsDialog = false;
@@ -719,6 +742,7 @@ export class ClientDetailComponent implements OnInit {
     public callNotesService: CallNotesService,
     private viewingService: ViewingService,
     private propertyMatchingService: PropertyMatchingService,
+    private geocodingService: GeocodingService,
     private zone: NgZone
   ) {}
 
@@ -739,6 +763,9 @@ export class ClientDetailComponent implements OnInit {
         this.isLoading = false;
         if (client.searchCriteria && client.id) {
           this.loadMatchingProperties(client.id);
+        }
+        if (client.searchCriteria?.latitude != null && client.searchCriteria?.longitude != null) {
+          this.loadSearchLocationLabel(client.searchCriteria.latitude, client.searchCriteria.longitude);
         }
       },
       error: () => {
@@ -776,6 +803,13 @@ export class ClientDetailComponent implements OnInit {
       error: () => {
         this.isLoadingViewings = false;
       }
+    });
+  }
+
+  private loadSearchLocationLabel(latitude: number, longitude: number): void {
+    this.searchLocationLabel = null;
+    this.geocodingService.reverse(latitude, longitude).subscribe(label => {
+      this.searchLocationLabel = label;
     });
   }
 

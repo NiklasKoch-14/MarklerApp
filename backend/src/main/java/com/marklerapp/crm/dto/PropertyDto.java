@@ -95,6 +95,11 @@ public class PropertyDto {
     @Size(max = 100, message = "District must not exceed 100 characters")
     private String addressDistrict;
 
+    // Geocoded coordinates, resolved server-side — null until the property has been
+    // successfully geocoded (see GeocodingService / PropertyService).
+    private BigDecimal latitude;
+    private BigDecimal longitude;
+
     // ========================================
     // Property Specifications
     // ========================================

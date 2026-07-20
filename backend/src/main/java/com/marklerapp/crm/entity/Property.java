@@ -81,6 +81,16 @@ public class Property extends BaseEntity {
     @Size(max = 100, message = "District must not exceed 100 characters")
     private String addressDistrict;
 
+    // Geocoded coordinates — resolved server-side from the address fields above via
+    // GeocodingService. Null until the first successful geocode (e.g. legacy rows,
+    // or Nominatim temporarily unreachable); matching falls back to city/postal text
+    // matching whenever these are null, see PropertyMatchingService.
+    @Column(name = "latitude", precision = 10, scale = 7)
+    private BigDecimal latitude;
+
+    @Column(name = "longitude", precision = 10, scale = 7)
+    private BigDecimal longitude;
+
     // Property specifications
     @Column(name = "living_area_sqm")
     @DecimalMin(value = "0.0", message = "Living area must be positive")

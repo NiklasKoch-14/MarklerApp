@@ -52,6 +52,9 @@ class PropertyServiceTest {
     @Mock
     private PropertyImageMapper propertyImageMapper;
 
+    @Mock
+    private GeocodingService geocodingService;
+
     private OwnershipValidator ownershipValidator;
 
     private PropertyService propertyService;
@@ -71,13 +74,17 @@ class PropertyServiceTest {
 
         // Initialize real OwnershipValidator
         ownershipValidator = new OwnershipValidator();
+        // Not every test exercises create/update (which trigger geocoding), so stub leniently.
+        lenient().when(geocodingService.geocodeAddress(any(), any(), any(), any(), any()))
+            .thenReturn(Optional.empty());
         propertyService = new PropertyService(
             propertyRepository,
             propertyImageRepository,
             agentRepository,
             propertyMapper,
             propertyImageMapper,
-            ownershipValidator
+            ownershipValidator,
+            geocodingService
         );
 
         testAgent = Agent.builder()

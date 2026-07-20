@@ -62,6 +62,17 @@ public class PropertySearchCriteriaDto {
 
     private List<String> preferredLocations;
 
+    // Map-based search location — see PropertySearchCriteria entity for details.
+    private BigDecimal latitude;
+    private BigDecimal longitude;
+
+    @Min(value = 1, message = "Search radius must be at least 1 km")
+    @Max(value = 200, message = "Search radius must not exceed 200 km")
+    private Integer searchRadiusKm;
+
+    @Builder.Default
+    private Boolean restrictToSearchRadius = true;
+
     private List<String> propertyTypes;
 
     private String additionalRequirements;

@@ -20,11 +20,12 @@ import { ViewingAddDialogComponent } from '../../../viewing-management/component
 import { PropertyNoteService, PropertyNoteResponse, NoteCategory } from '../../services/property-note.service';
 import { PropertyMatchingService } from '../../services/property-matching.service';
 import { ClientMatchResult } from '../../models/property-match.model';
+import { LocationPickerMapComponent } from '../../../../shared/components/location-picker-map/location-picker-map.component';
 
 @Component({
   selector: 'app-property-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent, ConfirmDialogComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent, ConfirmDialogComponent, LocationPickerMapComponent],
   templateUrl: './property-detail.component.html',
   styleUrls: ['./property-detail.component.scss']
 })
@@ -35,6 +36,7 @@ export class PropertyDetailComponent implements OnInit {
   showDeletePropertyConfirm = false;
   pageError = '';
   pendingDeleteNoteId: string | null = null;
+  isGeocoding = false;
   isLoadingExpose = false;
   selectedImage: PropertyImage | null = null;
   selectedImageIndex = 0;
@@ -264,6 +266,23 @@ export class PropertyDetailComponent implements OnInit {
         this.isDeleting = false;
         this.showDeletePropertyConfirm = false;
         this.pageError = this.translate.instant('properties.deleteFailed');
+      }
+    });
+  }
+
+  geocodeProperty(): void {
+    if (!this.property?.id) return;
+    this.isGeocoding = true;
+    this.pageError = '';
+    this.propertyService.geocodeProperty(this.property.id).subscribe({
+      next: (updated) => {
+        this.property = updated;
+        this.isGeocoding = false;
+      },
+      error: (error) => {
+        console.error('Error geocoding property:', error);
+        this.isGeocoding = false;
+        this.pageError = this.translate.instant('properties.location.geocodeFailed');
       }
     });
   }

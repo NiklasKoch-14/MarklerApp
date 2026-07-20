@@ -113,6 +113,12 @@ public class PropertyMatchingService {
                     .collect(Collectors.toList());
         }
 
+        // Hard-filter to the client's search radius when restrictToSearchRadius is
+        // enabled (default) and both sides are geocoded — see passesLocationGate.
+        availableProperties = availableProperties.stream()
+                .filter(p -> passesLocationGate(p.getLatitude(), p.getLongitude(), criteria))
+                .collect(Collectors.toList());
+
         log.debug("Found {} properties to evaluate", availableProperties.size());
 
         // Cross-reference against existing viewings for this client in one query, so the
@@ -179,6 +185,8 @@ public class PropertyMatchingService {
                 .filter(client -> client.getPipelineStage() != Client.PipelineStage.WON
                         && client.getPipelineStage() != Client.PipelineStage.LOST)
                 .filter(client -> matchesDesiredListingType(client.getClientType(), property.getListingType()))
+                .filter(client -> passesLocationGate(property.getLatitude(), property.getLongitude(),
+                        convertCriteriaToDto(client.getSearchCriteria())))
                 .map(client -> scoreClient(client, property, request,
                         viewingsByClientId.getOrDefault(client.getId(), List.of())))
                 .filter(result -> result.getMatchScore() >= request.getEffectiveMatchThreshold())
@@ -243,6 +251,10 @@ public class PropertyMatchingService {
                     .filter(p -> p.getListingType() == impliedListingType)
                     .collect(Collectors.toList());
         }
+
+        availableProperties = availableProperties.stream()
+                .filter(p -> passesLocationGate(p.getLatitude(), p.getLongitude(), criteria))
+                .collect(Collectors.toList());
 
         log.debug("Found {} properties to evaluate", availableProperties.size());
 
@@ -577,6 +589,14 @@ public class PropertyMatchingService {
     private int calculateLocationScore(Property property, PropertySearchCriteriaDto criteria,
                                        PropertyMatchRequest request, List<String> matchReasons,
                                        List<String> mismatchReasons) {
+        // Prefer real distance once both sides are geocoded — falls through to the
+        // city/postal-code text logic below whenever either side lacks coordinates
+        // (legacy criteria without a map pin, or a property not yet geocoded).
+        if (criteria.getLatitude() != null && criteria.getLongitude() != null && criteria.getSearchRadiusKm() != null
+                && property.getLatitude() != null && property.getLongitude() != null) {
+            return calculateDistanceScore(property, criteria, matchReasons, mismatchReasons);
+        }
+
         List<String> preferredLocations = criteria.getPreferredLocations();
 
         if (preferredLocations == null || preferredLocations.isEmpty()) {
@@ -627,6 +647,70 @@ public class PropertyMatchingService {
 
         mismatchReasons.add(String.format("Property location %s does not match preferred locations", propertyCity));
         return 0;
+    }
+
+    /**
+     * Distance-based location score once both criteria and property are geocoded.
+     * 100 points at the pin, decaying to ~70 at the radius edge. Properties beyond the
+     * radius only ever reach this method when restrictToSearchRadius is disabled
+     * (otherwise passesLocationGate already filtered them out before scoring), so the
+     * curve keeps decaying past the edge instead of assuming everything here is in-range.
+     */
+    private int calculateDistanceScore(Property property, PropertySearchCriteriaDto criteria,
+                                       List<String> matchReasons, List<String> mismatchReasons) {
+        double distance = distanceKm(criteria.getLatitude(), criteria.getLongitude(),
+                property.getLatitude(), property.getLongitude());
+        int radiusKm = criteria.getSearchRadiusKm();
+
+        if (distance <= radiusKm) {
+            int score = (int) Math.round(100 - (distance / radiusKm) * 30);
+            matchReasons.add(String.format("Property is %.1f km from the search location (within %d km radius)",
+                    distance, radiusKm));
+            return Math.max(70, score);
+        }
+
+        double overKm = distance - radiusKm;
+        int score = (int) Math.round(70 - overKm * 5);
+        mismatchReasons.add(String.format("Property is %.1f km outside the %d km search radius", overKm, radiusKm));
+        return Math.max(0, score);
+    }
+
+    /**
+     * Great-circle distance between two coordinates in kilometers (haversine formula).
+     */
+    private static double distanceKm(BigDecimal lat1, BigDecimal lng1, BigDecimal lat2, BigDecimal lng2) {
+        final double earthRadiusKm = 6371.0;
+        double phi1 = Math.toRadians(lat1.doubleValue());
+        double phi2 = Math.toRadians(lat2.doubleValue());
+        double deltaPhi = Math.toRadians(lat2.doubleValue() - lat1.doubleValue());
+        double deltaLambda = Math.toRadians(lng2.doubleValue() - lng1.doubleValue());
+
+        double a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2)
+                + Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return earthRadiusKm * c;
+    }
+
+    /**
+     * Hard pre-filter applied before scoring: excludes properties outside a client's
+     * search radius when restrictToSearchRadius is enabled (the default). A data gap
+     * on either side — criteria without a pin, or a property not yet geocoded — always
+     * passes the gate rather than silently hiding an otherwise valid match; scoring
+     * falls back to city/postal-code text matching for those instead.
+     */
+    private boolean passesLocationGate(BigDecimal propertyLatitude, BigDecimal propertyLongitude,
+                                        PropertySearchCriteriaDto criteria) {
+        if (criteria == null || !Boolean.TRUE.equals(criteria.getRestrictToSearchRadius())) {
+            return true;
+        }
+        if (criteria.getLatitude() == null || criteria.getLongitude() == null || criteria.getSearchRadiusKm() == null) {
+            return true;
+        }
+        if (propertyLatitude == null || propertyLongitude == null) {
+            return true;
+        }
+        double distance = distanceKm(criteria.getLatitude(), criteria.getLongitude(), propertyLatitude, propertyLongitude);
+        return distance <= criteria.getSearchRadiusKm();
     }
 
     /**
@@ -845,6 +929,10 @@ public class PropertyMatchingService {
                 .maxWarmRent(criteria.getMaxWarmRent())
                 .preferredLocations(criteria.getPreferredLocations() != null ?
                         Arrays.asList(criteria.getPreferredLocationsArray()) : null)
+                .latitude(criteria.getLatitude())
+                .longitude(criteria.getLongitude())
+                .searchRadiusKm(criteria.getSearchRadiusKm())
+                .restrictToSearchRadius(criteria.getRestrictToSearchRadius())
                 .propertyTypes(criteria.getPropertyTypes() != null ?
                         Arrays.asList(criteria.getPropertyTypesArray()) : null)
                 .additionalRequirements(criteria.getAdditionalRequirements())
@@ -862,6 +950,8 @@ public class PropertyMatchingService {
         property.setRooms(dto.getRooms());
         property.setAddressCity(dto.getAddressCity());
         property.setAddressPostalCode(dto.getAddressPostalCode());
+        property.setLatitude(dto.getLatitude());
+        property.setLongitude(dto.getLongitude());
         property.setPropertyType(dto.getPropertyType());
         property.setListingType(dto.getListingType());
         property.setStatus(dto.getStatus());

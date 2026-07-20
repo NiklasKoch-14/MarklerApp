@@ -5,11 +5,12 @@ import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ClientService, Client } from '../../services/client.service';
+import { LocationPickerMapComponent } from '../../../../shared/components/location-picker-map/location-picker-map.component';
 
 @Component({
   selector: 'app-client-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, RouterLink, LocationPickerMapComponent],
   template: `
     <div>
       <div class="page-header">
@@ -250,9 +251,18 @@ import { ClientService, Client } from '../../services/client.service';
                 </ng-container>
                 <div>
                   <label class="form-label">{{ 'clients.searchCriteria.preferredLocations' | translate }}</label>
-                  <input type="text" formControlName="preferredLocations" class="form-input"
-                    [placeholder]="'clients.searchCriteria.preferredLocationsPlaceholder' | translate">
-                  <p style="margin-top:5px; font-size:12px; color:var(--text-3);">{{ 'clients.searchCriteria.preferredLocationsHint' | translate }}</p>
+                  <app-location-picker-map
+                    [latitude]="searchCriteriaGroup.get('latitude')?.value"
+                    [longitude]="searchCriteriaGroup.get('longitude')?.value"
+                    [radiusKm]="searchCriteriaGroup.get('searchRadiusKm')?.value || 10"
+                    (locationChange)="onSearchLocationChange($event)"
+                    (radiusChangeEvent)="onSearchRadiusChange($event)">
+                  </app-location-picker-map>
+                  <label style="display:flex; align-items:center; gap:8px; margin-top:10px; font-size:13px; color:var(--text-2); cursor:pointer;">
+                    <input type="checkbox" formControlName="restrictToSearchRadius">
+                    {{ 'clients.searchCriteria.restrictToRadius' | translate }}
+                  </label>
+                  <p style="margin-top:5px; font-size:12px; color:var(--text-3);">{{ 'clients.searchCriteria.restrictToRadiusHint' | translate }}</p>
                 </div>
                 <div>
                   <label class="form-label">{{ 'clients.searchCriteria.propertyTypes' | translate }}</label>
@@ -395,6 +405,10 @@ export class ClientFormComponent implements OnInit {
         minWarmRent: [null, [Validators.min(0)]],
         maxWarmRent: [null, [Validators.min(0)]],
         preferredLocations: [''],
+        latitude: [null],
+        longitude: [null],
+        searchRadiusKm: [10],
+        restrictToSearchRadius: [true],
         propertyTypes: [''],
         additionalRequirements: ['']
       }, { validators: this.rangeValidator })
@@ -506,6 +520,10 @@ export class ClientFormComponent implements OnInit {
             minWarmRent: client.searchCriteria?.minWarmRent || null,
             maxWarmRent: client.searchCriteria?.maxWarmRent || null,
             preferredLocations: client.searchCriteria?.preferredLocations?.join(', ') || '',
+            latitude: client.searchCriteria?.latitude ?? null,
+            longitude: client.searchCriteria?.longitude ?? null,
+            searchRadiusKm: client.searchCriteria?.searchRadiusKm ?? 10,
+            restrictToSearchRadius: client.searchCriteria?.restrictToSearchRadius ?? true,
             propertyTypes: client.searchCriteria?.propertyTypes?.join(', ') || '',
             additionalRequirements: client.searchCriteria?.additionalRequirements || ''
           }
@@ -573,7 +591,8 @@ export class ClientFormComponent implements OnInit {
                         criteria.minColdRent || criteria.maxColdRent ||
                         criteria.minWarmRent || criteria.maxWarmRent ||
                         preferredLocations.length > 0 || propertyTypes.length > 0 ||
-                        criteria.additionalRequirements;
+                        criteria.additionalRequirements ||
+                        (criteria.latitude != null && criteria.longitude != null);
 
     if (!hasAnyValue) return null;
 
@@ -589,9 +608,21 @@ export class ClientFormComponent implements OnInit {
       minWarmRent: criteria.minWarmRent || null,
       maxWarmRent: criteria.maxWarmRent || null,
       preferredLocations: preferredLocations.length > 0 ? preferredLocations : null,
+      latitude: criteria.latitude ?? null,
+      longitude: criteria.longitude ?? null,
+      searchRadiusKm: criteria.latitude != null ? (criteria.searchRadiusKm ?? 10) : null,
+      restrictToSearchRadius: criteria.restrictToSearchRadius ?? true,
       propertyTypes: propertyTypes.length > 0 ? propertyTypes : null,
       additionalRequirements: criteria.additionalRequirements || null
     };
+  }
+
+  onSearchLocationChange(location: { latitude: number; longitude: number }): void {
+    this.searchCriteriaGroup.patchValue(location);
+  }
+
+  onSearchRadiusChange(radiusKm: number): void {
+    this.searchCriteriaGroup.patchValue({ searchRadiusKm: radiusKm });
   }
 
   rangeValidator(group: FormGroup): { [key: string]: any } | null {

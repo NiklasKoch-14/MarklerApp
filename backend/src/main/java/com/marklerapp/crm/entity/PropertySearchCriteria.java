@@ -69,7 +69,30 @@ public class PropertySearchCriteria extends BaseEntity {
     private BigDecimal maxWarmRent;
 
     @Column(name = "preferred_locations", length = 500)
-    private String preferredLocations; // Comma-separated list
+    private String preferredLocations; // Comma-separated list — legacy free-text fallback,
+                                        // kept alongside the map-based fields below for
+                                        // clients whose criteria predate the location picker.
+
+    // Map-based search location: a pin (lat/lng) plus a radius in km, set interactively
+    // in the client form. When present, PropertyMatchingService prefers real-distance
+    // matching over the text-based preferredLocations comparison.
+    @Column(name = "latitude", precision = 10, scale = 7)
+    private BigDecimal latitude;
+
+    @Column(name = "longitude", precision = 10, scale = 7)
+    private BigDecimal longitude;
+
+    @Column(name = "search_radius_km")
+    @Min(value = 1, message = "Search radius must be at least 1 km")
+    @Max(value = 200, message = "Search radius must not exceed 200 km")
+    private Integer searchRadiusKm;
+
+    // Hard-filters matching to properties within searchRadiusKm when true (default).
+    // Unchecking it in the UI keeps the radius for scoring/ranking but stops excluding
+    // properties outside it — an explicit opt-out, not a silent one.
+    @Column(name = "restrict_to_search_radius", nullable = false)
+    @Builder.Default
+    private Boolean restrictToSearchRadius = true;
 
     @Column(name = "property_types", length = 200)
     private String propertyTypes; // Comma-separated list

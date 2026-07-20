@@ -115,6 +115,14 @@ anthropic:
 google:
   client-id: ${GOOGLE_CLIENT_ID:}
 
+# Geocoding (Nominatim/OSM) — resolves property addresses and search-criteria pins to
+# coordinates for the map-based location feature. Free, no API key; disable via
+# GEOCODING_ENABLED if a self-hosted instance/paid provider replaces it later.
+geocoding:
+  base-url: ${GEOCODING_BASE_URL:https://nominatim.openstreetmap.org}
+  user-agent: ${GEOCODING_USER_AGENT:MarklerApp/1.0 (support@marklerapp.example)}
+  enabled: ${GEOCODING_ENABLED:true}
+
 # File Storage Configuration
 app:
   file-storage:

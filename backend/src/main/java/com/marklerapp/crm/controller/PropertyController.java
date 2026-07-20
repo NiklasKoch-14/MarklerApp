@@ -175,6 +175,33 @@ public class PropertyController extends BaseController {
     }
 
     /**
+     * Re-resolve a property's map coordinates from its current address fields.
+     * Powers the "Standort ermitteln" button on the property detail page — a one-click
+     * backfill for properties saved before the geocoding feature existed.
+     */
+    @PostMapping("/{id}/geocode")
+    @Operation(summary = "Re-geocode property",
+               description = "Re-resolve latitude/longitude from the property's current address fields.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Property returned (coordinates updated if the address resolved)",
+                     content = @Content(schema = @Schema(implementation = PropertyDto.class))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
+        @ApiResponse(responseCode = "404", description = "Property not found or access denied")
+    })
+    public ResponseEntity<PropertyDto> regeocodeProperty(
+            @Parameter(description = "Property ID", required = true)
+            @PathVariable UUID id,
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        log.info("Re-geocoding property: {} for agent: {}", id, agentId);
+
+        PropertyDto property = propertyService.regeocode(id, agentId);
+
+        return ResponseEntity.ok(property);
+    }
+
+    /**
      * Get a single property by ID.
      *
      * @param id the property ID

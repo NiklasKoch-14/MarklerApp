@@ -59,6 +59,7 @@ public class PropertyService {
     private final PropertyMapper propertyMapper;
     private final PropertyImageMapper propertyImageMapper;
     private final OwnershipValidator ownershipValidator;
+    private final GeocodingService geocodingService;
 
     /**
      * Create a new property with GDPR validation.
@@ -86,6 +87,7 @@ public class PropertyService {
         property.setAgent(agent);
         property.setStatus(PropertyStatus.AVAILABLE);
         property.setConsentDate(LocalDate.now());
+        geocodeProperty(property);
 
         // Calculate price per sqm if not provided
         if (property.getPricePerSqm() == null && property.getPrice() != null &&
@@ -128,6 +130,14 @@ public class PropertyService {
         // Update fields from request (only non-null values)
         updatePropertyFields(property, request);
 
+        // Re-geocode whenever an address field actually changed — avoids hammering
+        // Nominatim on every unrelated edit (price tweak, feature toggle, etc).
+        boolean addressChanged = request.getAddressStreet() != null || request.getAddressHouseNumber() != null
+            || request.getAddressCity() != null || request.getAddressPostalCode() != null;
+        if (addressChanged) {
+            geocodeProperty(property);
+        }
+
         // Recalculate price per sqm if price or area changed
         if ((request.getPrice() != null || request.getLivingAreaSqm() != null) &&
             property.getPrice() != null && property.getLivingAreaSqm() != null &&
@@ -142,6 +152,48 @@ public class PropertyService {
         log.info("Updated property: {} for agent: {}", propertyId, agentId);
 
         return propertyMapper.toDto(updatedProperty);
+    }
+
+    /**
+     * Manually re-resolve a property's coordinates from its current address fields.
+     * Used by the "Standort ermitteln" action on the property detail page — a one-click
+     * backfill for existing properties that predate the geocoding feature, without
+     * requiring the agent to re-edit and re-save the whole record.
+     *
+     * @throws ResourceNotFoundException if property is not found or access denied
+     */
+    @Transactional
+    public PropertyDto regeocode(UUID propertyId, UUID agentId) {
+        Property property = propertyRepository.findById(propertyId)
+            .orElseThrow(() -> new ResourceNotFoundException("Property", "id", propertyId));
+
+        try {
+            ownershipValidator.validatePropertyOwnership(property, agentId);
+        } catch (AccessDeniedException e) {
+            throw new ResourceNotFoundException("Property not found or access denied");
+        }
+
+        geocodeProperty(property);
+        Property saved = propertyRepository.save(property);
+        return propertyMapper.toDto(saved);
+    }
+
+    /**
+     * Resolve a property's address fields to coordinates and set them on the entity.
+     * Never throws — see {@link GeocodingService}'s fail-soft contract. Leaves existing
+     * coordinates untouched if the lookup comes back empty, rather than clearing them.
+     */
+    private void geocodeProperty(Property property) {
+        geocodingService.geocodeAddress(
+            property.getAddressStreet(),
+            property.getAddressHouseNumber(),
+            property.getAddressPostalCode(),
+            property.getAddressCity(),
+            property.getAddressCountry()
+        ).ifPresent(point -> {
+            property.setLatitude(point.latitude());
+            property.setLongitude(point.longitude());
+        });
     }
 
     /**
