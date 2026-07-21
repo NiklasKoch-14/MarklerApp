@@ -1119,10 +1119,12 @@
     "noDocuments": "No documents uploaded yet",
     "uploadSuccess": "File uploaded successfully",
     "confirmDelete": "Are you sure you want to delete '{{fileName}}'?",
+    "changeType": "Change type",
     "errors": {
       "uploadFailed": "Failed to upload file. Please try again.",
       "downloadFailed": "Failed to download file. Please try again.",
       "deleteFailed": "Failed to delete file. Please try again.",
+      "updateTypeFailed": "Could not change the document type. Please try again.",
       "invalidFileType": "Invalid file type. Only PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, and GIF are allowed.",
       "fileTooLarge": "File size exceeds the maximum limit of 10MB."
     }

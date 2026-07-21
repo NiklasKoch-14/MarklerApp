@@ -1119,10 +1119,12 @@
     "noDocuments": "Noch keine Dokumente hochgeladen",
     "uploadSuccess": "Datei erfolgreich hochgeladen",
     "confirmDelete": "Möchten Sie '{{fileName}}' wirklich löschen?",
+    "changeType": "Typ ändern",
     "errors": {
       "uploadFailed": "Upload fehlgeschlagen. Bitte versuchen Sie es erneut.",
       "downloadFailed": "Download fehlgeschlagen. Bitte versuchen Sie es erneut.",
       "deleteFailed": "Löschen fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "updateTypeFailed": "Dokumenttyp konnte nicht geändert werden. Bitte versuchen Sie es erneut.",
       "invalidFileType": "Ungültiger Dateityp. Nur PDF, DOC, DOCX, XLS, XLSX, JPG, PNG und GIF sind erlaubt.",
       "fileTooLarge": "Dateigröße überschreitet die maximale Grenze von 10MB."
     }

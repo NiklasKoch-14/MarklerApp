@@ -7,6 +7,7 @@ import { Subject, takeUntil } from 'rxjs';
 
 import { FileAttachmentService } from '../../services/file-attachment.service';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { TranslateEnumPipe } from '../../pipes/translate-enum.pipe';
 import {
   FileAttachmentDto,
   FileAttachmentType,
@@ -23,7 +24,7 @@ import {
 @Component({
   selector: 'app-file-attachment-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, ConfirmDialogComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, ConfirmDialogComponent, TranslateEnumPipe],
   templateUrl: './file-attachment-manager.component.html',
   styleUrls: ['./file-attachment-manager.component.scss']
 })
@@ -41,11 +42,13 @@ export class FileAttachmentManagerComponent implements OnInit, OnDestroy {
   contextMenuX = 0;
   contextMenuY = 0;
   contextMenuAttachment: FileAttachmentDto | null = null;
+  showTypeSubmenu = false;
   pendingDeleteAttachment: FileAttachmentDto | null = null;
   errorMessage = '';
 
   // File type metadata
   fileTypeMetadata = FILE_TYPE_METADATA;
+  fileTypes: FileAttachmentType[] = Object.values(FileAttachmentType);
 
   private destroy$ = new Subject<void>();
 
@@ -300,7 +303,10 @@ export class FileAttachmentManagerComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Detect file type based on file extension
+   * Detect file type based on file extension and entity context.
+   * Images default to FLOOR_PLAN only for properties — for clients an image
+   * is more likely a photographed document (ID, financing confirmation, etc.),
+   * so it falls back to OTHER and can be corrected via the context menu.
    */
   detectFileType(fileName: string): FileAttachmentType {
     const extension = fileName.split('.').pop()?.toLowerCase() || '';
@@ -313,10 +319,39 @@ export class FileAttachmentManagerComponent implements OnInit, OnDestroy {
     } else if (['xls', 'xlsx'].includes(extension)) {
       return FileAttachmentType.FINANCIAL;
     } else if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
-      return FileAttachmentType.FLOOR_PLAN;
+      return this.entityType === 'property' ? FileAttachmentType.FLOOR_PLAN : FileAttachmentType.OTHER;
     } else {
       return FileAttachmentType.OTHER;
     }
+  }
+
+  /**
+   * Change the file type of an attachment via updateAttachmentMetadata()
+   */
+  selectFileType(type: FileAttachmentType): void {
+    const attachment = this.contextMenuAttachment;
+    if (!attachment?.id || attachment.fileType === type) {
+      this.closeContextMenu();
+      return;
+    }
+
+    this.fileAttachmentService
+      .updateAttachmentMetadata(attachment.id, { fileType: type, description: attachment.description })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (updated) => {
+          const index = this.attachments.findIndex((a) => a.id === updated.id);
+          if (index !== -1) {
+            this.attachments[index] = updated;
+          }
+          this.closeContextMenu();
+        },
+        error: (error) => {
+          console.error('Error updating attachment type:', error);
+          this.errorMessage = this.translate.instant('attachments.errors.updateTypeFailed');
+          this.closeContextMenu();
+        }
+      });
   }
 
   /**
@@ -338,6 +373,7 @@ export class FileAttachmentManagerComponent implements OnInit, OnDestroy {
     this.contextMenuX = event.clientX;
     this.contextMenuY = event.clientY;
     this.contextMenuAttachment = attachment;
+    this.showTypeSubmenu = false;
     this.contextMenuVisible = true;
   }
 
@@ -347,6 +383,7 @@ export class FileAttachmentManagerComponent implements OnInit, OnDestroy {
   closeContextMenu(): void {
     this.contextMenuVisible = false;
     this.contextMenuAttachment = null;
+    this.showTypeSubmenu = false;
   }
 
   /**

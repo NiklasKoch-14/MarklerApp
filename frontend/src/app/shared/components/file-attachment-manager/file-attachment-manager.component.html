@@ -100,21 +100,40 @@
 
   <!-- Context Menu -->
   <div *ngIf="contextMenuVisible"
-       style="position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);z-index:50;min-width:130px;overflow:hidden;"
-       [style.left.px]="contextMenuX"
-       [style.top.px]="contextMenuY">
-    <button (click)="downloadAttachment(contextMenuAttachment!); closeContextMenu()"
-            style="width:100%;text-align:left;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:13px;color:var(--text-2);font-family:inherit;display:flex;align-items:center;gap:8px;"
-            class="ctx-btn">
-      <i class="ri-download-line" style="font-size:14px;"></i>
-      {{ 'common.download' | translate }}
-    </button>
-    <button (click)="confirmDeleteAttachment(contextMenuAttachment!); closeContextMenu()"
-            style="width:100%;text-align:left;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:13px;color:var(--color-error);font-family:inherit;display:flex;align-items:center;gap:8px;"
-            class="ctx-btn">
-      <i class="ri-delete-bin-line" style="font-size:14px;"></i>
-      {{ 'common.delete' | translate }}
-    </button>
+       (click)="$event.stopPropagation()"
+       style="position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);z-index:50;min-width:170px;max-height:280px;overflow-y:auto;">
+    <ng-container *ngIf="!showTypeSubmenu; else typeSubmenu">
+      <button (click)="downloadAttachment(contextMenuAttachment!); closeContextMenu()"
+              style="width:100%;text-align:left;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:13px;color:var(--text-2);font-family:inherit;display:flex;align-items:center;gap:8px;"
+              class="ctx-btn">
+        <i class="ri-download-line" style="font-size:14px;"></i>
+        {{ 'common.download' | translate }}
+      </button>
+      <button (click)="showTypeSubmenu = true"
+              style="width:100%;text-align:left;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:13px;color:var(--text-2);font-family:inherit;display:flex;align-items:center;gap:8px;"
+              class="ctx-btn">
+        <i class="ri-edit-2-line" style="font-size:14px;"></i>
+        {{ 'attachments.changeType' | translate }}
+      </button>
+      <button (click)="confirmDeleteAttachment(contextMenuAttachment!); closeContextMenu()"
+              style="width:100%;text-align:left;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:13px;color:var(--color-error);font-family:inherit;display:flex;align-items:center;gap:8px;"
+              class="ctx-btn">
+        <i class="ri-delete-bin-line" style="font-size:14px;"></i>
+        {{ 'common.delete' | translate }}
+      </button>
+    </ng-container>
+    <ng-template #typeSubmenu>
+      <div style="padding:8px 14px 4px;font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;">
+        {{ 'attachments.fileType' | translate }}
+      </div>
+      <button *ngFor="let type of fileTypes" (click)="selectFileType(type)"
+              style="width:100%;text-align:left;padding:8px 14px;border:none;background:none;cursor:pointer;font-size:13px;color:var(--text-2);font-family:inherit;display:flex;align-items:center;gap:8px;"
+              [style.font-weight]="contextMenuAttachment?.fileType === type ? 700 : 400"
+              class="ctx-btn">
+        <i class="ri-check-line" style="font-size:14px;color:var(--primary);" [style.visibility]="contextMenuAttachment?.fileType === type ? 'visible' : 'hidden'"></i>
+        {{ type | translateEnum:'fileAttachmentType' }}
+      </button>
+    </ng-template>
   </div>
 
   <app-confirm-dialog
