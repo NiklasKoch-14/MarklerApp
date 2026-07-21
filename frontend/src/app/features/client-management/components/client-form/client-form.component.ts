@@ -6,11 +6,13 @@ import { TranslateModule } from '@ngx-translate/core';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ClientService, Client } from '../../services/client.service';
 import { LocationPickerMapComponent } from '../../../../shared/components/location-picker-map/location-picker-map.component';
+import { PropertyType } from '../../../property-management/services/property.service';
+import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 
 @Component({
   selector: 'app-client-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, RouterLink, LocationPickerMapComponent],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, RouterLink, LocationPickerMapComponent, TranslateEnumPipe],
   template: `
     <div>
       <div class="page-header">
@@ -266,9 +268,17 @@ import { LocationPickerMapComponent } from '../../../../shared/components/locati
                 </div>
                 <div>
                   <label class="form-label">{{ 'clients.searchCriteria.propertyTypes' | translate }}</label>
-                  <input type="text" formControlName="propertyTypes" class="form-input"
-                    [placeholder]="'clients.searchCriteria.propertyTypesPlaceholder' | translate">
-                  <p style="margin-top:5px; font-size:12px; color:var(--text-3);">{{ 'clients.searchCriteria.propertyTypesHint' | translate }}</p>
+                  <div style="display:flex; flex-wrap:wrap; gap:7px;">
+                    <button type="button" *ngFor="let pt of propertyTypeOptions"
+                      (click)="togglePropertyType(pt)"
+                      style="padding:6px 13px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; transition:background 0.12s, color 0.12s, border-color 0.12s;"
+                      [style.background]="isPropertyTypeSelected(pt) ? 'var(--primary)' : 'var(--surface-2)'"
+                      [style.color]="isPropertyTypeSelected(pt) ? '#fff' : 'var(--text-2)'"
+                      [style.border]="isPropertyTypeSelected(pt) ? '1px solid var(--primary)' : '1px solid var(--border)'">
+                      {{ pt | translateEnum:'propertyType' }}
+                    </button>
+                  </div>
+                  <p style="margin-top:8px; font-size:12px; color:var(--text-3);">{{ 'clients.searchCriteria.propertyTypesHint' | translate }}</p>
                 </div>
                 <div>
                   <label class="form-label">{{ 'clients.searchCriteria.additionalRequirements' | translate }}</label>
@@ -415,14 +425,28 @@ export class ClientFormComponent implements OnInit {
         longitude: [null],
         searchRadiusKm: [10],
         restrictToSearchRadius: [true],
-        propertyTypes: [''],
+        propertyTypes: [[] as string[]],
         additionalRequirements: ['']
       }, { validators: this.rangeValidator })
     });
   }
 
+  readonly propertyTypeOptions = Object.values(PropertyType);
+
   get isRenter(): boolean {
     return this.clientForm.get('clientType')?.value === 'RENTER';
+  }
+
+  isPropertyTypeSelected(type: string): boolean {
+    const current: string[] = this.searchCriteriaGroup.get('propertyTypes')?.value || [];
+    return current.includes(type);
+  }
+
+  togglePropertyType(type: string): void {
+    const control = this.searchCriteriaGroup.get('propertyTypes');
+    const current: string[] = control?.value || [];
+    const next = current.includes(type) ? current.filter(t => t !== type) : [...current, type];
+    control?.setValue(next);
   }
 
   get clientTypeControl() {
@@ -531,7 +555,7 @@ export class ClientFormComponent implements OnInit {
             longitude: client.searchCriteria?.longitude ?? null,
             searchRadiusKm: client.searchCriteria?.searchRadiusKm ?? 10,
             restrictToSearchRadius: client.searchCriteria?.restrictToSearchRadius ?? true,
-            propertyTypes: client.searchCriteria?.propertyTypes?.join(', ') || '',
+            propertyTypes: client.searchCriteria?.propertyTypes || [],
             additionalRequirements: client.searchCriteria?.additionalRequirements || ''
           }
         });
@@ -588,9 +612,7 @@ export class ClientFormComponent implements OnInit {
       ? criteria.preferredLocations.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
       : [];
 
-    const propertyTypes = criteria.propertyTypes
-      ? criteria.propertyTypes.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
-      : [];
+    const propertyTypes: string[] = Array.isArray(criteria.propertyTypes) ? criteria.propertyTypes : [];
 
     const hasAnyValue = criteria.minSquareMeters || criteria.maxSquareMeters ||
                         criteria.minRooms || criteria.maxRooms ||
