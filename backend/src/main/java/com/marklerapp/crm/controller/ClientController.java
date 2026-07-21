@@ -2,6 +2,7 @@ package com.marklerapp.crm.controller;
 
 import com.marklerapp.crm.constants.PaginationConstants;
 import com.marklerapp.crm.dto.ClientDto;
+import com.marklerapp.crm.dto.ClientImportResponse;
 import com.marklerapp.crm.entity.Client;
 import com.marklerapp.crm.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,11 +15,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -90,6 +95,40 @@ public class ClientController extends BaseController {
         UUID agentId = getAgentIdFromAuth(authentication);
         List<ClientDto> matches = clientService.findPotentialDuplicateClients(agentId, firstName, lastName, phone);
         return ResponseEntity.ok(matches);
+    }
+
+    /**
+     * Bulk-import clients (leads) from a CSV file, e.g. contacts collected at a trade fair.
+     */
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Import clients from CSV",
+               description = "Bulk-create clients from a CSV file. Required header columns: firstName, lastName. " +
+                             "Optional: email, phone, addressStreet, addressCity, addressPostalCode, clientType. " +
+                             "Rows that fail validation or duplicate an existing client's email are skipped, not fatal to the rest of the import.")
+    public ResponseEntity<ClientImportResponse> importClients(
+            @Parameter(description = "CSV file") @RequestParam("file") MultipartFile file,
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        ClientImportResponse result = clientService.importClientsFromCsv(file, agentId);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Downloadable CSV template matching the columns {@link #importClients} expects.
+     */
+    @GetMapping(value = "/import/template", produces = "text/csv")
+    @Operation(summary = "Download CSV import template")
+    public ResponseEntity<byte[]> downloadImportTemplate() {
+        String csv = "firstName,lastName,email,phone,addressStreet,addressCity,addressPostalCode,clientType\n"
+                + "Max,Mustermann,max.mustermann@example.com,0151 12345678,Musterstraße 1,Berlin,10115,BUYER\n";
+        byte[] bytes = csv.getBytes(StandardCharsets.UTF_8);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("text/csv"));
+        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"kunden_import_vorlage.csv\"");
+
+        return ResponseEntity.ok().headers(headers).body(bytes);
     }
 
     /**

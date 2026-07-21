@@ -12,6 +12,11 @@ export const clientRoutes: Routes = [
     title: 'pageTitles.clientNew'
   },
   {
+    path: 'import',
+    loadComponent: () => import('./components/client-import/client-import.component').then(c => c.ClientImportComponent),
+    title: 'pageTitles.clientImport'
+  },
+  {
     path: ':id',
     loadComponent: () => import('./components/client-detail/client-detail.component').then(c => c.ClientDetailComponent),
     title: 'pageTitles.clientDetail'

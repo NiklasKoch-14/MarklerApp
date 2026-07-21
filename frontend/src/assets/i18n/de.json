@@ -164,6 +164,7 @@
     "settings": "Einstellungen",
     "clients": "Kunden",
     "clientNew": "Neuer Kunde",
+    "clientImport": "Kunden importieren",
     "clientDetail": "Kundendetails",
     "clientEdit": "Kunde bearbeiten",
     "properties": "Immobilien",
@@ -272,6 +273,33 @@
     "title": "Kunden",
     "listDescription": "Eine Liste aller Ihrer Kunden einschließlich Kontaktinformationen und Präferenzen.",
     "addClient": "Kunde hinzufügen",
+    "importCsv": "CSV importieren",
+    "import": {
+      "title": "Kunden aus CSV importieren",
+      "subtitle": "Mehrere Leads auf einmal anlegen, z.B. Kontakte von einer Messe.",
+      "formatTitle": "Format",
+      "formatRequired": "Erforderliche Spalten: firstName, lastName.",
+      "formatOptional": "Optionale Spalten: email, phone, addressStreet, addressCity, addressPostalCode, clientType (BUYER/RENTER/SELLER).",
+      "downloadTemplate": "Vorlage herunterladen",
+      "dropHint": "CSV-Datei hierher ziehen oder klicken zum Auswählen",
+      "startImport": "Importieren",
+      "importing": "Wird importiert...",
+      "importAnother": "Weitere Datei importieren",
+      "imported": "Importiert",
+      "skipped": "Übersprungen",
+      "failed": "Fehlgeschlagen",
+      "col": {
+        "row": "Zeile",
+        "name": "Name",
+        "status": "Status",
+        "message": "Hinweis"
+      },
+      "status": {
+        "IMPORTED": "Importiert",
+        "SKIPPED_DUPLICATE": "Duplikat",
+        "FAILED": "Fehlgeschlagen"
+      }
+    },
     "addFirstClient": "Ersten Kunden hinzufügen",
     "noClientsFound": "Keine Kunden gefunden.",
     "searchPlaceholder": "Name, E-Mail, Telefon, Ort …",

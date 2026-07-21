@@ -164,6 +164,7 @@
     "settings": "Settings",
     "clients": "Clients",
     "clientNew": "New Client",
+    "clientImport": "Import Clients",
     "clientDetail": "Client Details",
     "clientEdit": "Edit Client",
     "properties": "Properties",
@@ -272,6 +273,33 @@
     "title": "Clients",
     "listDescription": "A list of all your clients including their contact information and preferences.",
     "addClient": "Add Client",
+    "importCsv": "Import CSV",
+    "import": {
+      "title": "Import Clients from CSV",
+      "subtitle": "Add multiple leads at once, e.g. contacts collected at a trade fair.",
+      "formatTitle": "Format",
+      "formatRequired": "Required columns: firstName, lastName.",
+      "formatOptional": "Optional columns: email, phone, addressStreet, addressCity, addressPostalCode, clientType (BUYER/RENTER/SELLER).",
+      "downloadTemplate": "Download template",
+      "dropHint": "Drag a CSV file here or click to choose one",
+      "startImport": "Import",
+      "importing": "Importing...",
+      "importAnother": "Import another file",
+      "imported": "Imported",
+      "skipped": "Skipped",
+      "failed": "Failed",
+      "col": {
+        "row": "Row",
+        "name": "Name",
+        "status": "Status",
+        "message": "Note"
+      },
+      "status": {
+        "IMPORTED": "Imported",
+        "SKIPPED_DUPLICATE": "Duplicate",
+        "FAILED": "Failed"
+      }
+    },
     "addFirstClient": "Add your first client",
     "noClientsFound": "No clients found.",
     "searchPlaceholder": "Name, email, phone, city …",

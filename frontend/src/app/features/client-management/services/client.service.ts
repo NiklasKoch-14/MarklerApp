@@ -65,6 +65,25 @@ export interface Client {
   formattedAddress?: string;
 }
 
+export type ClientImportStatus = 'IMPORTED' | 'SKIPPED_DUPLICATE' | 'FAILED';
+
+export interface ClientImportRowResult {
+  rowNumber: number;
+  firstName: string;
+  lastName: string;
+  status: ClientImportStatus;
+  message?: string;
+  clientId?: string;
+}
+
+export interface ClientImportResponse {
+  totalRows: number;
+  importedCount: number;
+  skippedCount: number;
+  failedCount: number;
+  rows: ClientImportRowResult[];
+}
+
 export interface PropertySearchCriteria {
   id?: string;
   clientId?: string;
@@ -256,6 +275,23 @@ export class ClientService {
   hasClients(): Observable<boolean> {
     return this.getClientStats().pipe(
       map(stats => stats.totalClients > 0),
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
+
+  /**
+   * Bulk-import clients from a CSV file (e.g. leads collected at a trade fair).
+   */
+  importClientsCsv(file: File): Observable<ClientImportResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<ClientImportResponse>(`${this.apiUrl}/import`, formData).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
+
+  downloadImportTemplate(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/import/template`, { responseType: 'blob' }).pipe(
       catchError(err => this.errorHandler.handleError(err))
     );
   }

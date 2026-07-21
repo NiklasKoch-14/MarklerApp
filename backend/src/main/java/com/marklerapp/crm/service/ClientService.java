@@ -3,6 +3,8 @@ package com.marklerapp.crm.service;
 import com.marklerapp.crm.config.GlobalExceptionHandler.ResourceNotFoundException;
 import com.marklerapp.crm.constants.ValidationConstants;
 import com.marklerapp.crm.dto.ClientDto;
+import com.marklerapp.crm.dto.ClientImportResponse;
+import com.marklerapp.crm.dto.ClientImportRowResult;
 import com.marklerapp.crm.dto.PropertySearchCriteriaDto;
 import com.marklerapp.crm.entity.Agent;
 import com.marklerapp.crm.entity.Client;
@@ -15,7 +17,9 @@ import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.FileAttachmentRepository;
 import com.marklerapp.crm.repository.PropertySearchCriteriaRepository;
 import com.marklerapp.crm.repository.ViewingRepository;
+import com.marklerapp.crm.util.CsvParseUtil;
 import com.marklerapp.crm.util.DuplicateMatchUtil;
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -23,13 +27,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -478,6 +488,171 @@ public class ClientService {
 
         existingCriteria.setClient(client);
         searchCriteriaRepository.save(existingCriteria);
+    }
+
+    private static final List<String> IMPORT_REQUIRED_COLUMNS = List.of("firstname", "lastname");
+    private static final Pattern IMPORT_EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+
+    /**
+     * Bulk-import clients (leads) from a CSV file — e.g. contacts collected at a trade fair.
+     * Each row is imported through the normal {@link #createClient} path in its own
+     * transaction, so one bad row (validation failure, unexpected exception) is recorded
+     * and skipped without rolling back rows already imported earlier in the file.
+     *
+     * <p>Expected header (case-insensitive, any order): firstName, lastName (required),
+     * email, phone, addressStreet, addressCity, addressPostalCode, clientType (optional).</p>
+     */
+    public ClientImportResponse importClientsFromCsv(MultipartFile file, UUID agentId) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException(ValidationConstants.FILE_EMPTY_MESSAGE);
+        }
+
+        Agent agent = getAgentById(agentId);
+
+        String content;
+        try {
+            content = CsvParseUtil.stripBom(new String(file.getBytes(), StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Could not read CSV file: " + e.getMessage());
+        }
+
+        List<List<String>> rows = CsvParseUtil.parse(content);
+        if (rows.isEmpty()) {
+            throw new IllegalArgumentException("CSV file has no rows");
+        }
+
+        Map<String, Integer> columnIndex = new HashMap<>();
+        List<String> header = rows.get(0);
+        for (int i = 0; i < header.size(); i++) {
+            columnIndex.put(header.get(i).trim().toLowerCase(Locale.ROOT), i);
+        }
+        List<String> missingColumns = IMPORT_REQUIRED_COLUMNS.stream()
+                .filter(col -> !columnIndex.containsKey(col))
+                .collect(Collectors.toList());
+        if (!missingColumns.isEmpty()) {
+            throw new IllegalArgumentException("CSV is missing required column(s): " + String.join(", ", missingColumns)
+                    + ". Expected header: firstName,lastName,email,phone,addressStreet,addressCity,addressPostalCode,clientType");
+        }
+
+        List<ClientImportRowResult> results = new ArrayList<>();
+        int imported = 0;
+        int skipped = 0;
+        int failed = 0;
+
+        for (int rowNum = 1; rowNum < rows.size(); rowNum++) {
+            List<String> row = rows.get(rowNum);
+            String firstName = cell(row, columnIndex, "firstname");
+            String lastName = cell(row, columnIndex, "lastname");
+            String email = cell(row, columnIndex, "email");
+
+            ClientImportRowResult result = importRow(rowNum + 1, agent, row, columnIndex, firstName, lastName, email);
+            results.add(result);
+            switch (result.getStatus()) {
+                case IMPORTED -> imported++;
+                case SKIPPED_DUPLICATE -> skipped++;
+                case FAILED -> failed++;
+            }
+        }
+
+        log.info("CSV client import for agent {}: {} rows, {} imported, {} skipped, {} failed",
+                agentId, rows.size() - 1, imported, skipped, failed);
+
+        return ClientImportResponse.builder()
+                .totalRows(rows.size() - 1)
+                .importedCount(imported)
+                .skippedCount(skipped)
+                .failedCount(failed)
+                .rows(results)
+                .build();
+    }
+
+    /**
+     * Imports a single CSV row. Runs in its own transaction (via {@link #createClient}) so a
+     * failure here can't roll back rows already committed earlier in the same file.
+     */
+    private ClientImportRowResult importRow(int displayRowNumber, Agent agent, List<String> row,
+                                             Map<String, Integer> columnIndex, String firstName, String lastName, String email) {
+        if (firstName == null || firstName.trim().length() < 2 || lastName == null || lastName.trim().length() < 2) {
+            return ClientImportRowResult.builder()
+                    .rowNumber(displayRowNumber).firstName(firstName).lastName(lastName)
+                    .status(ClientImportRowResult.ClientImportStatus.FAILED)
+                    .message("First and last name are required (min. 2 characters)")
+                    .build();
+        }
+        if (email != null && !email.isBlank() && !IMPORT_EMAIL_PATTERN.matcher(email.trim()).matches()) {
+            return ClientImportRowResult.builder()
+                    .rowNumber(displayRowNumber).firstName(firstName).lastName(lastName)
+                    .status(ClientImportRowResult.ClientImportStatus.FAILED)
+                    .message("Invalid email address: " + email)
+                    .build();
+        }
+        if (email != null && !email.isBlank() && clientRepository.existsByAgentAndEmail(agent, email.trim())) {
+            return ClientImportRowResult.builder()
+                    .rowNumber(displayRowNumber).firstName(firstName).lastName(lastName)
+                    .status(ClientImportRowResult.ClientImportStatus.SKIPPED_DUPLICATE)
+                    .message("A client with this email already exists")
+                    .build();
+        }
+
+        try {
+            ClientDto dto = ClientDto.builder()
+                    .firstName(firstName.trim())
+                    .lastName(lastName.trim())
+                    .email(blankToNull(email))
+                    .phone(blankToNull(cell(row, columnIndex, "phone")))
+                    .addressStreet(blankToNull(cell(row, columnIndex, "addressstreet")))
+                    .addressCity(blankToNull(cell(row, columnIndex, "addresscity")))
+                    .addressPostalCode(blankToNull(cell(row, columnIndex, "addresspostalcode")))
+                    .clientType(parseClientType(cell(row, columnIndex, "clienttype")))
+                    .build();
+
+            ClientDto created = createClient(dto, agent.getId());
+
+            return ClientImportRowResult.builder()
+                    .rowNumber(displayRowNumber).firstName(firstName).lastName(lastName)
+                    .status(ClientImportRowResult.ClientImportStatus.IMPORTED)
+                    .clientId(created.getId())
+                    .build();
+        } catch (ConstraintViolationException e) {
+            String message = e.getConstraintViolations().stream()
+                    .map(v -> v.getMessage())
+                    .distinct()
+                    .collect(Collectors.joining("; "));
+            return ClientImportRowResult.builder()
+                    .rowNumber(displayRowNumber).firstName(firstName).lastName(lastName)
+                    .status(ClientImportRowResult.ClientImportStatus.FAILED)
+                    .message(message.isBlank() ? "Invalid data" : message)
+                    .build();
+        } catch (Exception e) {
+            return ClientImportRowResult.builder()
+                    .rowNumber(displayRowNumber).firstName(firstName).lastName(lastName)
+                    .status(ClientImportRowResult.ClientImportStatus.FAILED)
+                    .message(e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName())
+                    .build();
+        }
+    }
+
+    private String cell(List<String> row, Map<String, Integer> columnIndex, String columnName) {
+        Integer idx = columnIndex.get(columnName);
+        if (idx == null || idx >= row.size()) {
+            return null;
+        }
+        return row.get(idx);
+    }
+
+    private String blankToNull(String value) {
+        return (value == null || value.trim().isEmpty()) ? null : value.trim();
+    }
+
+    private Client.ClientType parseClientType(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return Client.ClientType.BUYER;
+        }
+        try {
+            return Client.ClientType.valueOf(value.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return Client.ClientType.BUYER;
+        }
     }
 
     /**

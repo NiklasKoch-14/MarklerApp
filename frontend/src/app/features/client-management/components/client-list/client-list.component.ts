@@ -68,10 +68,16 @@ type SortDir = 'asc' | 'desc';
           <h1 class="page-title">{{ 'clients.title' | translate }}</h1>
           <p style="font-size:14px; color:var(--text-2); margin-top:4px;">{{ 'clients.listDescription' | translate }}</p>
         </div>
-        <a routerLink="/clients/new" class="btn-primary">
-          <i class="ri-user-add-line"></i>
-          {{ 'clients.addClient' | translate }}
-        </a>
+        <div style="display:flex; gap:10px;">
+          <a routerLink="/clients/import" class="btn-secondary">
+            <i class="ri-upload-2-line"></i>
+            {{ 'clients.importCsv' | translate }}
+          </a>
+          <a routerLink="/clients/new" class="btn-primary">
+            <i class="ri-user-add-line"></i>
+            {{ 'clients.addClient' | translate }}
+          </a>
+        </div>
       </div>
 
       <!-- Loading -->
