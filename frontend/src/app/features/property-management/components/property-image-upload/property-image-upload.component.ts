@@ -6,6 +6,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PropertyImageService } from '../../services/property-image.service';
 import { PropertyImageDto, PropertyImageType, getImageTypeName } from '../../models/property-image.model';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { ErrorHandlerService } from '../../../../core/services/error-handler.service';
 
 @Component({
   selector: 'app-property-image-upload',
@@ -15,7 +16,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
     <div class="property-image-upload">
       <!-- Image Gallery -->
       <div class="mb-6" *ngIf="images && images.length > 0">
-        <h3 class="text-lg font-semibold mb-4">Property Images ({{ images.length }})</h3>
+        <h3 class="text-lg font-semibold mb-4">{{ 'properties.images.title' | translate }} ({{ images.length }})</h3>
 
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           <div
@@ -29,7 +30,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
             <div style="aspect-ratio:1;background:var(--surface-2);">
               <img
                 [src]="image.thumbnailUrl || image.imageUrl"
-                [alt]="image.altText || image.title || 'Property image'"
+                [alt]="image.altText || image.title || ('properties.images.altFallback' | translate)"
                 class="w-full h-full object-cover"
               />
             </div>
@@ -37,7 +38,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
             <!-- Image Info -->
             <div style="padding:8px;background:var(--surface);">
               <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-medium truncate">{{ image.title || 'Untitled' }}</span>
+                <span class="text-xs font-medium truncate">{{ image.title || ('properties.images.untitled' | translate) }}</span>
                 <span *ngIf="image.isPrimary" class="badge badge-xs badge-primary">{{ 'properties.detail.primaryImage' | translate }}</span>
               </div>
               <div style="font-size:11px;color:var(--text-3);">
@@ -53,7 +54,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
                 (click)="$event.stopPropagation(); onSetPrimary(image)"
                 class="btn btn-sm btn-circle btn-primary"
                 style="min-width:44px;min-height:44px;"
-                title="Set as primary"
+                [title]="'properties.images.setPrimary' | translate"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -63,7 +64,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
                 (click)="$event.stopPropagation(); onEditImage(image)"
                 class="btn btn-sm btn-circle btn-info"
                 style="min-width:44px;min-height:44px;"
-                title="Edit metadata"
+                [title]="'properties.images.editMetadata' | translate"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -73,7 +74,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
                 (click)="$event.stopPropagation(); onDeleteImage(image)"
                 class="btn btn-sm btn-circle btn-error"
                 style="min-width:44px;min-height:44px;"
-                title="Delete image"
+                [title]="'properties.images.deleteImage' | translate"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -86,7 +87,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
 
       <!-- Upload Area -->
       <div class="mb-6">
-        <h3 class="text-lg font-semibold mb-4">Upload Images</h3>
+        <h3 class="text-lg font-semibold mb-4">{{ 'properties.images.upload' | translate }}</h3>
 
         <div
           style="border:2px dashed var(--border);border-radius:10px;padding:32px;text-align:center;cursor:pointer;transition:border-color 0.15s;"
@@ -110,16 +111,16 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
           </svg>
 
           <p style="margin-top:8px;font-size:13px;color:var(--text-2);">
-            Click to upload or drag and drop
+            {{ 'properties.images.dragAndDrop' | translate }}
           </p>
           <p style="font-size:11px;color:var(--text-3);">
-            PNG, JPG, GIF, WebP up to 50MB
+            {{ 'properties.images.allowedTypes' | translate }} &middot; {{ 'properties.images.maxFileSize' | translate:{ size: '50MB' } }}
           </p>
         </div>
 
         <!-- Selected Files Preview -->
         <div *ngIf="selectedFiles.length > 0" class="mt-4">
-          <h4 class="text-sm font-medium mb-2">Selected Files ({{ selectedFiles.length }})</h4>
+          <h4 class="text-sm font-medium mb-2">{{ 'properties.images.selectedFiles' | translate:{ count: selectedFiles.length } }}</h4>
           <div class="space-y-2">
             <div
               *ngFor="let file of selectedFiles; let i = index"
@@ -147,7 +148,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
         <!-- Upload Progress -->
         <div *ngIf="uploadProgress > 0 && uploadProgress < 100" class="mt-4">
           <div class="flex justify-between mb-1">
-            <span class="text-sm font-medium">Uploading...</span>
+            <span class="text-sm font-medium">{{ 'properties.images.uploading' | translate }}</span>
             <span class="text-sm font-medium">{{ uploadProgress }}%</span>
           </div>
           <div class="w-full bg-gray-200 rounded-full h-2">
@@ -167,7 +168,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
             class="btn btn-primary"
           >
             <span *ngIf="isUploading" class="loading loading-spinner"></span>
-            Upload {{ selectedFiles.length }} Image{{ selectedFiles.length > 1 ? 's' : '' }}
+            {{ 'properties.images.uploadButton' | translate:{ count: selectedFiles.length } }}
           </button>
           <button
             *ngIf="selectedFiles.length > 0"
@@ -175,7 +176,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
             [disabled]="isUploading"
             class="btn btn-ghost"
           >
-            Clear
+            {{ 'properties.images.clearSelection' | translate }}
           </button>
         </div>
       </div>
@@ -224,7 +225,11 @@ export class PropertyImageUploadComponent implements OnInit {
     this.activeImageId = this.activeImageId === imageId ? null : imageId;
   }
 
-  constructor(private imageService: PropertyImageService, private translate: TranslateService) {}
+  constructor(
+    private imageService: PropertyImageService,
+    private translate: TranslateService,
+    private errorHandler: ErrorHandlerService
+  ) {}
 
   ngOnInit(): void {
     if (!this.propertyId) {
@@ -314,70 +319,54 @@ export class PropertyImageUploadComponent implements OnInit {
   }
 
   /**
-   * Extract user-friendly error message from HTTP error
+   * Extract a translated, user-friendly error message from an HTTP error. Tries a known
+   * backend message first (see ErrorHandlerService), then falls back to a translated
+   * message for the HTTP status — never the raw backend text.
    */
   private getErrorMessage(error: any): string {
     if (!error) {
-      return 'An unexpected error occurred while uploading images.';
+      return this.translate.instant('properties.images.errorUnexpected');
     }
 
-    // Check for specific error messages from backend
     if (error.error) {
-      // If backend returns a structured error
-      if (typeof error.error === 'string') {
-        return error.error;
+      const rawMessage = typeof error.error === 'string'
+        ? error.error
+        : (error.error.message || error.error.error);
+      const translated = this.errorHandler.translateBackendMessage(rawMessage);
+      if (translated) {
+        return translated;
       }
 
-      // Check for message field
-      if (error.error.message) {
-        return error.error.message;
-      }
-
-      // Check for error field
-      if (error.error.error) {
-        return error.error.error;
-      }
-
-      // Check for fieldErrors (validation errors)
       if (error.error.fieldErrors) {
-        const fieldErrors = Object.values(error.error.fieldErrors);
+        const fieldErrors = Object.values(error.error.fieldErrors) as string[];
         if (fieldErrors.length > 0) {
-          return `Validation error: ${fieldErrors.join(', ')}`;
+          const translatedFieldErrors = fieldErrors
+            .map(msg => this.errorHandler.translateBackendMessage(msg) || msg)
+            .join(', ');
+          return `${this.translate.instant('errors.validationError')}: ${translatedFieldErrors}`;
         }
       }
     }
 
-    // Check for HTTP status specific messages
     if (error.status) {
       switch (error.status) {
-        case 400:
-          return 'Invalid image file or data. Please check the file format and size (max 10MB).';
-        case 401:
-          return 'Authentication error. Please log in again.';
-        case 403:
-          return 'You do not have permission to upload images for this property.';
-        case 404:
-          return 'Property not found. Please refresh the page and try again.';
-        case 413:
-          return 'File size too large. Maximum file size is 10MB per image.';
-        case 415:
-          return 'Unsupported file format. Please use JPEG, PNG, GIF, or WebP images.';
-        case 500:
-          return 'Server error occurred. This might be a database configuration issue. Please contact support if the problem persists.';
-        case 503:
-          return 'Service temporarily unavailable. Please try again later.';
-        default:
-          return `Upload failed with error code ${error.status}. Please try again.`;
+        case 400: return this.translate.instant('properties.images.errorInvalidImageData');
+        case 401: return this.translate.instant('properties.images.errorAuthentication');
+        case 403: return this.translate.instant('properties.images.errorNoPermission');
+        case 404: return this.translate.instant('properties.images.errorPropertyNotFound');
+        case 413: return this.translate.instant('properties.images.errorFileTooLargeHttp');
+        case 415: return this.translate.instant('properties.images.errorUnsupportedFormatHttp');
+        case 500: return this.translate.instant('properties.images.errorServerConfig');
+        case 503: return this.translate.instant('properties.images.errorServiceUnavailable');
+        default: return this.translate.instant('errors.serverError');
       }
     }
 
-    // Network error
-    if (error.name === 'HttpErrorResponse' && error.status === 0) {
-      return 'Network error. Please check your internet connection and try again.';
+    if (error.status === 0) {
+      return this.translate.instant('errors.networkError');
     }
 
-    // Generic fallback
-    return 'Failed to upload images. Please try again or contact support if the problem persists.';
+    return this.translate.instant('properties.images.errorUnexpected');
   }
 
   private loadImages(): void {
@@ -404,7 +393,7 @@ export class PropertyImageUploadComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error setting primary image:', error);
-        this.errorMessage = this.getErrorMessage(error) || 'Failed to set primary image. Please try again.';
+        this.errorMessage = this.getErrorMessage(error);
       }
     });
   }

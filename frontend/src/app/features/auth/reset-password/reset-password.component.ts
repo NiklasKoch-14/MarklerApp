@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { catchError, of } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
 @Component({
   selector: 'app-reset-password',
@@ -116,7 +117,8 @@ export class ResetPasswordComponent implements OnInit {
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private errorHandler: ErrorHandlerService
   ) {
     this.resetPasswordForm = this.fb.group({
       newPassword: ['', [
@@ -166,14 +168,14 @@ export class ResetPasswordComponent implements OnInit {
 
       this.authService.resetPassword(this.token, newPassword).pipe(
         catchError(error => {
-          this.errorMessage = error.error?.message || 'Password reset failed. Please try again.';
+          this.errorMessage = this.errorHandler.getUserMessage(error);
           this.isSubmitting = false;
           return of(null);
         })
       ).subscribe(response => {
         this.isSubmitting = false;
         if (response) {
-          this.successMessage = response.message;
+          this.successMessage = this.errorHandler.translateBackendMessage(response.message) || response.message;
           // Redirect to login after 3 seconds
           setTimeout(() => {
             this.router.navigate(['/auth/login']);

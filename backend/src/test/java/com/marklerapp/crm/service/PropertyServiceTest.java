@@ -255,12 +255,12 @@ class PropertyServiceTest {
     }
 
     @Test
-    void createProperty_ShouldSetDefaultCountryToGermany() {
+    void createProperty_ShouldSetDefaultCountryToDeutschland() {
         // Given
         when(agentRepository.findById(agentId)).thenReturn(Optional.of(testAgent));
         when(propertyRepository.save(any(Property.class))).thenAnswer(invocation -> {
             Property property = invocation.getArgument(0);
-            assertThat(property.getAddressCountry()).isEqualTo("Germany");
+            assertThat(property.getAddressCountry()).isEqualTo("Deutschland");
             return testProperty;
         });
         when(propertyMapper.toDto(any(Property.class))).thenReturn(testPropertyDto);

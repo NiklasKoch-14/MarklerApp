@@ -16,7 +16,8 @@ import { PropertyImageUploadComponent } from '../property-image-upload/property-
 import { PropertyExposeComponent } from '../property-expose/property-expose.component';
 import { PropertyImageDto } from '../../models/property-image.model';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { ErrorHandlerService } from '../../../../core/services/error-handler.service';
 
 @Component({
   selector: 'app-property-form',
@@ -68,7 +69,9 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     public propertyService: PropertyService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private translate: TranslateService,
+    private errorHandler: ErrorHandlerService
   ) {
     this.propertyForm = this.fb.group({
       // Basic Information
@@ -85,7 +88,7 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
       addressCity: ['', [Validators.required, Validators.maxLength(100)]],
       addressPostalCode: ['', [Validators.required, Validators.pattern('^[0-9]{5}$')]],
       addressState: ['', [Validators.maxLength(100)]],
-      addressCountry: ['Germany'],
+      addressCountry: ['Deutschland'],
       addressDistrict: ['', [Validators.maxLength(100)]],
 
       // Specifications
@@ -231,7 +234,7 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.isLoading = false;
-        this.errorMessage = 'Failed to load property data. Please try again.';
+        this.errorMessage = this.errorHandler.getUserMessage(error);
         console.error('Error loading property:', error);
       }
     });
@@ -275,7 +278,7 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
         this.propertyForm.get(key)?.markAsTouched();
       });
       this.openAllSections();
-      this.errorMessage = 'Please fill in all required fields correctly.';
+      this.errorMessage = this.translate.instant('properties.form.fillRequiredFields');
       this.scrollToFirstError();
     }
   }
@@ -293,9 +296,9 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
         const fieldList = fieldNames
           .map(field => this.getFieldDisplayName(field))
           .join(', ');
-        this.errorMessage = `Validation failed for the following field(s): ${fieldList}. Please check the highlighted fields below.`;
+        this.errorMessage = this.translate.instant('properties.form.validationFailedFields', { fields: fieldList });
       } else {
-        this.errorMessage = error.message || 'Failed to save property. Please try again.';
+        this.errorMessage = this.errorHandler.getUserMessage(error);
       }
 
       // Mark fields with errors as touched
@@ -310,23 +313,24 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
       this.openAllSections();
       this.scrollToFirstError();
     } else {
-      this.errorMessage = error.message || 'Failed to save property. Please try again.';
+      this.errorMessage = this.errorHandler.getUserMessage(error);
     }
   }
 
   private getFieldDisplayName(fieldName: string): string {
-    const fieldMap: { [key: string]: string } = {
-      'title': 'Property Title',
-      'propertyType': 'Property Type',
-      'listingType': 'Listing Type',
-      'addressStreet': 'Street Address',
-      'addressCity': 'City',
-      'addressPostalCode': 'Postal Code',
-      'price': 'Price',
-      'livingAreaSqm': 'Living Area',
-      'rooms': 'Number of Rooms'
+    const fieldKeyMap: { [key: string]: string } = {
+      'title': 'properties.form.title',
+      'propertyType': 'properties.form.propertyType',
+      'listingType': 'properties.form.listingType',
+      'addressStreet': 'properties.form.addressStreet',
+      'addressCity': 'properties.form.addressCity',
+      'addressPostalCode': 'properties.form.addressPostalCode',
+      'price': 'properties.form.price',
+      'livingAreaSqm': 'properties.form.livingArea',
+      'rooms': 'properties.form.rooms'
     };
-    return fieldMap[fieldName] || fieldName;
+    const key = fieldKeyMap[fieldName];
+    return key ? this.translate.instant(key) : fieldName;
   }
 
   private scrollToFirstError(): void {

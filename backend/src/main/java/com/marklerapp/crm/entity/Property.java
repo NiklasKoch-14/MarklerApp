@@ -75,7 +75,7 @@ public class Property extends BaseEntity {
 
     @Column(name = "address_country")
     @Builder.Default
-    private String addressCountry = "Germany";
+    private String addressCountry = "Deutschland";
 
     @Column(name = "address_district")
     @Size(max = 100, message = "District must not exceed 100 characters")

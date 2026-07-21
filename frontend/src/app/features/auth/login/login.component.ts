@@ -7,6 +7,7 @@ import { catchError, of } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 import { environment } from '../../../../environments/environment';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
 @Component({
   selector: 'app-login',
@@ -102,7 +103,8 @@ export class LoginComponent implements AfterViewInit {
     private router: Router,
     private route: ActivatedRoute,
     private zone: NgZone,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private errorHandler: ErrorHandlerService
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -178,7 +180,7 @@ export class LoginComponent implements AfterViewInit {
 
       this.authService.login(credentials).pipe(
         catchError(error => {
-          this.errorMessage = error.error?.message || 'Login failed. Please try again.';
+          this.errorMessage = this.errorHandler.getUserMessage(error);
           this.isLoading = false;
           return of(null);
         })

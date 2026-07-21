@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { catchError, of, switchMap } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
 @Component({
   selector: 'app-register',
@@ -132,7 +133,8 @@ export class RegisterComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private errorHandler: ErrorHandlerService
   ) {
     this.registerForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
@@ -192,7 +194,7 @@ export class RegisterComponent {
 
       this.authService.register(registerData).pipe(
         catchError(error => {
-          this.errorMessage = error.error?.message || 'Registration failed. Please try again.';
+          this.errorMessage = this.errorHandler.getUserMessage(error);
           this.isLoading = false;
           return of(null);
         })

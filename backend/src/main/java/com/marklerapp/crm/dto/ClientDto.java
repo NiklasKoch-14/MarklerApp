@@ -111,7 +111,7 @@ public class ClientDto {
             address.append(addressCity);
         }
 
-        if (addressCountry != null && !addressCountry.trim().isEmpty() && !"Germany".equals(addressCountry)) {
+        if (addressCountry != null && !addressCountry.trim().isEmpty() && !"Deutschland".equals(addressCountry)) {
             if (address.length() > 0) address.append(", ");
             address.append(addressCountry);
         }

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpEvent, HttpRequest } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../../environments/environment';
 import { PropertyImageDto } from '../models/property-image.model';
 
@@ -13,7 +14,7 @@ import { PropertyImageDto } from '../models/property-image.model';
 export class PropertyImageService {
   private readonly apiUrl = `${environment.apiUrl}/properties`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private translate: TranslateService) {}
 
   /**
    * Get all images for a property
@@ -144,14 +145,14 @@ export class PropertyImageService {
     if (!allowedTypes.includes(file.type)) {
       return {
         valid: false,
-        error: 'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'
+        error: this.translate.instant('properties.images.errorInvalidType')
       };
     }
 
     if (file.size > maxSize) {
       return {
         valid: false,
-        error: 'File size exceeds the maximum limit of 50MB.'
+        error: this.translate.instant('properties.images.errorSizeExceeded')
       };
     }
 

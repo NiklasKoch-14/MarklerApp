@@ -8,6 +8,7 @@ import { ClientService, Client } from '../../services/client.service';
 import { LocationPickerMapComponent } from '../../../../shared/components/location-picker-map/location-picker-map.component';
 import { PropertyType } from '../../../property-management/services/property.service';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
+import { ErrorHandlerService } from '../../../../core/services/error-handler.service';
 
 @Component({
   selector: 'app-client-form',
@@ -395,7 +396,8 @@ export class ClientFormComponent implements OnInit {
     private fb: FormBuilder,
     private clientService: ClientService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private errorHandler: ErrorHandlerService
   ) {
     this.clientForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
@@ -405,7 +407,7 @@ export class ClientFormComponent implements OnInit {
       addressStreet: [''],
       addressCity: [''],
       addressPostalCode: ['', [Validators.pattern('^[0-9]{5}$')]],
-      addressCountry: ['Germany'],
+      addressCountry: ['Deutschland'],
       clientType: ['BUYER'],
       legalBasis: ['CONTRACT_INITIATION', [Validators.required]],
       gdprConsentGiven: [false],
@@ -561,9 +563,9 @@ export class ClientFormComponent implements OnInit {
         });
         this.isLoading = false;
       },
-      error: () => {
+      error: (error) => {
         this.isLoading = false;
-        this.errorMessage = 'Failed to load client data. Please try again.';
+        this.errorMessage = this.errorHandler.getUserMessage(error);
       }
     });
   }
@@ -587,7 +589,7 @@ export class ClientFormComponent implements OnInit {
           },
           error: (error) => {
             this.isLoading = false;
-            this.errorMessage = error.message || 'Failed to update client. Please try again.';
+            this.errorMessage = this.errorHandler.getUserMessage(error);
           }
         });
       } else {
@@ -598,7 +600,7 @@ export class ClientFormComponent implements OnInit {
           },
           error: (error) => {
             this.isLoading = false;
-            this.errorMessage = error.message || 'Failed to create client. Please try again.';
+            this.errorMessage = this.errorHandler.getUserMessage(error);
           }
         });
       }

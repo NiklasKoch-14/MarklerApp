@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { catchError, of } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
 @Component({
   selector: 'app-forgot-password',
@@ -74,7 +75,8 @@ export class ForgotPasswordComponent {
 
   constructor(
     private fb: FormBuilder,
-    private authService: AuthService
+    private authService: AuthService,
+    private errorHandler: ErrorHandlerService
   ) {
     this.forgotPasswordForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]]
@@ -91,14 +93,14 @@ export class ForgotPasswordComponent {
 
       this.authService.forgotPassword(email).pipe(
         catchError(error => {
-          this.errorMessage = error.error?.message || 'An error occurred. Please try again.';
+          this.errorMessage = this.errorHandler.getUserMessage(error);
           this.isLoading = false;
           return of(null);
         })
       ).subscribe(response => {
         this.isLoading = false;
         if (response) {
-          this.successMessage = response.message;
+          this.successMessage = this.errorHandler.translateBackendMessage(response.message) || response.message;
           this.forgotPasswordForm.reset();
         }
       });

@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { ClientService, ClientImportResponse, ClientImportRowResult } from '../../services/client.service';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { ErrorHandlerService } from '../../../../core/services/error-handler.service';
 
 @Component({
   selector: 'app-client-import',
@@ -112,7 +113,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
                 <td>{{ row.rowNumber }}</td>
                 <td>{{ row.firstName }} {{ row.lastName }}</td>
                 <td><span class="row-status" [class]="row.status">{{ statusLabelKey(row) | translate }}</span></td>
-                <td>{{ row.message || '—' }}</td>
+                <td>{{ translateRowMessage(row.message) }}</td>
               </tr>
             </tbody>
           </table>
@@ -137,7 +138,7 @@ export class ClientImportComponent {
   errorMessage = '';
   result: ClientImportResponse | null = null;
 
-  constructor(private clientService: ClientService) {}
+  constructor(private clientService: ClientService, private errorHandler: ErrorHandlerService) {}
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -182,7 +183,7 @@ export class ClientImportComponent {
       },
       error: (error) => {
         this.isImporting = false;
-        this.errorMessage = error.message || 'Import failed. Please check the file format and try again.';
+        this.errorMessage = this.errorHandler.getUserMessage(error);
       }
     });
   }
@@ -195,5 +196,10 @@ export class ClientImportComponent {
 
   statusLabelKey(row: ClientImportRowResult): string {
     return 'clients.import.status.' + row.status;
+  }
+
+  translateRowMessage(message: string | undefined): string {
+    if (!message) return '—';
+    return this.errorHandler.translateBackendMessage(message) || message;
   }
 }

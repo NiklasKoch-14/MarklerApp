@@ -58,7 +58,7 @@ public class Client extends BaseEntity {
 
     @Column(name = "address_country")
     @Builder.Default
-    private String addressCountry = "Germany";
+    private String addressCountry = "Deutschland";
 
     @Enumerated(EnumType.STRING)
     @Column(name = "client_type", nullable = false)
@@ -160,7 +160,7 @@ public class Client extends BaseEntity {
             address.append(addressCity);
         }
 
-        if (addressCountry != null && !addressCountry.trim().isEmpty() && !"Germany".equals(addressCountry)) {
+        if (addressCountry != null && !addressCountry.trim().isEmpty() && !"Deutschland".equals(addressCountry)) {
             if (address.length() > 0) address.append(", ");
             address.append(addressCountry);
         }

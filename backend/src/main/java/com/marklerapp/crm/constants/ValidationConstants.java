@@ -172,9 +172,10 @@ public final class ValidationConstants {
     // ========================================
 
     /**
-     * Default country for addresses (German real estate market)
+     * Default country for addresses (German real estate market). German, not English —
+     * this is a stored data value shown directly to agents, not a UI label (see issue #5).
      */
-    public static final String DEFAULT_ADDRESS_COUNTRY = "Germany";
+    public static final String DEFAULT_ADDRESS_COUNTRY = "Deutschland";
 
     // ========================================
     // GDPR Compliance
