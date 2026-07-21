@@ -331,15 +331,15 @@ public class ClientService {
     }
 
     /**
-     * Get active clients grouped by pipeline stage for Kanban dashboard view
+     * Get clients grouped by pipeline stage for Kanban dashboard view. Includes WON/LOST
+     * buckets — the frontend decides whether to render them as optional, collapsible columns.
      */
     @Transactional(readOnly = true)
     public Map<Client.PipelineStage, List<ClientDto>> getClientsByStage(UUID agentId) {
         Agent agent = getAgentById(agentId);
-        List<Client> clients = clientRepository.findActiveClientsByAgent(agent);
+        List<Client> clients = clientRepository.findByAgent(agent);
         Map<Client.PipelineStage, List<ClientDto>> result = new java.util.LinkedHashMap<>();
         for (Client.PipelineStage stage : Client.PipelineStage.values()) {
-            if (stage == Client.PipelineStage.WON || stage == Client.PipelineStage.LOST) continue;
             result.put(stage, new java.util.ArrayList<>());
         }
         for (Client c : clients) {

@@ -750,9 +750,22 @@
 
 .pipeline-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 14px;
   align-items: start;
+
+  .cdk-drag-preview {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    border-radius: 10px;
+  }
+
+  .cdk-drag-placeholder {
+    opacity: 0.3;
+  }
+
+  .cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
+    transition: transform 200ms cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
 }
 
 .detail-page {

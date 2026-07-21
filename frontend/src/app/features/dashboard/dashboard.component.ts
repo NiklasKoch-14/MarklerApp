@@ -18,6 +18,7 @@ import {
 } from '../call-notes/services/call-notes.service';
 import { ViewingService, ViewingSummary, ViewingFeedback, ViewingStatus } from '../viewing-management/services/viewing.service';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { DragDropModule, CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 
 
 interface FollowUpRow {
@@ -59,7 +60,7 @@ interface ViewingRow {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, DatePipe, ConfirmDialogComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, DatePipe, ConfirmDialogComponent, DragDropModule],
   template: `
     <div style="max-width:1180px; margin:0 auto;">
 
@@ -412,39 +413,54 @@ interface ViewingRow {
 
       <!-- Pipeline view -->
       @if (view === 'pipeline') {
+        <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+          <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text-2); cursor:pointer; user-select:none;">
+            <input type="checkbox" [(ngModel)]="showClosedStages" style="cursor:pointer;">
+            {{ 'dashboard.showClosedStages' | translate }}
+          </label>
+        </div>
         <div class="pipeline-grid">
-          @for (col of pipelineCols; track col.label) {
-            <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:14px; padding:6px;">
-              <div style="display:flex; align-items:center; gap:8px; padding:11px 12px 10px;">
-                <span style="width:9px; height:9px; border-radius:50%;" [style.background]="col.color"></span>
-                <span style="font-size:13px; font-weight:700; flex:1; color:var(--text);">{{ col.label }}</span>
-                <span style="font-size:12px; font-weight:700; color:var(--text-3); font-variant-numeric:tabular-nums;">
-                  {{ col.items.length }}
-                </span>
-              </div>
-              @for (it of col.items; track it.subject) {
-                <div [routerLink]="['/clients', it.clientId]"
-                     style="background:var(--surface); border:1px solid var(--border); border-radius:10px;
-                            padding:12px; margin:5px; cursor:pointer; box-shadow:0 1px 1px rgba(20,40,45,0.03);">
-                  <div style="display:flex; align-items:center; gap:8px; margin-bottom:7px;">
-                    <div style="width:26px; height:26px; border-radius:50%; background:var(--accent-soft);
-                                color:var(--primary); display:flex; align-items:center; justify-content:center;
-                                font-weight:700; font-size:11px;">{{ it.initials }}</div>
-                    <span style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden;
-                                 text-overflow:ellipsis;">{{ it.customerName }}</span>
-                  </div>
-                  <div style="font-size:12px; color:var(--text-2); line-height:1.4; white-space:nowrap;
-                               overflow:hidden; text-overflow:ellipsis;">{{ it.subject }}</div>
-                  <div style="display:flex; align-items:center; gap:6px; margin-top:8px; font-size:11px; color:var(--text-3);">
-                    <i [class]="it.typeIcon"></i>
-                    <span>{{ it.dateFmt }}</span>
-                  </div>
+          @for (col of pipelineCols; track col.stage) {
+            @if (!col.closed || showClosedStages) {
+              <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:14px; padding:6px;">
+                <div style="display:flex; align-items:center; gap:8px; padding:11px 12px 10px;">
+                  <span style="width:9px; height:9px; border-radius:50%;" [style.background]="col.color"></span>
+                  <span style="font-size:13px; font-weight:700; flex:1; color:var(--text);">{{ col.label }}</span>
+                  <span style="font-size:12px; font-weight:700; color:var(--text-3); font-variant-numeric:tabular-nums;">
+                    {{ col.items.length }}
+                  </span>
                 </div>
-              }
-              @if (col.items.length === 0) {
-                <div style="padding:14px 12px; font-size:12px; color:var(--text-3); text-align:center;">—</div>
-              }
-            </div>
+                <div [id]="'pipeline-col-' + col.stage"
+                     cdkDropList
+                     [cdkDropListData]="col.items"
+                     [cdkDropListConnectedTo]="dropListIds"
+                     (cdkDropListDropped)="onCardDropped($event, col.stage)"
+                     style="min-height:44px;">
+                  @for (it of col.items; track it.clientId) {
+                    <div cdkDrag [cdkDragData]="it" [routerLink]="['/clients', it.clientId]"
+                         style="background:var(--surface); border:1px solid var(--border); border-radius:10px;
+                                padding:12px; margin:5px; cursor:pointer; box-shadow:0 1px 1px rgba(20,40,45,0.03);">
+                      <div style="display:flex; align-items:center; gap:8px; margin-bottom:7px;">
+                        <div style="width:26px; height:26px; border-radius:50%; background:var(--accent-soft);
+                                    color:var(--primary); display:flex; align-items:center; justify-content:center;
+                                    font-weight:700; font-size:11px;">{{ it.initials }}</div>
+                        <span style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden;
+                                     text-overflow:ellipsis;">{{ it.customerName }}</span>
+                      </div>
+                      <div style="font-size:12px; color:var(--text-2); line-height:1.4; white-space:nowrap;
+                                   overflow:hidden; text-overflow:ellipsis;">{{ it.subject }}</div>
+                      <div style="display:flex; align-items:center; gap:6px; margin-top:8px; font-size:11px; color:var(--text-3);">
+                        <i [class]="it.typeIcon"></i>
+                        <span>{{ it.dateFmt }}</span>
+                      </div>
+                    </div>
+                  }
+                  @if (col.items.length === 0) {
+                    <div style="padding:14px 12px; font-size:12px; color:var(--text-3); text-align:center;">—</div>
+                  }
+                </div>
+              </div>
+            }
           }
         </div>
       }
@@ -581,7 +597,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   pendingInactiveClient: { id: string; name: string } | null = null;
   isMarkingInactive = false;
 
-  pipelineCols: { label: string; color: string; items: any[] }[] = [];
+  pipelineCols: { stage: PipelineStage; label: string; color: string; closed: boolean; items: any[] }[] = [];
+  showClosedStages = false;
+  isMovingCard = false;
 
   /** Überfällige Rückrufe — die dringendste Zahl der Aktions-Zeile. */
   get overdueCount(): number {
@@ -738,18 +756,39 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  get dropListIds(): string[] {
+    return this.pipelineCols.map(c => 'pipeline-col-' + c.stage);
+  }
+
+  /** Drag&Drop between Kanban columns — persists the new stage, reloads from the server on failure. */
+  onCardDropped(event: CdkDragDrop<any[]>, targetStage: PipelineStage): void {
+    if (event.previousContainer === event.container) {
+      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+      return;
+    }
+    const item = event.previousContainer.data[event.previousIndex];
+    transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
+    this.clientService.updatePipelineStage(item.clientId, targetStage).subscribe({
+      error: () => this.loadData()
+    });
+  }
+
   private buildPipelineFromStages(clientsByStage: Record<PipelineStage, any[]>): void {
-    const stageMeta: { stage: PipelineStage; label: string; color: string }[] = [
-      { stage: PipelineStage.PROSPECT,      label: 'Interessent',    color: 'var(--stage-prospect)' },
-      { stage: PipelineStage.ACTIVE_SEARCH, label: 'Aktive Suche',   color: 'var(--stage-active-search)' },
-      { stage: PipelineStage.VIEWING,       label: 'Besichtigung',   color: 'var(--stage-viewing)' },
+    const stageMeta: { stage: PipelineStage; label: string; color: string; closed: boolean }[] = [
+      { stage: PipelineStage.PROSPECT,      label: 'Interessent',    color: 'var(--stage-prospect)',      closed: false },
+      { stage: PipelineStage.ACTIVE_SEARCH, label: 'Aktive Suche',   color: 'var(--stage-active-search)', closed: false },
+      { stage: PipelineStage.VIEWING,       label: 'Besichtigung',   color: 'var(--stage-viewing)',       closed: false },
+      { stage: PipelineStage.WON,           label: 'Gewonnen',       color: 'var(--stage-won)',           closed: true },
+      { stage: PipelineStage.LOST,          label: 'Verloren',       color: 'var(--stage-lost)',          closed: true },
     ];
 
     this.pipelineCols = stageMeta.map(meta => {
       const clients = clientsByStage[meta.stage] ?? [];
       return {
+        stage: meta.stage,
         label: meta.label,
         color: meta.color,
+        closed: meta.closed,
         items: clients.map((c: any) => {
           const nameParts = ((c.firstName ?? '') + ' ' + (c.lastName ?? '')).trim().split(' ');
           const initials = nameParts.slice(0, 2).map((p: string) => p.charAt(0).toUpperCase()).join('');

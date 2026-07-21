@@ -243,6 +243,7 @@
     "newObject": "New Property",
     "tabCards": "Cards",
     "tabPipeline": "Pipeline",
+    "showClosedStages": "Show won/lost",
     "openFollowups": "Open Follow-ups",
     "recentActivity": "Recent Activity",
     "viewAll": "View all",
