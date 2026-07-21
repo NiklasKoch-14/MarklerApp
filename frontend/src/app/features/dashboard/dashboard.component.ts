@@ -251,6 +251,11 @@ interface ViewingRow {
               <span style="background:color-mix(in srgb,#c07a1e 14%,var(--surface)); color:#c07a1e;
                            font-size:12px; font-weight:700; padding:3px 9px; border-radius:20px;
                            font-variant-numeric:tabular-nums;">{{ followUps.length }}</span>
+              <button [routerLink]="['/notifications']"
+                      style="background:none; border:none; color:var(--primary); font-size:13px;
+                             font-weight:600; cursor:pointer;">
+                {{ 'dashboard.viewAll' | translate }}
+              </button>
             </div>
 
             @for (f of followUps.slice(0,5); track f.id) {
@@ -346,6 +351,11 @@ interface ViewingRow {
             <span style="background:color-mix(in srgb,var(--color-warning) 14%,var(--surface)); color:var(--color-warning);
                          font-size:12px; font-weight:700; padding:3px 9px; border-radius:20px;
                          font-variant-numeric:tabular-nums;">{{ staleClientRows.length }}</span>
+            <button [routerLink]="['/clients']"
+                    style="background:none; border:none; color:var(--primary); font-size:13px;
+                           font-weight:600; cursor:pointer;">
+              {{ 'dashboard.viewAll' | translate }}
+            </button>
           </div>
 
           @if (staleClientRows.length === 0 && !loading) {
