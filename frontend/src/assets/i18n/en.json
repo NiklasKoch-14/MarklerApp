@@ -283,6 +283,8 @@
       "GIVEN": "Consent given",
       "MISSING": "No consent"
     },
+    "incompleteFilter": "Incomplete",
+    "incompleteFilterHint": "Only show clients with no contact method (email/phone) or no search criteria",
     "resultCount": "{{count}} clients",
     "noMatchingClients": "No clients match the filters.",
     "clearFilters": "Clear filters",

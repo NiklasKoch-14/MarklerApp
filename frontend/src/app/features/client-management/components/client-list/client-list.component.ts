@@ -124,6 +124,12 @@ type SortDir = 'asc' | 'desc';
             <option value="MISSING">{{ 'clients.marketingConsentFilter.MISSING' | translate }}</option>
           </select>
 
+          <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text-2); cursor:pointer; user-select:none; white-space:nowrap;"
+                 [title]="'clients.incompleteFilterHint' | translate">
+            <input type="checkbox" [(ngModel)]="incompleteOnly" (ngModelChange)="applyView()" style="cursor:pointer;">
+            {{ 'clients.incompleteFilter' | translate }}
+          </label>
+
           <span class="result-count">{{ 'clients.resultCount' | translate:{ count: filtered.length } }}</span>
         </div>
 
@@ -243,6 +249,7 @@ export class ClientListComponent implements OnInit {
   stageFilter: PipelineStage | 'ALL' = 'ALL';
   typeFilter: ClientType | 'ALL' = 'ALL';
   consentFilter: 'ALL' | 'GIVEN' | 'MISSING' = 'ALL';
+  incompleteOnly = false;
   sortKey: SortKey = 'lastContact';
   sortDir: SortDir = 'desc';
 
@@ -300,6 +307,7 @@ export class ClientListComponent implements OnInit {
       if (this.typeFilter !== 'ALL' && c.clientType !== this.typeFilter) return false;
       if (this.consentFilter === 'GIVEN' && !c.gdprConsentGiven) return false;
       if (this.consentFilter === 'MISSING' && c.gdprConsentGiven) return false;
+      if (this.incompleteOnly && !this.isIncomplete(c)) return false;
       if (term) {
         const hay = [c.firstName, c.lastName, c.email, c.phone, c.addressCity]
           .filter(Boolean).join(' ').toLowerCase();
@@ -350,7 +358,31 @@ export class ClientListComponent implements OnInit {
     this.stageFilter = 'ALL';
     this.typeFilter = 'ALL';
     this.consentFilter = 'ALL';
+    this.incompleteOnly = false;
     this.applyView();
+  }
+
+  /** "Unvollständig" = kein Kontaktweg (weder E-Mail noch Telefon) oder keine Suchkriterien hinterlegt. */
+  isIncomplete(client: Client): boolean {
+    return !this.hasContactMethod(client) || !this.hasSearchCriteria(client);
+  }
+
+  private hasContactMethod(client: Client): boolean {
+    return !!(client.email && client.email.trim()) || !!(client.phone && client.phone.trim());
+  }
+
+  private hasSearchCriteria(client: Client): boolean {
+    const sc = client.searchCriteria;
+    if (!sc) return false;
+    return !!(
+      sc.minBudget || sc.maxBudget || sc.minRooms || sc.maxRooms ||
+      sc.minSquareMeters || sc.maxSquareMeters ||
+      sc.minColdRent || sc.maxColdRent || sc.minWarmRent || sc.maxWarmRent ||
+      (sc.preferredLocations && sc.preferredLocations.length > 0) ||
+      (sc.propertyTypes && sc.propertyTypes.length > 0) ||
+      (sc.additionalRequirements && sc.additionalRequirements.trim()) ||
+      (sc.latitude != null && sc.longitude != null)
+    );
   }
 
   daysSinceContact(client: Client): number | null {

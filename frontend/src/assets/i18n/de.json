@@ -283,6 +283,8 @@
       "GIVEN": "Mit Einwilligung",
       "MISSING": "Ohne Einwilligung"
     },
+    "incompleteFilter": "Unvollständig",
+    "incompleteFilterHint": "Nur Kunden ohne Kontaktweg (E-Mail/Telefon) oder ohne Suchkriterien anzeigen",
     "resultCount": "{{count}} Kunden",
     "noMatchingClients": "Keine Kunden passen zu den Filtern.",
     "clearFilters": "Filter zurücksetzen",
