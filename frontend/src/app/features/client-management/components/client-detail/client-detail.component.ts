@@ -15,6 +15,7 @@ import { PropertyMatchResult } from '../../../property-management/models/propert
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 import { LocationPickerMapComponent } from '../../../../shared/components/location-picker-map/location-picker-map.component';
 import { GeocodingService } from '../../../../shared/services/geocoding.service';
+import { GdprExportService } from '../../services/gdpr-export.service';
 
 @Component({
   selector: 'app-client-detail',
@@ -151,6 +152,15 @@ import { GeocodingService } from '../../../../shared/services/geocoding.service'
                   <button class="qm-item" (click)="showAttachmentsDialog = true; showQuickMenu = false">
                     <i class="ri-attachment-line" style="font-size:16px;color:var(--text-3);"></i>
                     Dokumente &amp; Anhänge
+                  </button>
+                  <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+                  <button class="qm-item" (click)="exportClientData('pdf')" [disabled]="isExportingClientData">
+                    <i class="ri-file-shield-2-line" style="font-size:16px;color:var(--text-3);"></i>
+                    {{ 'clients.exportDataPdf' | translate }}
+                  </button>
+                  <button class="qm-item" (click)="exportClientData('json')" [disabled]="isExportingClientData">
+                    <i class="ri-file-code-line" style="font-size:16px;color:var(--text-3);"></i>
+                    {{ 'clients.exportDataJson' | translate }}
                   </button>
                   <div style="height:1px;background:var(--border);margin:4px 0;"></div>
                   <button class="qm-item danger" (click)="showDeleteConfirm = true; showQuickMenu = false" [disabled]="isDeleting">
@@ -730,6 +740,7 @@ export class ClientDetailComponent implements OnInit {
   showQuickMenu = false;
   showStageUpgradeHint = false;
   showDeleteConfirm = false;
+  isExportingClientData = false;
 
   pipelineStages = [
     { value: PipelineStage.PROSPECT,      label: 'Interessent',    color: 'var(--stage-prospect)',      bg: 'var(--stage-prospect-bg)' },
@@ -747,6 +758,7 @@ export class ClientDetailComponent implements OnInit {
     private viewingService: ViewingService,
     private propertyMatchingService: PropertyMatchingService,
     private geocodingService: GeocodingService,
+    private gdprExportService: GdprExportService,
     private zone: NgZone
   ) {}
 
@@ -1159,6 +1171,34 @@ export class ClientDetailComponent implements OnInit {
     if (sc.minRooms) return `ab ${sc.minRooms} Zi.`;
     if (sc.maxRooms) return `bis ${sc.maxRooms} Zi.`;
     return '';
+  }
+
+  /** Art. 15 self-service export for this one client — downloads their GDPR data package. */
+  exportClientData(format: 'pdf' | 'json'): void {
+    if (!this.client?.id || this.isExportingClientData) return;
+    this.showQuickMenu = false;
+    this.isExportingClientData = true;
+
+    const clientId = this.client.id;
+    const fullName = `${this.client.firstName}_${this.client.lastName}`.replace(/\s+/g, '_');
+    const request = format === 'pdf'
+      ? this.gdprExportService.exportClientDataAsPdf(clientId)
+      : this.gdprExportService.exportClientDataAsJson(clientId);
+
+    request.subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `dsgvo_export_${fullName}.${format}`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.isExportingClientData = false;
+      },
+      error: () => {
+        this.isExportingClientData = false;
+      }
+    });
   }
 
   deleteClient(): void {

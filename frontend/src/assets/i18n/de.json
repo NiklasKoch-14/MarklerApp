@@ -408,6 +408,8 @@
     "anyMin": "Beliebig",
     "anyMax": "Beliebig",
     "gdpr": "DSGVO",
+    "exportDataPdf": "Daten dieses Kunden exportieren (PDF)",
+    "exportDataJson": "Daten dieses Kunden exportieren (JSON)",
     "gdprConsent": "Marketing-Einwilligung",
     "gdprConsentText": "Kunde ist damit einverstanden, zu Marketingzwecken (z.B. Exposé-Versand, Newsletter) kontaktiert zu werden",
     "legalBasis": {

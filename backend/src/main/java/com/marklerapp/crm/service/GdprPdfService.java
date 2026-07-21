@@ -74,6 +74,57 @@ public class GdprPdfService {
     }
 
     /**
+     * Generate PDF export for a single client (Art. 15 person-related export) —
+     * the client's own record plus their call notes, viewings, and file attachment metadata.
+     */
+    public byte[] generateClientPdfExport(GdprClientExportResponse exportData) {
+        log.info("Generating single-client PDF export for client: {}", exportData.getClient().getId());
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            PdfWriter writer = new PdfWriter(baos);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+
+            Paragraph title = new Paragraph("GDPR Data Export Report")
+                    .setFontSize(20)
+                    .setBold()
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setMarginBottom(10);
+            document.add(title);
+
+            Paragraph subtitle = new Paragraph("Personal Data Export - GDPR Article 15 - " + exportData.getClient().getFullName())
+                    .setFontSize(12)
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setMarginBottom(20);
+            document.add(subtitle);
+
+            Table metaTable = new Table(2);
+            metaTable.setWidth(UnitValue.createPercentValue(100));
+            addMetadataRow(metaTable, "Export Date:",
+                          exportData.getMetadata().getExportTimestamp().format(DATETIME_FORMATTER));
+            addMetadataRow(metaTable, "Export Version:", exportData.getMetadata().getExportVersion());
+            addMetadataRow(metaTable, "Data Controller:", exportData.getMetadata().getDataController());
+            metaTable.setMarginBottom(20);
+            document.add(metaTable);
+
+            addClientsSection(document, java.util.List.of(exportData.getClient()));
+            addCallNotesSection(document, exportData.getCallNotes());
+            addViewingsSection(document, exportData.getViewings());
+            addFileAttachmentsSection(document, exportData.getFileAttachments());
+            addGdprStatement(document, exportData.getMetadata());
+
+            document.close();
+
+            log.info("Single-client PDF export generated successfully. Size: {} bytes", baos.size());
+            return baos.toByteArray();
+
+        } catch (Exception e) {
+            log.error("Error generating single-client PDF export", e);
+            throw new RuntimeException("Failed to generate single-client PDF export", e);
+        }
+    }
+
+    /**
      * Add document header
      */
     private void addHeader(Document document, GdprExportResponse exportData) {
@@ -271,6 +322,76 @@ public class GdprPdfService {
                         .setMarginBottom(10);
                 document.add(notes);
             }
+        }
+
+        document.add(new Paragraph("").setMarginBottom(20));
+    }
+
+    /**
+     * Add viewings section
+     */
+    private void addViewingsSection(Document document, java.util.List<GdprViewingData> viewings) {
+        addSectionTitle(document, "Viewings (" + viewings.size() + ")");
+
+        if (viewings.isEmpty()) {
+            document.add(new Paragraph("No viewings found.").setMarginBottom(20));
+            return;
+        }
+
+        for (GdprViewingData viewing : viewings) {
+            Paragraph header = new Paragraph(viewing.getPropertyTitle() != null ? viewing.getPropertyTitle() : "Viewing")
+                    .setFontSize(12)
+                    .setBold()
+                    .setMarginTop(10)
+                    .setMarginBottom(5);
+            document.add(header);
+
+            Table table = new Table(2);
+            table.setWidth(UnitValue.createPercentValue(100));
+            addDataRow(table, "Property Address:", viewing.getPropertyAddress());
+            addDataRow(table, "Date:", viewing.getViewingDate() != null ? viewing.getViewingDate().format(DATETIME_FORMATTER) : "N/A");
+            addDataRow(table, "Status:", viewing.getStatus());
+            addDataRow(table, "Feedback:", viewing.getFeedback());
+            if (viewing.getClientNotes() != null && !viewing.getClientNotes().isEmpty()) {
+                addDataRow(table, "Notes:", viewing.getClientNotes());
+            }
+            table.setMarginBottom(10);
+            document.add(table);
+        }
+
+        document.add(new Paragraph("").setMarginBottom(20));
+    }
+
+    /**
+     * Add file attachments section (metadata only — see {@link GdprFileAttachmentData})
+     */
+    private void addFileAttachmentsSection(Document document, java.util.List<GdprFileAttachmentData> attachments) {
+        addSectionTitle(document, "File Attachments (" + attachments.size() + ")");
+
+        if (attachments.isEmpty()) {
+            document.add(new Paragraph("No file attachments found.").setMarginBottom(20));
+            return;
+        }
+
+        for (GdprFileAttachmentData attachment : attachments) {
+            Paragraph header = new Paragraph(attachment.getOriginalFileName() != null ? attachment.getOriginalFileName() : attachment.getFileName())
+                    .setFontSize(12)
+                    .setBold()
+                    .setMarginTop(10)
+                    .setMarginBottom(5);
+            document.add(header);
+
+            Table table = new Table(2);
+            table.setWidth(UnitValue.createPercentValue(100));
+            addDataRow(table, "Type:", attachment.getFileType());
+            addDataRow(table, "Format:", attachment.getMimeType());
+            addDataRow(table, "Size:", attachment.getFormattedFileSize());
+            addDataRow(table, "Uploaded:", attachment.getUploadDate() != null ? attachment.getUploadDate().format(DATETIME_FORMATTER) : "N/A");
+            if (attachment.getDescription() != null && !attachment.getDescription().isEmpty()) {
+                addDataRow(table, "Description:", attachment.getDescription());
+            }
+            table.setMarginBottom(10);
+            document.add(table);
         }
 
         document.add(new Paragraph("").setMarginBottom(20));

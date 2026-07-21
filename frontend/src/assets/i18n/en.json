@@ -408,6 +408,8 @@
     "anyMin": "Any",
     "anyMax": "Any",
     "gdpr": "GDPR",
+    "exportDataPdf": "Export this client's data (PDF)",
+    "exportDataJson": "Export this client's data (JSON)",
     "gdprConsent": "Marketing Consent",
     "gdprConsentText": "Client agrees to be contacted for marketing purposes (e.g. property listings, newsletter)",
     "legalBasis": {

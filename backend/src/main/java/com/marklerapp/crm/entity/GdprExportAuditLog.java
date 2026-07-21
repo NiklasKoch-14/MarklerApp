@@ -1,7 +1,6 @@
 package com.marklerapp.crm.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -30,12 +29,12 @@ public class GdprExportAuditLog extends BaseEntity {
     private Agent agent;
 
     @Column(name = "export_type", nullable = false, length = 50)
-    @NotBlank(message = "Export type is required")
+    @NotNull(message = "Export type is required")
     @Enumerated(EnumType.STRING)
     private ExportType exportType;
 
     @Column(name = "export_format", nullable = false, length = 20)
-    @NotBlank(message = "Export format is required")
+    @NotNull(message = "Export format is required")
     @Enumerated(EnumType.STRING)
     private ExportFormat exportFormat;
 
@@ -74,7 +73,8 @@ public class GdprExportAuditLog extends BaseEntity {
         CLIENTS_ONLY,
         PROPERTIES_ONLY,
         CALL_NOTES_ONLY,
-        EXPORT_SUMMARY
+        EXPORT_SUMMARY,
+        SINGLE_CLIENT_EXPORT
     }
 
     /**

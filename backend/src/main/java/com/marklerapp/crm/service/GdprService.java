@@ -1,10 +1,12 @@
 package com.marklerapp.crm.service;
 
+import com.marklerapp.crm.config.GlobalExceptionHandler.ResourceNotFoundException;
 import com.marklerapp.crm.dto.*;
 import com.marklerapp.crm.entity.*;
 import com.marklerapp.crm.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +35,9 @@ public class GdprService {
     private final CallNoteRepository callNoteRepository;
     private final PropertySearchCriteriaRepository searchCriteriaRepository;
     private final PropertyImageRepository propertyImageRepository;
+    private final ViewingRepository viewingRepository;
+    private final FileAttachmentRepository fileAttachmentRepository;
+    private final OwnershipValidator ownershipValidator;
 
     /**
      * Export all data for a specific agent
@@ -111,6 +116,47 @@ public class GdprService {
         Agent agent = agentRepository.findById(agentId)
                 .orElseThrow(() -> new RuntimeException("Agent not found: " + agentId));
         return exportCallNoteData(agent);
+    }
+
+    /**
+     * Export the full GDPR data package for a single client (Art. 15 person-related
+     * disclosure) — the client's own record plus their call notes, viewings, and file
+     * attachment metadata. Unlike {@link #exportClientData(UUID)}, this is scoped to one
+     * data subject rather than the agent's entire client book.
+     */
+    @Transactional(readOnly = true)
+    public GdprClientExportResponse exportSingleClientData(UUID clientId, UUID agentId) {
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new ResourceNotFoundException("Client", "id", clientId));
+
+        try {
+            ownershipValidator.validateClientOwnership(client, agentId);
+        } catch (AccessDeniedException e) {
+            throw new ResourceNotFoundException("Client not found or access denied");
+        }
+
+        List<GdprCallNoteData> callNotesData = callNoteRepository.findByClientOrderByCallDateDesc(client).stream()
+                .map(this::mapCallNoteData)
+                .collect(Collectors.toList());
+
+        List<GdprViewingData> viewingsData = viewingRepository.findByClientOrderByViewingDateDesc(client).stream()
+                .map(this::mapViewingData)
+                .collect(Collectors.toList());
+
+        List<GdprFileAttachmentData> fileAttachmentsData = fileAttachmentRepository.findByClientOrderByUploadDateDesc(client).stream()
+                .map(this::mapFileAttachmentData)
+                .collect(Collectors.toList());
+
+        log.info("GDPR single-client export completed for client: {} (agent: {}). CallNotes: {}, Viewings: {}, Attachments: {}",
+                clientId, agentId, callNotesData.size(), viewingsData.size(), fileAttachmentsData.size());
+
+        return GdprClientExportResponse.builder()
+                .metadata(buildMetadata())
+                .client(mapClientData(client))
+                .callNotes(callNotesData)
+                .viewings(viewingsData)
+                .fileAttachments(fileAttachmentsData)
+                .build();
     }
 
     /**
@@ -319,6 +365,44 @@ public class GdprService {
                 .outcome(callNote.getOutcome() != null ? callNote.getOutcome().toString() : null)
                 .createdAt(callNote.getCreatedAt())
                 .updatedAt(callNote.getUpdatedAt())
+                .build();
+    }
+
+    /**
+     * Map Viewing entity to GDPR DTO
+     */
+    private GdprViewingData mapViewingData(Viewing viewing) {
+        return GdprViewingData.builder()
+                .id(viewing.getId())
+                .propertyId(viewing.getProperty() != null ? viewing.getProperty().getId() : null)
+                .propertyTitle(viewing.getProperty() != null ? viewing.getProperty().getTitle() : null)
+                .propertyAddress(viewing.getProperty() != null ? viewing.getProperty().getFormattedAddress() : null)
+                .viewingDate(viewing.getViewingDate())
+                .durationMinutes(viewing.getDurationMinutes())
+                .status(viewing.getStatus() != null ? viewing.getStatus().toString() : null)
+                .feedback(viewing.getFeedback() != null ? viewing.getFeedback().toString() : null)
+                .clientNotes(viewing.getClientNotes())
+                .followUpAction(viewing.getFollowUpAction())
+                .createdAt(viewing.getCreatedAt())
+                .updatedAt(viewing.getUpdatedAt())
+                .build();
+    }
+
+    /**
+     * Map FileAttachment entity to GDPR DTO. Deliberately excludes the raw base64
+     * fileData — see {@link GdprFileAttachmentData}.
+     */
+    private GdprFileAttachmentData mapFileAttachmentData(FileAttachment attachment) {
+        return GdprFileAttachmentData.builder()
+                .id(attachment.getId())
+                .fileName(attachment.getFileName())
+                .originalFileName(attachment.getOriginalFileName())
+                .mimeType(attachment.getMimeType())
+                .fileType(attachment.getFileType() != null ? attachment.getFileType().toString() : null)
+                .fileSize(attachment.getFileSize())
+                .formattedFileSize(attachment.getFormattedFileSize())
+                .description(attachment.getDescription())
+                .uploadDate(attachment.getUploadDate())
                 .build();
     }
 

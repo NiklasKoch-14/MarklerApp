@@ -40,7 +40,7 @@ import java.util.UUID;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/gdpr")
+@RequestMapping("/gdpr")
 @RequiredArgsConstructor
 @Tag(name = "GDPR Compliance", description = "APIs for GDPR data export and compliance (Article 15 - Right of Access)")
 @SecurityRequirement(name = "Bearer Authentication")
@@ -322,6 +322,131 @@ public class GdprController extends BaseController {
             gdprAuditService.logFailedExport(
                 agentId,
                 GdprExportAuditLog.ExportType.FULL_EXPORT,
+                GdprExportAuditLog.ExportFormat.PDF,
+                e.getMessage(),
+                processingTime
+            );
+            throw e;
+        }
+    }
+
+    /**
+     * Export a single client's data as JSON (Art. 15 person-related export)
+     *
+     * Unlike {@code /export/clients}, which dumps every client the agent manages, this
+     * endpoint returns the GDPR data package for exactly one client — their own record
+     * plus their call notes, viewings, and file attachment metadata.
+     */
+    @GetMapping(value = "/clients/{clientId}/export", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(
+        summary = "Export a single client's data as JSON",
+        description = "Export the GDPR data package for one specific client, including their call notes, " +
+                      "viewings, and file attachment metadata. Complies with GDPR Article 15 (Right of Access)."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Client data successfully exported"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing authentication token"),
+        @ApiResponse(responseCode = "404", description = "Client not found or not owned by the authenticated agent")
+    })
+    public ResponseEntity<GdprClientExportResponse> exportSingleClientDataAsJson(
+            @Parameter(description = "Client ID") @PathVariable UUID clientId,
+            Authentication authentication) {
+        UUID agentId = getAgentIdFromAuth(authentication);
+        long startTime = System.currentTimeMillis();
+
+        log.info("GDPR single-client export request received from agent: {} for client: {}", agentId, clientId);
+
+        try {
+            GdprClientExportResponse exportData = gdprService.exportSingleClientData(clientId, agentId);
+
+            long processingTime = System.currentTimeMillis() - startTime;
+            int totalRecords = 1 + exportData.getCallNotes().size() + exportData.getViewings().size() + exportData.getFileAttachments().size();
+
+            gdprAuditService.logExport(
+                agentId,
+                GdprExportAuditLog.ExportType.SINGLE_CLIENT_EXPORT,
+                GdprExportAuditLog.ExportFormat.JSON,
+                totalRecords,
+                0L,
+                processingTime
+            );
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set(HttpHeaders.CONTENT_DISPOSITION,
+                       "attachment; filename=\"gdpr_client_export_" + generateFilename() + ".json\"");
+
+            log.info("GDPR single-client export completed successfully for client: {}", clientId);
+
+            return ResponseEntity.ok().headers(headers).body(exportData);
+
+        } catch (Exception e) {
+            long processingTime = System.currentTimeMillis() - startTime;
+            gdprAuditService.logFailedExport(
+                agentId,
+                GdprExportAuditLog.ExportType.SINGLE_CLIENT_EXPORT,
+                GdprExportAuditLog.ExportFormat.JSON,
+                e.getMessage(),
+                processingTime
+            );
+            throw e;
+        }
+    }
+
+    /**
+     * Export a single client's data as PDF (Art. 15 person-related export)
+     */
+    @GetMapping(value = "/clients/{clientId}/export/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @Operation(
+        summary = "Export a single client's data as PDF",
+        description = "Export the GDPR data package for one specific client as a formatted, human-readable " +
+                      "PDF document, including their call notes, viewings, and file attachment metadata."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "PDF successfully generated and exported"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing authentication token"),
+        @ApiResponse(responseCode = "404", description = "Client not found or not owned by the authenticated agent")
+    })
+    public ResponseEntity<byte[]> exportSingleClientDataAsPdf(
+            @Parameter(description = "Client ID") @PathVariable UUID clientId,
+            Authentication authentication) {
+        UUID agentId = getAgentIdFromAuth(authentication);
+        long startTime = System.currentTimeMillis();
+
+        log.info("GDPR single-client PDF export request received from agent: {} for client: {}", agentId, clientId);
+
+        try {
+            GdprClientExportResponse exportData = gdprService.exportSingleClientData(clientId, agentId);
+            byte[] pdfBytes = gdprPdfService.generateClientPdfExport(exportData);
+
+            long processingTime = System.currentTimeMillis() - startTime;
+            int totalRecords = 1 + exportData.getCallNotes().size() + exportData.getViewings().size() + exportData.getFileAttachments().size();
+
+            gdprAuditService.logExport(
+                agentId,
+                GdprExportAuditLog.ExportType.SINGLE_CLIENT_EXPORT,
+                GdprExportAuditLog.ExportFormat.PDF,
+                totalRecords,
+                (long) pdfBytes.length,
+                processingTime
+            );
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.set(HttpHeaders.CONTENT_DISPOSITION,
+                       "attachment; filename=\"gdpr_client_export_" + generateFilename() + ".pdf\"");
+            headers.setContentLength(pdfBytes.length);
+
+            log.info("GDPR single-client PDF export completed successfully for client: {}. Size: {} bytes",
+                    clientId, pdfBytes.length);
+
+            return ResponseEntity.ok().headers(headers).body(pdfBytes);
+
+        } catch (Exception e) {
+            long processingTime = System.currentTimeMillis() - startTime;
+            gdprAuditService.logFailedExport(
+                agentId,
+                GdprExportAuditLog.ExportType.SINGLE_CLIENT_EXPORT,
                 GdprExportAuditLog.ExportFormat.PDF,
                 e.getMessage(),
                 processingTime
