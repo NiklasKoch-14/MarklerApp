@@ -239,12 +239,6 @@ export class PropertyDetailComponent implements OnInit {
     });
   }
 
-  joinAddressParts(): string {
-    return [this.property?.addressStreet, this.property?.addressHouseNumber,
-            this.property?.addressPostalCode, this.property?.addressCity]
-      .filter(v => !!v).join(' ');
-  }
-
   getDaysOnMarket(): number | null {
     if (!this.property?.createdAt) return null;
     const created = new Date(this.property.createdAt);
