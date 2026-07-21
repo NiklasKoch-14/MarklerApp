@@ -71,16 +71,6 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
     List<Client> findByAgentAndAddressCity(Agent agent, String city);
 
     /**
-     * Find clients with the same name within agent's clients (duplicate-lead check)
-     */
-    List<Client> findByAgentAndFirstNameIgnoreCaseAndLastNameIgnoreCase(Agent agent, String firstName, String lastName);
-
-    /**
-     * Find clients with the same phone number within agent's clients (duplicate-lead check)
-     */
-    List<Client> findByAgentAndPhone(Agent agent, String phone);
-
-    /**
      * Find clients created after a specific date
      */
     List<Client> findByAgentAndCreatedAtAfter(Agent agent, LocalDateTime date);

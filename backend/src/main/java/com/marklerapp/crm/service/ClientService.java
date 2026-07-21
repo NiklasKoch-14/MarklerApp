@@ -15,6 +15,7 @@ import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.FileAttachmentRepository;
 import com.marklerapp.crm.repository.PropertySearchCriteriaRepository;
 import com.marklerapp.crm.repository.ViewingRepository;
+import com.marklerapp.crm.util.DuplicateMatchUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -165,23 +166,35 @@ public class ClientService {
     }
 
     /**
-     * Find existing clients of this agent that look like the same lead — same name or same
-     * phone number. Used as a soft, non-blocking duplicate warning while a client is being
-     * entered (the hard block is the existing e-mail check in {@link #createClient}, which
-     * only fires when an e-mail was actually given).
+     * Find existing clients of this agent that look like the same lead — a fuzzy name match
+     * (tolerates umlaut spelling variants and typos, e.g. "Krüger" vs "Kroeger") or the same
+     * phone number once country code/trunk prefix/formatting are normalized (e.g. "0151 123"
+     * vs "+49 151 123"). Used as a soft, non-blocking duplicate warning while a client is
+     * being entered (the hard block is the existing e-mail check in {@link #createClient},
+     * which only fires when an e-mail was actually given).
      */
     @Transactional(readOnly = true)
     public List<ClientDto> findPotentialDuplicateClients(UUID agentId, String firstName, String lastName, String phone) {
         Agent agent = getAgentById(agentId);
-        Map<UUID, Client> matches = new java.util.LinkedHashMap<>();
 
-        if (firstName != null && !firstName.trim().isEmpty() && lastName != null && !lastName.trim().isEmpty()) {
-            clientRepository.findByAgentAndFirstNameIgnoreCaseAndLastNameIgnoreCase(agent, firstName.trim(), lastName.trim())
-                    .forEach(c -> matches.put(c.getId(), c));
+        boolean hasName = firstName != null && !firstName.trim().isEmpty()
+                && lastName != null && !lastName.trim().isEmpty();
+        String normalizedPhone = DuplicateMatchUtil.normalizePhone(phone);
+        boolean hasPhone = !normalizedPhone.isEmpty();
+
+        if (!hasName && !hasPhone) {
+            return List.of();
         }
-        if (phone != null && !phone.trim().isEmpty()) {
-            clientRepository.findByAgentAndPhone(agent, phone.trim())
-                    .forEach(c -> matches.put(c.getId(), c));
+
+        Map<UUID, Client> matches = new java.util.LinkedHashMap<>();
+        for (Client c : clientRepository.findByAgent(agent)) {
+            boolean nameMatch = hasName
+                    && DuplicateMatchUtil.isFuzzyNameMatch(firstName, c.getFirstName())
+                    && DuplicateMatchUtil.isFuzzyNameMatch(lastName, c.getLastName());
+            boolean phoneMatch = hasPhone && normalizedPhone.equals(DuplicateMatchUtil.normalizePhone(c.getPhone()));
+            if (nameMatch || phoneMatch) {
+                matches.put(c.getId(), c);
+            }
         }
 
         return matches.values().stream().map(clientMapper::toDto).collect(Collectors.toList());
