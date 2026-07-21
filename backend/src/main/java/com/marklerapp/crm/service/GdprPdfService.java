@@ -162,7 +162,8 @@ public class GdprPdfService {
             addDataRow(table, "Email:", client.getEmail());
             addDataRow(table, "Phone:", client.getPhone());
             addDataRow(table, "Address:", client.getFormattedAddress());
-            addDataRow(table, "GDPR Consent:", client.isGdprConsentGiven() ? "Yes" : "No");
+            addDataRow(table, "Legal Basis for Processing:", client.getLegalBasis());
+            addDataRow(table, "Marketing Consent:", client.isGdprConsentGiven() ? "Yes" : "No");
             if (client.getGdprConsentDate() != null) {
                 addDataRow(table, "Consent Date:", client.getGdprConsentDate().format(DATETIME_FORMATTER));
             }

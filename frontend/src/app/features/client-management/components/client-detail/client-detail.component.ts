@@ -575,8 +575,12 @@ import { GeocodingService } from '../../../../shared/services/geocoding.service'
               </div>
             </div>
 
-            <!-- DSGVO-Einwilligung -->
-            <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:16px 20px;">
+            <!-- DSGVO -->
+            <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:16px 20px;display:flex;flex-direction:column;gap:14px;">
+              <div>
+                <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.03em;">{{ 'clients.legalBasis.label' | translate }}</div>
+                <div style="font-size:13px;color:var(--text);margin-top:3px;">{{ client.legalBasis | translateEnum:'legalBasis' }}</div>
+              </div>
               <div style="display:flex;align-items:center;gap:12px;">
                 <div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
                      [style.background]="client.gdprConsentGiven ? 'var(--color-success-soft)' : 'var(--color-error-soft)'">
@@ -585,9 +589,9 @@ import { GeocodingService } from '../../../../shared/services/geocoding.service'
                      style="font-size:17px;"></i>
                 </div>
                 <div>
-                  <div style="font-size:13px;font-weight:600;color:var(--text);">DSGVO-Einwilligung</div>
+                  <div style="font-size:13px;font-weight:600;color:var(--text);">{{ 'clients.gdprConsent' | translate }}</div>
                   <div style="font-size:12px;color:var(--text-3);margin-top:1px;">
-                    {{ client.gdprConsentGiven ? 'Erteilt' : 'Ausstehend' }}<ng-container *ngIf="client.gdprConsentGiven && client.gdprConsentDate"> · {{ client.gdprConsentDate | date:'dd.MM.yyyy' }}</ng-container>
+                    {{ (client.gdprConsentGiven ? 'clients.consentStatusGiven' : 'clients.gdprPending') | translate }}<ng-container *ngIf="client.gdprConsentGiven && client.gdprConsentDate"> · {{ client.gdprConsentDate | date:'dd.MM.yyyy' }}</ng-container>
                   </div>
                 </div>
               </div>

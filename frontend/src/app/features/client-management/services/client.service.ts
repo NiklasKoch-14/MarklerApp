@@ -34,6 +34,11 @@ export enum PipelineStage {
   LOST = 'LOST'
 }
 
+export enum LegalBasis {
+  CONTRACT_INITIATION = 'CONTRACT_INITIATION',
+  LEGITIMATE_INTEREST = 'LEGITIMATE_INTEREST'
+}
+
 export interface Client {
   id?: string;
   agentId?: string;
@@ -52,6 +57,7 @@ export interface Client {
   lastContactDate?: string;
   gdprConsentGiven: boolean;
   gdprConsentDate?: string;
+  legalBasis?: LegalBasis;
   searchCriteria?: PropertySearchCriteria;
   createdAt?: string;
   updatedAt?: string;

@@ -276,6 +276,12 @@
     "searchPlaceholder": "Name, E-Mail, Telefon, Ort …",
     "allStages": "Alle Phasen",
     "allTypes": "Alle Typen",
+    "marketingConsentFilterHint": "Nach Marketing-Einwilligung filtern — relevant z.B. vor einem Newsletter-Versand.",
+    "marketingConsentFilter": {
+      "ALL": "Marketing: Alle",
+      "GIVEN": "Mit Einwilligung",
+      "MISSING": "Ohne Einwilligung"
+    },
     "resultCount": "{{count}} Kunden",
     "noMatchingClients": "Keine Kunden passen zu den Filtern.",
     "clearFilters": "Filter zurücksetzen",
@@ -289,7 +295,7 @@
       "searching": "Sucht",
       "stage": "Phase",
       "lastContact": "Zuletzt kontaktiert",
-      "consent": "DSGVO"
+      "consent": "Marketing"
     },
     "stage": {
       "PROSPECT": "Neu",
@@ -402,10 +408,16 @@
     "anyMin": "Beliebig",
     "anyMax": "Beliebig",
     "gdpr": "DSGVO",
-    "gdprConsent": "DSGVO-Einwilligung",
-    "gdprConsentText": "Ich erkläre mich damit einverstanden, dass meine personenbezogenen Daten gemäß DSGVO verarbeitet werden *",
-    "gdprConsentRequired": "DSGVO-Einwilligung ist erforderlich",
+    "gdprConsent": "Marketing-Einwilligung",
+    "gdprConsentText": "Kunde ist damit einverstanden, zu Marketingzwecken (z.B. Exposé-Versand, Newsletter) kontaktiert zu werden",
+    "legalBasis": {
+      "label": "Rechtsgrundlage der Datenverarbeitung",
+      "contractInitiation": "Vertragsanbahnung (Art. 6 Abs. 1 lit. b DSGVO)",
+      "legitimateInterest": "Berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO)",
+      "hint": "Die Anlage eines Interessenten ist auch ohne Einwilligung zulässig, wenn eine dieser Rechtsgrundlagen vorliegt. Die separate Einwilligung unten wird nur für Marketing-Kontakt benötigt."
+    },
     "consent": "Einwilligung",
+    "consentStatusGiven": "Erteilt",
     "gdprPending": "Ausstehend",
     "consentDate": "Einwilligungsdatum",
     "gdprConsentGiven": "DSGVO-Einwilligung erteilt",
@@ -432,7 +444,7 @@
     "contactData": "Kontaktdaten",
     "hints": {
       "title": "Tipps",
-      "gdpr": "Erfassen Sie die DSGVO-Einwilligung, bevor Sie Kundendaten speichern.",
+      "gdpr": "Wählen Sie die Rechtsgrundlage der Verarbeitung. Die Marketing-Einwilligung ist optional und nur für Werbekontakt (z.B. Newsletter) erforderlich.",
       "searchCriteria": "Definieren Sie Suchkriterien für automatisches Matching mit passenden Immobilien.",
       "matching": "Nach dem Speichern werden passende Immobilien automatisch vorgeschlagen."
     }
@@ -1048,6 +1060,10 @@
       "BUYER": "Käufer",
       "RENTER": "Mieter",
       "SELLER": "Verkäufer"
+    },
+    "legalBasis": {
+      "CONTRACT_INITIATION": "Vertragsanbahnung",
+      "LEGITIMATE_INTEREST": "Berechtigtes Interesse"
     },
     "preferredContactMethod": {
       "EMAIL": "E-Mail",

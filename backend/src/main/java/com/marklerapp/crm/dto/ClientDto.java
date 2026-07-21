@@ -65,6 +65,8 @@ public class ClientDto {
 
     private LocalDateTime gdprConsentDate;
 
+    private Client.LegalBasis legalBasis;
+
     private PropertySearchCriteriaDto searchCriteria;
 
     private LocalDateTime createdAt;

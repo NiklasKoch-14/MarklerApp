@@ -34,6 +34,7 @@ public class GdprClientData {
     // GDPR consent information
     private boolean gdprConsentGiven;
     private LocalDateTime gdprConsentDate;
+    private String legalBasis;
 
     // Search criteria (nested object)
     private GdprSearchCriteriaData searchCriteria;

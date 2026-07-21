@@ -199,6 +199,7 @@ public class GdprService {
                 .formattedAddress(client.getFormattedAddress())
                 .gdprConsentGiven(client.isGdprConsentGiven())
                 .gdprConsentDate(client.getGdprConsentDate())
+                .legalBasis(client.getLegalBasis() != null ? client.getLegalBasis().name() : null)
                 .searchCriteria(searchCriteriaData)
                 .createdAt(client.getCreatedAt())
                 .updatedAt(client.getUpdatedAt())

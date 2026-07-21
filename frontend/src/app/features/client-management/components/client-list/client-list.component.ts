@@ -117,6 +117,13 @@ type SortDir = 'asc' | 'desc';
             <option *ngFor="let t of typeOptions" [value]="t.value">{{ t.labelKey | translate }}</option>
           </select>
 
+          <select class="type-select" [(ngModel)]="consentFilter" (ngModelChange)="applyView()"
+                  [title]="'clients.marketingConsentFilterHint' | translate">
+            <option value="ALL">{{ 'clients.marketingConsentFilter.ALL' | translate }}</option>
+            <option value="GIVEN">{{ 'clients.marketingConsentFilter.GIVEN' | translate }}</option>
+            <option value="MISSING">{{ 'clients.marketingConsentFilter.MISSING' | translate }}</option>
+          </select>
+
           <span class="result-count">{{ 'clients.resultCount' | translate:{ count: filtered.length } }}</span>
         </div>
 
@@ -235,6 +242,7 @@ export class ClientListComponent implements OnInit {
   searchTerm = '';
   stageFilter: PipelineStage | 'ALL' = 'ALL';
   typeFilter: ClientType | 'ALL' = 'ALL';
+  consentFilter: 'ALL' | 'GIVEN' | 'MISSING' = 'ALL';
   sortKey: SortKey = 'lastContact';
   sortDir: SortDir = 'desc';
 
@@ -290,6 +298,8 @@ export class ClientListComponent implements OnInit {
     let list = this.allClients.filter(c => {
       if (this.stageFilter !== 'ALL' && c.pipelineStage !== this.stageFilter) return false;
       if (this.typeFilter !== 'ALL' && c.clientType !== this.typeFilter) return false;
+      if (this.consentFilter === 'GIVEN' && !c.gdprConsentGiven) return false;
+      if (this.consentFilter === 'MISSING' && c.gdprConsentGiven) return false;
       if (term) {
         const hay = [c.firstName, c.lastName, c.email, c.phone, c.addressCity]
           .filter(Boolean).join(' ').toLowerCase();
@@ -339,6 +349,7 @@ export class ClientListComponent implements OnInit {
     this.searchTerm = '';
     this.stageFilter = 'ALL';
     this.typeFilter = 'ALL';
+    this.consentFilter = 'ALL';
     this.applyView();
   }
 

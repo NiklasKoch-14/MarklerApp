@@ -149,6 +149,9 @@ public class ClientService {
         if (client.getClientType() == null) {
             client.setClientType(Client.ClientType.BUYER);
         }
+        if (client.getLegalBasis() == null) {
+            client.setLegalBasis(Client.LegalBasis.CONTRACT_INITIATION);
+        }
 
         Client savedClient = clientRepository.save(client);
 
@@ -228,6 +231,9 @@ public class ClientService {
         }
         if (clientDto.getPipelineStage() != null) {
             existingClient.setPipelineStage(clientDto.getPipelineStage());
+        }
+        if (clientDto.getLegalBasis() != null) {
+            existingClient.setLegalBasis(clientDto.getLegalBasis());
         }
 
         // Handle GDPR consent updates

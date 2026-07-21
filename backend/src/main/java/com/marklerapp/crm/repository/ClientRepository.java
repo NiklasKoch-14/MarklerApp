@@ -81,26 +81,6 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
     List<Client> findByAgentAndPhone(Agent agent, String phone);
 
     /**
-     * Find clients with GDPR consent
-     * Uses JOIN FETCH to prevent N+1 query problem
-     */
-    @Query("SELECT c FROM Client c " +
-           "LEFT JOIN FETCH c.agent " +
-           "LEFT JOIN FETCH c.searchCriteria " +
-           "WHERE c.agent = :agent AND c.gdprConsentGiven = true")
-    List<Client> findByAgentWithGdprConsent(@Param("agent") Agent agent);
-
-    /**
-     * Find clients without GDPR consent
-     * Uses JOIN FETCH to prevent N+1 query problem
-     */
-    @Query("SELECT c FROM Client c " +
-           "LEFT JOIN FETCH c.agent " +
-           "LEFT JOIN FETCH c.searchCriteria " +
-           "WHERE c.agent = :agent AND c.gdprConsentGiven = false")
-    List<Client> findByAgentWithoutGdprConsent(@Param("agent") Agent agent);
-
-    /**
      * Find clients created after a specific date
      */
     List<Client> findByAgentAndCreatedAtAfter(Agent agent, LocalDateTime date);

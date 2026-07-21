@@ -87,8 +87,22 @@ public class Client extends BaseEntity {
     @Column(name = "gdpr_consent_date")
     private LocalDateTime gdprConsentDate;
 
+    // Lawful basis for processing this client's data at all (Art. 6(1) DSGVO) — independent
+    // of gdprConsentGiven, which covers the separate, optional consent for marketing contact.
+    // A client record is legitimately created via CONTRACT_INITIATION/LEGITIMATE_INTEREST alone;
+    // consent is never required just to store CRM data (see issue: forced-checkbox was a formality).
+    @Enumerated(EnumType.STRING)
+    @Column(name = "legal_basis", nullable = false)
+    @Builder.Default
+    private LegalBasis legalBasis = LegalBasis.CONTRACT_INITIATION;
+
     @OneToOne(mappedBy = "client", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private PropertySearchCriteria searchCriteria;
+
+    public enum LegalBasis {
+        CONTRACT_INITIATION,
+        LEGITIMATE_INTEREST
+    }
 
     public enum ClientType {
         BUYER,

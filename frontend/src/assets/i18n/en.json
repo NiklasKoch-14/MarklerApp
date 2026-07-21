@@ -276,6 +276,12 @@
     "searchPlaceholder": "Name, email, phone, city …",
     "allStages": "All stages",
     "allTypes": "All types",
+    "marketingConsentFilterHint": "Filter by marketing consent — relevant e.g. before sending a newsletter.",
+    "marketingConsentFilter": {
+      "ALL": "Marketing: All",
+      "GIVEN": "Consent given",
+      "MISSING": "No consent"
+    },
     "resultCount": "{{count}} clients",
     "noMatchingClients": "No clients match the filters.",
     "clearFilters": "Clear filters",
@@ -289,7 +295,7 @@
       "searching": "Looking for",
       "stage": "Stage",
       "lastContact": "Last contact",
-      "consent": "GDPR"
+      "consent": "Marketing"
     },
     "stage": {
       "PROSPECT": "New",
@@ -402,10 +408,16 @@
     "anyMin": "Any",
     "anyMax": "Any",
     "gdpr": "GDPR",
-    "gdprConsent": "GDPR Consent",
-    "gdprConsentText": "I consent to the processing of personal data in accordance with GDPR *",
-    "gdprConsentRequired": "GDPR consent is required",
+    "gdprConsent": "Marketing Consent",
+    "gdprConsentText": "Client agrees to be contacted for marketing purposes (e.g. property listings, newsletter)",
+    "legalBasis": {
+      "label": "Legal Basis for Data Processing",
+      "contractInitiation": "Contract Initiation (Art. 6(1)(b) GDPR)",
+      "legitimateInterest": "Legitimate Interest (Art. 6(1)(f) GDPR)",
+      "hint": "A prospect can be created without consent as long as one of these legal bases applies. The separate consent below is only required for marketing contact."
+    },
     "consent": "Consent",
+    "consentStatusGiven": "Given",
     "gdprPending": "Pending",
     "consentDate": "Consent Date",
     "gdprConsentGiven": "GDPR Consent Given",
@@ -432,7 +444,7 @@
     "contactData": "Contact Information",
     "hints": {
       "title": "Tips",
-      "gdpr": "Capture GDPR consent before saving any client data.",
+      "gdpr": "Choose the legal basis for processing. Marketing consent is optional and only needed for promotional contact (e.g. newsletters).",
       "searchCriteria": "Define search criteria for automatic matching with suitable properties.",
       "matching": "After saving, matching properties will be suggested automatically."
     }
@@ -1048,6 +1060,10 @@
       "BUYER": "Buyer",
       "RENTER": "Renter",
       "SELLER": "Seller"
+    },
+    "legalBasis": {
+      "CONTRACT_INITIATION": "Contract Initiation",
+      "LEGITIMATE_INTEREST": "Legitimate Interest"
     },
     "preferredContactMethod": {
       "EMAIL": "Email",

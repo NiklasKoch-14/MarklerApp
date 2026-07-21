@@ -293,15 +293,20 @@ import { LocationPickerMapComponent } from '../../../../shared/components/locati
                   </div>
                 </div>
               </div>
-              <div style="padding:20px;">
+              <div style="padding:20px; display:flex; flex-direction:column; gap:18px;">
+                <div>
+                  <label class="form-label">{{ 'clients.legalBasis.label' | translate }}</label>
+                  <select formControlName="legalBasis" class="form-select">
+                    <option value="CONTRACT_INITIATION">{{ 'clients.legalBasis.contractInitiation' | translate }}</option>
+                    <option value="LEGITIMATE_INTEREST">{{ 'clients.legalBasis.legitimateInterest' | translate }}</option>
+                  </select>
+                  <p style="margin-top:5px; font-size:12px; color:var(--text-3);">{{ 'clients.legalBasis.hint' | translate }}</p>
+                </div>
                 <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer;">
                   <input type="checkbox" formControlName="gdprConsentGiven"
                     style="width:18px; height:18px; margin-top:2px; accent-color:var(--primary); cursor:pointer; flex-shrink:0;">
                   <span style="font-size:14px; color:var(--text); line-height:1.5;">{{ 'clients.gdprConsentText' | translate }}</span>
                 </label>
-                <div *ngIf="clientForm.get('gdprConsentGiven')?.invalid && clientForm.get('gdprConsentGiven')?.touched" class="form-error" style="margin-top:8px;">
-                  {{ 'clients.gdprConsentRequired' | translate }}
-                </div>
               </div>
             </div>
 
@@ -392,7 +397,8 @@ export class ClientFormComponent implements OnInit {
       addressPostalCode: ['', [Validators.pattern('^[0-9]{5}$')]],
       addressCountry: ['Germany'],
       clientType: ['BUYER'],
-      gdprConsentGiven: [false, [Validators.requiredTrue]],
+      legalBasis: ['CONTRACT_INITIATION', [Validators.required]],
+      gdprConsentGiven: [false],
       searchCriteria: this.fb.group({
         minSquareMeters: [null, [Validators.min(0)]],
         maxSquareMeters: [null, [Validators.min(0)]],
@@ -507,6 +513,7 @@ export class ClientFormComponent implements OnInit {
           addressPostalCode: client.addressPostalCode,
           addressCountry: client.addressCountry,
           clientType: client.clientType || 'BUYER',
+          legalBasis: client.legalBasis || 'CONTRACT_INITIATION',
           gdprConsentGiven: client.gdprConsentGiven,
           searchCriteria: {
             minSquareMeters: client.searchCriteria?.minSquareMeters || null,
