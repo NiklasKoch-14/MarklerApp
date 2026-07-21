@@ -12,7 +12,9 @@ import com.marklerapp.crm.mapper.PropertySearchCriteriaMapper;
 import com.marklerapp.crm.repository.AgentRepository;
 import com.marklerapp.crm.repository.CallNoteRepository;
 import com.marklerapp.crm.repository.ClientRepository;
+import com.marklerapp.crm.repository.FileAttachmentRepository;
 import com.marklerapp.crm.repository.PropertySearchCriteriaRepository;
+import com.marklerapp.crm.repository.ViewingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -44,6 +46,9 @@ public class ClientService {
     private final ClientMapper clientMapper;
     private final PropertySearchCriteriaMapper searchCriteriaMapper;
     private final OwnershipValidator ownershipValidator;
+    private final ViewingRepository viewingRepository;
+    private final FileAttachmentRepository fileAttachmentRepository;
+    private final ClientDeletionAuditService clientDeletionAuditService;
 
     /**
      * Get all clients for an agent with pagination
@@ -279,6 +284,18 @@ public class ClientService {
         } catch (AccessDeniedException e) {
             throw new ResourceNotFoundException("Client not found or access denied");
         }
+
+        // Snapshot the scope of cascade-deleted data before it's gone, for the audit trail.
+        // If this fails, deleteClient() throws and the whole transaction rolls back —
+        // a client must never be deleted without a corresponding audit record.
+        int callNotesCount = (int) callNoteRepository.countByClient(client);
+        int viewingsCount = (int) viewingRepository.countByClient(client);
+        int fileAttachmentsCount = (int) fileAttachmentRepository.countByClient(client);
+        boolean hadSearchCriteria = client.getSearchCriteria() != null;
+
+        clientDeletionAuditService.logDeletion(
+            client, client.getAgent(), callNotesCount, viewingsCount, fileAttachmentsCount, hadSearchCriteria
+        );
 
         // Delete associated search criteria
         if (client.getSearchCriteria() != null) {

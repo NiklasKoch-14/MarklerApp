@@ -11,11 +11,14 @@ import com.marklerapp.crm.mapper.PropertySearchCriteriaMapper;
 import com.marklerapp.crm.repository.AgentRepository;
 import com.marklerapp.crm.repository.CallNoteRepository;
 import com.marklerapp.crm.repository.ClientRepository;
+import com.marklerapp.crm.repository.FileAttachmentRepository;
 import com.marklerapp.crm.repository.PropertySearchCriteriaRepository;
+import com.marklerapp.crm.repository.ViewingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -57,6 +60,15 @@ class ClientServiceTest {
     @Mock
     private PropertySearchCriteriaMapper searchCriteriaMapper;
 
+    @Mock
+    private ViewingRepository viewingRepository;
+
+    @Mock
+    private FileAttachmentRepository fileAttachmentRepository;
+
+    @Mock
+    private ClientDeletionAuditService clientDeletionAuditService;
+
     private OwnershipValidator ownershipValidator;
 
     private ClientService clientService;
@@ -81,7 +93,10 @@ class ClientServiceTest {
             callNoteRepository,
             clientMapper,
             searchCriteriaMapper,
-            ownershipValidator
+            ownershipValidator,
+            viewingRepository,
+            fileAttachmentRepository,
+            clientDeletionAuditService
         );
 
         testAgent = Agent.builder()
@@ -458,6 +473,40 @@ class ClientServiceTest {
         // Then
         verify(clientRepository).findById(clientId);
         verify(clientRepository).delete(testClient);
+    }
+
+    @Test
+    void deleteClient_ShouldWriteAuditLogBeforeDeletion_WithCascadeCounts() {
+        // Given
+        when(clientRepository.findById(clientId)).thenReturn(Optional.of(testClient));
+        when(callNoteRepository.countByClient(testClient)).thenReturn(3L);
+        when(viewingRepository.countByClient(testClient)).thenReturn(2L);
+        when(fileAttachmentRepository.countByClient(testClient)).thenReturn(1L);
+
+        // When
+        clientService.deleteClient(clientId, agentId);
+
+        // Then — audit log written with the correct snapshot, before the client row is gone
+        verify(clientDeletionAuditService).logDeletion(
+            testClient, testAgent, 3, 2, 1, false
+        );
+        InOrder inOrder = inOrder(clientDeletionAuditService, clientRepository);
+        inOrder.verify(clientDeletionAuditService).logDeletion(any(), any(), anyInt(), anyInt(), anyInt(), anyBoolean());
+        inOrder.verify(clientRepository).delete(testClient);
+    }
+
+    @Test
+    void deleteClient_WhenAuditLoggingFails_ShouldNotDeleteClient() {
+        // Given
+        when(clientRepository.findById(clientId)).thenReturn(Optional.of(testClient));
+        doThrow(new RuntimeException("audit db unavailable"))
+            .when(clientDeletionAuditService).logDeletion(any(), any(), anyInt(), anyInt(), anyInt(), anyBoolean());
+
+        // When & Then — a client must never be deleted without a corresponding audit record
+        assertThatThrownBy(() -> clientService.deleteClient(clientId, agentId))
+            .isInstanceOf(RuntimeException.class);
+
+        verify(clientRepository, never()).delete(any());
     }
 
     @Test
