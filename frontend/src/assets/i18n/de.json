@@ -275,7 +275,8 @@
       "thisMonth": "Diesen Monat",
       "open": "Offen"
     },
-    "pipelineValue": "Pipeline-Wert"
+    "pipelineValue": "Pipeline-Wert",
+    "staleClients": "Kunden ohne Kontakt"
   },
   "clients": {
     "title": "Kunden",

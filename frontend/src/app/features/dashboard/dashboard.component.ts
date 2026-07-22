@@ -86,7 +86,7 @@ interface ViewingRow {
       @if (!allClear) {
         <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
           <!-- 1) Überfällige Rückrufe — schlagen alles -->
-          <button (click)="focusSection('sec-followups')"
+          <button (click)="focusActivityTab('followups')"
                   style="flex:1; min-width:150px; display:flex; align-items:center; gap:13px; padding:15px 17px;
                          border-radius:14px; cursor:pointer; text-align:left; font-family:inherit;
                          box-shadow:var(--shadow); transition:transform .1s;"
@@ -114,7 +114,7 @@ interface ViewingRow {
           </button>
 
           <!-- 3) Kunden lange nicht gehört -->
-          <button (click)="focusSection('sec-stale')"
+          <button (click)="focusActivityTab('stale')"
                   style="flex:1; min-width:150px; display:flex; align-items:center; gap:13px; padding:15px 17px;
                          background:var(--surface); border:1px solid var(--border); border-radius:14px; cursor:pointer;
                          text-align:left; font-family:inherit; box-shadow:var(--shadow); transition:transform .1s;">
@@ -242,22 +242,34 @@ interface ViewingRow {
 
       <!-- Cards view -->
       @if (view === 'cards') {
-        <div class="dash-main-grid">
-
-          <!-- Follow-ups widget -->
-          <div id="sec-followups" class="widget-card" style="scroll-margin-top:16px;">
-            <div class="widget-header">
-              <i class="ri-notification-fill" style="color:#c07a1e; font-size:18px;"></i>
-              <h3 class="widget-title">{{ 'dashboard.openFollowups' | translate }}</h3>
-              <span style="background:color-mix(in srgb,#c07a1e 14%,var(--surface)); color:#c07a1e;
-                           font-size:12px; font-weight:700; padding:3px 9px; border-radius:20px;
-                           font-variant-numeric:tabular-nums;">{{ followUps.length }}</span>
-              <button [routerLink]="['/notifications']"
-                      style="background:none; border:none; color:var(--primary); font-size:13px;
-                             font-weight:600; cursor:pointer;">
-                {{ 'dashboard.viewAll' | translate }}
-              </button>
+        <!-- Eine Card, drei Reiter (Follow-ups / Aktivitaet / stille Kunden). Die Zaehler
+             sitzen auf den Reitern, damit das Zusammenlegen nicht die Information kostet,
+             ob hinter einem geschlossenen Reiter ueberhaupt etwas liegt. -->
+        <div id="sec-activity" class="widget-card" style="scroll-margin-top:16px;">
+          <div class="widget-header" style="gap:6px; flex-wrap:wrap;">
+            <div class="view-tabs">
+              @for (tab of activityTabs; track tab.key) {
+                <button class="view-tab" [class.active]="activityTab === tab.key" (click)="activityTab = tab.key">
+                  <i [class]="tab.icon" style="font-size:15px;" [style.color]="activityTab === tab.key ? tab.color : ''"></i>
+                  {{ tab.labelKey | translate }}
+                  @if (tabCount(tab.key) > 0) {
+                    <span style="font-size:11px; font-weight:700; padding:1px 7px; border-radius:20px;
+                                 font-variant-numeric:tabular-nums;"
+                          [style.background]="'color-mix(in srgb,' + tab.color + ' 14%,var(--surface))'"
+                          [style.color]="tab.color">{{ tabCount(tab.key) }}</span>
+                  }
+                </button>
+              }
             </div>
+            <div style="flex:1;"></div>
+            <button [routerLink]="[activeTabMeta.link]"
+                    style="background:none; border:none; color:var(--primary); font-size:13px;
+                           font-weight:600; cursor:pointer;">
+              {{ 'dashboard.viewAll' | translate }}
+            </button>
+          </div>
+
+          @if (activityTab === 'followups') {
 
             @for (f of followUps.slice(0,5); track f.id) {
               <div class="followup-row">
@@ -297,19 +309,9 @@ interface ViewingRow {
                 </div>
               </div>
             }
-          </div>
+          }
 
-          <!-- Recent activity widget -->
-          <div class="widget-card">
-            <div class="widget-header">
-              <i class="ri-history-line" style="color:var(--primary); font-size:18px;"></i>
-              <h3 class="widget-title">{{ 'dashboard.recentActivity' | translate }}</h3>
-              <button [routerLink]="['/notifications']"
-                      style="background:none; border:none; color:var(--primary); font-size:13px;
-                             font-weight:600; cursor:pointer;">
-                {{ 'dashboard.viewAll' | translate }}
-              </button>
-            </div>
+          @if (activityTab === 'activity') {
 
             @for (a of recentActivity; track a.dateFmt + a.subject) {
               <div style="display:flex; align-items:flex-start; gap:12px; padding:13px 18px; border-bottom:1px solid var(--border);">
@@ -340,24 +342,9 @@ interface ViewingRow {
                 </div>
               </div>
             }
-          </div>
+          }
 
-        </div>
-
-        <!-- Kunden ohne Kontakt >30 Tage -->
-        <div id="sec-stale" class="widget-card" style="margin-top:20px; scroll-margin-top:16px;">
-          <div class="widget-header">
-            <i class="ri-user-minus-fill" style="color:var(--color-warning); font-size:18px;"></i>
-            <h3 class="widget-title">Kunden ohne Kontakt &gt;30 Tage</h3>
-            <span style="background:color-mix(in srgb,var(--color-warning) 14%,var(--surface)); color:var(--color-warning);
-                         font-size:12px; font-weight:700; padding:3px 9px; border-radius:20px;
-                         font-variant-numeric:tabular-nums;">{{ staleClientRows.length }}</span>
-            <button [routerLink]="['/clients']"
-                    style="background:none; border:none; color:var(--primary); font-size:13px;
-                           font-weight:600; cursor:pointer;">
-              {{ 'dashboard.viewAll' | translate }}
-            </button>
-          </div>
+          @if (activityTab === 'stale') {
 
           @if (staleClientRows.length === 0 && !loading) {
             <div style="padding:32px 18px; text-align:center; color:var(--text-3);">
@@ -406,6 +393,8 @@ interface ViewingRow {
                 </div>
               }
             </div>
+          }
+
           }
         </div>
 
@@ -600,6 +589,28 @@ interface ViewingRow {
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   view: 'cards' | 'pipeline' = 'cards';
+
+  /** Follow-ups zuerst: das ist die Liste, aus der Arbeit entsteht — die beiden anderen
+   *  Reiter sind Nachschlagen, nicht Handeln. */
+  activityTab: 'followups' | 'activity' | 'stale' = 'followups';
+
+  readonly activityTabs = [
+    { key: 'followups' as const, labelKey: 'dashboard.openFollowups',  icon: 'ri-notification-fill', color: '#c07a1e',            link: '/notifications' },
+    { key: 'activity'  as const, labelKey: 'dashboard.recentActivity', icon: 'ri-history-line',      color: 'var(--primary)',      link: '/notifications' },
+    { key: 'stale'     as const, labelKey: 'dashboard.staleClients',   icon: 'ri-user-minus-fill',   color: 'var(--color-warning)', link: '/clients' },
+  ];
+
+  get activeTabMeta() {
+    return this.activityTabs.find(t => t.key === this.activityTab) ?? this.activityTabs[0];
+  }
+
+  /** Die Aktivitaetsliste bekommt bewusst keinen Zaehler: sie ist immer gefuellt und
+   *  eine Zahl daneben wuerde Dringlichkeit suggerieren, wo keine ist. */
+  tabCount(key: 'followups' | 'activity' | 'stale'): number {
+    if (key === 'followups') return this.followUps.length;
+    if (key === 'stale') return this.staleClientRows.length;
+    return 0;
+  }
   loading = true;
 
   followUps: FollowUpRow[] = [];
@@ -636,6 +647,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 50);
+  }
+
+  /**
+   * Die KPI-Kacheln sprangen frueher zu je einem eigenen Widget. Seit alle drei Listen
+   * in einer Card mit Reitern liegen, reicht Scrollen nicht mehr — der passende Reiter
+   * muss mit aufgehen, sonst landet man auf der Card und sieht die falsche Liste.
+   */
+  focusActivityTab(tab: 'followups' | 'activity' | 'stale'): void {
+    this.activityTab = tab;
+    this.focusSection('sec-activity');
   }
 
   // Follow-up popover
