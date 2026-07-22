@@ -68,6 +68,12 @@ public class PasswordResetService {
 
         Agent agent = agentOpt.get();
 
+        // Google-only accounts (googleSub set, passwordHash null) are deliberately NOT
+        // rejected here (Issue #26): a reset lets them add a password alongside Google
+        // sign-in, which is the only way back into the account if Google access is lost.
+        // The password is an addition, never a replacement — googleSub stays untouched.
+        // Do not add a rejection branch; PasswordResetServiceTest guards this.
+
         // Check rate limiting: count requests in last hour
         LocalDateTime oneHourAgo = LocalDateTime.now().minusHours(1);
         int requestCount = tokenRepository.countByAgentAndCreatedAtAfter(agent, oneHourAgo);

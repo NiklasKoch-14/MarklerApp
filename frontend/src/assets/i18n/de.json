@@ -111,7 +111,8 @@
       "submitting": "Wird gesendet...",
       "successMessage": "Wenn Ihre E-Mail registriert ist, erhalten Sie in Kürze einen Reset-Link.",
       "checkSpam": "Bitte überprüfen Sie auch Ihren Spam-Ordner",
-      "backToLogin": "Zurück zur Anmeldung"
+      "backToLogin": "Zurück zur Anmeldung",
+      "googleHint": "Meldest du dich sonst über Google an? Ein hier gesetztes Passwort kommt zusätzlich dazu — die Google-Anmeldung bleibt weiterhin möglich."
     },
     "resetPassword": {
       "title": "Neues Passwort festlegen",

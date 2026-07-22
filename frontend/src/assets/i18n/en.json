@@ -111,7 +111,8 @@
       "submitting": "Sending...",
       "successMessage": "If your email is registered, you'll receive a reset link shortly.",
       "checkSpam": "Please check your spam folder if you don't see the email",
-      "backToLogin": "Back to Login"
+      "backToLogin": "Back to Login",
+      "googleHint": "Normally sign in with Google? A password set here is an addition — signing in with Google keeps working."
     },
     "resetPassword": {
       "title": "Set New Password",

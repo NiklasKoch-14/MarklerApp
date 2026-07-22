@@ -59,6 +59,15 @@ import { ErrorHandlerService } from '../../../core/services/error-handler.servic
             {{ isLoading ? ('auth.forgotPassword.submitting' | translate) : ('auth.forgotPassword.submitButton' | translate) }}
           </button>
 
+          <!-- Bewusst statisch und fuer alle sichtbar: waere der Hinweis davon abhaengig,
+               ob das Konto ein Google-Konto ist, verriete die Seite die Existenz und den
+               Typ des Kontos — genau die Enumeration, die der generische Erfolgstext
+               oben verhindert. -->
+          <p style="font-size:12px;color:var(--text-3);margin:0;line-height:1.5;">
+            <i class="ri-information-line" style="margin-right:4px;"></i>
+            {{ 'auth.forgotPassword.googleHint' | translate }}
+          </p>
+
           <p style="text-align:center;font-size:13px;color:var(--text-3);margin:4px 0 0;">
             <a routerLink="/auth/login" class="auth-link">{{ 'auth.forgotPassword.backToLogin' | translate }}</a>
           </p>
