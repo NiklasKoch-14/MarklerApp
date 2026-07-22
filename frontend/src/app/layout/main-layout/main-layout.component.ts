@@ -114,7 +114,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     { route: '/clients',        icon: 'ri-group-fill',         labelKey: 'navigation.clients'                     },
     { route: '/properties',     icon: 'ri-building-2-fill',     labelKey: 'navigation.properties'                  },
     { route: '/analytics',      icon: 'ri-line-chart-fill', labelKey: 'navigation.analytics'                   },
-    { route: '/notifications',  icon: 'ri-notification-fill',          labelKey: 'navigation.notifications'               },
   ];
 
   navItems: NavItem[] = [...this.defaultNavItems];

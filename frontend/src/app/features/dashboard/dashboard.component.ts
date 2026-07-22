@@ -161,7 +161,6 @@ interface ViewingRow {
       <!-- Heutige Besichtigungen — Tagesagenda, immer als erstes sichtbar -->
       <div id="sec-today-viewings" class="widget-card" style="margin-bottom:20px; scroll-margin-top:16px;">
         <div class="widget-header">
-          <i class="ri-door-open-fill" style="color:var(--color-warning); font-size:18px;"></i>
           <h3 class="widget-title">Heutige Besichtigungen</h3>
           @if (todayViewingRows.length > 0) {
             <span style="background:color-mix(in srgb,var(--color-warning) 14%,var(--surface)); color:var(--color-warning);
@@ -178,10 +177,10 @@ interface ViewingRow {
         }
 
         @if (todayViewingRows.length > 0) {
-          <div style="display:flex; gap:12px; padding:4px 18px 16px; overflow-x:auto;">
+          <div style="display:flex; gap:16px; padding:16px 18px 20px; overflow-x:auto;">
             @for (v of todayViewingRows; track v.id) {
               <div style="min-width:210px; background:var(--surface-2); border:1px solid var(--border);
-                          border-radius:10px; padding:12px 14px; transition:box-shadow .15s; flex-shrink:0; display:flex; flex-direction:column; gap:0;">
+                          border-radius:10px; padding:16px 18px; transition:box-shadow .15s; flex-shrink:0; display:flex; flex-direction:column; gap:0;">
                 <div [routerLink]="['/clients', v.clientId]" style="cursor:pointer;">
                   <div style="font-size:20px; font-weight:800; color:var(--color-warning); font-variant-numeric:tabular-nums; line-height:1; margin-bottom:8px;">
                     {{ v.timeFmt }}
@@ -250,7 +249,6 @@ interface ViewingRow {
             <div class="view-tabs">
               @for (tab of activityTabs; track tab.key) {
                 <button class="view-tab" [class.active]="activityTab === tab.key" (click)="activityTab = tab.key">
-                  <i [class]="tab.icon" style="font-size:15px;" [style.color]="activityTab === tab.key ? tab.color : ''"></i>
                   {{ tab.labelKey | translate }}
                   @if (tabCount(tab.key) > 0) {
                     <span style="font-size:11px; font-weight:700; padding:1px 7px; border-radius:20px;
@@ -261,12 +259,6 @@ interface ViewingRow {
                 </button>
               }
             </div>
-            <div style="flex:1;"></div>
-            <button [routerLink]="[activeTabMeta.link]"
-                    style="background:none; border:none; color:var(--primary); font-size:13px;
-                           font-weight:600; cursor:pointer;">
-              {{ 'dashboard.viewAll' | translate }}
-            </button>
           </div>
 
           @if (activityTab === 'followups') {
@@ -594,15 +586,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
    *  Reiter sind Nachschlagen, nicht Handeln. */
   activityTab: 'followups' | 'activity' | 'stale' = 'followups';
 
+  /** color faerbt nur noch das Zaehler-Badge — die Reiter selbst tragen kein Icon. */
   readonly activityTabs = [
-    { key: 'followups' as const, labelKey: 'dashboard.openFollowups',  icon: 'ri-notification-fill', color: '#c07a1e',            link: '/notifications' },
-    { key: 'activity'  as const, labelKey: 'dashboard.recentActivity', icon: 'ri-history-line',      color: 'var(--primary)',      link: '/notifications' },
-    { key: 'stale'     as const, labelKey: 'dashboard.staleClients',   icon: 'ri-user-minus-fill',   color: 'var(--color-warning)', link: '/clients' },
+    { key: 'followups' as const, labelKey: 'dashboard.openFollowups',  color: '#c07a1e' },
+    { key: 'activity'  as const, labelKey: 'dashboard.recentActivity', color: 'var(--primary)' },
+    { key: 'stale'     as const, labelKey: 'dashboard.staleClients',   color: 'var(--color-warning)' },
   ];
-
-  get activeTabMeta() {
-    return this.activityTabs.find(t => t.key === this.activityTab) ?? this.activityTabs[0];
-  }
 
   /** Die Aktivitaetsliste bekommt bewusst keinen Zaehler: sie ist immer gefuellt und
    *  eine Zahl daneben wuerde Dringlichkeit suggerieren, wo keine ist. */

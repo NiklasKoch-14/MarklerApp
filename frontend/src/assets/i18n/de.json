@@ -155,13 +155,11 @@
     "search": "Kunden, Notizen suchen...",
     "toggleTheme": "Design wechseln",
     "matching": "Matching",
-    "analytics": "Analyse",
-    "notifications": "Benachrichtigungen"
+    "analytics": "Analyse"
   },
   "pageTitles": {
     "dashboard": "Dashboard",
     "analytics": "Analyse",
-    "notifications": "Benachrichtigungen",
     "settings": "Einstellungen",
     "clients": "Kunden",
     "clientNew": "Neuer Kunde",
@@ -254,7 +252,6 @@
     "showClosedStages": "Gewonnen/Verloren anzeigen",
     "openFollowups": "Offene Nachfassaktionen",
     "recentActivity": "Letzte Aktivität",
-    "viewAll": "Alle anzeigen",
     "markDone": "Als erledigt markieren",
     "openCustomer": "Kunde öffnen",
     "noFollowups": "Keine offenen Nachfassaktionen!",
@@ -492,19 +489,6 @@
     "expectedCommission": "Geschätzte Provision",
     "expectedCommissionPlaceholder": "z. B. 8500",
     "expectedCommissionHint": "Fließt in die Pipeline-Summe pro Spalte ein. Schon ab Interessent pflegbar."
-  },
-  "notifications": {
-    "title": "Benachrichtigungen",
-    "all": "Alle",
-    "followUps": "Follow-ups",
-    "matches": "Matches",
-    "notes": "Notizen",
-    "today": "Heute",
-    "thisWeek": "Diese Woche",
-    "earlier": "Früher",
-    "empty": "Keine Benachrichtigungen",
-    "markAllRead": "Alle gelesen",
-    "unread": "Ungelesen"
   },
   "properties": {
     "title": "Immobilien",

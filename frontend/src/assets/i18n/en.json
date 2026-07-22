@@ -155,13 +155,11 @@
     "search": "Search clients, notes...",
     "toggleTheme": "Toggle theme",
     "matching": "Matching",
-    "analytics": "Analytics",
-    "notifications": "Notifications"
+    "analytics": "Analytics"
   },
   "pageTitles": {
     "dashboard": "Dashboard",
     "analytics": "Analytics",
-    "notifications": "Notifications",
     "settings": "Settings",
     "clients": "Clients",
     "clientNew": "New Client",
@@ -254,7 +252,6 @@
     "showClosedStages": "Show won/lost",
     "openFollowups": "Open Follow-ups",
     "recentActivity": "Recent Activity",
-    "viewAll": "View all",
     "markDone": "Mark as done",
     "openCustomer": "Open client",
     "noFollowups": "No open follow-ups!",
@@ -492,19 +489,6 @@
     "expectedCommission": "Estimated commission",
     "expectedCommissionPlaceholder": "e.g. 8500",
     "expectedCommissionHint": "Feeds the pipeline total per column. Can be filled in from the prospect stage onwards."
-  },
-  "notifications": {
-    "title": "Notifications",
-    "all": "All",
-    "followUps": "Follow-ups",
-    "matches": "Matches",
-    "notes": "Notes",
-    "today": "Today",
-    "thisWeek": "This Week",
-    "earlier": "Earlier",
-    "empty": "No notifications",
-    "markAllRead": "Mark all read",
-    "unread": "Unread"
   },
   "properties": {
     "title": "Properties",

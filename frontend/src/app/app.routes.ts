@@ -61,11 +61,6 @@ export const routes: Routes = [
         loadChildren: () => import('./features/property-management/property-management.routes').then(r => r.propertyRoutes)
       },
       {
-        path: 'notifications',
-        loadComponent: () => import('./features/notifications/notifications.component').then(c => c.NotificationsComponent),
-        title: 'pageTitles.notifications'
-      },
-      {
         path: 'settings',
         loadComponent: () => import('./features/settings/settings.component').then(c => c.SettingsComponent),
         title: 'pageTitles.settings'
