@@ -651,7 +651,9 @@ public class PropertyService {
      * @param property the property entity to update
      * @param request the update request
      */
-    private void updatePropertyFields(Property property, UpdatePropertyRequest request) {
+    // Package-private so UpdateFieldParityTest can verify by reflection that every
+    // shared request/entity field is actually copied here.
+    void updatePropertyFields(Property property, UpdatePropertyRequest request) {
         if (request.getTitle() != null) property.setTitle(request.getTitle());
         if (request.getDescription() != null) property.setDescription(request.getDescription());
         if (request.getPropertyType() != null) property.setPropertyType(request.getPropertyType());

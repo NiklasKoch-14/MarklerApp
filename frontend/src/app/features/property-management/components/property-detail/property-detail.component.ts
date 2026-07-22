@@ -18,7 +18,8 @@ import { FormsModule } from '@angular/forms';
 import { ViewingService, ViewingSummary, ViewingStatus } from '../../../viewing-management/services/viewing.service';
 import { ViewingAddDialogComponent } from '../../../viewing-management/components/viewing-add-dialog/viewing-add-dialog.component';
 import { PropertyMatchingService } from '../../services/property-matching.service';
-import { ClientMatchResult } from '../../models/property-match.model';
+import { ClientMatchResult, MatchWeights } from '../../models/property-match.model';
+import { MatchScorePopoverComponent } from '../match-breakdown/match-score-popover.component';
 import { LocationPickerMapComponent, SecondaryMarker } from '../../../../shared/components/location-picker-map/location-picker-map.component';
 import { ClientService } from '../../../client-management/services/client.service';
 import { forkJoin, of } from 'rxjs';
@@ -27,7 +28,7 @@ import { catchError } from 'rxjs/operators';
 @Component({
   selector: 'app-property-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent, ConfirmDialogComponent, LocationPickerMapComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent, ConfirmDialogComponent, LocationPickerMapComponent, MatchScorePopoverComponent],
   templateUrl: './property-detail.component.html',
   styleUrls: ['./property-detail.component.scss']
 })
@@ -56,6 +57,8 @@ export class PropertyDetailComponent implements OnInit {
 
   matchingClients: ClientMatchResult[] = [];
   isLoadingMatchingClients = false;
+  /** Gewichte, mit denen der Backend-Score tatsaechlich gerechnet wurde */
+  matchingClientWeights?: MatchWeights;
   /** Alle übrigen Objekte (blau) und alle Kunden-Suchstandorte (rot) — das aktuelle
    * Objekt selbst ist der grüne Haupt-Pin und darf hier nicht doppelt auftauchen. */
   mapMarkers: SecondaryMarker[] = [];
@@ -166,22 +169,35 @@ export class PropertyDetailComponent implements OnInit {
     this.propertyMatchingService.findMatchingClientsForProperty(propertyId, { maxResults: 5, matchThreshold: 0 }).subscribe({
       next: (response) => {
         this.matchingClients = response.clients?.slice(0, 5) ?? [];
+        this.matchingClientWeights = response.appliedWeights;
         this.isLoadingMatchingClients = false;
       },
       error: () => { this.isLoadingMatchingClients = false; }
     });
   }
 
-  getMatchScoreBg(score: number): string {
-    if (score >= 75) return 'var(--accent-soft)';
-    if (score >= 50) return 'var(--color-warning-soft)';
-    return 'var(--surface-2)';
-  }
+  /** Nur die gesetzten Ausstattungsmerkmale, in der Reihenfolge des Formulars */
+  visibleFeatures(): { icon: string; labelKey: string }[] {
+    const p = this.property;
+    if (!p) {
+      return [];
+    }
 
-  getMatchScoreColor(score: number): string {
-    if (score >= 75) return 'var(--primary)';
-    if (score >= 50) return 'var(--color-warning)';
-    return 'var(--text-3)';
+    return [
+      { on: p.hasElevator, icon: 'ri-expand-up-down-line', labelKey: 'properties.form.hasElevator' },
+      { on: p.hasBalcony, icon: 'ri-cloudy-line', labelKey: 'properties.form.hasBalcony' },
+      { on: p.hasTerrace, icon: 'ri-sun-line', labelKey: 'properties.form.hasTerrace' },
+      { on: p.hasGarden, icon: 'ri-tree-line', labelKey: 'properties.form.hasGarden' },
+      { on: p.hasGarage, icon: 'ri-car-line', labelKey: 'properties.form.hasGarage' },
+      { on: p.hasParking, icon: 'ri-parking-line', labelKey: 'properties.form.hasParking' },
+      { on: p.hasBasement, icon: 'ri-archive-line', labelKey: 'properties.form.hasBasement' },
+      { on: p.hasAttic, icon: 'ri-home-line', labelKey: 'properties.form.hasAttic' },
+      { on: p.isBarrierFree, icon: 'ri-wheelchair-line', labelKey: 'properties.form.isBarrierFree' },
+      { on: p.petsAllowed, icon: 'ri-footprint-line', labelKey: 'properties.form.petsAllowed' },
+      { on: p.furnished, icon: 'ri-armchair-line', labelKey: 'properties.form.furnished' }
+    ]
+      .filter(feature => feature.on)
+      .map(({ icon, labelKey }) => ({ icon, labelKey }));
   }
 
   startEditingNotes(): void {

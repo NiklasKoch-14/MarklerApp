@@ -6,7 +6,10 @@ import org.mapstruct.BeanMapping;
 import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.ReportingPolicy;
 
 import java.util.Arrays;
 import java.util.List;
@@ -32,7 +35,10 @@ import java.util.List;
  * @see PropertySearchCriteria
  * @see PropertySearchCriteriaDto
  */
-@Mapper(componentModel = "spring")
+// unmappedTargetPolicy = ERROR: adding a field to the entity or DTO without wiring it
+// through every mapping (or consciously ignoring it) becomes a compile error instead of
+// a silently dropped field on create/update — see the search-location bug this replaced.
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface PropertySearchCriteriaMapper {
 
     /**
@@ -68,6 +74,29 @@ public interface PropertySearchCriteriaMapper {
     @Mapping(target = "propertyTypesArray", ignore = true)
     @BeanMapping(builder = @Builder(disableBuilder = true))
     PropertySearchCriteria toEntity(PropertySearchCriteriaDto dto);
+
+    /**
+     * Copy all criteria fields from the DTO onto an existing entity (full replace:
+     * null DTO values clear the corresponding entity field, matching the client form,
+     * which always submits the complete criteria state).
+     *
+     * <p>restrictToSearchRadius is the one exception: the column is NOT NULL with a
+     * default of true, so a null in the DTO keeps the entity's current value.</p>
+     *
+     * @param dto the incoming criteria state
+     * @param entity the managed entity to update in place
+     */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "client", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "preferredLocations", expression = "java(listToString(dto.getPreferredLocations()))")
+    @Mapping(target = "propertyTypes", expression = "java(listToString(dto.getPropertyTypes()))")
+    @Mapping(target = "preferredLocationsArray", ignore = true)
+    @Mapping(target = "propertyTypesArray", ignore = true)
+    @Mapping(target = "restrictToSearchRadius",
+             nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateEntityFromDto(PropertySearchCriteriaDto dto, @MappingTarget PropertySearchCriteria entity);
 
     /**
      * Helper method to convert array to list.

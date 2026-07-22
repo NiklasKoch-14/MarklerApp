@@ -1,6 +1,7 @@
 package com.marklerapp.crm.service;
 
 import com.marklerapp.crm.dto.ClientDto;
+import com.marklerapp.crm.dto.MatchReasonDto;
 import com.marklerapp.crm.dto.PropertyDto;
 import com.marklerapp.crm.dto.PropertyMatchRequest;
 import com.marklerapp.crm.dto.PropertyMatchResponse;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
@@ -59,11 +61,21 @@ class PropertyMatchingServiceTest {
     @Mock
     private ViewingRepository viewingRepository;
 
-    @Mock
-    private PropertyMapper propertyMapper;
+    // Real mappers: scoring now reads from the mapped DTO, so a mock returning an
+    // empty DTO would silently blank out every property field under test.
+    private final PropertyMapper propertyMapper = realPropertyMapper();
+    private final com.marklerapp.crm.mapper.PropertySearchCriteriaMapper searchCriteriaMapper =
+        new com.marklerapp.crm.mapper.PropertySearchCriteriaMapperImpl();
 
     @Mock
     private ClientMapper clientMapper;
+
+    private static PropertyMapper realPropertyMapper() {
+        com.marklerapp.crm.mapper.PropertyMapperImpl mapper = new com.marklerapp.crm.mapper.PropertyMapperImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(
+            mapper, "propertyImageMapper", new com.marklerapp.crm.mapper.PropertyImageMapperImpl());
+        return mapper;
+    }
 
     @Mock
     private ClientService clientService;
@@ -82,7 +94,7 @@ class PropertyMatchingServiceTest {
     void setUp() {
         matchingService = new PropertyMatchingService(
             propertyRepository, clientRepository, viewingRepository,
-            propertyMapper, clientMapper, clientService, propertyService
+            propertyMapper, clientMapper, searchCriteriaMapper, clientService, propertyService
         );
 
         agentId = UUID.randomUUID();
@@ -95,7 +107,6 @@ class PropertyMatchingServiceTest {
         // fixtures are stubbed leniently rather than duplicated per test.
         lenient().when(viewingRepository.findByClient_Id(any())).thenReturn(List.of());
         lenient().when(viewingRepository.findByProperty_Id(any())).thenReturn(List.of());
-        lenient().when(propertyMapper.toDto(any(Property.class))).thenAnswer(inv -> PropertyDto.builder().build());
         lenient().when(clientMapper.toDto(any(Client.class))).thenAnswer(inv -> ClientDto.builder().build());
     }
 
@@ -317,5 +328,188 @@ class PropertyMatchingServiceTest {
             PropertyMatchRequest.builder().propertyId(propertyId).matchThreshold(0).build());
 
         assertThat(response.getClients()).hasSize(1);
+    }
+
+    // ========================================
+    // matchClientsForProperty — warm rent weighting
+    // ========================================
+
+    private Client renterWithWarmRentBudget(String firstName, BigDecimal maxWarmRent) {
+        PropertySearchCriteria criteria = PropertySearchCriteria.builder()
+            .maxWarmRent(maxWarmRent)
+            .restrictToSearchRadius(true)
+            .build();
+        Client client = Client.builder()
+            .agent(agent)
+            .firstName(firstName)
+            .lastName("Mieter")
+            .clientType(Client.ClientType.RENTER)
+            .pipelineStage(Client.PipelineStage.ACTIVE_SEARCH)
+            .searchCriteria(criteria)
+            .build();
+        client.setId(UUID.randomUUID());
+        criteria.setClient(client);
+        return client;
+    }
+
+    @Test
+    void matchClientsForProperty_WarmRentIncludesAdditionalAndHeatingCosts() {
+        // Cold rent 700 + 150 additional + 100 heating = 950 warm rent.
+        PropertyDto property = PropertyDto.builder()
+            .id(propertyId)
+            .listingType(ListingType.RENT)
+            .price(new BigDecimal("700"))
+            .additionalCosts(new BigDecimal("150"))
+            .heatingCosts(new BigDecimal("100"))
+            .build();
+
+        // 950 warm rent is 18.75% over this client's 800 budget — the price score
+        // must drop below 100. If the costs are dropped, warm rent looks like 700
+        // and the client is wrongly scored as a perfect price match.
+        Client tightBudget = renterWithWarmRentBudget("Petra", new BigDecimal("800"));
+
+        when(propertyService.getProperty(propertyId, agentId)).thenReturn(property);
+        when(clientRepository.findByAgentWithSearchCriteria(any())).thenReturn(List.of(tightBudget));
+
+        PropertyMatchResponse response = matchingService.matchClientsForProperty(
+            propertyId, agentId,
+            PropertyMatchRequest.builder().propertyId(propertyId).matchThreshold(0).build());
+
+        assertThat(response.getClients()).hasSize(1);
+        assertThat(response.getClients().get(0).getScoreBreakdown().getPriceScore()).isLessThan(100);
+    }
+
+    @Test
+    void matchClientsForProperty_ClientWhoseWarmRentBudgetFits_RanksHotter() {
+        PropertyDto property = PropertyDto.builder()
+            .id(propertyId)
+            .listingType(ListingType.RENT)
+            .price(new BigDecimal("700"))
+            .additionalCosts(new BigDecimal("150"))
+            .heatingCosts(new BigDecimal("100"))
+            .build();
+
+        Client tightBudget = renterWithWarmRentBudget("Petra", new BigDecimal("800"));
+        Client fittingBudget = renterWithWarmRentBudget("Jonas", new BigDecimal("1000"));
+
+        when(propertyService.getProperty(propertyId, agentId)).thenReturn(property);
+        when(clientRepository.findByAgentWithSearchCriteria(any()))
+            .thenReturn(List.of(tightBudget, fittingBudget));
+        when(clientMapper.toDto(any(Client.class)))
+            .thenAnswer(inv -> ClientDto.builder().id(((Client) inv.getArgument(0)).getId()).build());
+
+        PropertyMatchResponse response = matchingService.matchClientsForProperty(
+            propertyId, agentId,
+            PropertyMatchRequest.builder().propertyId(propertyId).matchThreshold(0).build());
+
+        assertThat(response.getClients()).hasSize(2);
+        assertThat(response.getClients().get(0).getClient().getId()).isEqualTo(fittingBudget.getId());
+        assertThat(response.getClients().get(0).getMatchScore())
+            .isGreaterThan(response.getClients().get(1).getMatchScore());
+    }
+
+    // ========================================
+    // Score transparency (Issue #30) — the breakdown the UI shows must add up
+    // ========================================
+
+    @Test
+    void matchPropertiesForClient_WeightedContributionsSumToOverallScore() {
+        // The UI presents each category as "score × weight / 100" and sums them. If that
+        // sum drifts from matchScore, the explanation contradicts the headline number.
+        Property property = propertyIn("Berlin", BERLIN_LAT, BERLIN_LNG);
+        PropertySearchCriteriaDto criteria = PropertySearchCriteriaDto.builder()
+            .maxBudget(new BigDecimal("300000"))     // property is 350000 -> partial price score
+            .minSquareMeters(100)                    // property is 80 -> partial area score
+            .maxRooms(2)                             // property has 3 -> partial room score
+            .preferredLocations(List.of("Hamburg"))  // property is Berlin -> location mismatch
+            .propertyTypes(List.of("HOUSE"))         // property is APARTMENT -> type mismatch
+            .build();
+
+        when(clientService.getClientById(clientId, agentId)).thenReturn(clientWithCriteria(criteria));
+        when(propertyRepository.findByAgentId(agentId, null))
+            .thenReturn(new PageImpl<>(List.of(property)));
+
+        PropertyMatchResponse response = matchingService.matchPropertiesForClient(
+            clientId, agentId,
+            PropertyMatchRequest.builder().clientId(clientId).matchThreshold(0).build());
+
+        assertThat(response.getProperties()).hasSize(1);
+        PropertyMatchResponse.PropertyMatchResult result = response.getProperties().get(0);
+        PropertyMatchResponse.MatchScoreBreakdown breakdown = result.getScoreBreakdown();
+        PropertyMatchResponse.MatchWeights weights = response.getAppliedWeights();
+
+        assertThat(weights).isNotNull();
+        assertThat(weights.getPriceWeight() + weights.getLocationWeight() + weights.getAreaWeight()
+            + weights.getRoomWeight() + weights.getFeatureWeight()).isEqualTo(100);
+
+        double sumOfContributions =
+            breakdown.getPriceScore() * weights.getPriceWeight() / 100.0
+                + breakdown.getLocationScore() * weights.getLocationWeight() / 100.0
+                + breakdown.getAreaScore() * weights.getAreaWeight() / 100.0
+                + breakdown.getRoomScore() * weights.getRoomWeight() / 100.0
+                + breakdown.getFeatureScore() * weights.getFeatureWeight() / 100.0;
+
+        assertThat((double) result.getMatchScore()).isCloseTo(sumOfContributions, within(0.5));
+    }
+
+    @Test
+    void matchPropertiesForClient_CustomWeightsAreNormalizedToWholePercentagesSummingTo100() {
+        // Weights that neither sum to 100 nor divide evenly — largest-remainder
+        // distribution has to make up the difference, or the UI's parts won't add up.
+        Property property = propertyIn("Berlin", BERLIN_LAT, BERLIN_LNG);
+        PropertySearchCriteriaDto criteria = radiusCriteria(BERLIN_LAT, BERLIN_LNG, 10, true);
+
+        when(clientService.getClientById(clientId, agentId)).thenReturn(clientWithCriteria(criteria));
+        when(propertyRepository.findByAgentId(agentId, null))
+            .thenReturn(new PageImpl<>(List.of(property)));
+
+        PropertyMatchResponse response = matchingService.matchPropertiesForClient(
+            clientId, agentId,
+            PropertyMatchRequest.builder()
+                .clientId(clientId)
+                .matchThreshold(0)
+                .priceWeight(1).locationWeight(1).areaWeight(1).roomWeight(1).featureWeight(1)
+                .build());
+
+        PropertyMatchResponse.MatchWeights weights = response.getAppliedWeights();
+        assertThat(weights.getPriceWeight() + weights.getLocationWeight() + weights.getAreaWeight()
+            + weights.getRoomWeight() + weights.getFeatureWeight()).isEqualTo(100);
+    }
+
+    @Test
+    void matchPropertiesForClient_ReasonsAreTranslatableCodesNotRenderedSentences() {
+        // Reasons must stay machine-readable — rendered English prose here would be
+        // untranslatable in the UI.
+        Property property = propertyIn("Berlin", BERLIN_LAT, BERLIN_LNG);
+        PropertySearchCriteriaDto criteria = PropertySearchCriteriaDto.builder()
+            .maxBudget(new BigDecimal("400000"))     // property is 350000 -> within budget
+            .preferredLocations(List.of("Hamburg"))  // property is Berlin -> mismatch
+            .build();
+
+        when(clientService.getClientById(clientId, agentId)).thenReturn(clientWithCriteria(criteria));
+        when(propertyRepository.findByAgentId(agentId, null))
+            .thenReturn(new PageImpl<>(List.of(property)));
+
+        PropertyMatchResponse response = matchingService.matchPropertiesForClient(
+            clientId, agentId,
+            PropertyMatchRequest.builder().clientId(clientId).matchThreshold(0).build());
+
+        PropertyMatchResponse.PropertyMatchResult result = response.getProperties().get(0);
+
+        assertThat(result.getMatchReasons())
+            .extracting(MatchReasonDto::code)
+            .contains("priceWithinRange");
+        assertThat(result.getMatchReasons())
+            .extracting(MatchReasonDto::category)
+            .contains(MatchReasonDto.CATEGORY_PRICE);
+        assertThat(result.getMismatchReasons())
+            .extracting(MatchReasonDto::code)
+            .contains("locationNoMatch");
+
+        MatchReasonDto priceReason = result.getMatchReasons().stream()
+            .filter(r -> "priceWithinRange".equals(r.code()))
+            .findFirst()
+            .orElseThrow();
+        assertThat(priceReason.params()).containsKeys("priceKind", "value");
     }
 }

@@ -57,8 +57,10 @@ class ClientServiceTest {
     @Mock
     private ClientMapper clientMapper;
 
-    @Mock
-    private PropertySearchCriteriaMapper searchCriteriaMapper;
+    // Real mapper (no dependencies): update tests assert actual field values on the
+    // saved entity, which a mock would silently swallow.
+    private final PropertySearchCriteriaMapper searchCriteriaMapper =
+        new com.marklerapp.crm.mapper.PropertySearchCriteriaMapperImpl();
 
     @Mock
     private ViewingRepository viewingRepository;
@@ -455,6 +457,100 @@ class ClientServiceTest {
         verify(clientRepository).findById(clientId);
         verify(clientRepository).existsByAgentAndEmail(testAgent, "duplicate@example.com");
         verify(clientRepository, never()).save(any());
+    }
+
+    @Test
+    void updateClient_WithSearchCriteria_ShouldUpdateSearchLocationAndRentFields() {
+        // Given: client already has saved criteria with an old search location
+        PropertySearchCriteria existingCriteria = PropertySearchCriteria.builder()
+            .latitude(new java.math.BigDecimal("52.5200000"))   // Berlin
+            .longitude(new java.math.BigDecimal("13.4050000"))
+            .searchRadiusKm(10)
+            .restrictToSearchRadius(true)
+            .maxWarmRent(new java.math.BigDecimal("900.00"))
+            .build();
+        existingCriteria.setId(UUID.randomUUID());
+
+        PropertySearchCriteriaDto updatedCriteria = PropertySearchCriteriaDto.builder()
+            .latitude(new java.math.BigDecimal("48.1351250"))   // Munich
+            .longitude(new java.math.BigDecimal("11.5819810"))
+            .searchRadiusKm(25)
+            .restrictToSearchRadius(false)
+            .minColdRent(new java.math.BigDecimal("500.00"))
+            .maxColdRent(new java.math.BigDecimal("800.00"))
+            .minWarmRent(new java.math.BigDecimal("600.00"))
+            .maxWarmRent(new java.math.BigDecimal("950.00"))
+            .build();
+
+        ClientDto updateRequest = ClientDto.builder()
+            .firstName("John")
+            .lastName("Doe")
+            .email("john.doe@example.com")
+            .searchCriteria(updatedCriteria)
+            .build();
+
+        when(clientRepository.findById(clientId)).thenReturn(Optional.of(testClient));
+        when(clientRepository.save(testClient)).thenReturn(testClient);
+        when(clientMapper.toDto(testClient)).thenReturn(testClientDto);
+        when(searchCriteriaRepository.findByClient(testClient)).thenReturn(Optional.of(existingCriteria));
+
+        // When
+        clientService.updateClient(clientId, updateRequest, agentId);
+
+        // Then: the saved criteria must carry the new search location and rent ranges
+        org.mockito.ArgumentCaptor<PropertySearchCriteria> captor =
+            org.mockito.ArgumentCaptor.forClass(PropertySearchCriteria.class);
+        verify(searchCriteriaRepository).save(captor.capture());
+        PropertySearchCriteria saved = captor.getValue();
+
+        assertThat(saved.getLatitude()).isEqualByComparingTo("48.1351250");
+        assertThat(saved.getLongitude()).isEqualByComparingTo("11.5819810");
+        assertThat(saved.getSearchRadiusKm()).isEqualTo(25);
+        assertThat(saved.getRestrictToSearchRadius()).isFalse();
+        assertThat(saved.getMinColdRent()).isEqualByComparingTo("500.00");
+        assertThat(saved.getMaxColdRent()).isEqualByComparingTo("800.00");
+        assertThat(saved.getMinWarmRent()).isEqualByComparingTo("600.00");
+        assertThat(saved.getMaxWarmRent()).isEqualByComparingTo("950.00");
+    }
+
+    @Test
+    void updateClient_ClearingPreferredLocationsAndTypes_RemovesThemFromSavedCriteria() {
+        // Given: saved criteria with locations/types; the form now submits them as null
+        // (user removed all entries). The update must clear them, not keep the old values.
+        PropertySearchCriteria existingCriteria = PropertySearchCriteria.builder()
+            .minBudget(new java.math.BigDecimal("100000"))
+            .build();
+        existingCriteria.setPreferredLocationsArray(new String[]{"Berlin", "Potsdam"});
+        existingCriteria.setPropertyTypesArray(new String[]{"APARTMENT"});
+        existingCriteria.setId(UUID.randomUUID());
+
+        PropertySearchCriteriaDto updatedCriteria = PropertySearchCriteriaDto.builder()
+            .minBudget(new java.math.BigDecimal("100000"))
+            .preferredLocations(null)
+            .propertyTypes(null)
+            .build();
+
+        ClientDto updateRequest = ClientDto.builder()
+            .firstName("John")
+            .lastName("Doe")
+            .email("john.doe@example.com")
+            .searchCriteria(updatedCriteria)
+            .build();
+
+        when(clientRepository.findById(clientId)).thenReturn(Optional.of(testClient));
+        when(clientRepository.save(testClient)).thenReturn(testClient);
+        when(clientMapper.toDto(testClient)).thenReturn(testClientDto);
+        when(searchCriteriaRepository.findByClient(testClient)).thenReturn(Optional.of(existingCriteria));
+
+        // When
+        clientService.updateClient(clientId, updateRequest, agentId);
+
+        // Then
+        org.mockito.ArgumentCaptor<PropertySearchCriteria> captor =
+            org.mockito.ArgumentCaptor.forClass(PropertySearchCriteria.class);
+        verify(searchCriteriaRepository).save(captor.capture());
+        assertThat(captor.getValue().getPreferredLocations()).isNull();
+        assertThat(captor.getValue().getPropertyTypes()).isNull();
     }
 
     // ========================================

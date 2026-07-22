@@ -18,6 +18,12 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.marklerapp.crm.dto.MatchReasonDto.CATEGORY_AREA;
+import static com.marklerapp.crm.dto.MatchReasonDto.CATEGORY_LOCATION;
+import static com.marklerapp.crm.dto.MatchReasonDto.CATEGORY_PRICE;
+import static com.marklerapp.crm.dto.MatchReasonDto.CATEGORY_ROOM;
+import static com.marklerapp.crm.dto.MatchReasonDto.CATEGORY_TYPE;
+
 /**
  * Service for intelligent property-client matching operations.
  *
@@ -58,6 +64,7 @@ public class PropertyMatchingService {
     private final ViewingRepository viewingRepository;
     private final PropertyMapper propertyMapper;
     private final ClientMapper clientMapper;
+    private final com.marklerapp.crm.mapper.PropertySearchCriteriaMapper searchCriteriaMapper;
     private final ClientService clientService;
     private final PropertyService propertyService;
 
@@ -65,6 +72,12 @@ public class PropertyMatchingService {
     private static final BigDecimal BUDGET_FLEXIBILITY_MULTIPLIER = new BigDecimal("1.10"); // 10% over budget
     private static final BigDecimal AREA_TOLERANCE_PERCENTAGE = new BigDecimal("0.15"); // 15% tolerance
     private static final int POSTAL_CODE_PROXIMITY_RANGE = 50; // Postal code range for nearby matching
+
+    // Which monetary figure a price reason refers to — the frontend translates these
+    private static final String PRICE_KIND_PURCHASE = "PURCHASE_PRICE";
+    private static final String PRICE_KIND_WARM_RENT = "WARM_RENT";
+    private static final String PRICE_KIND_COLD_RENT = "COLD_RENT";
+    private static final String PRICE_KIND_RENT = "RENT";
 
     /**
      * Find properties matching a client's search criteria.
@@ -126,8 +139,10 @@ public class PropertyMatchingService {
         Map<UUID, List<Viewing>> viewingsByPropertyId = viewingRepository.findByClient_Id(clientId).stream()
                 .collect(Collectors.groupingBy(v -> v.getProperty().getId()));
 
-        // Score each property against the criteria
+        // Score each property against the criteria. Scoring works on the DTO so that
+        // there is no lossy entity<->DTO hand-copy between the two matching directions.
         List<PropertyMatchResponse.PropertyMatchResult> matchResults = availableProperties.stream()
+                .map(propertyMapper::toDto)
                 .map(property -> scoreProperty(property, criteria, request,
                         viewingsByPropertyId.getOrDefault(property.getId(), List.of())))
                 .filter(result -> result.getMatchScore() >= request.getEffectiveMatchThreshold())
@@ -144,6 +159,7 @@ public class PropertyMatchingService {
                 .returnedMatches(matchResults.size())
                 .matchThreshold(request.getEffectiveMatchThreshold())
                 .executionTimeMs(executionTime)
+                .appliedWeights(appliedWeights(request))
                 .build();
     }
 
@@ -203,6 +219,7 @@ public class PropertyMatchingService {
                 .returnedMatches(matchResults.size())
                 .matchThreshold(request.getEffectiveMatchThreshold())
                 .executionTimeMs(executionTime)
+                .appliedWeights(appliedWeights(request))
                 .build();
     }
 
@@ -261,6 +278,7 @@ public class PropertyMatchingService {
         // Score each property against the criteria (no client attached to an ad-hoc search,
         // so there is nothing to cross-reference against past viewings)
         List<PropertyMatchResponse.PropertyMatchResult> matchResults = availableProperties.stream()
+                .map(propertyMapper::toDto)
                 .map(property -> scoreProperty(property, criteria, request, List.of()))
                 .filter(result -> result.getMatchScore() >= request.getEffectiveMatchThreshold())
                 .sorted(Comparator.comparingInt(PropertyMatchResponse.PropertyMatchResult::getMatchScore).reversed())
@@ -277,6 +295,7 @@ public class PropertyMatchingService {
                 .returnedMatches(matchResults.size())
                 .matchThreshold(request.getEffectiveMatchThreshold())
                 .executionTimeMs(executionTime)
+                .appliedWeights(appliedWeights(request))
                 .build();
     }
 
@@ -296,11 +315,11 @@ public class PropertyMatchingService {
      * @return PropertyMatchResult with score and breakdown
      */
     private PropertyMatchResponse.PropertyMatchResult scoreProperty(
-            Property property, PropertySearchCriteriaDto criteria, PropertyMatchRequest request,
+            PropertyDto property, PropertySearchCriteriaDto criteria, PropertyMatchRequest request,
             List<Viewing> priorViewings) {
 
-        List<String> matchReasons = new ArrayList<>();
-        List<String> mismatchReasons = new ArrayList<>();
+        List<MatchReasonDto> matchReasons = new ArrayList<>();
+        List<MatchReasonDto> mismatchReasons = new ArrayList<>();
 
         // Calculate individual scores
         int priceScore = calculatePriceScore(property, criteria, request, matchReasons, mismatchReasons);
@@ -309,17 +328,8 @@ public class PropertyMatchingService {
         int roomScore = calculateRoomScore(property, criteria, request, matchReasons, mismatchReasons);
         int featureScore = calculateFeatureScore(property, criteria, request, matchReasons, mismatchReasons);
 
-        // Get normalized weights
-        double[] weights = request.getNormalizedWeights();
-
-        // Calculate weighted overall score
-        int overallScore = (int) Math.round(
-                priceScore * weights[0] +
-                locationScore * weights[1] +
-                areaScore * weights[2] +
-                roomScore * weights[3] +
-                featureScore * weights[4]
-        );
+        int overallScore = weightedOverallScore(
+                request, priceScore, locationScore, areaScore, roomScore, featureScore);
 
         log.debug("Property {} scored: overall={}, price={}, location={}, area={}, room={}, feature={}",
                 property.getId(), overallScore, priceScore, locationScore, areaScore, roomScore, featureScore);
@@ -333,11 +343,8 @@ public class PropertyMatchingService {
                 .featureScore(featureScore)
                 .build();
 
-        // Convert property entity to DTO
-        PropertyDto propertyDto = propertyMapper.toDto(property);
-
         return PropertyMatchResponse.PropertyMatchResult.builder()
-                .property(propertyDto)
+                .property(property)
                 .matchScore(overallScore)
                 .scoreBreakdown(breakdown)
                 .matchReasons(matchReasons)
@@ -373,30 +380,19 @@ public class PropertyMatchingService {
             Client client, PropertyDto property, PropertyMatchRequest request, List<Viewing> priorViewings) {
 
         PropertySearchCriteriaDto criteria = convertCriteriaToDto(client.getSearchCriteria());
-        List<String> matchReasons = new ArrayList<>();
-        List<String> mismatchReasons = new ArrayList<>();
+        List<MatchReasonDto> matchReasons = new ArrayList<>();
+        List<MatchReasonDto> mismatchReasons = new ArrayList<>();
 
-        // Convert DTO to entity for scoring (reuse existing logic)
-        Property propertyEntity = convertToEntity(property);
+        // Calculate scores using the same logic as the property direction — scoring
+        // operates on the DTO directly, so every property field is available.
+        int priceScore = calculatePriceScore(property, criteria, request, matchReasons, mismatchReasons);
+        int locationScore = calculateLocationScore(property, criteria, request, matchReasons, mismatchReasons);
+        int areaScore = calculateAreaScore(property, criteria, request, matchReasons, mismatchReasons);
+        int roomScore = calculateRoomScore(property, criteria, request, matchReasons, mismatchReasons);
+        int featureScore = calculateFeatureScore(property, criteria, request, matchReasons, mismatchReasons);
 
-        // Calculate scores using the same logic
-        int priceScore = calculatePriceScore(propertyEntity, criteria, request, matchReasons, mismatchReasons);
-        int locationScore = calculateLocationScore(propertyEntity, criteria, request, matchReasons, mismatchReasons);
-        int areaScore = calculateAreaScore(propertyEntity, criteria, request, matchReasons, mismatchReasons);
-        int roomScore = calculateRoomScore(propertyEntity, criteria, request, matchReasons, mismatchReasons);
-        int featureScore = calculateFeatureScore(propertyEntity, criteria, request, matchReasons, mismatchReasons);
-
-        // Get normalized weights
-        double[] weights = request.getNormalizedWeights();
-
-        // Calculate weighted overall score
-        int overallScore = (int) Math.round(
-                priceScore * weights[0] +
-                locationScore * weights[1] +
-                areaScore * weights[2] +
-                roomScore * weights[3] +
-                featureScore * weights[4]
-        );
+        int overallScore = weightedOverallScore(
+                request, priceScore, locationScore, areaScore, roomScore, featureScore);
 
         log.debug("Client {} scored: overall={}, price={}, location={}, area={}, room={}, feature={}",
                 client.getId(), overallScore, priceScore, locationScore, areaScore, roomScore, featureScore);
@@ -426,6 +422,41 @@ public class PropertyMatchingService {
     }
 
     // ========================================
+    // Private Helper Methods - Weighting
+    // ========================================
+
+    /**
+     * Combine the five category scores into the overall score using whole-percentage
+     * weights. The UI shows each category's contribution as {@code score × weight / 100};
+     * computing the total the same way keeps the parts adding up to the number shown.
+     */
+    private int weightedOverallScore(PropertyMatchRequest request, int priceScore, int locationScore,
+                                     int areaScore, int roomScore, int featureScore) {
+        int[] weights = request.getNormalizedWeightPercentages();
+        return (int) Math.round(
+                (priceScore * weights[0]
+                        + locationScore * weights[1]
+                        + areaScore * weights[2]
+                        + roomScore * weights[3]
+                        + featureScore * weights[4]) / 100.0
+        );
+    }
+
+    /**
+     * The weights actually applied, echoed back so the frontend never has to assume defaults.
+     */
+    private PropertyMatchResponse.MatchWeights appliedWeights(PropertyMatchRequest request) {
+        int[] weights = request.getNormalizedWeightPercentages();
+        return PropertyMatchResponse.MatchWeights.builder()
+                .priceWeight(weights[0])
+                .locationWeight(weights[1])
+                .areaWeight(weights[2])
+                .roomWeight(weights[3])
+                .featureWeight(weights[4])
+                .build();
+    }
+
+    // ========================================
     // Private Helper Methods - Individual Score Calculations
     // ========================================
 
@@ -440,11 +471,11 @@ public class PropertyMatchingService {
      *   <li>0-49 points: Price significantly outside budget</li>
      * </ul>
      */
-    private int calculatePriceScore(Property property, PropertySearchCriteriaDto criteria,
-                                    PropertyMatchRequest request, List<String> matchReasons,
-                                    List<String> mismatchReasons) {
+    private int calculatePriceScore(PropertyDto property, PropertySearchCriteriaDto criteria,
+                                    PropertyMatchRequest request, List<MatchReasonDto> matchReasons,
+                                    List<MatchReasonDto> mismatchReasons) {
         if (property.getPrice() == null) {
-            matchReasons.add("Price not specified for this property");
+            matchReasons.add(MatchReasonDto.of(CATEGORY_PRICE, "priceNotSpecified"));
             return 50; // Neutral score for missing price
         }
 
@@ -452,7 +483,7 @@ public class PropertyMatchingService {
 
         if (property.getListingType() == ListingType.SALE) {
             return scoreValueAgainstRange(property.getPrice(), criteria.getMinBudget(), criteria.getMaxBudget(),
-                    allowFlexibility, "Purchase price", matchReasons, mismatchReasons);
+                    allowFlexibility, PRICE_KIND_PURCHASE, matchReasons, mismatchReasons);
         }
 
         // RENT / LEASE: price is the cold rent; warm rent adds additional/heating costs.
@@ -465,14 +496,14 @@ public class PropertyMatchingService {
 
         if (criteria.getMinWarmRent() != null || criteria.getMaxWarmRent() != null) {
             return scoreValueAgainstRange(warmRent, criteria.getMinWarmRent(), criteria.getMaxWarmRent(),
-                    allowFlexibility, "Warm rent", matchReasons, mismatchReasons);
+                    allowFlexibility, PRICE_KIND_WARM_RENT, matchReasons, mismatchReasons);
         }
         if (criteria.getMinColdRent() != null || criteria.getMaxColdRent() != null) {
             return scoreValueAgainstRange(coldRent, criteria.getMinColdRent(), criteria.getMaxColdRent(),
-                    allowFlexibility, "Cold rent", matchReasons, mismatchReasons);
+                    allowFlexibility, PRICE_KIND_COLD_RENT, matchReasons, mismatchReasons);
         }
         return scoreValueAgainstRange(coldRent, criteria.getMinBudget(), criteria.getMaxBudget(),
-                allowFlexibility, "Rent", matchReasons, mismatchReasons);
+                allowFlexibility, PRICE_KIND_RENT, matchReasons, mismatchReasons);
     }
 
     /**
@@ -488,10 +519,10 @@ public class PropertyMatchingService {
      * </ul>
      */
     private int scoreValueAgainstRange(BigDecimal value, BigDecimal min, BigDecimal max,
-                                       boolean allowFlexibility, String label,
-                                       List<String> matchReasons, List<String> mismatchReasons) {
+                                       boolean allowFlexibility, String priceKind,
+                                       List<MatchReasonDto> matchReasons, List<MatchReasonDto> mismatchReasons) {
         if (min == null && max == null) {
-            matchReasons.add("No " + label.toLowerCase() + " constraints specified");
+            matchReasons.add(MatchReasonDto.of(CATEGORY_PRICE, "noPriceConstraints", "priceKind", priceKind));
             return 100;
         }
 
@@ -504,13 +535,15 @@ public class PropertyMatchingService {
         boolean withinMax = max == null || value.compareTo(max) <= 0;
 
         if (withinMin && withinMax) {
-            matchReasons.add(String.format("%s €%,d is within budget range", label, value.intValue()));
+            matchReasons.add(MatchReasonDto.of(CATEGORY_PRICE, "priceWithinRange",
+                    "priceKind", priceKind, "value", value));
             return 100;
         }
 
         boolean withinFlexibleMax = effectiveMax == null || value.compareTo(effectiveMax) <= 0;
         if (withinMin && withinFlexibleMax) {
-            matchReasons.add(String.format("%s €%,d is slightly over budget but within 10%% tolerance", label, value.intValue()));
+            matchReasons.add(MatchReasonDto.of(CATEGORY_PRICE, "priceSlightlyOverBudget",
+                    "priceKind", priceKind, "value", value, "limit", max));
             return 85;
         }
 
@@ -520,22 +553,30 @@ public class PropertyMatchingService {
                     .multiply(BigDecimal.valueOf(100));
 
             if (percentOver.compareTo(BigDecimal.valueOf(20)) <= 0) {
-                mismatchReasons.add(String.format("%s €%,d is %.1f%% over budget",
-                        label, value.intValue(), percentOver.doubleValue()));
+                mismatchReasons.add(MatchReasonDto.of(CATEGORY_PRICE, "priceOverBudget",
+                        "priceKind", priceKind, "value", value, "limit", max, "percent", percent(percentOver)));
                 return Math.max(50, 100 - percentOver.intValue());
             } else {
-                mismatchReasons.add(String.format("%s €%,d significantly exceeds budget (%.1f%% over)",
-                        label, value.intValue(), percentOver.doubleValue()));
+                mismatchReasons.add(MatchReasonDto.of(CATEGORY_PRICE, "priceFarOverBudget",
+                        "priceKind", priceKind, "value", value, "limit", max, "percent", percent(percentOver)));
                 return Math.max(0, 50 - (percentOver.intValue() - 20));
             }
         }
 
         if (min != null && value.compareTo(min) < 0) {
-            mismatchReasons.add(String.format("%s €%,d is below minimum budget", label, value.intValue()));
+            mismatchReasons.add(MatchReasonDto.of(CATEGORY_PRICE, "priceBelowMinimum",
+                    "priceKind", priceKind, "value", value, "limit", min));
             return 30;
         }
 
         return 50;
+    }
+
+    /**
+     * Percentages are rounded once here so every client renders the same number.
+     */
+    private static BigDecimal percent(BigDecimal raw) {
+        return raw.setScale(1, RoundingMode.HALF_UP);
     }
 
     /**
@@ -586,9 +627,9 @@ public class PropertyMatchingService {
      *   <li>0 points: No location match</li>
      * </ul>
      */
-    private int calculateLocationScore(Property property, PropertySearchCriteriaDto criteria,
-                                       PropertyMatchRequest request, List<String> matchReasons,
-                                       List<String> mismatchReasons) {
+    private int calculateLocationScore(PropertyDto property, PropertySearchCriteriaDto criteria,
+                                       PropertyMatchRequest request, List<MatchReasonDto> matchReasons,
+                                       List<MatchReasonDto> mismatchReasons) {
         // Prefer real distance once both sides are geocoded — falls through to the
         // city/postal-code text logic below whenever either side lacks coordinates
         // (legacy criteria without a map pin, or a property not yet geocoded).
@@ -600,7 +641,7 @@ public class PropertyMatchingService {
         List<String> preferredLocations = criteria.getPreferredLocations();
 
         if (preferredLocations == null || preferredLocations.isEmpty()) {
-            matchReasons.add("No location preferences specified");
+            matchReasons.add(MatchReasonDto.of(CATEGORY_LOCATION, "noLocationPreferences"));
             return 100;
         }
 
@@ -608,21 +649,22 @@ public class PropertyMatchingService {
         String propertyPostalCode = property.getAddressPostalCode();
 
         if (propertyCity == null && propertyPostalCode == null) {
-            matchReasons.add("Property location not fully specified");
+            matchReasons.add(MatchReasonDto.of(CATEGORY_LOCATION, "locationNotSpecified"));
             return 50;
         }
 
         // Check for exact city match
         for (String location : preferredLocations) {
             if (propertyCity != null && propertyCity.equalsIgnoreCase(location.trim())) {
-                matchReasons.add(String.format("Property is in preferred city: %s", propertyCity));
+                matchReasons.add(MatchReasonDto.of(CATEGORY_LOCATION, "locationCityMatch", "city", propertyCity));
                 return 100;
             }
 
             // Check for postal code match
             if (propertyPostalCode != null && location.trim().matches("\\d{5}")) {
                 if (propertyPostalCode.equals(location.trim())) {
-                    matchReasons.add(String.format("Property postal code %s matches exactly", propertyPostalCode));
+                    matchReasons.add(MatchReasonDto.of(CATEGORY_LOCATION, "locationPostalCodeExact",
+                            "postalCode", propertyPostalCode));
                     return 100;
                 }
 
@@ -634,8 +676,8 @@ public class PropertyMatchingService {
                         int difference = Math.abs(propertyCode - preferredCode);
 
                         if (difference <= POSTAL_CODE_PROXIMITY_RANGE) {
-                            matchReasons.add(String.format("Property postal code %s is near preferred location (within %d)",
-                                    propertyPostalCode, POSTAL_CODE_PROXIMITY_RANGE));
+                            matchReasons.add(MatchReasonDto.of(CATEGORY_LOCATION, "locationPostalCodeNear",
+                                    "postalCode", propertyPostalCode, "preferredPostalCode", location.trim()));
                             return 80;
                         }
                     } catch (NumberFormatException e) {
@@ -645,7 +687,9 @@ public class PropertyMatchingService {
             }
         }
 
-        mismatchReasons.add(String.format("Property location %s does not match preferred locations", propertyCity));
+        // City can be blank while the postal code is set — fall back so the reason never renders "null"
+        mismatchReasons.add(MatchReasonDto.of(CATEGORY_LOCATION, "locationNoMatch",
+                "city", propertyCity != null ? propertyCity : propertyPostalCode));
         return 0;
     }
 
@@ -656,23 +700,28 @@ public class PropertyMatchingService {
      * (otherwise passesLocationGate already filtered them out before scoring), so the
      * curve keeps decaying past the edge instead of assuming everything here is in-range.
      */
-    private int calculateDistanceScore(Property property, PropertySearchCriteriaDto criteria,
-                                       List<String> matchReasons, List<String> mismatchReasons) {
+    private int calculateDistanceScore(PropertyDto property, PropertySearchCriteriaDto criteria,
+                                       List<MatchReasonDto> matchReasons, List<MatchReasonDto> mismatchReasons) {
         double distance = distanceKm(criteria.getLatitude(), criteria.getLongitude(),
                 property.getLatitude(), property.getLongitude());
         int radiusKm = criteria.getSearchRadiusKm();
 
         if (distance <= radiusKm) {
             int score = (int) Math.round(100 - (distance / radiusKm) * 30);
-            matchReasons.add(String.format("Property is %.1f km from the search location (within %d km radius)",
-                    distance, radiusKm));
+            matchReasons.add(MatchReasonDto.of(CATEGORY_LOCATION, "locationWithinRadius",
+                    "distanceKm", roundToOneDecimal(distance), "radiusKm", radiusKm));
             return Math.max(70, score);
         }
 
         double overKm = distance - radiusKm;
         int score = (int) Math.round(70 - overKm * 5);
-        mismatchReasons.add(String.format("Property is %.1f km outside the %d km search radius", overKm, radiusKm));
+        mismatchReasons.add(MatchReasonDto.of(CATEGORY_LOCATION, "locationOutsideRadius",
+                "overKm", roundToOneDecimal(overKm), "radiusKm", radiusKm));
         return Math.max(0, score);
+    }
+
+    private static BigDecimal roundToOneDecimal(double value) {
+        return BigDecimal.valueOf(value).setScale(1, RoundingMode.HALF_UP);
     }
 
     /**
@@ -724,11 +773,11 @@ public class PropertyMatchingService {
      *   <li>0-49 points: Living area significantly outside range</li>
      * </ul>
      */
-    private int calculateAreaScore(Property property, PropertySearchCriteriaDto criteria,
-                                   PropertyMatchRequest request, List<String> matchReasons,
-                                   List<String> mismatchReasons) {
+    private int calculateAreaScore(PropertyDto property, PropertySearchCriteriaDto criteria,
+                                   PropertyMatchRequest request, List<MatchReasonDto> matchReasons,
+                                   List<MatchReasonDto> mismatchReasons) {
         if (property.getLivingAreaSqm() == null) {
-            matchReasons.add("Living area not specified for this property");
+            matchReasons.add(MatchReasonDto.of(CATEGORY_AREA, "areaNotSpecified"));
             return 50;
         }
 
@@ -738,7 +787,7 @@ public class PropertyMatchingService {
 
         // If no area constraints, perfect score
         if (minArea == null && maxArea == null) {
-            matchReasons.add("No area constraints specified");
+            matchReasons.add(MatchReasonDto.of(CATEGORY_AREA, "noAreaConstraints"));
             return 100;
         }
 
@@ -750,7 +799,7 @@ public class PropertyMatchingService {
         boolean withinMax = maxAreaDecimal == null || area.compareTo(maxAreaDecimal) <= 0;
 
         if (withinMin && withinMax) {
-            matchReasons.add(String.format("Living area %.0f m² is within desired range", area.doubleValue()));
+            matchReasons.add(MatchReasonDto.of(CATEGORY_AREA, "areaWithinRange", "area", area));
             return 100;
         }
 
@@ -760,16 +809,16 @@ public class PropertyMatchingService {
             BigDecimal maxWithTolerance = maxAreaDecimal.add(tolerance);
 
             if (area.compareTo(maxWithTolerance) <= 0) {
-                matchReasons.add(String.format("Living area %.0f m² is slightly larger than preferred (within 15%% tolerance)",
-                        area.doubleValue()));
+                matchReasons.add(MatchReasonDto.of(CATEGORY_AREA, "areaSlightlyAboveMax",
+                        "area", area, "limit", maxAreaDecimal));
                 return 85;
             }
 
             BigDecimal percentOver = area.subtract(maxAreaDecimal)
                     .divide(maxAreaDecimal, 4, RoundingMode.HALF_UP)
                     .multiply(BigDecimal.valueOf(100));
-            mismatchReasons.add(String.format("Living area %.0f m² is %.1f%% larger than preferred maximum",
-                    area.doubleValue(), percentOver.doubleValue()));
+            mismatchReasons.add(MatchReasonDto.of(CATEGORY_AREA, "areaAboveMax",
+                    "area", area, "limit", maxAreaDecimal, "percent", percent(percentOver)));
             return Math.max(0, 100 - percentOver.intValue());
         }
 
@@ -777,8 +826,8 @@ public class PropertyMatchingService {
             BigDecimal percentUnder = minAreaDecimal.subtract(area)
                     .divide(minAreaDecimal, 4, RoundingMode.HALF_UP)
                     .multiply(BigDecimal.valueOf(100));
-            mismatchReasons.add(String.format("Living area %.0f m² is %.1f%% smaller than preferred minimum",
-                    area.doubleValue(), percentUnder.doubleValue()));
+            mismatchReasons.add(MatchReasonDto.of(CATEGORY_AREA, "areaBelowMin",
+                    "area", area, "limit", minAreaDecimal, "percent", percent(percentUnder)));
             return Math.max(0, 100 - percentUnder.intValue());
         }
 
@@ -796,11 +845,11 @@ public class PropertyMatchingService {
      *   <li>0 points: Room count significantly different</li>
      * </ul>
      */
-    private int calculateRoomScore(Property property, PropertySearchCriteriaDto criteria,
-                                   PropertyMatchRequest request, List<String> matchReasons,
-                                   List<String> mismatchReasons) {
+    private int calculateRoomScore(PropertyDto property, PropertySearchCriteriaDto criteria,
+                                   PropertyMatchRequest request, List<MatchReasonDto> matchReasons,
+                                   List<MatchReasonDto> mismatchReasons) {
         if (property.getRooms() == null) {
-            matchReasons.add("Room count not specified for this property");
+            matchReasons.add(MatchReasonDto.of(CATEGORY_ROOM, "roomsNotSpecified"));
             return 50;
         }
 
@@ -810,7 +859,7 @@ public class PropertyMatchingService {
 
         // If no room constraints, perfect score
         if (minRooms == null && maxRooms == null) {
-            matchReasons.add("No room count constraints specified");
+            matchReasons.add(MatchReasonDto.of(CATEGORY_ROOM, "noRoomConstraints"));
             return 100;
         }
 
@@ -822,7 +871,7 @@ public class PropertyMatchingService {
         boolean withinMax = maxRoomsDecimal == null || rooms.compareTo(maxRoomsDecimal) <= 0;
 
         if (withinMin && withinMax) {
-            matchReasons.add(String.format("%.1f rooms is within desired range", rooms.doubleValue()));
+            matchReasons.add(MatchReasonDto.of(CATEGORY_ROOM, "roomsWithinRange", "rooms", rooms));
             return 100;
         }
 
@@ -831,13 +880,16 @@ public class PropertyMatchingService {
         if (maxRoomsDecimal != null && rooms.compareTo(maxRoomsDecimal) > 0) {
             difference = rooms.subtract(maxRoomsDecimal);
             if (difference.compareTo(BigDecimal.ONE) <= 0) {
-                matchReasons.add(String.format("%.1f rooms is 1 room more than preferred", rooms.doubleValue()));
+                matchReasons.add(MatchReasonDto.of(CATEGORY_ROOM, "roomsSlightlyAboveMax",
+                        "rooms", rooms, "limit", maxRoomsDecimal));
                 return 75;
             } else if (difference.compareTo(BigDecimal.valueOf(2)) <= 0) {
-                mismatchReasons.add(String.format("%.1f rooms is 2 rooms more than preferred", rooms.doubleValue()));
+                mismatchReasons.add(MatchReasonDto.of(CATEGORY_ROOM, "roomsAboveMax",
+                        "rooms", rooms, "limit", maxRoomsDecimal, "difference", difference));
                 return 50;
             } else {
-                mismatchReasons.add(String.format("%.1f rooms is significantly more than preferred", rooms.doubleValue()));
+                mismatchReasons.add(MatchReasonDto.of(CATEGORY_ROOM, "roomsFarAboveMax",
+                        "rooms", rooms, "limit", maxRoomsDecimal, "difference", difference));
                 return Math.max(0, 50 - (difference.intValue() - 2) * 10);
             }
         }
@@ -845,13 +897,16 @@ public class PropertyMatchingService {
         if (minRoomsDecimal != null && rooms.compareTo(minRoomsDecimal) < 0) {
             difference = minRoomsDecimal.subtract(rooms);
             if (difference.compareTo(BigDecimal.ONE) <= 0) {
-                matchReasons.add(String.format("%.1f rooms is 1 room less than preferred", rooms.doubleValue()));
+                matchReasons.add(MatchReasonDto.of(CATEGORY_ROOM, "roomsSlightlyBelowMin",
+                        "rooms", rooms, "limit", minRoomsDecimal));
                 return 75;
             } else if (difference.compareTo(BigDecimal.valueOf(2)) <= 0) {
-                mismatchReasons.add(String.format("%.1f rooms is 2 rooms less than preferred", rooms.doubleValue()));
+                mismatchReasons.add(MatchReasonDto.of(CATEGORY_ROOM, "roomsBelowMin",
+                        "rooms", rooms, "limit", minRoomsDecimal, "difference", difference));
                 return 50;
             } else {
-                mismatchReasons.add(String.format("%.1f rooms is significantly less than preferred", rooms.doubleValue()));
+                mismatchReasons.add(MatchReasonDto.of(CATEGORY_ROOM, "roomsFarBelowMin",
+                        "rooms", rooms, "limit", minRoomsDecimal, "difference", difference));
                 return Math.max(0, 50 - (difference.intValue() - 2) * 10);
             }
         }
@@ -873,33 +928,31 @@ public class PropertyMatchingService {
      *   <li>0 points: Property type explicitly excluded</li>
      * </ul>
      */
-    private int calculateFeatureScore(Property property, PropertySearchCriteriaDto criteria,
-                                      PropertyMatchRequest request, List<String> matchReasons,
-                                      List<String> mismatchReasons) {
+    private int calculateFeatureScore(PropertyDto property, PropertySearchCriteriaDto criteria,
+                                      PropertyMatchRequest request, List<MatchReasonDto> matchReasons,
+                                      List<MatchReasonDto> mismatchReasons) {
         List<String> preferredTypes = criteria.getPropertyTypes();
 
         if (preferredTypes == null || preferredTypes.isEmpty()) {
-            matchReasons.add("No specific property type preferences");
+            matchReasons.add(MatchReasonDto.of(CATEGORY_TYPE, "noTypePreferences"));
             return 100;
         }
 
         if (property.getPropertyType() == null) {
-            matchReasons.add("Property type not specified");
+            matchReasons.add(MatchReasonDto.of(CATEGORY_TYPE, "typeNotSpecified"));
             return 50;
         }
 
-        // Check if property type matches any preferred type
+        // Property type travels as the raw enum name so the frontend can translate it
         String propertyTypeName = property.getPropertyType().name();
         for (String preferredType : preferredTypes) {
             if (propertyTypeName.equalsIgnoreCase(preferredType.trim())) {
-                matchReasons.add(String.format("Property type %s matches preferences",
-                        property.getPropertyType().getEnglishName()));
+                matchReasons.add(MatchReasonDto.of(CATEGORY_TYPE, "typeMatches", "propertyType", propertyTypeName));
                 return 100;
             }
         }
 
-        mismatchReasons.add(String.format("Property type %s does not match preferred types",
-                property.getPropertyType().getEnglishName()));
+        mismatchReasons.add(MatchReasonDto.of(CATEGORY_TYPE, "typeNoMatch", "propertyType", propertyTypeName));
         return 0;
     }
 
@@ -908,53 +961,10 @@ public class PropertyMatchingService {
     // ========================================
 
     /**
-     * Convert PropertySearchCriteria entity to DTO.
+     * Convert PropertySearchCriteria entity to DTO via the shared MapStruct mapper —
+     * hand-copying fields here caused silently incomplete matching in the past.
      */
     private PropertySearchCriteriaDto convertCriteriaToDto(com.marklerapp.crm.entity.PropertySearchCriteria criteria) {
-        if (criteria == null) {
-            return null;
-        }
-
-        return PropertySearchCriteriaDto.builder()
-                .id(criteria.getId())
-                .minSquareMeters(criteria.getMinSquareMeters())
-                .maxSquareMeters(criteria.getMaxSquareMeters())
-                .minRooms(criteria.getMinRooms())
-                .maxRooms(criteria.getMaxRooms())
-                .minBudget(criteria.getMinBudget())
-                .maxBudget(criteria.getMaxBudget())
-                .minColdRent(criteria.getMinColdRent())
-                .maxColdRent(criteria.getMaxColdRent())
-                .minWarmRent(criteria.getMinWarmRent())
-                .maxWarmRent(criteria.getMaxWarmRent())
-                .preferredLocations(criteria.getPreferredLocations() != null ?
-                        Arrays.asList(criteria.getPreferredLocationsArray()) : null)
-                .latitude(criteria.getLatitude())
-                .longitude(criteria.getLongitude())
-                .searchRadiusKm(criteria.getSearchRadiusKm())
-                .restrictToSearchRadius(criteria.getRestrictToSearchRadius())
-                .propertyTypes(criteria.getPropertyTypes() != null ?
-                        Arrays.asList(criteria.getPropertyTypesArray()) : null)
-                .additionalRequirements(criteria.getAdditionalRequirements())
-                .build();
-    }
-
-    /**
-     * Convert PropertyDto to Property entity (lightweight conversion for scoring).
-     */
-    private Property convertToEntity(PropertyDto dto) {
-        Property property = new Property();
-        property.setId(dto.getId());
-        property.setPrice(dto.getPrice());
-        property.setLivingAreaSqm(dto.getLivingAreaSqm());
-        property.setRooms(dto.getRooms());
-        property.setAddressCity(dto.getAddressCity());
-        property.setAddressPostalCode(dto.getAddressPostalCode());
-        property.setLatitude(dto.getLatitude());
-        property.setLongitude(dto.getLongitude());
-        property.setPropertyType(dto.getPropertyType());
-        property.setListingType(dto.getListingType());
-        property.setStatus(dto.getStatus());
-        return property;
+        return criteria == null ? null : searchCriteriaMapper.toDto(criteria);
     }
 }

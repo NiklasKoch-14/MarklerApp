@@ -241,31 +241,56 @@ public class PropertyMatchRequest {
     }
 
     /**
-     * Get normalized weight values that sum to 100.
-     * Used internally by the matching algorithm.
+     * Get normalized weights as whole percentages that sum to exactly 100.
      *
-     * @return array of normalized weights [price, location, area, room, feature]
+     * <p>Integer percentages rather than fractions because these weights are shown to the
+     * user as the composition of a match score. Largest-remainder distribution keeps the
+     * parts adding up to 100 — a breakdown whose parts don't sum to the whole is worse
+     * than no breakdown at all.</p>
+     *
+     * @return array of weight percentages [price, location, area, room, feature]
      */
-    public double[] getNormalizedWeights() {
-        int totalWeight = (priceWeight != null ? priceWeight : 0) +
-                         (locationWeight != null ? locationWeight : 0) +
-                         (areaWeight != null ? areaWeight : 0) +
-                         (roomWeight != null ? roomWeight : 0) +
-                         (featureWeight != null ? featureWeight : 0);
+    public int[] getNormalizedWeightPercentages() {
+        int[] raw = {
+            priceWeight != null ? priceWeight : 0,
+            locationWeight != null ? locationWeight : 0,
+            areaWeight != null ? areaWeight : 0,
+            roomWeight != null ? roomWeight : 0,
+            featureWeight != null ? featureWeight : 0
+        };
 
+        int totalWeight = raw[0] + raw[1] + raw[2] + raw[3] + raw[4];
         if (totalWeight == 0) {
-            // Use default weights
-            return new double[]{0.30, 0.25, 0.20, 0.15, 0.10};
+            return new int[]{30, 25, 20, 15, 10};
         }
 
-        // Normalize to sum to 1.0
-        return new double[]{
-            (priceWeight != null ? priceWeight : 0) / (double) totalWeight,
-            (locationWeight != null ? locationWeight : 0) / (double) totalWeight,
-            (areaWeight != null ? areaWeight : 0) / (double) totalWeight,
-            (roomWeight != null ? roomWeight : 0) / (double) totalWeight,
-            (featureWeight != null ? featureWeight : 0) / (double) totalWeight
-        };
+        int[] normalized = new int[raw.length];
+        double[] remainders = new double[raw.length];
+        int distributed = 0;
+
+        for (int i = 0; i < raw.length; i++) {
+            double exact = raw[i] * 100.0 / totalWeight;
+            normalized[i] = (int) Math.floor(exact);
+            remainders[i] = exact - normalized[i];
+            distributed += normalized[i];
+        }
+
+        // Hand out the points lost to flooring, largest remainder first
+        for (int remaining = 100 - distributed; remaining > 0; remaining--) {
+            int best = -1;
+            for (int i = 0; i < raw.length; i++) {
+                if (remainders[i] > 0 && (best == -1 || remainders[i] > remainders[best])) {
+                    best = i;
+                }
+            }
+            if (best == -1) {
+                break;
+            }
+            normalized[best]++;
+            remainders[best] = 0;
+        }
+
+        return normalized;
     }
 
     /**

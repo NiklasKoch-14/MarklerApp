@@ -11,7 +11,8 @@ import { FileAttachmentManagerComponent } from '../../../../shared/components/fi
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { PropertyMatchingService } from '../../../property-management/services/property-matching.service';
-import { PropertyMatchResult } from '../../../property-management/models/property-match.model';
+import { PropertyMatchResult, MatchWeights } from '../../../property-management/models/property-match.model';
+import { MatchScorePopoverComponent } from '../../../property-management/components/match-breakdown/match-score-popover.component';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 import { LocationPickerMapComponent, SecondaryMarker } from '../../../../shared/components/location-picker-map/location-picker-map.component';
 import { PropertyService } from '../../../property-management/services/property.service';
@@ -22,7 +23,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent, TranslateEnumPipe, ConfirmDialogComponent, LocationPickerMapComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent, TranslateEnumPipe, ConfirmDialogComponent, LocationPickerMapComponent, MatchScorePopoverComponent],
   styles: [`
     .stage-option:hover { background:var(--surface-2) !important; }
     .qm-item { display:flex; align-items:center; gap:10px; width:100%; padding:10px 14px; border:none; background:none; cursor:pointer; font-size:13px; font-weight:500; color:var(--text); text-align:left; font-family:inherit; transition:background 0.1s; }
@@ -573,43 +574,53 @@ import { GdprExportService } from '../../services/gdpr-export.service';
                  style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
                 <i class="ri-shuffle-fill" style="font-size:15px;color:var(--primary);"></i>
-                <span style="font-size:15px;font-weight:700;color:var(--text);flex:1;">Passende Objekte</span>
-                <span *ngIf="!isLoadingMatches && matchingProperties.length > 0"
-                      style="font-size:12px;font-weight:700;color:var(--primary);background:var(--accent-soft);padding:2px 8px;border-radius:10px;">
-                  {{ matchingProperties.length }}
-                </span>
-              </div>
-              <app-loading-spinner *ngIf="isLoadingMatches" size="sm"></app-loading-spinner>
-              <div *ngIf="!isLoadingMatches && matchingProperties.length > 0" style="display:flex;flex-direction:column;gap:8px;">
-                <a *ngFor="let match of matchingProperties"
-                   [routerLink]="['/properties', match.property.id]"
-                   class="match-link"
-                   style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);text-decoration:none;transition:background 0.1s;">
-                  <span [style.background]="getMatchScoreBg(match.matchScore)"
-                        [style.color]="getMatchScoreColor(match.matchScore)"
-                        style="font-size:11px;font-weight:800;padding:4px 8px;border-radius:8px;flex-shrink:0;min-width:36px;text-align:center;">
-                    {{ match.matchScore }}%
+                <span style="font-size:15px;font-weight:700;color:var(--text);flex:1;">{{ 'properties.matching.matchingProperties' | translate }}</span>
+                @if (!isLoadingMatches && matchingProperties.length > 0) {
+                  <span style="font-size:12px;font-weight:700;color:var(--primary);background:var(--accent-soft);padding:2px 8px;border-radius:10px;">
+                    {{ matchingProperties.length }}
                   </span>
-                  <div style="flex:1;min-width:0;">
-                    <div style="display:flex;align-items:center;gap:6px;">
-                      <span style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ match.property.title }}</span>
-                      <span *ngIf="match.previouslyContacted"
-                            title="{{ 'properties.matching.alreadyContactedHint' | translate }}"
-                            style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--color-neutral);background:var(--color-neutral-soft);padding:2px 6px;border-radius:8px;flex-shrink:0;">
-                        <i class="ri-checkbox-circle-line" style="font-size:11px;"></i>
-                        {{ 'properties.matching.alreadyContacted' | translate }}
-                      </span>
+                }
+              </div>
+              @if (isLoadingMatches) {
+                <app-loading-spinner size="sm"></app-loading-spinner>
+              } @else if (matchingProperties.length > 0) {
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  @for (match of matchingProperties; track match.property.id) {
+                    <!-- Score-Badge und Zeilenlink sind getrennte Klickziele: das Badge oeffnet
+                         die Aufschluesselung, der Rest der Zeile navigiert. -->
+                    <div style="display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);">
+                      <app-match-score-popover [matchScore]="match.matchScore"
+                                               [breakdown]="match.scoreBreakdown"
+                                               [weights]="matchingPropertyWeights"
+                                               [matchReasons]="match.matchReasons || []"
+                                               [mismatchReasons]="match.mismatchReasons || []"></app-match-score-popover>
+                      <a [routerLink]="['/properties', match.property.id]"
+                         class="match-link"
+                         style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;text-decoration:none;">
+                        <div style="flex:1;min-width:0;">
+                          <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ match.property.title }}</span>
+                            @if (match.previouslyContacted) {
+                              <span title="{{ 'properties.matching.alreadyContactedHint' | translate }}"
+                                    style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--color-neutral);background:var(--color-neutral-soft);padding:2px 6px;border-radius:8px;flex-shrink:0;">
+                                <i class="ri-checkbox-circle-line" style="font-size:11px;"></i>
+                                {{ 'properties.matching.alreadyContacted' | translate }}
+                              </span>
+                            }
+                          </div>
+                          <div style="font-size:12px;color:var(--text-3);">{{ match.property.addressCity }}</div>
+                        </div>
+                        <i class="ri-arrow-right-line" style="font-size:14px;color:var(--text-3);flex-shrink:0;"></i>
+                      </a>
                     </div>
-                    <div style="font-size:11px;color:var(--text-3);">{{ match.property.addressCity }}</div>
-                  </div>
-                  <i class="ri-arrow-right-line" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
-                </a>
-              </div>
-              <div *ngIf="!isLoadingMatches && matchingProperties.length === 0"
-                   style="text-align:center;padding:16px 0;color:var(--text-3);">
-                <i class="ri-home-line" style="font-size:24px;display:block;margin-bottom:6px;"></i>
-                <div style="font-size:13px;">Keine passenden Objekte gefunden</div>
-              </div>
+                  }
+                </div>
+              } @else {
+                <div style="text-align:center;padding:16px 0;color:var(--text-3);">
+                  <i class="ri-home-line" style="font-size:24px;display:block;margin-bottom:6px;"></i>
+                  <div style="font-size:13px;">{{ 'properties.matching.noMatchingProperties' | translate }}</div>
+                </div>
+              }
             </div>
 
             <!-- DSGVO -->
@@ -764,6 +775,8 @@ export class ClientDetailComponent implements OnInit {
   showViewingForm = false;
 
   matchingProperties: PropertyMatchResult[] = [];
+  /** Gewichte, mit denen der Backend-Score tatsaechlich gerechnet wurde */
+  matchingPropertyWeights?: MatchWeights;
   searchLocationLabel: string | null = null;
   isLoadingMatches = false;
   radiusPropertyMarkers: SecondaryMarker[] = [];
@@ -893,6 +906,7 @@ export class ClientDetailComponent implements OnInit {
     this.propertyMatchingService.findMatchingPropertiesForClient(clientId, { maxResults: 3, matchThreshold: 0 }).subscribe({
       next: (response) => {
         this.matchingProperties = response.properties?.slice(0, 3) ?? [];
+        this.matchingPropertyWeights = response.appliedWeights;
         this.isLoadingMatches = false;
       },
       error: () => {
@@ -1172,18 +1186,6 @@ export class ClientDetailComponent implements OnInit {
       case MoveInTimeline.FLEXIBLE:    return 'Flexibel';
       default:                         return '–';
     }
-  }
-
-  getMatchScoreBg(score: number): string {
-    if (score >= 75) return 'var(--accent-soft)';
-    if (score >= 50) return 'var(--color-warning-soft)';
-    return 'var(--surface-2)';
-  }
-
-  getMatchScoreColor(score: number): string {
-    if (score >= 75) return 'var(--primary)';
-    if (score >= 50) return 'var(--color-warning)';
-    return 'var(--text-3)';
   }
 
   hasBudgetOrRent(): boolean {

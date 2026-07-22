@@ -465,30 +465,18 @@ public class ClientService {
      * Update search criteria for a client
      */
     private void updateSearchCriteria(Client client, PropertySearchCriteriaDto criteriaDto) {
-        PropertySearchCriteria existingCriteria = searchCriteriaRepository.findByClient(client)
-                .orElse(searchCriteriaMapper.toEntity(criteriaDto));
+        // Field copying is delegated to MapStruct (updateEntityFromDto) so that new
+        // criteria fields can never be forgotten here again — the mapper's
+        // unmappedTargetPolicy=ERROR turns a missing field into a compile error.
+        PropertySearchCriteria criteria = searchCriteriaRepository.findByClient(client)
+                .map(existing -> {
+                    searchCriteriaMapper.updateEntityFromDto(criteriaDto, existing);
+                    return existing;
+                })
+                .orElseGet(() -> searchCriteriaMapper.toEntity(criteriaDto));
 
-        if (existingCriteria.getId() != null) {
-            // Update existing criteria
-            existingCriteria.setMinSquareMeters(criteriaDto.getMinSquareMeters());
-            existingCriteria.setMaxSquareMeters(criteriaDto.getMaxSquareMeters());
-            existingCriteria.setMinRooms(criteriaDto.getMinRooms());
-            existingCriteria.setMaxRooms(criteriaDto.getMaxRooms());
-            existingCriteria.setMinBudget(criteriaDto.getMinBudget());
-            existingCriteria.setMaxBudget(criteriaDto.getMaxBudget());
-            existingCriteria.setAdditionalRequirements(criteriaDto.getAdditionalRequirements());
-
-            if (criteriaDto.getPreferredLocations() != null) {
-                existingCriteria.setPreferredLocationsArray(criteriaDto.getPreferredLocations().toArray(new String[0]));
-            }
-
-            if (criteriaDto.getPropertyTypes() != null) {
-                existingCriteria.setPropertyTypesArray(criteriaDto.getPropertyTypes().toArray(new String[0]));
-            }
-        }
-
-        existingCriteria.setClient(client);
-        searchCriteriaRepository.save(existingCriteria);
+        criteria.setClient(client);
+        searchCriteriaRepository.save(criteria);
     }
 
     private static final List<String> IMPORT_REQUIRED_COLUMNS = List.of("firstname", "lastname");

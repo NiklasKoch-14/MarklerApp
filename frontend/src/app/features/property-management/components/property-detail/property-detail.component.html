@@ -143,111 +143,119 @@
         </div>
       </div>
 
-      <!-- Description -->
-      <div *ngIf="property.description"
-           style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px;">
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Beschreibung</div>
-        <p style="font-size:14px;color:var(--text-2);line-height:1.65;margin:0;white-space:pre-line;">{{ property.description }}</p>
-      </div>
+      <!-- Beschreibung & Interne Notiz — Aussentext und Innensicht nebeneinander, damit
+           beim Lesen der Objektbeschreibung sofort sichtbar ist, was intern dazu bekannt ist. -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+        <div class="desc-notes-grid">
 
-      <!-- Features & Amenities -->
-      <div *ngIf="hasFeatures()"
-           style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px;">
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;text-transform:uppercase;letter-spacing:0.5px;">Ausstattung</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;">
-          <span *ngIf="property.hasElevator"
-                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ri-expand-up-down-line" style="color:var(--primary);"></i>
-            Aufzug
-          </span>
-          <span *ngIf="property.hasBalcony"
-                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ri-cloudy-line" style="color:var(--primary);"></i>
-            Balkon
-          </span>
-          <span *ngIf="property.hasTerrace"
-                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ri-sun-line" style="color:var(--primary);"></i>
-            Terrasse
-          </span>
-          <span *ngIf="property.hasGarden"
-                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ri-tree-line" style="color:var(--primary);"></i>
-            Garten
-          </span>
-          <span *ngIf="property.hasGarage"
-                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ri-car-line" style="color:var(--primary);"></i>
-            Garage
-          </span>
-          <span *ngIf="property.hasParking"
-                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ri-parking-line" style="color:var(--primary);"></i>
-            Parkplatz
-          </span>
-          <span *ngIf="property.hasBasement"
-                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ri-archive-line" style="color:var(--primary);"></i>
-            Keller
-          </span>
-          <span *ngIf="property.hasAttic"
-                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ri-home-line" style="color:var(--primary);"></i>
-            Dachboden
-          </span>
-          <span *ngIf="property.isBarrierFree"
-                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ri-wheelchair-line" style="color:var(--primary);"></i>
-            Barrierefrei
-          </span>
-          <span *ngIf="property.petsAllowed"
-                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ri-footprint-line" style="color:var(--primary);"></i>
-            Haustiere erlaubt
-          </span>
-          <span *ngIf="property.furnished"
-                style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
-            <i class="ri-armchair-line" style="color:var(--primary);"></i>
-            Möbliert
-          </span>
+          @if (property.description) {
+            <div style="padding:18px 20px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                <i class="ri-file-text-line" style="color:var(--primary);font-size:16px;"></i>
+                <span style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.5px;">{{ 'properties.form.description' | translate }}</span>
+              </div>
+              <p style="font-size:14px;color:var(--text-2);line-height:1.65;margin:0;white-space:pre-line;">{{ property.description }}</p>
+            </div>
+          }
+
+          <div style="padding:18px 20px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+              <i class="ri-lock-line" style="color:var(--primary);font-size:16px;"></i>
+              <span style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.5px;flex:1;">{{ 'properties.notes.title' | translate }}</span>
+              @if (!isEditingNotes) {
+                <button type="button" (click)="startEditingNotes()"
+                        [title]="'properties.notes.edit' | translate"
+                        style="border:none;background:none;cursor:pointer;padding:0 0 0 6px;color:var(--text-3);font-size:16px;line-height:1;">
+                  <i class="ri-pencil-line"></i>
+                </button>
+              }
+            </div>
+
+            @if (isEditingNotes) {
+              <textarea [(ngModel)]="notesDraft" rows="6"
+                        [placeholder]="'properties.notes.placeholder' | translate"
+                        style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:var(--surface);resize:vertical;font-family:inherit;box-sizing:border-box;outline:none;"></textarea>
+              <div class="form-actions" style="margin-top:10px;">
+                <button type="button" class="btn-primary" (click)="saveNotes()" [disabled]="isSavingNotes">
+                  @if (!isSavingNotes) {
+                    <i class="ri-check-line"></i>
+                  }
+                  {{ (isSavingNotes ? 'common.saving' : 'common.save') | translate }}
+                </button>
+                <button type="button" class="btn-secondary" (click)="cancelEditingNotes()" [disabled]="isSavingNotes">
+                  <i class="ri-close-line"></i>
+                  {{ 'common.cancel' | translate }}
+                </button>
+              </div>
+            } @else if (property.notes) {
+              <p style="font-size:14px;color:var(--text);margin:0;white-space:pre-wrap;line-height:1.5;">{{ property.notes }}</p>
+            } @else {
+              <button type="button" (click)="startEditingNotes()"
+                      style="border:none;background:none;padding:0;cursor:pointer;font-size:13px;color:var(--text-3);font-family:inherit;text-align:left;">
+                {{ 'properties.notes.empty' | translate }}
+              </button>
+            }
+          </div>
         </div>
       </div>
 
-      <!-- Interne Notiz -->
+      <!-- Passende Käufer -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
         <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
-          <i class="ri-lock-line" style="color:var(--primary);font-size:16px;"></i>
-          <span style="font-size:14px;font-weight:700;color:var(--text);">{{ 'properties.notes.title' | translate }}</span>
-          <button *ngIf="!isEditingNotes" type="button" (click)="startEditingNotes()"
-                  [title]="'properties.notes.edit' | translate"
-                  style="margin-left:auto;border:none;background:none;cursor:pointer;padding:6px;color:var(--text-3);font-size:16px;line-height:1;">
-            <i class="ri-pencil-line"></i>
-          </button>
+          <i class="ri-group-3-fill" style="font-size:16px;color:var(--primary);"></i>
+          <span style="font-size:14px;font-weight:700;color:var(--text);flex:1;">{{ 'properties.matching.matchingBuyers' | translate }}</span>
+          @if (!isLoadingMatchingClients && matchingClients.length > 0) {
+            <span style="font-size:12px;font-weight:700;color:var(--primary);background:var(--accent-soft);padding:2px 8px;border-radius:10px;">
+              {{ matchingClients.length }}
+            </span>
+          }
         </div>
-        <div style="padding:16px 20px;">
-          <ng-container *ngIf="!isEditingNotes">
-            <p *ngIf="property.notes" style="font-size:14px;color:var(--text);margin:0;white-space:pre-wrap;line-height:1.5;">{{ property.notes }}</p>
-            <button *ngIf="!property.notes" type="button" (click)="startEditingNotes()"
-                    style="border:none;background:none;padding:0;cursor:pointer;font-size:13px;color:var(--text-3);font-family:inherit;text-align:left;">
-              {{ 'properties.notes.empty' | translate }}
-            </button>
-          </ng-container>
-
-          <ng-container *ngIf="isEditingNotes">
-            <textarea [(ngModel)]="notesDraft" rows="6"
-                      [placeholder]="'properties.notes.placeholder' | translate"
-                      style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:var(--surface);resize:vertical;font-family:inherit;box-sizing:border-box;outline:none;"></textarea>
-            <div class="form-actions" style="margin-top:10px;">
-              <button type="button" class="btn-primary" (click)="saveNotes()" [disabled]="isSavingNotes">
-                <i *ngIf="!isSavingNotes" class="ri-check-line"></i>
-                {{ (isSavingNotes ? 'common.saving' : 'common.save') | translate }}
-              </button>
-              <button type="button" class="btn-secondary" (click)="cancelEditingNotes()" [disabled]="isSavingNotes">
-                <i class="ri-close-line"></i>
-                {{ 'common.cancel' | translate }}
-              </button>
+        <div style="padding:14px 18px;">
+          @if (isLoadingMatchingClients) {
+            <div style="text-align:center;padding:12px 0;">
+              <div style="width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;"></div>
             </div>
-          </ng-container>
+          } @else if (matchingClients.length > 0) {
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              @for (m of matchingClients; track m.client.id) {
+                <!-- Score-Badge und Zeilenlink sind getrennte Klickziele: das Badge oeffnet
+                     die Aufschluesselung, der Rest der Zeile navigiert. -->
+                <div style="display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);">
+                  <app-match-score-popover [matchScore]="m.matchScore"
+                                           [breakdown]="m.scoreBreakdown"
+                                           [weights]="matchingClientWeights"
+                                           [matchReasons]="m.matchReasons || []"
+                                           [mismatchReasons]="m.mismatchReasons || []"></app-match-score-popover>
+                  <a [routerLink]="['/clients', m.client.id]"
+                     style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;text-decoration:none;">
+                    <div style="flex:1;min-width:0;">
+                      <div style="display:flex;align-items:center;gap:6px;">
+                        <span style="font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ m.client.firstName }} {{ m.client.lastName }}</span>
+                        @if (m.previouslyContacted) {
+                          <span title="{{ 'properties.matching.alreadyContactedHint' | translate }}"
+                                style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--color-neutral);background:var(--color-neutral-soft);padding:2px 6px;border-radius:8px;flex-shrink:0;">
+                            <i class="ri-checkbox-circle-line" style="font-size:11px;"></i>
+                            {{ 'properties.matching.alreadyContacted' | translate }}
+                          </span>
+                        }
+                      </div>
+                      @if (m.client.searchCriteria?.maxBudget) {
+                        <div style="font-size:12px;color:var(--text-3);">
+                          {{ 'properties.matching.upToBudget' | translate: { amount: (m.client.searchCriteria.maxBudget | number:'1.0-0') } }}
+                        </div>
+                      }
+                    </div>
+                    <i class="ri-arrow-right-line" style="font-size:14px;color:var(--text-3);flex-shrink:0;"></i>
+                  </a>
+                </div>
+              }
+            </div>
+          } @else {
+            <div style="text-align:center;padding:14px 0;color:var(--text-3);">
+              <i class="ri-group-line" style="font-size:24px;display:block;margin-bottom:6px;"></i>
+              <div style="font-size:13px;">{{ 'properties.matching.noMatchingBuyers' | translate }}</div>
+            </div>
+          }
         </div>
       </div>
 
@@ -390,6 +398,23 @@
         </div>
       </div>
 
+      <!-- Ausstattung -->
+      @if (hasFeatures()) {
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+          <div style="padding:14px 18px;border-bottom:1px solid var(--border);">
+            <span style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.5px;">{{ 'properties.detail.specifications' | translate }}</span>
+          </div>
+          <div style="padding:14px 18px;display:flex;flex-wrap:wrap;gap:8px;">
+            @for (feature of visibleFeatures(); track feature.labelKey) {
+              <span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);">
+                <i [class]="feature.icon" style="color:var(--primary);"></i>
+                {{ feature.labelKey | translate }}
+              </span>
+            }
+          </div>
+        </div>
+      }
+
       <!-- Preisdetails -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
         <div style="padding:14px 18px;border-bottom:1px solid var(--border);">
@@ -502,7 +527,7 @@
            style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
         <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
           <i class="ri-account-circle-line" style="font-size:15px;color:var(--text-3);"></i>
-          <span style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.5px;">Eigentümer</span>
+          <span style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.5px;">{{ 'properties.detail.owner' | translate }}</span>
           <span style="margin-left:auto;font-size:11px;color:var(--text-3);font-style:italic;">intern</span>
         </div>
         <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
@@ -516,54 +541,6 @@
             <i class="ri-phone-line" style="font-size:14px;flex-shrink:0;"></i>
             {{ property.ownerPhone }}
           </a>
-        </div>
-      </div>
-
-      <!-- Passende Käufer -->
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
-        <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
-          <i class="ri-group-3-fill" style="font-size:15px;color:var(--primary);"></i>
-          <span style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.5px;flex:1;">Passende Käufer</span>
-          <span *ngIf="!isLoadingMatchingClients && matchingClients.length > 0"
-                style="font-size:11px;font-weight:700;color:var(--primary);background:var(--accent-soft);padding:2px 7px;border-radius:10px;">
-            {{ matchingClients.length }}
-          </span>
-        </div>
-        <div style="padding:12px 14px;">
-          <div *ngIf="isLoadingMatchingClients" style="text-align:center;padding:12px 0;">
-            <div style="width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;"></div>
-          </div>
-          <div *ngIf="!isLoadingMatchingClients && matchingClients.length > 0" style="display:flex;flex-direction:column;gap:6px;">
-            <a *ngFor="let m of matchingClients"
-               [routerLink]="['/clients', m.client.id]"
-               style="display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2);text-decoration:none;transition:background 0.1s;"
-               (mouseenter)="$any($event.currentTarget).style.background='var(--surface)'"
-               (mouseleave)="$any($event.currentTarget).style.background='var(--surface-2)'">
-              <span [style.background]="getMatchScoreBg(m.matchScore)"
-                    [style.color]="getMatchScoreColor(m.matchScore)"
-                    style="font-size:11px;font-weight:800;padding:3px 7px;border-radius:7px;flex-shrink:0;min-width:32px;text-align:center;">
-                {{ m.matchScore }}%
-              </span>
-              <div style="flex:1;min-width:0;">
-                <div style="display:flex;align-items:center;gap:6px;">
-                  <span style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ m.client.firstName }} {{ m.client.lastName }}</span>
-                  <span *ngIf="m.previouslyContacted"
-                        title="{{ 'properties.matching.alreadyContactedHint' | translate }}"
-                        style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--color-neutral);background:var(--color-neutral-soft);padding:2px 6px;border-radius:8px;flex-shrink:0;">
-                    <i class="ri-checkbox-circle-line" style="font-size:11px;"></i>
-                    {{ 'properties.matching.alreadyContacted' | translate }}
-                  </span>
-                </div>
-                <div *ngIf="m.client.searchCriteria?.maxBudget" style="font-size:11px;color:var(--text-3);">bis {{ m.client.searchCriteria.maxBudget | number:'1.0-0' }} €</div>
-              </div>
-              <i class="ri-arrow-right-line" style="font-size:12px;color:var(--text-3);flex-shrink:0;"></i>
-            </a>
-          </div>
-          <div *ngIf="!isLoadingMatchingClients && matchingClients.length === 0"
-               style="text-align:center;padding:12px 0;color:var(--text-3);">
-            <i class="ri-group-line" style="font-size:22px;display:block;margin-bottom:4px;"></i>
-            <div style="font-size:12px;">Keine passenden Käufer</div>
-          </div>
         </div>
       </div>
 
