@@ -5,8 +5,9 @@ import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ClientService, Client } from '../../services/client.service';
-import { LocationPickerMapComponent } from '../../../../shared/components/location-picker-map/location-picker-map.component';
-import { PropertyType } from '../../../property-management/services/property.service';
+import { LocationPickerMapComponent, SecondaryMarker } from '../../../../shared/components/location-picker-map/location-picker-map.component';
+import { PropertyType, PropertyService, Property } from '../../../property-management/services/property.service';
+import { filterWithinRadius } from '../../../../shared/utils/geo.util';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 import { ErrorHandlerService } from '../../../../core/services/error-handler.service';
 
@@ -258,9 +259,14 @@ import { ErrorHandlerService } from '../../../../core/services/error-handler.ser
                     [latitude]="searchCriteriaGroup.get('latitude')?.value"
                     [longitude]="searchCriteriaGroup.get('longitude')?.value"
                     [radiusKm]="searchCriteriaGroup.get('searchRadiusKm')?.value || 10"
+                    [secondaryMarkers]="radiusPropertyMarkers"
                     (locationChange)="onSearchLocationChange($event)"
                     (radiusChangeEvent)="onSearchRadiusChange($event)">
                   </app-location-picker-map>
+                  <p *ngIf="radiusPropertyMarkers.length > 0" style="margin-top:6px; font-size:12px; color:var(--text-2);">
+                    <i class="ri-map-pin-2-fill" style="color:#2563eb;"></i>
+                    {{ 'location.propertiesInRadius' | translate:{ count: radiusPropertyMarkers.length } }}
+                  </p>
                   <label style="display:flex; align-items:center; gap:8px; margin-top:10px; font-size:13px; color:var(--text-2); cursor:pointer;">
                     <input type="checkbox" formControlName="restrictToSearchRadius">
                     {{ 'clients.searchCriteria.restrictToRadius' | translate }}
@@ -392,12 +398,16 @@ export class ClientFormComponent implements OnInit {
   activeSection: 'contact' | 'search' | 'gdpr' = 'contact';
   duplicateWarnings: Client[] = [];
 
+  private agentProperties: Property[] = [];
+  radiusPropertyMarkers: SecondaryMarker[] = [];
+
   constructor(
     private fb: FormBuilder,
     private clientService: ClientService,
     private router: Router,
     private route: ActivatedRoute,
-    private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
+    private propertyService: PropertyService
   ) {
     this.clientForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
@@ -495,6 +505,33 @@ export class ClientFormComponent implements OnInit {
     } else {
       this.watchForDuplicates();
     }
+
+    // Größe 1000: ein Agent hat realistisch weit weniger Objekte; erspart Paging-Logik hier.
+    this.propertyService.getProperties(0, 1000).subscribe({
+      next: page => {
+        this.agentProperties = page.content;
+        this.updateRadiusPropertyMarkers();
+      },
+      error: () => {
+        // Karte funktioniert ohne Immobilien-Pins weiter — Fehler hier nicht blockierend.
+        this.agentProperties = [];
+      }
+    });
+  }
+
+  private updateRadiusPropertyMarkers(): void {
+    const criteria = this.searchCriteriaGroup;
+    const lat = criteria.get('latitude')?.value;
+    const lng = criteria.get('longitude')?.value;
+    const radiusKm = criteria.get('searchRadiusKm')?.value ?? 10;
+
+    if (lat == null || lng == null) {
+      this.radiusPropertyMarkers = [];
+      return;
+    }
+    // Immer neues Array zuweisen, damit ngOnChanges der Map-Komponente feuert.
+    this.radiusPropertyMarkers = filterWithinRadius(this.agentProperties, lat, lng, radiusKm)
+      .map(p => ({ latitude: p.latitude!, longitude: p.longitude!, label: p.title }));
   }
 
   /** Non-blocking duplicate-lead check while a new client is being entered (create mode only). */
@@ -561,6 +598,7 @@ export class ClientFormComponent implements OnInit {
             additionalRequirements: client.searchCriteria?.additionalRequirements || ''
           }
         });
+        this.updateRadiusPropertyMarkers();
         this.isLoading = false;
       },
       error: (error) => {
@@ -650,10 +688,12 @@ export class ClientFormComponent implements OnInit {
 
   onSearchLocationChange(location: { latitude: number; longitude: number }): void {
     this.searchCriteriaGroup.patchValue(location);
+    this.updateRadiusPropertyMarkers();
   }
 
   onSearchRadiusChange(radiusKm: number): void {
     this.searchCriteriaGroup.patchValue({ searchRadiusKm: radiusKm });
+    this.updateRadiusPropertyMarkers();
   }
 
   rangeValidator(group: FormGroup): { [key: string]: any } | null {
