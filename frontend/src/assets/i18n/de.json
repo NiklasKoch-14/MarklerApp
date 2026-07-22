@@ -1231,6 +1231,7 @@
   "location": {
     "searchPlaceholder": "Adresse suchen…",
     "radiusLabel": "Umkreis",
-    "noPinHint": "Klicke auf die Karte, um einen Standort-Pin zu setzen."
+    "noPinHint": "Klicke auf die Karte, um einen Standort-Pin zu setzen.",
+    "propertiesInRadius": "{{count}} Immobilie(n) im Suchradius"
   }
 }

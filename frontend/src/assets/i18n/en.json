@@ -1231,6 +1231,7 @@
   "location": {
     "searchPlaceholder": "Search address…",
     "radiusLabel": "Radius",
-    "noPinHint": "Click on the map to place a location pin."
+    "noPinHint": "Click on the map to place a location pin.",
+    "propertiesInRadius": "{{count}} propert(y/ies) within the search radius"
   }
 }
