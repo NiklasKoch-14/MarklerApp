@@ -207,7 +207,13 @@
     "healthTitle": "Pipeline health",
     "overdueFollowups": "Overdue follow-ups",
     "noContact30": "Clients with no contact >30 days",
-    "avgDaysSinceContact": "Avg. days since last contact"
+    "avgDaysSinceContact": "Avg. days since last contact",
+    "mapTitle": "Portfolio map",
+    "mapSub": "All properties and client search locations at a glance",
+    "mapLegendProperties": "Properties ({{count}})",
+    "mapLegendClients": "Client search locations ({{count}})",
+    "mapClickHint": "Click a pin to open the record.",
+    "mapEmpty": "No property or client has coordinates yet."
   },
   "dashboard": {
     "title": "Dashboard",

@@ -207,7 +207,13 @@
     "healthTitle": "Pipeline-Gesundheit",
     "overdueFollowups": "Überfällige Follow-ups",
     "noContact30": "Kunden ohne Kontakt >30 Tage",
-    "avgDaysSinceContact": "Ø Tage seit letztem Kontakt"
+    "avgDaysSinceContact": "Ø Tage seit letztem Kontakt",
+    "mapTitle": "Portfolio-Karte",
+    "mapSub": "Alle Objekte und Suchstandorte der Kunden auf einen Blick",
+    "mapLegendProperties": "Immobilien ({{count}})",
+    "mapLegendClients": "Suchstandorte der Kunden ({{count}})",
+    "mapClickHint": "Klick auf einen Pin öffnet den Datensatz.",
+    "mapEmpty": "Für keine Immobilie und keinen Kunden liegen bisher Koordinaten vor."
   },
   "dashboard": {
     "title": "Dashboard",

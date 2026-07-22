@@ -1,9 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AnalyticsService, DashboardAnalytics, DailyActivity, PropertyOnMarket } from './services/analytics.service';
 import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
+import { LocationPickerMapComponent, SecondaryMarker } from '../../shared/components/location-picker-map/location-picker-map.component';
+import { PropertyService } from '../property-management/services/property.service';
+import { ClientService } from '../client-management/services/client.service';
 
 interface FunnelStage {
   label: string;
@@ -36,7 +41,7 @@ interface MarketBar {
 @Component({
   selector: 'app-analytics',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule, LoadingSpinnerComponent],
+  imports: [CommonModule, RouterLink, TranslateModule, LoadingSpinnerComponent, LocationPickerMapComponent],
   styles: [`
     .an-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); }
     .an-card-head { padding:16px 20px 4px; }
@@ -101,6 +106,40 @@ interface MarketBar {
           <div>
             <div style="font-size:14px; font-weight:600; color:var(--text);">{{ 'analytics.tooFewTitle' | translate }}</div>
             <div style="font-size:13px; color:var(--text-3); margin-top:2px;">{{ 'analytics.tooFewBody' | translate }}</div>
+          </div>
+        </div>
+
+        <!-- ══ Portfolio-Karte — wo liegt alles, und wer sucht dort ══ -->
+        <div class="an-card" style="margin-bottom:20px;">
+          <div class="an-card-head">
+            <div class="an-title"><i class="ri-map-2-fill" style="color:var(--primary);"></i>{{ 'analytics.mapTitle' | translate }}</div>
+            <div class="an-sub">{{ 'analytics.mapSub' | translate }}</div>
+          </div>
+          <div style="padding:8px 20px 16px;">
+            <app-location-picker-map
+              [readOnly]="true"
+              [showRadiusControl]="false"
+              [secondaryMarkers]="mapMarkers"
+              height="520px"
+              (markerClick)="onMarkerClick($event)">
+            </app-location-picker-map>
+
+            <div *ngIf="mapMarkers.length > 0" style="display:flex; flex-wrap:wrap; gap:18px; margin-top:12px; font-size:12.5px; color:var(--text-2);">
+              <span style="display:inline-flex; align-items:center; gap:7px;">
+                <span style="width:11px; height:11px; border-radius:50%; background:#2563eb; box-shadow:0 0 0 2px var(--surface);"></span>
+                {{ 'analytics.mapLegendProperties' | translate:{ count: propertyPinCount } }}
+              </span>
+              <span style="display:inline-flex; align-items:center; gap:7px;">
+                <span style="width:11px; height:11px; border-radius:50%; background:#dc2626; box-shadow:0 0 0 2px var(--surface);"></span>
+                {{ 'analytics.mapLegendClients' | translate:{ count: searchPinCount } }}
+              </span>
+              <span style="color:var(--text-3);">{{ 'analytics.mapClickHint' | translate }}</span>
+            </div>
+
+            <div *ngIf="!isLoadingMap && mapMarkers.length === 0"
+                 style="margin-top:12px; font-size:13px; color:var(--text-3);">
+              {{ 'analytics.mapEmpty' | translate }}
+            </div>
           </div>
         </div>
 
@@ -253,9 +292,20 @@ export class AnalyticsComponent implements OnInit {
   marketBars: MarketBar[] = [];
   tooFewData = false;
 
-  constructor(private analyticsService: AnalyticsService) {}
+  mapMarkers: SecondaryMarker[] = [];
+  propertyPinCount = 0;
+  searchPinCount = 0;
+  isLoadingMap = true;
+
+  constructor(
+    private analyticsService: AnalyticsService,
+    private propertyService: PropertyService,
+    private clientService: ClientService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
+    this.loadMapMarkers();
     this.analyticsService.getAnalytics().subscribe({
       next: (d) => {
         this.data = d;
@@ -267,6 +317,50 @@ export class AnalyticsComponent implements OnInit {
       },
       error: () => { this.loading = false; },
     });
+  }
+
+  /**
+   * Bewusst getrennt vom Analytics-Endpoint geladen: die Karte braucht Koordinaten
+   * einzelner Datensätze, keine Kennzahlen — und soll auch stehen, wenn die
+   * Auswertung noch lädt oder mangels Daten gar nicht angezeigt wird.
+   * Größe 1000: ein Agent hat realistisch weit weniger Datensätze; erspart Paging.
+   */
+  private loadMapMarkers(): void {
+    forkJoin({
+      properties: this.propertyService.getProperties(0, 1000).pipe(catchError(() => of(null))),
+      clients: this.clientService.getClients(0, 1000).pipe(catchError(() => of(null)))
+    }).subscribe(({ properties, clients }) => {
+      const propertyMarkers: SecondaryMarker[] = (properties?.content ?? [])
+        .filter(p => p.latitude != null && p.longitude != null)
+        .map(p => ({
+          latitude: p.latitude!,
+          longitude: p.longitude!,
+          label: p.title,
+          role: 'property' as const,
+          link: ['/properties', p.id!]
+        }));
+
+      const searchMarkers: SecondaryMarker[] = (clients?.content ?? [])
+        .filter(c => c.searchCriteria?.latitude != null && c.searchCriteria?.longitude != null)
+        .map(c => ({
+          latitude: c.searchCriteria!.latitude!,
+          longitude: c.searchCriteria!.longitude!,
+          label: `${c.firstName} ${c.lastName} · ${c.searchCriteria!.searchRadiusKm ?? 10} km`,
+          role: 'search' as const,
+          link: ['/clients', c.id!]
+        }));
+
+      this.propertyPinCount = propertyMarkers.length;
+      this.searchPinCount = searchMarkers.length;
+      this.mapMarkers = [...propertyMarkers, ...searchMarkers];
+      this.isLoadingMap = false;
+    });
+  }
+
+  onMarkerClick(marker: SecondaryMarker): void {
+    if (marker.link) {
+      this.router.navigate(marker.link);
+    }
   }
 
   private buildFunnel(d: DashboardAnalytics): void {

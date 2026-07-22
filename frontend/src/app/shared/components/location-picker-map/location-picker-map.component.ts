@@ -49,6 +49,9 @@ export interface SecondaryMarker {
   label: string;
   /** Default 'property' — der mit Abstand häufigste Fall. */
   role?: MapMarkerRole;
+  /** Router-Kommandos zum zugehörigen Datensatz. Gesetzt = der Pin ist anklickbar;
+   * die Navigation macht der Aufrufer über (markerClick), die Karte kennt keine Routen. */
+  link?: unknown[];
 }
 
 /**
@@ -82,7 +85,7 @@ export interface SecondaryMarker {
         </div>
       </div>
 
-      <div #mapContainer style="height:260px;overflow:hidden;" [style.border-radius]="mapBorderRadius" [class.location-picker-map--interactive]="!readOnly"></div>
+      <div #mapContainer style="overflow:hidden;" [style.height]="height" [style.border-radius]="mapBorderRadius" [class.location-picker-map--interactive]="!readOnly"></div>
 
       <div *ngIf="!readOnly && showRadiusControl && hasPin" style="display:flex;align-items:center;gap:10px;">
         <label style="font-size:12px;color:var(--text-2);white-space:nowrap;">{{ 'location.radiusLabel' | translate }}</label>
@@ -110,9 +113,13 @@ export class LocationPickerMapComponent implements AfterViewInit, OnChanges, OnD
   /** Rolle des Haupt-Pins — im Kundenkontext der Suchstandort, auf einer Objektseite
    * die Immobilie selbst. Steuert nur die Farbe, nicht das Verhalten. */
   @Input() pinRole: MapMarkerRole = 'search';
+  /** CSS-Höhe des Kartencontainers — Detailkarten sind Beiwerk in einer Spalte,
+   * eine Übersichtskarte trägt die Seite und braucht deutlich mehr. */
+  @Input() height = '260px';
 
   @Output() locationChange = new EventEmitter<{ latitude: number; longitude: number }>();
   @Output() radiusChangeEvent = new EventEmitter<number>();
+  @Output() markerClick = new EventEmitter<SecondaryMarker>();
 
   @ViewChild('mapContainer') mapContainerRef!: ElementRef<HTMLDivElement>;
 
@@ -198,10 +205,13 @@ export class LocationPickerMapComponent implements AfterViewInit, OnChanges, OnD
       this.marker.setIcon(this.buildPinIcon());
     }
     if (changes['secondaryMarkers']) {
-      // Bewusst ohne fitToContent: der Ausschnitt gehört dem Haupt-Pin (bzw. seinem
-      // Radius). Sekundäre Pins liegen mit auf der Karte und werden beim manuellen
-      // Rauszoomen sichtbar — sie dürfen den Fokus aber nicht wegziehen.
       this.renderSecondaryMarkers();
+      // Wo ein Haupt-Pin existiert, gehört ihm der Ausschnitt: sekundäre Pins liegen
+      // mit auf der Karte und werden beim manuellen Rauszoomen sichtbar, dürfen den
+      // Fokus aber nicht wegziehen. Nur die Übersichtskarte richtet sich nach ihnen.
+      if (!this.hasPin) {
+        this.fitToContent();
+      }
     }
   }
 
@@ -237,13 +247,25 @@ export class LocationPickerMapComponent implements AfterViewInit, OnChanges, OnD
    * clipped outside the viewport, forcing a manual zoom-out every time.
    */
   private fitToContent(): void {
-    if (!this.map || !this.hasPin) {
+    if (!this.map) {
       return;
     }
-    if (this.showRadiusControl && this.circle) {
-      this.map.fitBounds(this.circle.getBounds(), { padding: [24, 24] });
-    } else {
-      this.map.setView([this.latitude!, this.longitude!], 13);
+    if (this.hasPin) {
+      if (this.showRadiusControl && this.circle) {
+        this.map.fitBounds(this.circle.getBounds(), { padding: [24, 24] });
+      } else {
+        this.map.setView([this.latitude!, this.longitude!], 13);
+      }
+      return;
+    }
+    // Übersichtskarte ohne Hauptgegenstand: hier gibt es nichts zu fokussieren, also
+    // spannt der Marker-Bestand den Ausschnitt auf. maxZoom verhindert, dass ein
+    // einzelner Pin bis auf Hausnummernebene aufgezogen wird.
+    if (this.secondaryMarkers?.length) {
+      const bounds = L.latLngBounds(
+        this.secondaryMarkers.map(marker => [marker.latitude, marker.longitude] as L.LatLngTuple)
+      );
+      this.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
     }
   }
 
@@ -269,7 +291,7 @@ export class LocationPickerMapComponent implements AfterViewInit, OnChanges, OnD
     }
     this.secondaryLayer.clearLayers();
     for (const marker of this.secondaryMarkers ?? []) {
-      L.circleMarker([marker.latitude, marker.longitude], {
+      const circleMarker = L.circleMarker([marker.latitude, marker.longitude], {
         radius: 8,
         color: '#ffffff',
         weight: 2,
@@ -278,6 +300,10 @@ export class LocationPickerMapComponent implements AfterViewInit, OnChanges, OnD
       })
         .bindTooltip(marker.label)
         .addTo(this.secondaryLayer);
+
+      if (marker.link) {
+        circleMarker.on('click', () => this.markerClick.emit(marker));
+      }
     }
   }
 
