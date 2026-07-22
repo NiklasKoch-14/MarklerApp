@@ -30,6 +30,12 @@ L.Icon.Default.mergeOptions({
 
 const GERMANY_CENTER: L.LatLngTuple = [51.1657, 10.4515];
 
+export interface SecondaryMarker {
+  latitude: number;
+  longitude: number;
+  label: string;
+}
+
 /**
  * Reusable Leaflet map for the location feature (Issue #19): a draggable pin with an
  * optional radius circle. Read-only mode (property-detail: show where a property is)
@@ -85,6 +91,7 @@ export class LocationPickerMapComponent implements AfterViewInit, OnChanges, OnD
    * against a card edge (e.g. '0' when a parent already clips corners via overflow:hidden,
    * or '0 0 12px 12px' when it should visually continue straight from content above it). */
   @Input() mapBorderRadius = '12px';
+  @Input() secondaryMarkers: SecondaryMarker[] = [];
 
   @Output() locationChange = new EventEmitter<{ latitude: number; longitude: number }>();
   @Output() radiusChangeEvent = new EventEmitter<number>();
@@ -98,6 +105,7 @@ export class LocationPickerMapComponent implements AfterViewInit, OnChanges, OnD
   private map?: L.Map;
   private marker?: L.Marker;
   private circle?: L.Circle;
+  private secondaryLayer?: L.LayerGroup;
   private viewInitialized = false;
   private search$ = new Subject<string>();
 
@@ -143,6 +151,8 @@ export class LocationPickerMapComponent implements AfterViewInit, OnChanges, OnD
       this.fitToContent();
     }
 
+    this.renderSecondaryMarkers();
+
     if (!this.readOnly) {
       this.map.on('click', (event: L.LeafletMouseEvent) => {
         this.setPin(event.latlng.lat, event.latlng.lng);
@@ -165,6 +175,9 @@ export class LocationPickerMapComponent implements AfterViewInit, OnChanges, OnD
     if (changes['radiusKm'] && this.circle) {
       this.circle.setRadius(this.radiusKm * 1000);
       this.fitToContent();
+    }
+    if (changes['secondaryMarkers']) {
+      this.renderSecondaryMarkers();
     }
   }
 
@@ -215,6 +228,33 @@ export class LocationPickerMapComponent implements AfterViewInit, OnChanges, OnD
     this.longitude = longitude;
     this.renderPin();
     this.locationChange.emit({ latitude, longitude });
+  }
+
+  /**
+   * Sekundäre Pins (z. B. Immobilien im Suchradius) leben in einer eigenen LayerGroup,
+   * damit ein kompletter Neuaufbau bei jeder Änderung den Such-Pin nicht berührt.
+   * CircleMarker statt Icon-Marker: klar vom Such-Pin unterscheidbar und ohne
+   * zusätzliche Icon-Assets im Build.
+   */
+  private renderSecondaryMarkers(): void {
+    if (!this.map) {
+      return;
+    }
+    if (!this.secondaryLayer) {
+      this.secondaryLayer = L.layerGroup().addTo(this.map);
+    }
+    this.secondaryLayer.clearLayers();
+    for (const marker of this.secondaryMarkers ?? []) {
+      L.circleMarker([marker.latitude, marker.longitude], {
+        radius: 8,
+        color: '#ffffff',
+        weight: 2,
+        fillColor: '#2563eb',
+        fillOpacity: 0.9
+      })
+        .bindTooltip(marker.label)
+        .addTo(this.secondaryLayer);
+    }
   }
 
   private renderPin(): void {
