@@ -33,7 +33,7 @@ interface Notification {
           <h1 class="page-title">{{ 'notifications.title' | translate }}</h1>
         </div>
         <button class="btn-secondary" (click)="markAllRead()">
-          <i class="ri-check-double-line" style="font-size:16px;"></i>
+          <i class="ri-check-line" style="font-size:16px;"></i>
           {{ 'notifications.markAllRead' | translate }}
         </button>
       </div>

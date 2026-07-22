@@ -892,6 +892,9 @@
       "legendClients": "Suchstandorte der Kunden"
     }
   },
+  "viewings": {
+    "save": "Besichtigung speichern"
+  },
   "call-notes": {
     "title": "Gesprächsnotizen",
     "all-call-notes": "Alle Gesprächsnotizen",

@@ -129,8 +129,8 @@ import { GdprExportService } from '../../services/gdpr-export.service';
               <!-- Neue Notiz -->
               <button (click)="showQuickNoteForm = !showQuickNoteForm; showFollowUpPanel = false"
                       style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">
-                <i class="ri-edit-2-fill" style="font-size:14px;"></i>
-                + Neue Notiz
+                <i class="ri-add-line" style="font-size:14px;"></i>
+                Neue Notiz
               </button>
 
               <!-- Bearbeiten -->
@@ -181,7 +181,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
         <div *ngIf="showQuickNoteForm" class="detail-modal-card"
              style="background:var(--surface);border-radius:14px;padding:20px 24px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
-            <i class="ri-edit-2-fill" style="font-size:16px;color:var(--primary);"></i>
+            <i class="ri-pencil-line" style="font-size:16px;color:var(--primary);"></i>
             <span style="font-size:14px;font-weight:700;color:var(--text);">Gesprächsnotiz</span>
             <div style="flex:1;"></div>
             <button *ngIf="voiceSupported" (click)="toggleVoiceRecording()" [disabled]="isParsingVoice"
@@ -350,7 +350,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
                 </span>
                 <button (click)="showViewingForm = !showViewingForm"
                         style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--color-warning-soft);color:var(--color-warning);border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
-                  <i class="ri-add-fill" style="font-size:12px;"></i>
+                  <i class="ri-add-line" style="font-size:12px;"></i>
                   Besichtigung
                 </button>
               </div>

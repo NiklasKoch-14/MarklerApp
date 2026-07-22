@@ -670,6 +670,22 @@
     cursor: not-allowed;
   }
 
+  /* ── Aktionsreihe unter Formularen ─────────────────────────────────
+     Reihenfolge steckt im Markup: der primaere Button steht als erstes
+     Kind links, der sekundaere folgt rechts daneben. Ausrichtung der
+     ganzen Gruppe kommt von der Klasse — rechtsbuendig im Formular,
+     zentriert im Dialog. */
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .form-actions--centered {
+    justify-content: center;
+  }
+
   /* Auth pages */
   .auth-card {
     @apply bg-white rounded-2xl shadow-lg p-8;

@@ -7,11 +7,12 @@ import { ViewingService, ViewingResponse, ViewingFeedback } from '../../services
 import { ClientService, Client, PipelineStage } from '../../../client-management/services/client.service';
 import { PropertyService, Property, ListingType } from '../../../property-management/services/property.service';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-viewing-add-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, LoadingSpinnerComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, LoadingSpinnerComponent, TranslateModule],
   template: `
     <!-- ── Shared form body ────────────────────────────────────── -->
     <ng-template #formBody>
@@ -290,16 +291,16 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
         </div>
 
         <!-- Actions -->
-        <div style="display:flex;gap:12px;">
-          <button type="button" (click)="cancel()"
-                  style="flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);color:var(--text-2);font-size:14px;font-weight:500;cursor:pointer;">
-            Abbrechen
-          </button>
-          <button type="submit" [disabled]="!canSubmit() || isSubmitting"
-                  style="flex:2;padding:10px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"
+        <div class="form-actions form-actions--centered">
+          <button type="submit" class="btn-primary" [disabled]="!canSubmit() || isSubmitting"
                   [style.opacity]="!canSubmit() || isSubmitting ? '0.6' : '1'">
             <app-loading-spinner *ngIf="isSubmitting" size="xs" [centered]="false"></app-loading-spinner>
-            {{ isSubmitting ? 'Speichern...' : 'Besichtigung speichern' }}
+            <i *ngIf="!isSubmitting" class="ri-check-line"></i>
+            {{ isSubmitting ? ('common.saving' | translate) : ('viewings.save' | translate) }}
+          </button>
+          <button type="button" class="btn-secondary" (click)="cancel()">
+            <i class="ri-close-line"></i>
+            {{ 'common.cancel' | translate }}
           </button>
         </div>
       </form>

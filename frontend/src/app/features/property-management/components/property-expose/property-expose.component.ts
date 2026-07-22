@@ -148,18 +148,23 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
                 </div>
               </div>
             </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <div class="form-actions form-actions--centered bg-gray-50 px-4 py-3 sm:px-6">
+              <!-- Loeschen traegt die Signalfarbe statt --primary, sonst laese sich der
+                   destruktive Vorgang wie eine gewoehnliche Bestaetigung. -->
               <button
                 type="button"
+                class="btn-primary"
                 (click)="deleteExpose()"
                 [disabled]="deleting"
-                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[var(--color-error)] text-base font-medium text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-error)] sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50">
+                style="background:var(--color-error);">
+                <i class="ri-delete-bin-line"></i>
                 {{ deleting ? ('common.deleting' | translate) : ('common.delete' | translate) }}
               </button>
               <button
                 type="button"
-                (click)="cancelDelete()"
-                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                class="btn-secondary"
+                (click)="cancelDelete()">
+                <i class="ri-close-line"></i>
                 {{ 'common.cancel' | translate }}
               </button>
             </div>

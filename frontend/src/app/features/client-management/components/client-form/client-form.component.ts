@@ -333,12 +333,14 @@ import { ErrorHandlerService } from '../../../../core/services/error-handler.ser
             </div>
 
             <!-- Actions -->
-            <div style="display:flex; justify-content:flex-end; gap:10px; padding-bottom:32px;">
-              <button type="button" (click)="cancel()" class="btn-secondary">
-                {{ 'common.cancel' | translate }}
-              </button>
+            <div class="form-actions" style="padding-bottom:32px;">
               <button type="submit" [disabled]="!clientForm.valid || isLoading" class="btn-primary">
+                <i class="ri-check-line"></i>
                 {{ isLoading ? (isEditMode ? ('clients.updating' | translate) : ('clients.creating' | translate)) : (isEditMode ? ('clients.updateClient' | translate) : ('clients.createClient' | translate)) }}
+              </button>
+              <button type="button" (click)="cancel()" class="btn-secondary">
+                <i class="ri-close-line"></i>
+                {{ 'common.cancel' | translate }}
               </button>
             </div>
 

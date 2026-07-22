@@ -711,21 +711,23 @@
       </div>
 
       <!-- Form Actions -->
-      <div style="display:flex; justify-content:space-between; align-items:center; padding-top:20px; border-top:1px solid var(--border); margin-top:8px;">
-        <button
-          type="button"
-          (click)="cancel()"
-          class="btn-secondary">
-          {{ 'common.cancel' | translate }}
-        </button>
-
+      <div class="form-actions" style="padding-top:20px; border-top:1px solid var(--border); margin-top:8px;">
         <button
           type="submit"
           [disabled]="!propertyForm.valid || isLoading"
           class="btn-primary">
+          <i class="ri-check-line"></i>
           <ng-container *ngIf="isLoading">{{ 'common.saving' | translate }}</ng-container>
           <ng-container *ngIf="!isLoading && isEditMode">{{ 'properties.update' | translate }}</ng-container>
           <ng-container *ngIf="!isLoading && !isEditMode">{{ 'properties.create' | translate }}</ng-container>
+        </button>
+
+        <button
+          type="button"
+          (click)="cancel()"
+          class="btn-secondary">
+          <i class="ri-close-line"></i>
+          {{ 'common.cancel' | translate }}
         </button>
       </div>
     </form>

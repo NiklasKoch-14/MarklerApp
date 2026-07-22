@@ -892,6 +892,9 @@
       "legendClients": "Client search locations"
     }
   },
+  "viewings": {
+    "save": "Save viewing"
+  },
   "call-notes": {
     "title": "Call Notes",
     "all-call-notes": "All Call Notes",

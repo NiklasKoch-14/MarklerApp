@@ -169,6 +169,30 @@ Always use `translateEnum` pipe in templates. NEVER format enums in service meth
 
 `JacksonConfig.java` coerces empty strings to null for enums — needed because frontend sends `""` for optional enums.
 
+### Buttons & Icons (Issue #28)
+
+Never style a button inline — use `.btn-primary` (filled `--primary`) or `.btn-secondary`
+(light surface + neutral `--border`), both in `styles.scss`.
+
+Action rows go **below** the form, in one group, wrapped in `.form-actions`
+(right-aligned) or `.form-actions form-actions--centered` (dialogs). **The primary
+button comes first in the markup** — it sits on the left, deliberately inverting the
+usual LTR convention.
+
+One icon per operation, no exceptions:
+
+| Operation | Icon |
+|---|---|
+| Edit | `ri-pencil-line` |
+| Add / create | `ri-add-line` |
+| Close / cancel | `ri-close-line` |
+| Confirm / save | `ri-check-line` |
+| Delete | `ri-delete-bin-line` |
+
+`ri-checkbox-circle-line`/`-fill` stay **status indicators** and are never button icons.
+Destructive confirmations keep `.btn-primary` but override `background` with the signal
+colour — teal on a delete would read as a routine confirmation.
+
 ---
 
 ## Git Workflow

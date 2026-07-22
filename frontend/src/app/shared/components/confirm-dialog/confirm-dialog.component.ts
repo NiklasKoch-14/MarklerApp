@@ -33,16 +33,18 @@ import { TranslateModule } from '@ngx-translate/core';
             <p style="font-size:13px;color:var(--text-2);margin:0;line-height:1.5;">{{ message }}</p>
           </div>
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:22px;">
-          <button (click)="cancel.emit()"
-                  style="padding:9px 16px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">
-            {{ cancelLabel || ('common.cancel' | translate) }}
-          </button>
-          <button (click)="confirm.emit()" [disabled]="busy"
+        <div class="form-actions form-actions--centered" style="margin-top:22px;">
+          <!-- Bestaetigung ist hier die primaere Aktion, traegt aber die Signalfarbe
+               des Vorgangs statt --primary: bei einer Loeschung waere Teal irrefuehrend. -->
+          <button class="btn-primary" (click)="confirm.emit()" [disabled]="busy"
                   [style.background]="danger ? 'var(--color-error)' : 'var(--color-warning)'"
-                  [style.opacity]="busy ? 0.7 : 1"
-                  style="padding:9px 16px;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">
+                  [style.opacity]="busy ? 0.7 : 1">
+            <i class="ri-check-line"></i>
             {{ busy ? (busyLabel || ('common.deleting' | translate)) : (confirmLabel || ('common.delete' | translate)) }}
+          </button>
+          <button class="btn-secondary" (click)="cancel.emit()">
+            <i class="ri-close-line"></i>
+            {{ cancelLabel || ('common.cancel' | translate) }}
           </button>
         </div>
       </div>

@@ -237,15 +237,13 @@
             <textarea [(ngModel)]="notesDraft" rows="6"
                       [placeholder]="'properties.notes.placeholder' | translate"
                       style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:var(--surface);resize:vertical;font-family:inherit;box-sizing:border-box;outline:none;"></textarea>
-            <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
-              <button type="button" (click)="saveNotes()" [disabled]="isSavingNotes"
-                      style="padding:7px 18px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;"
-                      [style.opacity]="isSavingNotes ? '0.5' : '1'">
+            <div class="form-actions" style="margin-top:10px;">
+              <button type="button" class="btn-primary" (click)="saveNotes()" [disabled]="isSavingNotes">
                 <i *ngIf="!isSavingNotes" class="ri-check-line"></i>
                 {{ (isSavingNotes ? 'common.saving' : 'common.save') | translate }}
               </button>
-              <button type="button" (click)="cancelEditingNotes()" [disabled]="isSavingNotes"
-                      style="padding:7px 18px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
+              <button type="button" class="btn-secondary" (click)="cancelEditingNotes()" [disabled]="isSavingNotes">
+                <i class="ri-close-line"></i>
                 {{ 'common.cancel' | translate }}
               </button>
             </div>
