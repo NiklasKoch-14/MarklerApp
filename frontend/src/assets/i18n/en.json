@@ -878,7 +878,10 @@
       "notGeocoded": "No location has been resolved for this property yet.",
       "geocodeNow": "Determine location",
       "geocoding": "Determining…",
-      "geocodeFailed": "Could not determine the location."
+      "geocodeFailed": "Could not determine the location.",
+      "legendCurrent": "This property",
+      "legendProperties": "Other properties",
+      "legendClients": "Client search locations"
     }
   },
   "call-notes": {
@@ -1232,6 +1235,6 @@
     "searchPlaceholder": "Search address…",
     "radiusLabel": "Radius",
     "noPinHint": "Click on the map to place a location pin.",
-    "propertiesInRadius": "{{count}} propert(y/ies) within the search radius"
+    "propertiesInRadius": "Properties within the search radius: {{count}}"
   }
 }

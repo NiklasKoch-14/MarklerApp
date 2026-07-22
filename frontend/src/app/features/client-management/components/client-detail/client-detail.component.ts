@@ -13,7 +13,9 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
 import { PropertyMatchingService } from '../../../property-management/services/property-matching.service';
 import { PropertyMatchResult } from '../../../property-management/models/property-match.model';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
-import { LocationPickerMapComponent } from '../../../../shared/components/location-picker-map/location-picker-map.component';
+import { LocationPickerMapComponent, SecondaryMarker } from '../../../../shared/components/location-picker-map/location-picker-map.component';
+import { PropertyService } from '../../../property-management/services/property.service';
+import { filterWithinRadius } from '../../../../shared/utils/geo.util';
 import { GeocodingService } from '../../../../shared/services/geocoding.service';
 import { GdprExportService } from '../../services/gdpr-export.service';
 
@@ -537,8 +539,13 @@ import { GdprExportService } from '../../services/gdpr-export.service';
                 [radiusKm]="client.searchCriteria!.searchRadiusKm || 10"
                 [readOnly]="true"
                 [showRadiusControl]="true"
+                [secondaryMarkers]="radiusPropertyMarkers"
                 mapBorderRadius="0 0 12px 12px">
               </app-location-picker-map>
+              <p *ngIf="radiusPropertyMarkers.length > 0" style="margin-top:8px;margin-bottom:0;font-size:12px;color:var(--text-2);">
+                <i class="ri-map-pin-2-fill" style="color:#2563eb;"></i>
+                {{ 'location.propertiesInRadius' | translate:{ count: radiusPropertyMarkers.length } }}
+              </p>
             </div>
 
             <!-- Passende Objekte -->
@@ -733,6 +740,7 @@ export class ClientDetailComponent implements OnInit {
   matchingProperties: PropertyMatchResult[] = [];
   searchLocationLabel: string | null = null;
   isLoadingMatches = false;
+  radiusPropertyMarkers: SecondaryMarker[] = [];
 
   showAttachmentsDialog = false;
   stageDropdownOpen = false;
@@ -757,6 +765,7 @@ export class ClientDetailComponent implements OnInit {
     public callNotesService: CallNotesService,
     private viewingService: ViewingService,
     private propertyMatchingService: PropertyMatchingService,
+    private propertyService: PropertyService,
     private geocodingService: GeocodingService,
     private gdprExportService: GdprExportService,
     private zone: NgZone
@@ -782,6 +791,11 @@ export class ClientDetailComponent implements OnInit {
         }
         if (client.searchCriteria?.latitude != null && client.searchCriteria?.longitude != null) {
           this.loadSearchLocationLabel(client.searchCriteria.latitude, client.searchCriteria.longitude);
+          this.loadRadiusPropertyMarkers(
+            client.searchCriteria.latitude,
+            client.searchCriteria.longitude,
+            client.searchCriteria.searchRadiusKm ?? 10
+          );
         }
       },
       error: () => {
@@ -826,6 +840,25 @@ export class ClientDetailComponent implements OnInit {
     this.searchLocationLabel = null;
     this.geocodingService.reverse(latitude, longitude).subscribe(label => {
       this.searchLocationLabel = label;
+    });
+  }
+
+  /**
+   * Rein geografischer Filter — bewusst nicht dasselbe wie "Passende Objekte" darunter,
+   * das zusätzlich Preis, Zimmer und Fläche bewertet. Die Karte beantwortet nur
+   * "was habe ich überhaupt in der Gegend".
+   */
+  private loadRadiusPropertyMarkers(latitude: number, longitude: number, radiusKm: number): void {
+    // Größe 1000: ein Agent hat realistisch weit weniger Objekte; erspart Paging-Logik hier.
+    this.propertyService.getProperties(0, 1000).subscribe({
+      next: page => {
+        this.radiusPropertyMarkers = filterWithinRadius(page.content, latitude, longitude, radiusKm)
+          .map(p => ({ latitude: p.latitude!, longitude: p.longitude!, label: p.title, role: 'property' as const }));
+      },
+      error: () => {
+        // Karte funktioniert ohne Immobilien-Pins weiter — Fehler hier nicht blockierend.
+        this.radiusPropertyMarkers = [];
+      }
     });
   }
 

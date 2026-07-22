@@ -20,7 +20,10 @@ import { ViewingAddDialogComponent } from '../../../viewing-management/component
 import { PropertyNoteService, PropertyNoteResponse, NoteCategory } from '../../services/property-note.service';
 import { PropertyMatchingService } from '../../services/property-matching.service';
 import { ClientMatchResult } from '../../models/property-match.model';
-import { LocationPickerMapComponent } from '../../../../shared/components/location-picker-map/location-picker-map.component';
+import { LocationPickerMapComponent, SecondaryMarker } from '../../../../shared/components/location-picker-map/location-picker-map.component';
+import { ClientService } from '../../../client-management/services/client.service';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-property-detail',
@@ -54,6 +57,9 @@ export class PropertyDetailComponent implements OnInit {
 
   matchingClients: ClientMatchResult[] = [];
   isLoadingMatchingClients = false;
+  /** Alle übrigen Objekte (blau) und alle Kunden-Suchstandorte (rot) — das aktuelle
+   * Objekt selbst ist der grüne Haupt-Pin und darf hier nicht doppelt auftauchen. */
+  mapMarkers: SecondaryMarker[] = [];
   newNoteText = '';
   newNoteCategory: NoteCategory = NoteCategory.GENERAL;
   isSavingNote = false;
@@ -84,6 +90,7 @@ export class PropertyDetailComponent implements OnInit {
     private viewingService: ViewingService,
     private propertyNoteService: PropertyNoteService,
     private propertyMatchingService: PropertyMatchingService,
+    private clientService: ClientService,
     private translate: TranslateService
   ) {}
 
@@ -94,7 +101,35 @@ export class PropertyDetailComponent implements OnInit {
       this.loadViewings(propertyId);
       this.loadNotes(propertyId);
       this.loadMatchingClients(propertyId);
+      this.loadMapMarkers(propertyId);
     }
+  }
+
+  /**
+   * Auf der Objektseite zeigt die Karte den gesamten Bestand: wo liegt dieses Objekt
+   * im Verhältnis zu meinen anderen Objekten, und welche Kunden suchen in der Nähe.
+   * Größe 1000: ein Agent hat realistisch weit weniger Datensätze; erspart Paging.
+   */
+  private loadMapMarkers(currentPropertyId: string): void {
+    forkJoin({
+      properties: this.propertyService.getProperties(0, 1000).pipe(catchError(() => of(null))),
+      clients: this.clientService.getClients(0, 1000).pipe(catchError(() => of(null)))
+    }).subscribe(({ properties, clients }) => {
+      const propertyMarkers: SecondaryMarker[] = (properties?.content ?? [])
+        .filter(p => p.id !== currentPropertyId && p.latitude != null && p.longitude != null)
+        .map(p => ({ latitude: p.latitude!, longitude: p.longitude!, label: p.title, role: 'property' as const }));
+
+      const searchMarkers: SecondaryMarker[] = (clients?.content ?? [])
+        .filter(c => c.searchCriteria?.latitude != null && c.searchCriteria?.longitude != null)
+        .map(c => ({
+          latitude: c.searchCriteria!.latitude!,
+          longitude: c.searchCriteria!.longitude!,
+          label: `${c.firstName} ${c.lastName} · ${c.searchCriteria!.searchRadiusKm ?? 10} km`,
+          role: 'search' as const
+        }));
+
+      this.mapMarkers = [...propertyMarkers, ...searchMarkers];
+    });
   }
 
   private loadProperty(id: string): void {

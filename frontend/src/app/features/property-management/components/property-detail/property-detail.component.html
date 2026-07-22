@@ -464,8 +464,24 @@
             [longitude]="property.longitude"
             [readOnly]="true"
             [showRadiusControl]="false"
+            pinRole="currentProperty"
+            [secondaryMarkers]="mapMarkers"
             mapBorderRadius="0">
           </app-location-picker-map>
+          <div style="display:flex;flex-wrap:wrap;gap:14px;padding:10px 18px 14px;font-size:12px;color:var(--text-2);">
+            <span style="display:inline-flex;align-items:center;gap:6px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:#16a34a;box-shadow:0 0 0 2px var(--surface);"></span>
+              {{ 'properties.location.legendCurrent' | translate }}
+            </span>
+            <span style="display:inline-flex;align-items:center;gap:6px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:#2563eb;box-shadow:0 0 0 2px var(--surface);"></span>
+              {{ 'properties.location.legendProperties' | translate }}
+            </span>
+            <span style="display:inline-flex;align-items:center;gap:6px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:#dc2626;box-shadow:0 0 0 2px var(--surface);"></span>
+              {{ 'properties.location.legendClients' | translate }}
+            </span>
+          </div>
         </div>
         <div *ngIf="property.latitude == null || property.longitude == null" style="padding:10px 18px 14px;display:flex;flex-direction:column;gap:10px;">
           <p style="margin:0;font-size:13px;color:var(--text-3);">{{ 'properties.location.notGeocoded' | translate }}</p>

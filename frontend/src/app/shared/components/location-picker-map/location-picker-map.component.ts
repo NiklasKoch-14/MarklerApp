@@ -30,10 +30,25 @@ L.Icon.Default.mergeOptions({
 
 const GERMANY_CENTER: L.LatLngTuple = [51.1657, 10.4515];
 
+/**
+ * Farbe kodiert durchgängig *was* ein Pin ist, nicht wo er liegt: rot = Suchstandort
+ * eines Kunden, blau = Immobilie, grün = die gerade geöffnete Immobilie. Damit liest
+ * sich jede Karte gleich, egal ob sie aus dem Kunden- oder dem Objektkontext kommt.
+ */
+export type MapMarkerRole = 'search' | 'property' | 'currentProperty';
+
+export const MAP_MARKER_COLORS: Record<MapMarkerRole, string> = {
+  search: '#dc2626',
+  property: '#2563eb',
+  currentProperty: '#16a34a'
+};
+
 export interface SecondaryMarker {
   latitude: number;
   longitude: number;
   label: string;
+  /** Default 'property' — der mit Abstand häufigste Fall. */
+  role?: MapMarkerRole;
 }
 
 /**
@@ -92,6 +107,9 @@ export class LocationPickerMapComponent implements AfterViewInit, OnChanges, OnD
    * or '0 0 12px 12px' when it should visually continue straight from content above it). */
   @Input() mapBorderRadius = '12px';
   @Input() secondaryMarkers: SecondaryMarker[] = [];
+  /** Rolle des Haupt-Pins — im Kundenkontext der Suchstandort, auf einer Objektseite
+   * die Immobilie selbst. Steuert nur die Farbe, nicht das Verhalten. */
+  @Input() pinRole: MapMarkerRole = 'search';
 
   @Output() locationChange = new EventEmitter<{ latitude: number; longitude: number }>();
   @Output() radiusChangeEvent = new EventEmitter<number>();
@@ -176,7 +194,13 @@ export class LocationPickerMapComponent implements AfterViewInit, OnChanges, OnD
       this.circle.setRadius(this.radiusKm * 1000);
       this.fitToContent();
     }
+    if (changes['pinRole'] && this.marker) {
+      this.marker.setIcon(this.buildPinIcon());
+    }
     if (changes['secondaryMarkers']) {
+      // Bewusst ohne fitToContent: der Ausschnitt gehört dem Haupt-Pin (bzw. seinem
+      // Radius). Sekundäre Pins liegen mit auf der Karte und werden beim manuellen
+      // Rauszoomen sichtbar — sie dürfen den Fokus aber nicht wegziehen.
       this.renderSecondaryMarkers();
     }
   }
@@ -249,7 +273,7 @@ export class LocationPickerMapComponent implements AfterViewInit, OnChanges, OnD
         radius: 8,
         color: '#ffffff',
         weight: 2,
-        fillColor: '#2563eb',
+        fillColor: MAP_MARKER_COLORS[marker.role ?? 'property'],
         fillOpacity: 0.9
       })
         .bindTooltip(marker.label)
@@ -264,7 +288,7 @@ export class LocationPickerMapComponent implements AfterViewInit, OnChanges, OnD
     const position: L.LatLngTuple = [this.latitude!, this.longitude!];
 
     if (!this.marker) {
-      this.marker = L.marker(position, { draggable: !this.readOnly }).addTo(this.map);
+      this.marker = L.marker(position, { draggable: !this.readOnly, icon: this.buildPinIcon() }).addTo(this.map);
       if (!this.readOnly) {
         this.marker.on('dragend', () => {
           const pos = this.marker!.getLatLng();
@@ -273,6 +297,7 @@ export class LocationPickerMapComponent implements AfterViewInit, OnChanges, OnD
       }
     } else {
       this.marker.setLatLng(position);
+      this.marker.setIcon(this.buildPinIcon());
     }
 
     if (this.showRadiusControl) {
@@ -286,6 +311,26 @@ export class LocationPickerMapComponent implements AfterViewInit, OnChanges, OnD
         this.circle.setLatLng(position);
       }
     }
+  }
+
+  /**
+   * Inline-SVG statt Leaflets Standard-PNG: das PNG gibt es nur in Blau, und ein
+   * eingefärbtes Icon pro Rolle als zusätzliches Asset auszuliefern lohnt für drei
+   * Farben nicht. className:'' unterdrückt Leaflets weißen divIcon-Kasten.
+   */
+  private buildPinIcon(): L.DivIcon {
+    const color = MAP_MARKER_COLORS[this.pinRole];
+    return L.divIcon({
+      className: '',
+      html: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="38" viewBox="-1 -1 28 38" aria-hidden="true">
+          <path d="M13 0a13 13 0 0 0-13 13c0 9.5 13 23 13 23s13-13.5 13-23A13 13 0 0 0 13 0z"
+                fill="${color}" stroke="#ffffff" stroke-width="2"/>
+          <circle cx="13" cy="13" r="4.5" fill="#ffffff"/>
+        </svg>`,
+      iconSize: [28, 38],
+      iconAnchor: [14, 37],
+      tooltipAnchor: [0, -32]
+    });
   }
 
   /**
