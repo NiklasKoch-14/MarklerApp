@@ -531,8 +531,10 @@
     "delete": "Delete Property",
     "deleteFailed": "Failed to delete. Please try again.",
     "notes": {
-      "delete": "Delete note",
-      "deleteConfirm": "Are you sure you want to delete this note?"
+      "title": "Internal note",
+      "edit": "Edit note",
+      "empty": "No note yet — click to add one.",
+      "placeholder": "Internal note… e.g. 'Seller is flexible on price', 'Owner wants to close by end of Q3'"
     },
     "list": "Property List",
     "details": "Property Details",
@@ -613,7 +615,7 @@
       "contactPhone": "Contact Phone",
       "contactEmail": "Contact Email",
       "virtualTour": "Virtual Tour URL",
-      "notes": "Additional Notes",
+      "notes": "Internal note",
       "fillRequiredFields": "Please fill in all required fields correctly.",
       "validationFailedFields": "Validation failed for the following field(s): {{fields}}. Please check the highlighted fields below."
     },

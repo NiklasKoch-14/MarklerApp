@@ -254,7 +254,7 @@ public class Property extends BaseEntity {
     private String virtualTourUrl;
 
     @Column(name = "notes", columnDefinition = "TEXT")
-    @Size(max = 2000, message = "Notes must not exceed 2000 characters")
+    @Size(max = 5000, message = "Notes must not exceed 5000 characters")
     private String notes;
 
     // Property Expose/Brochure (stored as Base64)

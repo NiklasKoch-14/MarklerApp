@@ -531,8 +531,10 @@
     "delete": "Immobilie löschen",
     "deleteFailed": "Löschen fehlgeschlagen. Bitte versuchen Sie es erneut.",
     "notes": {
-      "delete": "Notiz löschen",
-      "deleteConfirm": "Möchten Sie diese Notiz wirklich löschen?"
+      "title": "Interne Notiz",
+      "edit": "Notiz bearbeiten",
+      "empty": "Noch keine Notiz — zum Anlegen klicken.",
+      "placeholder": "Interne Notiz… z. B. 'Verkäufer flexibel beim Preis', 'Eigentümer will bis Ende Q3 abschließen'"
     },
     "list": "Immobilienliste",
     "details": "Immobiliendetails",
@@ -613,7 +615,7 @@
       "contactPhone": "Kontakt Telefon",
       "contactEmail": "Kontakt E-Mail",
       "virtualTour": "Virtueller Rundgang URL",
-      "notes": "Zusätzliche Notizen",
+      "notes": "Interne Notiz",
       "fillRequiredFields": "Bitte füllen Sie alle Pflichtfelder korrekt aus.",
       "validationFailedFields": "Validierung fehlgeschlagen für folgende Felder: {{fields}}. Bitte prüfen Sie die markierten Felder unten."
     },

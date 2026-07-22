@@ -219,7 +219,7 @@ public class PropertyDto {
     @Size(max = 500, message = "Virtual tour URL must not exceed 500 characters")
     private String virtualTourUrl;
 
-    @Size(max = 2000, message = "Notes must not exceed 2000 characters")
+    @Size(max = 5000, message = "Notes must not exceed 5000 characters")
     private String notes;
 
     // ========================================

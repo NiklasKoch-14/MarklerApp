@@ -17,7 +17,6 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
 import { FormsModule } from '@angular/forms';
 import { ViewingService, ViewingSummary, ViewingStatus } from '../../../viewing-management/services/viewing.service';
 import { ViewingAddDialogComponent } from '../../../viewing-management/components/viewing-add-dialog/viewing-add-dialog.component';
-import { PropertyNoteService, PropertyNoteResponse, NoteCategory } from '../../services/property-note.service';
 import { PropertyMatchingService } from '../../services/property-matching.service';
 import { ClientMatchResult } from '../../models/property-match.model';
 import { LocationPickerMapComponent, SecondaryMarker } from '../../../../shared/components/location-picker-map/location-picker-map.component';
@@ -38,7 +37,6 @@ export class PropertyDetailComponent implements OnInit {
   isDeleting = false;
   showDeletePropertyConfirm = false;
   pageError = '';
-  pendingDeleteNoteId: string | null = null;
   isGeocoding = false;
   isLoadingExpose = false;
   selectedImage: PropertyImage | null = null;
@@ -52,43 +50,21 @@ export class PropertyDetailComponent implements OnInit {
   isLoadingViewings = false;
   showViewingDialog = false;
 
-  propertyNotes: PropertyNoteResponse[] = [];
-  isLoadingNotes = false;
+  isEditingNotes = false;
+  notesDraft = '';
+  isSavingNotes = false;
 
   matchingClients: ClientMatchResult[] = [];
   isLoadingMatchingClients = false;
   /** Alle übrigen Objekte (blau) und alle Kunden-Suchstandorte (rot) — das aktuelle
    * Objekt selbst ist der grüne Haupt-Pin und darf hier nicht doppelt auftauchen. */
   mapMarkers: SecondaryMarker[] = [];
-  newNoteText = '';
-  newNoteCategory: NoteCategory = NoteCategory.GENERAL;
-  isSavingNote = false;
-  NoteCategory = NoteCategory;
-
-  noteCategoryLabels: Record<NoteCategory, string> = {
-    [NoteCategory.GENERAL]: 'Allgemein',
-    [NoteCategory.SELLER_INFO]: 'Verkäufer-Info',
-    [NoteCategory.PRICE_NOTE]: 'Preis-Notiz',
-    [NoteCategory.VIEWING_NOTE]: 'Besichtigungs-Notiz',
-    [NoteCategory.LEGAL_NOTE]: 'Rechtliches'
-  };
-
-  noteCategoryColors: Record<NoteCategory, string> = {
-    [NoteCategory.GENERAL]:      'var(--color-neutral-soft)',
-    [NoteCategory.SELLER_INFO]:  'var(--color-warning-soft)',
-    [NoteCategory.PRICE_NOTE]:   'var(--color-success-soft)',
-    [NoteCategory.VIEWING_NOTE]: 'var(--accent-soft)',
-    [NoteCategory.LEGAL_NOTE]:   'var(--color-error-soft)',
-  };
-
-  noteCategories = Object.values(NoteCategory);
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     public propertyService: PropertyService,
     private viewingService: ViewingService,
-    private propertyNoteService: PropertyNoteService,
     private propertyMatchingService: PropertyMatchingService,
     private clientService: ClientService,
     private translate: TranslateService
@@ -99,7 +75,6 @@ export class PropertyDetailComponent implements OnInit {
     if (propertyId) {
       this.loadProperty(propertyId);
       this.loadViewings(propertyId);
-      this.loadNotes(propertyId);
       this.loadMatchingClients(propertyId);
       this.loadMapMarkers(propertyId);
     }
@@ -209,52 +184,29 @@ export class PropertyDetailComponent implements OnInit {
     return 'var(--text-3)';
   }
 
-  private loadNotes(propertyId: string): void {
-    this.isLoadingNotes = true;
-    this.propertyNoteService.getNotesByProperty(propertyId).subscribe({
-      next: (notes) => {
-        this.propertyNotes = notes;
-        this.isLoadingNotes = false;
+  startEditingNotes(): void {
+    this.notesDraft = this.property?.notes ?? '';
+    this.isEditingNotes = true;
+  }
+
+  cancelEditingNotes(): void {
+    this.isEditingNotes = false;
+    this.notesDraft = '';
+  }
+
+  saveNotes(): void {
+    if (!this.property?.id || this.isSavingNotes) return;
+    this.isSavingNotes = true;
+    // Leerer Text loescht die Notiz -- '' statt null, weil updateProperty null als
+    // "Feld nicht anfassen" interpretiert und die Notiz sonst stehen bliebe.
+    const notes = this.notesDraft.trim();
+    this.propertyService.patchProperty(this.property.id, { notes }).subscribe({
+      next: (updated) => {
+        this.property = { ...this.property!, notes: updated.notes };
+        this.isEditingNotes = false;
+        this.isSavingNotes = false;
       },
-      error: () => { this.isLoadingNotes = false; }
-    });
-  }
-
-  saveNote(): void {
-    if (!this.newNoteText.trim() || !this.property?.id || this.isSavingNote) return;
-    this.isSavingNote = true;
-    this.propertyNoteService.createNote({
-      propertyId: this.property.id,
-      content: this.newNoteText.trim(),
-      category: this.newNoteCategory
-    }).subscribe({
-      next: (note) => {
-        this.propertyNotes = [note, ...this.propertyNotes];
-        this.newNoteText = '';
-        this.newNoteCategory = NoteCategory.GENERAL;
-        this.isSavingNote = false;
-      },
-      error: () => { this.isSavingNote = false; }
-    });
-  }
-
-  confirmDeleteNote(noteId: string): void {
-    this.pendingDeleteNoteId = noteId;
-  }
-
-  cancelDeleteNote(): void {
-    this.pendingDeleteNoteId = null;
-  }
-
-  deleteNote(): void {
-    if (!this.pendingDeleteNoteId) return;
-    const noteId = this.pendingDeleteNoteId;
-    this.propertyNoteService.deleteNote(noteId).subscribe({
-      next: () => {
-        this.propertyNotes = this.propertyNotes.filter(n => n.id !== noteId);
-        this.pendingDeleteNoteId = null;
-      },
-      error: () => { this.pendingDeleteNoteId = null; }
+      error: () => { this.isSavingNotes = false; }
     });
   }
 
