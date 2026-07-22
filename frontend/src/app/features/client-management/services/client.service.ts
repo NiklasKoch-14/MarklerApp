@@ -58,6 +58,8 @@ export interface Client {
   gdprConsentGiven: boolean;
   gdprConsentDate?: string;
   legalBasis?: LegalBasis;
+  /** Geschätzte Provision in EUR — ab der Interessent-Stufe pflegbar (Issue #22). */
+  expectedCommission?: number;
   searchCriteria?: PropertySearchCriteria;
   createdAt?: string;
   updatedAt?: string;

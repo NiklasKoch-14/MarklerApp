@@ -423,13 +423,20 @@ interface ViewingRow {
           @for (col of pipelineCols; track col.stage) {
             @if (!col.closed || showClosedStages) {
               <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:14px; padding:6px;">
-                <div style="display:flex; align-items:center; gap:8px; padding:11px 12px 10px;">
+                <div style="display:flex; align-items:center; gap:8px; padding:11px 12px 2px;">
                   <span style="width:9px; height:9px; border-radius:50%;" [style.background]="col.color"></span>
                   <span style="font-size:13px; font-weight:700; flex:1; color:var(--text);">{{ col.label }}</span>
                   <span style="font-size:12px; font-weight:700; color:var(--text-3); font-variant-numeric:tabular-nums;">
                     {{ col.items.length }}
                   </span>
                 </div>
+                @if (columnCommission(col.items) > 0) {
+                  <div style="padding:0 12px 9px 29px; font-size:11.5px; color:var(--text-3); font-variant-numeric:tabular-nums;">
+                    {{ 'dashboard.pipelineValue' | translate }}: <strong style="color:var(--text-2);">{{ formatCommission(columnCommission(col.items)) }}</strong>
+                  </div>
+                } @else {
+                  <div style="padding-bottom:9px;"></div>
+                }
                 <div [id]="'pipeline-col-' + col.stage"
                      cdkDropList
                      [cdkDropListData]="col.items"
@@ -452,6 +459,11 @@ interface ViewingRow {
                       <div style="display:flex; align-items:center; gap:6px; margin-top:8px; font-size:11px; color:var(--text-3);">
                         <i [class]="it.typeIcon"></i>
                         <span>{{ it.dateFmt }}</span>
+                        @if (it.expectedCommission) {
+                          <span style="margin-left:auto; font-weight:700; color:var(--text-2); font-variant-numeric:tabular-nums;">
+                            {{ formatCommission(it.expectedCommission) }}
+                          </span>
+                        }
                       </div>
                     </div>
                   }
@@ -799,10 +811,27 @@ export class DashboardComponent implements OnInit, OnDestroy {
             subject: c.searchCriteria?.additionalRequirements ?? (c.addressCity ? c.addressCity : ''),
             typeIcon: 'ri-user-line',
             dateFmt: c.updatedAt ? new Date(c.updatedAt).toLocaleDateString('de-DE', { day: '2-digit', month: 'short' }) : '',
+            expectedCommission: c.expectedCommission ?? null,
           };
         }),
       };
     });
+  }
+
+  /**
+   * Summe der geschaetzten Provisionen einer Spalte (Issue #22). Karten ohne
+   * gepflegten Wert zaehlen als 0 — eine Spalte ohne jeden Wert liefert 0 und
+   * blendet die Anzeige im Template aus, statt ein irrefuehrendes "0 €" zu zeigen.
+   */
+  columnCommission(items: { expectedCommission?: number | null }[]): number {
+    return items.reduce((sum, item) => sum + (item.expectedCommission ?? 0), 0);
+  }
+
+  formatCommission(value: number): string {
+    const locale = (this.translate.currentLang || 'de') === 'de' ? 'de-DE' : 'en-US';
+    return new Intl.NumberFormat(locale, {
+      style: 'currency', currency: 'EUR', maximumFractionDigits: 0
+    }).format(value);
   }
 
   private buildTodayViewings(viewings: ViewingSummary[]): void {

@@ -243,6 +243,7 @@ public class ClientService {
         existingClient.setAddressCity(clientDto.getAddressCity());
         existingClient.setAddressPostalCode(clientDto.getAddressPostalCode());
         existingClient.setAddressCountry(clientDto.getAddressCountry());
+        existingClient.setExpectedCommission(clientDto.getExpectedCommission());
         if (clientDto.getClientType() != null) {
             existingClient.setClientType(clientDto.getClientType());
         }

@@ -274,7 +274,8 @@
       "activeThis": "Aktive Kunden",
       "thisMonth": "Diesen Monat",
       "open": "Offen"
-    }
+    },
+    "pipelineValue": "Pipeline-Wert"
   },
   "clients": {
     "title": "Kunden",
@@ -486,7 +487,10 @@
       "gdpr": "Wählen Sie die Rechtsgrundlage der Verarbeitung. Die Marketing-Einwilligung ist optional und nur für Werbekontakt (z.B. Newsletter) erforderlich.",
       "searchCriteria": "Definieren Sie Suchkriterien für automatisches Matching mit passenden Immobilien.",
       "matching": "Nach dem Speichern werden passende Immobilien automatisch vorgeschlagen."
-    }
+    },
+    "expectedCommission": "Geschätzte Provision",
+    "expectedCommissionPlaceholder": "z. B. 8500",
+    "expectedCommissionHint": "Fließt in die Pipeline-Summe pro Spalte ein. Schon ab Interessent pflegbar."
   },
   "notifications": {
     "title": "Benachrichtigungen",

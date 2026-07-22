@@ -153,6 +153,16 @@ import { ErrorHandlerService } from '../../../../core/services/error-handler.ser
                   </select>
                   <p style="margin-top:5px; font-size:12px; color:var(--text-3);">{{ 'clients.clientTypeHint' | translate }}</p>
                 </div>
+                <div>
+                  <label class="form-label">{{ 'clients.expectedCommission' | translate }}</label>
+                  <div style="position:relative;">
+                    <input type="number" formControlName="expectedCommission" min="0" step="100" class="form-input"
+                           style="padding-right:46px;"
+                           [placeholder]="'clients.expectedCommissionPlaceholder' | translate">
+                    <span style="position:absolute; right:14px; top:50%; transform:translateY(-50%); font-size:13px; color:var(--text-3);">EUR</span>
+                  </div>
+                  <p style="margin-top:5px; font-size:12px; color:var(--text-3);">{{ 'clients.expectedCommissionHint' | translate }}</p>
+                </div>
               </div>
               <div *ngIf="searchCriteriaExpanded" [formGroup]="searchCriteriaGroup"
                    style="padding:0 20px 20px; display:flex; flex-direction:column; gap:16px;">
@@ -421,6 +431,7 @@ export class ClientFormComponent implements OnInit {
       addressPostalCode: ['', [Validators.pattern('^[0-9]{5}$')]],
       addressCountry: ['Deutschland'],
       clientType: ['BUYER'],
+      expectedCommission: [null, [Validators.min(0)]],
       legalBasis: ['CONTRACT_INITIATION', [Validators.required]],
       gdprConsentGiven: [false],
       searchCriteria: this.fb.group({
@@ -578,6 +589,7 @@ export class ClientFormComponent implements OnInit {
           addressPostalCode: client.addressPostalCode,
           addressCountry: client.addressCountry,
           clientType: client.clientType || 'BUYER',
+          expectedCommission: client.expectedCommission ?? null,
           legalBasis: client.legalBasis || 'CONTRACT_INITIATION',
           gdprConsentGiven: client.gdprConsentGiven,
           searchCriteria: {

@@ -3,10 +3,12 @@ package com.marklerapp.crm.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -95,6 +97,12 @@ public class Client extends BaseEntity {
     @Column(name = "legal_basis", nullable = false)
     @Builder.Default
     private LegalBasis legalBasis = LegalBasis.CONTRACT_INITIATION;
+
+    // Geschaetzte Provision, vom Makler gepflegt und schon ab der Interessent-Stufe
+    // erlaubt (Issue #22) -- die Kanban-Spaltensummen waeren sonst bis auf "Gewonnen" leer.
+    @Column(name = "expected_commission", precision = 12, scale = 2)
+    @DecimalMin(value = "0.0", message = "Expected commission must be non-negative")
+    private BigDecimal expectedCommission;
 
     @OneToOne(mappedBy = "client", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private PropertySearchCriteria searchCriteria;

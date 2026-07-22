@@ -274,7 +274,8 @@
       "activeThis": "Active clients",
       "thisMonth": "This month",
       "open": "Open"
-    }
+    },
+    "pipelineValue": "Pipeline value"
   },
   "clients": {
     "title": "Clients",
@@ -486,7 +487,10 @@
       "gdpr": "Choose the legal basis for processing. Marketing consent is optional and only needed for promotional contact (e.g. newsletters).",
       "searchCriteria": "Define search criteria for automatic matching with suitable properties.",
       "matching": "After saving, matching properties will be suggested automatically."
-    }
+    },
+    "expectedCommission": "Estimated commission",
+    "expectedCommissionPlaceholder": "e.g. 8500",
+    "expectedCommissionHint": "Feeds the pipeline total per column. Can be filled in from the prospect stage onwards."
   },
   "notifications": {
     "title": "Notifications",

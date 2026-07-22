@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.marklerapp.crm.entity.Client;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -11,6 +12,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -66,6 +68,9 @@ public class ClientDto {
     private LocalDateTime gdprConsentDate;
 
     private Client.LegalBasis legalBasis;
+
+    @DecimalMin(value = "0.0", message = "Expected commission must be non-negative")
+    private BigDecimal expectedCommission;
 
     private PropertySearchCriteriaDto searchCriteria;
 
