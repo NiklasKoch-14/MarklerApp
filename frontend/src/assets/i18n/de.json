@@ -997,6 +997,17 @@
       "structuring": "KI strukturiert deine Notiz…",
       "followUpDetected": "Follow-up",
       "notSupported": "Spracheingabe wird von diesem Browser nicht unterstützt"
+    },
+    "quickNote": {
+      "subject": "Betreff",
+      "subjectPlaceholder": "Worum ging es?",
+      "contactType": "Kontaktart",
+      "content": "Gesprächsverlauf",
+      "contentPlaceholder": "Was wurde besprochen?",
+      "outcome": "Ergebnis",
+      "outcomePlaceholder": "Ergebnis wählen…",
+      "save": "Notiz speichern",
+      "completeFollowUp": "Follow-up erledigt · Notiz speichern"
     }
   },
   "search": {

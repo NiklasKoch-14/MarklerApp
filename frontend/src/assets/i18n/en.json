@@ -997,6 +997,17 @@
       "structuring": "AI is structuring your note…",
       "followUpDetected": "Follow-up",
       "notSupported": "Voice input is not supported by this browser"
+    },
+    "quickNote": {
+      "subject": "Subject",
+      "subjectPlaceholder": "What was it about?",
+      "contactType": "Contact type",
+      "content": "What was discussed",
+      "contentPlaceholder": "What was discussed?",
+      "outcome": "Outcome",
+      "outcomePlaceholder": "Select an outcome…",
+      "save": "Save note",
+      "completeFollowUp": "Complete follow-up · Save note"
     }
   },
   "search": {

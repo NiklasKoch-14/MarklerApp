@@ -212,50 +212,61 @@ import { GdprExportService } from '../../services/gdpr-export.service';
           </div>
           <div class="form-grid-2" style="gap:12px;margin-bottom:12px;">
             <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">Betreff</label>
-              <input type="text" [(ngModel)]="quickNoteSubject" placeholder="Worum ging es?"
+              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.subject' | translate }}</label>
+              <input type="text" [(ngModel)]="quickNoteSubject" [placeholder]="'callNotes.quickNote.subjectPlaceholder' | translate"
                      style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);outline:none;box-sizing:border-box;">
             </div>
             <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">Kontaktart</label>
+              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.contactType' | translate }}</label>
               <select [(ngModel)]="quickNoteType"
                       style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
-                <option value="PHONE_OUTBOUND">Anruf (ausgehend)</option>
-                <option value="PHONE_INBOUND">Anruf (eingehend)</option>
-                <option value="EMAIL">E-Mail</option>
-                <option value="MEETING">Meeting</option>
+                <option *ngFor="let type of callTypeOptions" [value]="type">{{ type | translateEnum:'callType' }}</option>
               </select>
             </div>
           </div>
-          <textarea [(ngModel)]="quickNoteText" placeholder="Was wurde besprochen?" rows="3"
-                    style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);resize:vertical;font-family:inherit;margin-bottom:12px;box-sizing:border-box;outline:none;">
-          </textarea>
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <select [(ngModel)]="quickNoteOutcome"
-                    style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
-              <option value="">Ergebnis wählen…</option>
-              <option value="INTERESTED">Interessiert</option>
-              <option value="NOT_INTERESTED">Kein Interesse</option>
-              <option value="SCHEDULED_VIEWING">Besichtigung vereinbart</option>
-              <option value="OFFER_MADE">Angebot gemacht</option>
-              <option value="DEAL_CLOSED">Abschluss</option>
-            </select>
-            <div *ngIf="quickNoteFollowUpRequired"
-                 style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:var(--color-warning-soft);border-radius:8px;">
-              <i class="ri-notification-fill" style="font-size:13px;color:var(--color-warning);"></i>
-              <span style="font-size:12px;font-weight:600;color:var(--color-warning);">{{ 'callNotes.voice.followUpDetected' | translate }}</span>
-              <input type="date" [(ngModel)]="quickNoteFollowUpDate"
-                     style="border:none;background:none;font-size:12px;color:var(--color-warning);font-weight:600;font-family:inherit;outline:none;cursor:pointer;">
-              <button (click)="quickNoteFollowUpRequired = false; quickNoteFollowUpDate = ''"
-                      style="background:none;border:none;cursor:pointer;color:var(--color-warning);padding:0;line-height:1;">
-                <i class="ri-close-line" style="font-size:12px;"></i>
-              </button>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.content' | translate }}</label>
+            <textarea [(ngModel)]="quickNoteText" [placeholder]="'callNotes.quickNote.contentPlaceholder' | translate" rows="3"
+                      style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);resize:vertical;font-family:inherit;box-sizing:border-box;outline:none;">
+            </textarea>
+          </div>
+
+          <!-- Das Ergebnis ist ein Formularfeld, kein Bedienelement: es stand vorher in
+               derselben Zeile wie der Speichern-Button und las sich dadurch wie eine
+               zweite Aktion. Jetzt beschriftet und im Formularkoerper, direkt nach dem
+               Gespraechsverlauf, den es zusammenfasst. -->
+          <div class="form-grid-2" style="gap:12px;margin-bottom:12px;">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.outcome' | translate }}</label>
+              <select [(ngModel)]="quickNoteOutcome"
+                      style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
+                <option value="">{{ 'callNotes.quickNote.outcomePlaceholder' | translate }}</option>
+                <option *ngFor="let outcome of callOutcomeOptions" [value]="outcome">{{ outcome | translateEnum:'callOutcome' }}</option>
+              </select>
             </div>
-            <button (click)="saveQuickNote()" [disabled]="isSavingNote || isParsingVoice || !quickNoteText.trim()"
-                    style="padding:9px 20px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;"
-                    [style.opacity]="(isSavingNote || isParsingVoice || !quickNoteText.trim()) ? '0.45' : '1'">
-              <i class="ri-check-line" style="margin-right:5px;"></i>
-              {{ isSavingNote ? 'Speichern…' : 'Notiz speichern' }}
+          </div>
+
+          <div *ngIf="quickNoteFollowUpRequired"
+               style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;margin-bottom:12px;background:var(--color-warning-soft);border-radius:8px;">
+            <i class="ri-notification-fill" style="font-size:13px;color:var(--color-warning);"></i>
+            <span style="font-size:12px;font-weight:600;color:var(--color-warning);">{{ 'callNotes.voice.followUpDetected' | translate }}</span>
+            <input type="date" [(ngModel)]="quickNoteFollowUpDate"
+                   style="border:none;background:none;font-size:12px;color:var(--color-warning);font-weight:600;font-family:inherit;outline:none;cursor:pointer;">
+            <button (click)="quickNoteFollowUpRequired = false; quickNoteFollowUpDate = ''"
+                    style="background:none;border:none;cursor:pointer;color:var(--color-warning);padding:0;line-height:1;">
+              <i class="ri-close-line" style="font-size:12px;"></i>
+            </button>
+          </div>
+
+          <div class="form-actions form-actions--centered">
+            <button type="button" class="btn-primary" (click)="saveQuickNote()"
+                    [disabled]="isSavingNote || isParsingVoice || !quickNoteText.trim()">
+              <i class="ri-check-line"></i>
+              {{ (isSavingNote ? 'common.saving' : 'callNotes.quickNote.save') | translate }}
+            </button>
+            <button type="button" class="btn-secondary" (click)="showQuickNoteForm = false" [disabled]="isSavingNote">
+              <i class="ri-close-line"></i>
+              {{ 'common.cancel' | translate }}
             </button>
           </div>
         </div>
@@ -285,40 +296,49 @@ import { GdprExportService } from '../../services/gdpr-export.service';
           </div>
           <div class="form-grid-2" style="gap:12px;margin-bottom:12px;">
             <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">Betreff</label>
+              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.subject' | translate }}</label>
               <input type="text" [(ngModel)]="quickNoteSubject"
-                     [placeholder]="callNotesSummary?.mostRecentSubject || 'Worum ging es?'"
+                     [placeholder]="callNotesSummary?.mostRecentSubject || ('callNotes.quickNote.subjectPlaceholder' | translate)"
                      style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);outline:none;box-sizing:border-box;">
             </div>
             <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">Kontaktart</label>
+              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.contactType' | translate }}</label>
               <select [(ngModel)]="quickNoteType"
                       style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
-                <option value="PHONE_OUTBOUND">Anruf (ausgehend)</option>
-                <option value="PHONE_INBOUND">Anruf (eingehend)</option>
-                <option value="EMAIL">E-Mail</option>
-                <option value="MEETING">Meeting</option>
+                <option *ngFor="let type of callTypeOptions" [value]="type">{{ type | translateEnum:'callType' }}</option>
               </select>
             </div>
           </div>
-          <textarea [(ngModel)]="quickNoteText" placeholder="Was wurde besprochen?" rows="3"
-                    style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);resize:vertical;font-family:inherit;margin-bottom:12px;box-sizing:border-box;outline:none;">
-          </textarea>
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <select [(ngModel)]="quickNoteOutcome"
-                    style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
-              <option value="">Ergebnis wählen…</option>
-              <option value="INTERESTED">Interessiert</option>
-              <option value="NOT_INTERESTED">Kein Interesse</option>
-              <option value="SCHEDULED_VIEWING">Besichtigung vereinbart</option>
-              <option value="OFFER_MADE">Angebot gemacht</option>
-              <option value="DEAL_CLOSED">Abschluss</option>
-            </select>
-            <button (click)="saveFollowUp()" [disabled]="isSavingNote || !quickNoteText.trim()"
-                    style="padding:9px 20px;background:var(--color-warning);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;"
-                    [style.opacity]="(isSavingNote || !quickNoteText.trim()) ? '0.45' : '1'">
-              <i class="ri-check-line" style="margin-right:5px;"></i>
-              {{ isSavingNote ? 'Speichern…' : 'Follow-up erledigt · Notiz speichern' }}
+          <div style="margin-bottom:12px;">
+            <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.content' | translate }}</label>
+            <textarea [(ngModel)]="quickNoteText" [placeholder]="'callNotes.quickNote.contentPlaceholder' | translate" rows="3"
+                      style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);resize:vertical;font-family:inherit;box-sizing:border-box;outline:none;">
+            </textarea>
+          </div>
+
+          <div class="form-grid-2" style="gap:12px;margin-bottom:12px;">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.outcome' | translate }}</label>
+              <select [(ngModel)]="quickNoteOutcome"
+                      style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
+                <option value="">{{ 'callNotes.quickNote.outcomePlaceholder' | translate }}</option>
+                <option *ngFor="let outcome of callOutcomeOptions" [value]="outcome">{{ outcome | translateEnum:'callOutcome' }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-actions form-actions--centered">
+            <!-- Warnfarbe statt --primary: der Button schliesst ein ueberfaelliges
+                 Follow-up ab und gehoert optisch zu dessen Signalfarbe. -->
+            <button type="button" class="btn-primary" (click)="saveFollowUp()"
+                    [disabled]="isSavingNote || !quickNoteText.trim()"
+                    style="background:var(--color-warning);">
+              <i class="ri-check-line"></i>
+              {{ (isSavingNote ? 'common.saving' : 'callNotes.quickNote.completeFollowUp') | translate }}
+            </button>
+            <button type="button" class="btn-secondary" (click)="showFollowUpPanel = false" [disabled]="isSavingNote">
+              <i class="ri-close-line"></i>
+              {{ 'common.cancel' | translate }}
             </button>
           </div>
         </div>
@@ -721,6 +741,12 @@ export class ClientDetailComponent implements OnInit {
   quickNoteFollowUpRequired = false;
   quickNoteFollowUpDate = '';
   isSavingNote = false;
+
+  // Aus den Enums abgeleitet statt im Template aufgezaehlt: die Beschriftungen liegen
+  // bereits als callType/callOutcome in beiden Sprachdateien und wurden im Markup
+  // doppelt (und abweichend) gepflegt.
+  readonly callTypeOptions = Object.values(CallType);
+  readonly callOutcomeOptions = Object.values(CallOutcome);
 
   readonly voiceSupported = typeof window !== 'undefined'
     && !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
