@@ -497,24 +497,37 @@
         </div>
       </div>
 
-      <!-- Owner Contact (internal) -->
-      <div *ngIf="property.ownerName || property.ownerPhone"
+      <!-- Eigentümer als verknüpfter Kunde (intern, #37) -->
+      <div *ngIf="property.owner"
            style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
         <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
           <i class="ri-account-circle-line" style="font-size:15px;color:var(--text-3);"></i>
-          <span style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.5px;">Eigentümer</span>
-          <span style="margin-left:auto;font-size:11px;color:var(--text-3);font-style:italic;">intern</span>
+          <span style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.5px;">{{ 'properties.owner.title' | translate }}</span>
+          <span style="margin-left:auto;font-size:11px;color:var(--text-3);font-style:italic;">{{ 'properties.owner.internal' | translate }}</span>
         </div>
-        <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
-          <span *ngIf="property.ownerName"
-                style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);">
-            <i class="ri-user-line" style="font-size:14px;flex-shrink:0;color:var(--text-3);"></i>
-            {{ property.ownerName }}
-          </span>
-          <a *ngIf="property.ownerPhone" [href]="'tel:' + property.ownerPhone"
+        <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px;">
+          <a [routerLink]="['/clients', property.owner.id]"
+             style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);text-decoration:none;">
+            <div style="width:34px;height:34px;border-radius:9px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="ri-user-line" style="font-size:16px;color:var(--primary);"></i>
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                {{ property.owner.fullName || property.owner.firstName + ' ' + property.owner.lastName }}
+              </div>
+              <div style="font-size:11px;color:var(--text-3);">{{ 'properties.owner.openClient' | translate }}</div>
+            </div>
+            <i class="ri-arrow-right-line" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
+          </a>
+          <a *ngIf="property.owner.phone" [href]="'tel:' + property.owner.phone"
              style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--primary);text-decoration:none;font-weight:600;">
             <i class="ri-phone-line" style="font-size:14px;flex-shrink:0;"></i>
-            {{ property.ownerPhone }}
+            {{ property.owner.phone }}
+          </a>
+          <a *ngIf="property.owner.email" [href]="'mailto:' + property.owner.email"
+             style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--primary);text-decoration:none;font-weight:600;word-break:break-all;">
+            <i class="ri-mail-line" style="font-size:14px;flex-shrink:0;"></i>
+            {{ property.owner.email }}
           </a>
         </div>
       </div>

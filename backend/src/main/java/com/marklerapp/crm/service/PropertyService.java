@@ -7,6 +7,7 @@ import com.marklerapp.crm.entity.*;
 import com.marklerapp.crm.mapper.PropertyMapper;
 import com.marklerapp.crm.mapper.PropertyImageMapper;
 import com.marklerapp.crm.repository.AgentRepository;
+import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.PropertyRepository;
 import com.marklerapp.crm.repository.PropertyImageRepository;
 import lombok.RequiredArgsConstructor;
@@ -56,6 +57,7 @@ public class PropertyService {
     private final PropertyRepository propertyRepository;
     private final PropertyImageRepository propertyImageRepository;
     private final AgentRepository agentRepository;
+    private final ClientRepository clientRepository;
     private final PropertyMapper propertyMapper;
     private final PropertyImageMapper propertyImageMapper;
     private final OwnershipValidator ownershipValidator;
@@ -87,6 +89,7 @@ public class PropertyService {
         property.setAgent(agent);
         property.setStatus(PropertyStatus.AVAILABLE);
         property.setConsentDate(LocalDate.now());
+        property.setOwner(resolveOwner(property, request.getOwnerClientId(), agentId));
         geocodeProperty(property);
 
         // Calculate price per sqm if not provided
@@ -129,6 +132,12 @@ public class PropertyService {
 
         // Update fields from request (only non-null values)
         updatePropertyFields(property, request);
+
+        // Eigentuemer-Zuordnung folgt bewusst nicht der "null bedeutet unveraendert"-Regel:
+        // ein mitgesendetes null ist die Entkopplung (siehe UpdatePropertyRequest).
+        if (request.isOwnerClientIdPresent()) {
+            property.setOwner(resolveOwner(property, request.getOwnerClientId(), agentId));
+        }
 
         // Re-geocode whenever an address field actually changed — avoids hammering
         // Nominatim on every unrelated edit (price tweak, feature toggle, etc).
@@ -583,6 +592,46 @@ public class PropertyService {
             .orElseThrow(() -> new ResourceNotFoundException("Agent", "id", agentId));
     }
 
+    /**
+     * Resolve the client that is to be linked as the property's owner (issue #37).
+     *
+     * @param property the property the owner is attached to (agent must already be set)
+     * @param ownerClientId the client ID, or null to detach the current owner
+     * @param agentId the acting agent
+     * @return the resolved client, or null when detaching
+     * @throws ResourceNotFoundException if no such client exists for this agent
+     */
+    private Client resolveOwner(Property property, UUID ownerClientId, UUID agentId) {
+        if (ownerClientId == null) {
+            return null;
+        }
+
+        Client owner = clientRepository.findById(ownerClientId)
+            .orElseThrow(() -> new ResourceNotFoundException("Client", "id", ownerClientId));
+
+        try {
+            ownershipValidator.validateOwnerAssignment(property, owner, agentId);
+        } catch (AccessDeniedException e) {
+            // Deliberately indistinguishable from "does not exist" — otherwise the error
+            // message itself confirms that a foreign agent holds that client ID.
+            throw new ResourceNotFoundException("Client not found or access denied");
+        }
+
+        return owner;
+    }
+
+    /**
+     * Alle Objekte, die dem angegebenen Kunden als Eigentuemer zugeordnet sind (Issue #37).
+     * Grundlage der Objektliste auf der Kundendetailseite.
+     */
+    @Transactional(readOnly = true)
+    public List<PropertyDto> getPropertiesByOwner(UUID clientId, UUID agentId) {
+        Agent agent = getAgentById(agentId);
+        return propertyRepository.findByAgentAndOwnerId(agent, clientId).stream()
+            .map(propertyMapper::toDto)
+            .collect(Collectors.toList());
+    }
+
 
     /**
      * Convert CreatePropertyRequest to Property entity.
@@ -633,9 +682,6 @@ public class PropertyService {
             .energyConsumptionKwh(request.getEnergyConsumptionKwh())
             .heatingType(request.getHeatingType())
             .availableFrom(request.getAvailableFrom())
-            .ownerName(request.getOwnerName())
-            .ownerPhone(request.getOwnerPhone())
-            .ownerEmail(request.getOwnerEmail())
             .contactPhone(request.getContactPhone())
             .contactEmail(request.getContactEmail())
             .virtualTourUrl(request.getVirtualTourUrl())
@@ -709,9 +755,7 @@ public class PropertyService {
 
         // Additional fields
         if (request.getAvailableFrom() != null) property.setAvailableFrom(request.getAvailableFrom());
-        if (request.getOwnerName() != null) property.setOwnerName(request.getOwnerName());
-        if (request.getOwnerPhone() != null) property.setOwnerPhone(request.getOwnerPhone());
-        if (request.getOwnerEmail() != null) property.setOwnerEmail(request.getOwnerEmail());
+        // Eigentuemer: siehe updateProperty() -- braucht Agent-Pruefung und kennt echtes null.
         if (request.getContactPhone() != null) property.setContactPhone(request.getContactPhone());
         if (request.getContactEmail() != null) property.setContactEmail(request.getContactEmail());
         if (request.getVirtualTourUrl() != null) property.setVirtualTourUrl(request.getVirtualTourUrl());

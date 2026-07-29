@@ -14,7 +14,7 @@ import { PropertyMatchingService } from '../../../property-management/services/p
 import { PropertyMatchResult } from '../../../property-management/models/property-match.model';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 import { LocationPickerMapComponent, SecondaryMarker } from '../../../../shared/components/location-picker-map/location-picker-map.component';
-import { PropertyService } from '../../../property-management/services/property.service';
+import { Property, PropertyService } from '../../../property-management/services/property.service';
 import { filterWithinRadius } from '../../../../shared/utils/geo.util';
 import { GeocodingService } from '../../../../shared/services/geocoding.service';
 import { GdprExportService } from '../../services/gdpr-export.service';
@@ -581,6 +581,32 @@ import { GdprExportService } from '../../services/gdpr-export.service';
               </p>
             </div>
 
+            <!-- Eigene Objekte (#37) -->
+            <div *ngIf="ownedProperties.length > 0"
+                 style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                <i class="ri-home-4-line" style="font-size:15px;color:var(--primary);"></i>
+                <span style="font-size:15px;font-weight:700;color:var(--text);flex:1;">{{ 'clients.ownedProperties.title' | translate }}</span>
+                <span style="font-size:12px;font-weight:700;color:var(--primary);background:var(--accent-soft);padding:2px 8px;border-radius:10px;">
+                  {{ ownedProperties.length }}
+                </span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <a *ngFor="let p of ownedProperties"
+                   [routerLink]="['/properties', p.id]"
+                   class="match-link"
+                   style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);text-decoration:none;">
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ p.title }}</div>
+                    <div style="font-size:11px;color:var(--text-3);">
+                      {{ p.addressCity }}<ng-container *ngIf="p.status"> · {{ p.status | translateEnum:'propertyStatus' }}</ng-container>
+                    </div>
+                  </div>
+                  <i class="ri-arrow-right-line" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
+                </a>
+              </div>
+            </div>
+
             <!-- Passende Objekte -->
             <div *ngIf="client.searchCriteria"
                  style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
@@ -779,6 +805,9 @@ export class ClientDetailComponent implements OnInit {
   showViewingForm = false;
 
   matchingProperties: PropertyMatchResult[] = [];
+  /** Objekte, bei denen dieser Kunde als Eigentuemer verknuepft ist (#37). */
+  ownedProperties: Property[] = [];
+  isLoadingOwnedProperties = false;
   searchLocationLabel: string | null = null;
   isLoadingMatches = false;
   radiusPropertyMarkers: SecondaryMarker[] = [];
@@ -832,6 +861,9 @@ export class ClientDetailComponent implements OnInit {
         this.isLoading = false;
         if (client.searchCriteria && client.id) {
           this.loadMatchingProperties(client.id);
+        }
+        if (client.id) {
+          this.loadOwnedProperties(client.id);
         }
         if (client.searchCriteria?.latitude != null && client.searchCriteria?.longitude != null) {
           this.loadSearchLocationLabel(client.searchCriteria.latitude, client.searchCriteria.longitude);
@@ -927,6 +959,24 @@ export class ClientDetailComponent implements OnInit {
       error: () => {
         // Karte funktioniert ohne Immobilien-Pins weiter — Fehler hier nicht blockierend.
         this.radiusPropertyMarkers = [];
+      }
+    });
+  }
+
+  /**
+   * Objekte, die diesem Kunden als Eigentuemer zugeordnet sind (#37). Bewusst nur die
+   * Liste -- der Ausbau zur Auftrags-Karte ist ein eigenes Thema.
+   */
+  private loadOwnedProperties(clientId: string): void {
+    this.isLoadingOwnedProperties = true;
+    this.propertyService.getPropertiesByOwner(clientId).subscribe({
+      next: properties => {
+        this.ownedProperties = properties;
+        this.isLoadingOwnedProperties = false;
+      },
+      error: () => {
+        this.ownedProperties = [];
+        this.isLoadingOwnedProperties = false;
       }
     });
   }

@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
 /**
  * Request DTO for creating a new property.
@@ -178,15 +179,11 @@ public class CreatePropertyRequest {
 
     private LocalDate availableFrom;
 
-    @Size(max = 100, message = "Owner name must not exceed 100 characters")
-    private String ownerName;
-
-    @Pattern(regexp = "^[+]?[0-9\\s\\-()]*$", message = "Phone number format is invalid")
-    @Size(max = 20, message = "Owner phone must not exceed 20 characters")
-    private String ownerPhone;
-
-    @Email(message = "Owner email should be valid")
-    private String ownerEmail;
+    /**
+     * Verknuepfter Eigentuemer (Client-ID) statt der frueheren Freitextfelder -- Issue #37.
+     * Optional: ein Objekt darf ohne erfassten Eigentuemer angelegt werden.
+     */
+    private UUID ownerClientId;
 
     @Pattern(regexp = "^[+]?[0-9\\s\\-()]*$", message = "Phone number format is invalid")
     @Size(max = 20, message = "Contact phone must not exceed 20 characters")

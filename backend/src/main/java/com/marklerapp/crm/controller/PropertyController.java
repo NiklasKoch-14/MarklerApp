@@ -705,6 +705,27 @@ public class PropertyController extends BaseController {
     }
 
     /**
+     * Objekte, die einem Kunden als Eigentuemer gehoeren (Issue #37).
+     * Grundlage der Objektliste auf der Kundendetailseite.
+     */
+    @GetMapping("/by-owner/{clientId}")
+    @Operation(summary = "Get properties by owner",
+               description = "Retrieve all properties linked to the given client as owner.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Properties retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token")
+    })
+    public ResponseEntity<List<PropertyDto>> getPropertiesByOwner(
+            @Parameter(description = "Client ID of the owner") @PathVariable UUID clientId,
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        log.debug("Getting properties owned by client: {} for agent: {}", clientId, agentId);
+
+        return ResponseEntity.ok(propertyService.getPropertiesByOwner(clientId, agentId));
+    }
+
+    /**
      * Get available properties from a specific date.
      */
     @GetMapping("/available")

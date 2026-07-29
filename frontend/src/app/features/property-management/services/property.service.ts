@@ -87,6 +87,19 @@ export interface PropertyImage {
   uploadedAt?: string;
 }
 
+/**
+ * Verknüpfter Eigentümer eines Objekts — schlanke Sicht auf einen Kunden (#37).
+ */
+export interface PropertyOwner {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  clientType?: string;
+}
+
 export interface Property {
   id?: string;
   agentId?: string;
@@ -148,9 +161,10 @@ export interface Property {
 
   // Additional
   availableFrom?: string;
-  ownerName?: string;
-  ownerPhone?: string;
-  ownerEmail?: string;
+  /** Verknüpfter Eigentümer (Client-ID) — ersetzt die früheren Freitextfelder (#37). */
+  ownerClientId?: string | null;
+  /** Aufgelöster Eigentümer, read-only vom Backend. */
+  owner?: PropertyOwner;
   contactPhone?: string;
   contactEmail?: string;
   virtualTourUrl?: string;
@@ -341,6 +355,15 @@ export class PropertyService {
   getRecentProperties(days: number = 30): Observable<Property[]> {
     const params = new HttpParams().set('days', days.toString());
     return this.http.get<Property[]>(`${this.apiUrl}/recent`, { params }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
+
+  /**
+   * Objekte, die einem Kunden als Eigentümer gehören (#37).
+   */
+  getPropertiesByOwner(clientId: string): Observable<Property[]> {
+    return this.http.get<Property[]>(`${this.apiUrl}/by-owner/${clientId}`).pipe(
       catchError(err => this.errorHandler.handleError(err))
     );
   }

@@ -6,11 +6,13 @@ import com.marklerapp.crm.entity.*;
 import com.marklerapp.crm.mapper.PropertyImageMapper;
 import com.marklerapp.crm.mapper.PropertyMapper;
 import com.marklerapp.crm.repository.AgentRepository;
+import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.PropertyImageRepository;
 import com.marklerapp.crm.repository.PropertyRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -47,6 +49,9 @@ class PropertyServiceTest {
     private AgentRepository agentRepository;
 
     @Mock
+    private ClientRepository clientRepository;
+
+    @Mock
     private PropertyMapper propertyMapper;
 
     @Mock
@@ -81,6 +86,7 @@ class PropertyServiceTest {
             propertyRepository,
             propertyImageRepository,
             agentRepository,
+            clientRepository,
             propertyMapper,
             propertyImageMapper,
             ownershipValidator,
@@ -270,6 +276,102 @@ class PropertyServiceTest {
 
         // Then
         verify(propertyRepository).save(any(Property.class));
+    }
+
+    // ========================================
+    // Eigentuemer-Verknuepfung (Issue #37)
+    // ========================================
+
+    @Test
+    void createProperty_WithOwnerClientId_ShouldLinkOwner() {
+        // Given
+        Client owner = sellerOf(testAgent);
+        createRequest.setOwnerClientId(owner.getId());
+        when(agentRepository.findById(agentId)).thenReturn(Optional.of(testAgent));
+        when(clientRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+        when(propertyRepository.save(any(Property.class))).thenReturn(testProperty);
+        when(propertyMapper.toDto(testProperty)).thenReturn(testPropertyDto);
+
+        // When
+        propertyService.createProperty(createRequest, agentId);
+
+        // Then
+        ArgumentCaptor<Property> saved = ArgumentCaptor.forClass(Property.class);
+        verify(propertyRepository).save(saved.capture());
+        assertThat(saved.getValue().getOwner()).isSameAs(owner);
+    }
+
+    @Test
+    void createProperty_WithForeignAgentsClient_ShouldThrowException() {
+        // Ein fremder Kunde als Eigentuemer waere ein Datenleck ueber die Beziehung:
+        // Name, Telefon und E-Mail stuenden danach auf der eigenen Objektseite.
+        Agent otherAgent = Agent.builder().firstName("Erika").lastName("Fremd").email("erika@example.com").build();
+        otherAgent.setId(UUID.randomUUID());
+        Client foreignOwner = sellerOf(otherAgent);
+
+        createRequest.setOwnerClientId(foreignOwner.getId());
+        when(agentRepository.findById(agentId)).thenReturn(Optional.of(testAgent));
+        when(clientRepository.findById(foreignOwner.getId())).thenReturn(Optional.of(foreignOwner));
+
+        assertThatThrownBy(() -> propertyService.createProperty(createRequest, agentId))
+            .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(propertyRepository, never()).save(any());
+    }
+
+    @Test
+    void updateProperty_WithNullOwnerClientId_ShouldDetachOwner() {
+        // null bedeutet hier ausnahmsweise "Zuordnung entfernen", nicht "unveraendert" —
+        // deshalb die Praesenzmarkierung im DTO.
+        testProperty.setOwner(sellerOf(testAgent));
+        UpdatePropertyRequest request = new UpdatePropertyRequest();
+        request.setOwnerClientId(null);
+
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(testProperty));
+        when(propertyRepository.save(testProperty)).thenReturn(testProperty);
+        when(propertyMapper.toDto(testProperty)).thenReturn(testPropertyDto);
+
+        propertyService.updateProperty(propertyId, request, agentId);
+
+        assertThat(testProperty.getOwner()).isNull();
+    }
+
+    @Test
+    void updateProperty_WithoutOwnerClientIdKey_ShouldKeepOwner() {
+        Client owner = sellerOf(testAgent);
+        testProperty.setOwner(owner);
+
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(testProperty));
+        when(propertyRepository.save(testProperty)).thenReturn(testProperty);
+        when(propertyMapper.toDto(testProperty)).thenReturn(testPropertyDto);
+
+        propertyService.updateProperty(propertyId, updateRequest, agentId);
+
+        assertThat(testProperty.getOwner()).isSameAs(owner);
+    }
+
+    @Test
+    void getPropertiesByOwner_ShouldReturnLinkedProperties() {
+        Client owner = sellerOf(testAgent);
+        when(agentRepository.findById(agentId)).thenReturn(Optional.of(testAgent));
+        when(propertyRepository.findByAgentAndOwnerId(testAgent, owner.getId()))
+            .thenReturn(List.of(testProperty));
+        when(propertyMapper.toDto(testProperty)).thenReturn(testPropertyDto);
+
+        List<PropertyDto> result = propertyService.getPropertiesByOwner(owner.getId(), agentId);
+
+        assertThat(result).containsExactly(testPropertyDto);
+    }
+
+    private Client sellerOf(Agent agent) {
+        Client client = Client.builder()
+            .agent(agent)
+            .firstName("Anna")
+            .lastName("Verkaeufer")
+            .clientType(Client.ClientType.SELLER)
+            .build();
+        client.setId(UUID.randomUUID());
+        return client;
     }
 
     // ========================================

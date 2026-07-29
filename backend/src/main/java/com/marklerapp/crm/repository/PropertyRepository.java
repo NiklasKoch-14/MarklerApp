@@ -239,6 +239,23 @@ public interface PropertyRepository extends JpaRepository<Property, UUID> {
     List<Property> findByAgentWithImages(@Param("agent") Agent agent);
 
     /**
+     * Objekte eines Eigentuemers (Issue #37). Der Agent-Filter ist keine Redundanz:
+     * er haelt die Abfrage auch dann mandantensicher, wenn eine fremde Client-ID
+     * hereingereicht wird.
+     */
+    @Query("SELECT p FROM Property p " +
+           "JOIN FETCH p.owner o " +
+           "WHERE p.agent = :agent AND o.id = :ownerId " +
+           "ORDER BY p.createdAt DESC")
+    List<Property> findByAgentAndOwnerId(@Param("agent") Agent agent, @Param("ownerId") UUID ownerId);
+
+    /**
+     * Alle Objekte, die auf einen bestimmten Kunden als Eigentuemer zeigen. Wird vor dem
+     * Loeschen eines Kunden gebraucht, um die Verknuepfung sauber aufzuloesen.
+     */
+    List<Property> findByOwner(Client owner);
+
+    /**
      * Find recently added properties
      */
     @Query("SELECT p FROM Property p " +
