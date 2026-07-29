@@ -136,6 +136,13 @@ docker compose -f docker-compose.dev.yml up --build
 # Tests
 cd frontend && npm test && npm run lint
 cd backend && mvn test
+
+# E2E (Playwright) — braucht ein laufendes Backend auf :8085, startet ng serve selbst
+cd frontend && npm run e2e:pw                    # beide Projekte
+cd frontend && npm run e2e:pw:desktop            # nur Desktop Chromium
+E2E_PORT=4300 npm run e2e:pw:desktop             # anderer Port, falls :4200 belegt ist
+npx playwright install chromium webkit           # einmalig; webkit braucht zusaetzlich
+sudo npx playwright install-deps webkit          # Systembibliotheken fuer Mobile Safari
 ```
 
 ---
