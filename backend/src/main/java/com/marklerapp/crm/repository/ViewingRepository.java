@@ -31,6 +31,16 @@ public interface ViewingRepository extends JpaRepository<Viewing, UUID> {
     @Query("SELECT v FROM Viewing v JOIN FETCH v.agent JOIN FETCH v.client JOIN FETCH v.property WHERE v.agent = :agent ORDER BY v.viewingDate DESC")
     Page<Viewing> findByAgentOrderByViewingDateDesc(@Param("agent") Agent agent, Pageable pageable);
 
+    @Query(value = "SELECT v FROM Viewing v JOIN FETCH v.agent JOIN FETCH v.client JOIN FETCH v.property "
+                 + "WHERE v.agent = :agent AND v.viewingDate >= :from AND v.viewingDate < :to",
+           countQuery = "SELECT COUNT(v) FROM Viewing v WHERE v.agent = :agent AND v.viewingDate >= :from AND v.viewingDate < :to")
+    Page<Viewing> findByAgentAndViewingDateRange(
+            @Param("agent") Agent agent,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to,
+            Pageable pageable
+    );
+
     @Query("SELECT v FROM Viewing v JOIN FETCH v.agent JOIN FETCH v.client JOIN FETCH v.property WHERE v.agent = :agent AND v.viewingDate >= :startDate AND v.viewingDate < :endDate ORDER BY v.viewingDate ASC")
     List<Viewing> findByAgentAndViewingDateBetween(
             @Param("agent") Agent agent,

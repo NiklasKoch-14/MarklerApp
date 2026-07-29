@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
@@ -68,6 +68,16 @@ export interface ViewingSummary {
   createdAt: string;
 }
 
+export interface ViewingQuery {
+  /** Inclusive lower bound, local ISO date-time without zone (e.g. 2026-07-29T00:00:00). */
+  from?: string;
+  /** Exclusive upper bound, same format as `from`. */
+  to?: string;
+  page?: number;
+  size?: number;
+  sort?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -99,6 +109,24 @@ export class ViewingService {
 
   getViewing(viewingId: string): Observable<ViewingResponse> {
     return this.http.get<ViewingResponse>(`${this.apiUrl}/${viewingId}`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
+
+  /**
+   * Paginated viewings of the authenticated agent. `from`/`to` narrow the result to a
+   * half-open date range — viewing dates are stored as naive local timestamps, so the
+   * bounds must be sent without a zone offset.
+   */
+  getViewings(query: ViewingQuery = {}): Observable<PagedResponse<ViewingSummary>> {
+    let params = new HttpParams()
+      .set('page', String(query.page ?? 0))
+      .set('size', String(query.size ?? 200))
+      .set('sort', query.sort ?? 'viewingDate,asc');
+    if (query.from) params = params.set('from', query.from);
+    if (query.to) params = params.set('to', query.to);
+
+    return this.http.get<PagedResponse<ViewingSummary>>(this.apiUrl, { params }).pipe(
       catchError(err => this.errorHandler.handleError(err))
     );
   }

@@ -113,6 +113,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     { route: '/dashboard',      icon: 'ri-grid-fill',  labelKey: 'navigation.dashboard',      exact: true },
     { route: '/clients',        icon: 'ri-group-fill',         labelKey: 'navigation.clients'                     },
     { route: '/properties',     icon: 'ri-building-2-fill',     labelKey: 'navigation.properties'                  },
+    { route: '/viewings',       icon: 'ri-calendar-check-fill', labelKey: 'navigation.viewings'                    },
     { route: '/analytics',      icon: 'ri-line-chart-fill', labelKey: 'navigation.analytics'                   },
   ];
 
