@@ -244,6 +244,9 @@ public class ClientService {
         existingClient.setAddressPostalCode(clientDto.getAddressPostalCode());
         existingClient.setAddressCountry(clientDto.getAddressCountry());
         existingClient.setExpectedCommission(clientDto.getExpectedCommission());
+        // Bewusst ohne Null-Guard: "keine Angabe" muss wieder einstellbar sein, sonst
+        // liesse sich eine einmal falsch gesetzte Quelle nie mehr zuruecknehmen.
+        existingClient.setLeadSource(clientDto.getLeadSource());
         if (clientDto.getClientType() != null) {
             existingClient.setClientType(clientDto.getClientType());
         }

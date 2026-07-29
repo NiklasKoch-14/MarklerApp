@@ -39,6 +39,18 @@ export enum LegalBasis {
   LEGITIMATE_INTEREST = 'LEGITIMATE_INTEREST'
 }
 
+/** Akquisekanal des Leads (Issue #41) — optional, bewusst ohne Default. */
+export enum LeadSource {
+  REFERRAL = 'REFERRAL',
+  PORTAL = 'PORTAL',
+  WEBSITE = 'WEBSITE',
+  WALK_IN = 'WALK_IN',
+  SOCIAL_MEDIA = 'SOCIAL_MEDIA',
+  SIGNAGE = 'SIGNAGE',
+  COLD_OUTREACH = 'COLD_OUTREACH',
+  OTHER = 'OTHER'
+}
+
 export interface Client {
   id?: string;
   agentId?: string;
@@ -60,6 +72,8 @@ export interface Client {
   legalBasis?: LegalBasis;
   /** Geschätzte Provision in EUR — ab der Interessent-Stufe pflegbar (Issue #22). */
   expectedCommission?: number;
+  /** Woher der Lead kam (Issue #41) — leer bei Bestandsdaten. */
+  leadSource?: LeadSource | null;
   searchCriteria?: PropertySearchCriteria;
   createdAt?: string;
   updatedAt?: string;

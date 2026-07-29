@@ -112,6 +112,12 @@ import { GdprExportService } from '../../services/gdpr-export.service';
                 </span>
                 <span *ngIf="!callNotesSummary?.lastCallDate"
                       style="font-size:12px;color:var(--text-3);">Noch kein Kontakt</span>
+                <span *ngIf="client.leadSource"
+                      [title]="'clients.leadSource' | translate"
+                      style="font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:4px;">
+                  <i class="ri-inbox-archive-line" style="font-size:12px;"></i>
+                  {{ client.leadSource | translateEnum:'leadSource' }}
+                </span>
               </div>
             </div>
 

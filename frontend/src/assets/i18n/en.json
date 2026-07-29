@@ -212,7 +212,13 @@
     "mapLegendProperties": "Properties ({{count}})",
     "mapLegendClients": "Client search locations ({{count}})",
     "mapClickHint": "Click a pin to open the record.",
-    "mapEmpty": "No property or client has coordinates yet."
+    "mapEmpty": "No property or client has coordinates yet.",
+    "leadSourceTitle": "Where the deals come from",
+    "leadSourceSub": "Realised commission per acquisition channel. Counts clients in the \"Won\" stage with the commission recorded on them.",
+    "leadSourceUnknown": "Not specified",
+    "leadSourceMeta": "{{won}} of {{clients}} clients won · {{rate}} % rate",
+    "leadSourceEmpty": "No client has a source recorded yet. Add it in the client form — then this shows which channel pays off.",
+    "leadSourceNoCommission": "No commission recorded on won clients yet — bars show the number of deals until then."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -311,6 +317,8 @@
     "searchPlaceholder": "Name, email, phone, city …",
     "allStages": "All stages",
     "allTypes": "All types",
+    "allLeadSources": "All sources",
+    "leadSourceFilterHint": "Filter by acquisition channel — e.g. to review all referrals or to fill in clients without a source.",
     "marketingConsentFilterHint": "Filter by marketing consent — relevant e.g. before sending a newsletter.",
     "marketingConsentFilter": {
       "ALL": "Marketing: All",
@@ -488,7 +496,10 @@
     },
     "expectedCommission": "Estimated commission",
     "expectedCommissionPlaceholder": "e.g. 8500",
-    "expectedCommissionHint": "Feeds the pipeline total per column. Can be filled in from the prospect stage onwards."
+    "expectedCommissionHint": "Feeds the pipeline total per column. Can be filled in from the prospect stage onwards.",
+    "leadSource": "Where the contact came from",
+    "leadSourceNone": "Not specified",
+    "leadSourceHint": "Optional. Shows in analytics which channel actually produces deals."
   },
   "properties": {
     "title": "Properties",
@@ -1261,6 +1272,16 @@
     "legalBasis": {
       "CONTRACT_INITIATION": "Contract Initiation",
       "LEGITIMATE_INTEREST": "Legitimate Interest"
+    },
+    "leadSource": {
+      "REFERRAL": "Referral",
+      "PORTAL": "Property portal",
+      "WEBSITE": "Own website",
+      "WALK_IN": "Walk-in",
+      "SOCIAL_MEDIA": "Social media",
+      "SIGNAGE": "For-sale sign",
+      "COLD_OUTREACH": "Cold outreach",
+      "OTHER": "Other"
     },
     "preferredContactMethod": {
       "EMAIL": "Email",

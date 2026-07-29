@@ -73,12 +73,26 @@ export interface Revenue {
   avgCommissionPerDeal: number;
 }
 
+/**
+ * Kennzahlen je Akquisekanal (Issue #41). `source` ist der Enum-Name von LeadSource
+ * oder null für Kunden ohne erfasste Quelle — übersetzt wird erst im Template.
+ */
+export interface LeadSourcePerformance {
+  source: string | null;
+  totalClients: number;
+  wonClients: number;
+  wonCommission: number;
+  openCommission: number;
+  winRate: number;
+}
+
 export interface DashboardAnalytics {
   conversionFunnel: ConversionFunnel;
   pipelineHealth: PipelineHealth;
   propertyPortfolio: PropertyPortfolio;
   activityTrends: ActivityTrends;
   revenue: Revenue;
+  leadSourcePerformance: LeadSourcePerformance[];
   clientsNeedingAttention: unknown[];
   suggestedActions: string[];
 }
