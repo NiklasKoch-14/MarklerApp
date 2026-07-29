@@ -53,18 +53,24 @@ public class DashboardAnalyticsService {
     public DashboardAnalyticsDto generateAnalytics(UUID agentId) {
         log.info("Generating dashboard analytics for agent: {}", agentId);
 
-        // Fetch the Agent entity
         Agent agent = agentRepository.findById(agentId)
                 .orElseThrow(() -> new IllegalArgumentException("Agent not found: " + agentId));
 
+        // Die drei Datensätze des Maklers einmal laden und an alle Auswertungen
+        // durchreichen — vorher hat jede Kennzahl ihre eigenen Queries abgesetzt,
+        // inklusive einer Abfrage pro Kunde für den letzten Kontakt.
+        List<Client> clients = clientRepository.findByAgent(agent);
+        List<CallNote> callNotes = callNoteRepository
+                .findByAgentOrderByCallDateDesc(agent, Pageable.unpaged()).getContent();
+        List<Property> properties = propertyRepository
+                .findByAgent(agent, Pageable.unpaged()).getContent();
+
         return DashboardAnalyticsDto.builder()
-                .conversionFunnel(calculateConversionFunnel(agent))
-                .pipelineHealth(calculatePipelineHealth(agent))
-                .propertyPortfolio(calculatePropertyPortfolio(agent))
-                .activityTrends(calculateActivityTrends(agent))
-                .revenue(calculateRevenue(agent))
-                .clientsNeedingAttention(identifyClientsNeedingAttention(agent))
-                .suggestedActions(generateSuggestedActions(agent))
+                .conversionFunnel(calculateConversionFunnel(clients, callNotes))
+                .pipelineHealth(calculatePipelineHealth(clients, callNotes))
+                .propertyPortfolio(calculatePropertyPortfolio(properties))
+                .activityTrends(calculateActivityTrends(clients, callNotes, properties))
+                .revenue(calculateRevenue(properties))
                 .build();
     }
 
@@ -72,43 +78,44 @@ public class DashboardAnalyticsService {
     // Conversion Funnel Calculation
     // ========================================
 
-    private ConversionFunnelDto calculateConversionFunnel(Agent agent) {
-        List<Client> allClients = clientRepository.findByAgent(agent);
-        long totalClients = allClients.size();
+    /**
+     * Rang einer Gesprächs-Stufe im Trichter. NOT_INTERESTED ist kein Fortschritt,
+     * sondern ein Ausstieg, und bekommt darum keinen Rang.
+     */
+    private static int funnelRank(CallOutcome outcome) {
+        if (outcome == null) return 0;
+        return switch (outcome) {
+            case INTERESTED -> 1;
+            case SCHEDULED_VIEWING -> 2;
+            case OFFER_MADE -> 3;
+            case DEAL_CLOSED -> 4;
+            case NOT_INTERESTED -> 0;
+        };
+    }
 
-        // Get all call notes to analyze outcomes
-        List<CallNote> allCallNotes = callNoteRepository.findByAgentOrderByCallDateDesc(agent, Pageable.unpaged()).getContent();
+    private ConversionFunnelDto calculateConversionFunnel(List<Client> clients, List<CallNote> callNotes) {
+        long totalClients = clients.size();
 
-        // Count unique clients by their latest outcome
-        Map<UUID, CallOutcome> latestOutcomeByClient = new HashMap<>();
-        for (CallNote note : allCallNotes) {
-            if (note.getOutcome() != null && !latestOutcomeByClient.containsKey(note.getClient().getId())) {
-                latestOutcomeByClient.put(note.getClient().getId(), note.getOutcome());
-            }
+        // Ein Trichter zählt kumulativ: wer ein Angebot bekommen hat, war vorher
+        // zwangsläufig Interessent. Darum zählt pro Kunde die am weitesten
+        // fortgeschrittene Stufe, die er je erreicht hat — nicht sein letztes
+        // Gesprächsergebnis. Sonst rutscht ein Kunde beim Fortschritt aus der
+        // vorherigen Stufe heraus und die Quoten übersteigen 100 %.
+        Map<UUID, Integer> furthestRank = new HashMap<>();
+        for (CallNote note : callNotes) {
+            int rank = funnelRank(note.getOutcome());
+            if (rank == 0) continue;
+            furthestRank.merge(note.getClient().getId(), rank, Math::max);
         }
 
-        long interested = latestOutcomeByClient.values().stream()
-                .filter(o -> o == CallOutcome.INTERESTED)
-                .count();
+        long interested = countAtLeast(furthestRank, 1);
+        long scheduledViewings = countAtLeast(furthestRank, 2);
+        long offersMade = countAtLeast(furthestRank, 3);
+        long dealsClosed = countAtLeast(furthestRank, 4);
 
-        long scheduledViewings = latestOutcomeByClient.values().stream()
-                .filter(o -> o == CallOutcome.SCHEDULED_VIEWING)
+        long lostClients = latestOutcomeByClient(callNotes).values().stream()
+                .filter(o -> o == CallOutcome.NOT_INTERESTED)
                 .count();
-
-        long offersMade = latestOutcomeByClient.values().stream()
-                .filter(o -> o == CallOutcome.OFFER_MADE)
-                .count();
-
-        long dealsClosed = latestOutcomeByClient.values().stream()
-                .filter(o -> o == CallOutcome.DEAL_CLOSED)
-                .count();
-
-        // Calculate conversion rates
-        double interestedRate = totalClients > 0 ? (interested * 100.0 / totalClients) : 0.0;
-        double viewingRate = interested > 0 ? (scheduledViewings * 100.0 / interested) : 0.0;
-        double offerRate = scheduledViewings > 0 ? (offersMade * 100.0 / scheduledViewings) : 0.0;
-        double closingRate = offersMade > 0 ? (dealsClosed * 100.0 / offersMade) : 0.0;
-        double overallConversionRate = totalClients > 0 ? (dealsClosed * 100.0 / totalClients) : 0.0;
 
         return ConversionFunnelDto.builder()
                 .totalClients(totalClients)
@@ -116,80 +123,83 @@ public class DashboardAnalyticsService {
                 .scheduledViewings(scheduledViewings)
                 .offersMade(offersMade)
                 .dealsClosed(dealsClosed)
-                .interestedRate(Math.round(interestedRate * ValidationConstants.PERCENTAGE_ROUNDING_PRECISION) / ValidationConstants.PERCENTAGE_ROUNDING_PRECISION)
-                .viewingRate(Math.round(viewingRate * ValidationConstants.PERCENTAGE_ROUNDING_PRECISION) / ValidationConstants.PERCENTAGE_ROUNDING_PRECISION)
-                .offerRate(Math.round(offerRate * ValidationConstants.PERCENTAGE_ROUNDING_PRECISION) / ValidationConstants.PERCENTAGE_ROUNDING_PRECISION)
-                .closingRate(Math.round(closingRate * ValidationConstants.PERCENTAGE_ROUNDING_PRECISION) / ValidationConstants.PERCENTAGE_ROUNDING_PRECISION)
-                .overallConversionRate(Math.round(overallConversionRate * ValidationConstants.PERCENTAGE_ROUNDING_PRECISION) / ValidationConstants.PERCENTAGE_ROUNDING_PRECISION)
+                .lostClients(lostClients)
+                .interestedRate(percentage(interested, totalClients))
+                .viewingRate(percentage(scheduledViewings, interested))
+                .offerRate(percentage(offersMade, scheduledViewings))
+                .closingRate(percentage(dealsClosed, offersMade))
+                .overallConversionRate(percentage(dealsClosed, totalClients))
                 .build();
+    }
+
+    private long countAtLeast(Map<UUID, Integer> furthestRank, int rank) {
+        return furthestRank.values().stream().filter(r -> r >= rank).count();
+    }
+
+    private double percentage(long part, long whole) {
+        if (whole <= 0) return 0.0;
+        double raw = part * 100.0 / whole;
+        return Math.round(raw * ValidationConstants.PERCENTAGE_ROUNDING_PRECISION)
+                / ValidationConstants.PERCENTAGE_ROUNDING_PRECISION;
+    }
+
+    /** Letztes bewertetes Gesprächsergebnis je Kunde. Erwartet die Notizen nach callDate absteigend. */
+    private Map<UUID, CallOutcome> latestOutcomeByClient(List<CallNote> callNotes) {
+        Map<UUID, CallOutcome> latest = new HashMap<>();
+        for (CallNote note : callNotes) {
+            if (note.getOutcome() == null) continue;
+            latest.putIfAbsent(note.getClient().getId(), note.getOutcome());
+        }
+        return latest;
     }
 
     // ========================================
     // Pipeline Health Calculation
     // ========================================
 
-    private PipelineHealthDto calculatePipelineHealth(Agent agent) {
-        List<CallNote> allCallNotes = callNoteRepository.findByAgentOrderByCallDateDesc(agent, Pageable.unpaged()).getContent();
-
-        // Latest outcome per client
-        Map<UUID, CallOutcome> latestOutcomeByClient = new HashMap<>();
-        for (CallNote note : allCallNotes) {
-            if (note.getOutcome() != null && !latestOutcomeByClient.containsKey(note.getClient().getId())) {
-                latestOutcomeByClient.put(note.getClient().getId(), note.getOutcome());
-            }
-        }
-
-        // Count by outcome
-        Map<String, Long> clientsByOutcome = latestOutcomeByClient.values().stream()
-                .collect(Collectors.groupingBy(Enum::name, Collectors.counting()));
-
-        // Follow-ups
+    private PipelineHealthDto calculatePipelineHealth(List<Client> clients, List<CallNote> callNotes) {
         LocalDateTime now = LocalDateTime.now();
         LocalDate today = LocalDate.now();
-        LocalDateTime oneWeekFromNow = now.plusWeeks(1);
-        LocalDateTime twoWeeksFromNow = now.plusWeeks(2);
 
-        // Get all overdue follow-ups for this agent
-        List<CallNote> allOverdue = callNoteRepository.findOverdueFollowUps(today);
-        long overdueFollowUps = allOverdue.stream()
-                .filter(note -> note.getAgent().getId().equals(agent.getId()))
-                .count();
+        Map<String, Long> clientsByOutcome = latestOutcomeByClient(callNotes).values().stream()
+                .collect(Collectors.groupingBy(Enum::name, Collectors.counting()));
 
-        // Get all follow-ups requiring action and filter by agent and date ranges
-        List<CallNote> allFollowUps = callNoteRepository.findCallNotesRequiringFollowUp();
-        long followUpsDueThisWeek = allFollowUps.stream()
-                .filter(note -> note.getAgent().getId().equals(agent.getId()))
-                .filter(note -> note.getFollowUpDate() != null)
-                .filter(note -> !note.getFollowUpDate().isBefore(today) && note.getFollowUpDate().isBefore(today.plusWeeks(1)))
-                .count();
-        long followUpsDueNextWeek = allFollowUps.stream()
-                .filter(note -> note.getAgent().getId().equals(agent.getId()))
-                .filter(note -> note.getFollowUpDate() != null)
-                .filter(note -> !note.getFollowUpDate().isBefore(today.plusWeeks(1)) && note.getFollowUpDate().isBefore(today.plusWeeks(2)))
-                .count();
+        List<CallNote> openFollowUps = callNotes.stream()
+                .filter(n -> Boolean.TRUE.equals(n.getFollowUpRequired()))
+                .filter(n -> n.getFollowUpDate() != null)
+                .toList();
 
-        // Clients without recent contact (30+ days)
-        LocalDateTime thirtyDaysAgo = now.minusDays(ValidationConstants.DAYS_WITHOUT_CONTACT_THRESHOLD);
-        List<Client> allClients = clientRepository.findByAgent(agent);
-        long clientsWithoutRecentContact = allClients.stream()
-                .filter(client -> {
-                    List<CallNote> clientNotes = callNoteRepository.findByClientOrderByCallDateDesc(client, Pageable.unpaged()).getContent();
-                    return clientNotes.isEmpty() || clientNotes.get(0).getCallDate().isBefore(thirtyDaysAgo);
-                })
+        // "Überfällig" schließt heute mit ein — konsistent mit CallNoteService.
+        // Die Wochen-Buckets starten deshalb erst morgen, sonst zählt heute doppelt.
+        long overdueFollowUps = openFollowUps.stream()
+                .filter(n -> !n.getFollowUpDate().isAfter(today))
                 .count();
+        long followUpsDueThisWeek = countFollowUpsBetween(openFollowUps, today.plusDays(1), today.plusWeeks(1));
+        long followUpsDueNextWeek = countFollowUpsBetween(openFollowUps, today.plusWeeks(1), today.plusWeeks(2));
 
-        // Average days since last contact
-        int totalDays = 0;
-        int clientCount = 0;
-        for (Client client : allClients) {
-            List<CallNote> clientNotes = callNoteRepository.findByClientOrderByCallDateDesc(client, Pageable.unpaged()).getContent();
-            if (!clientNotes.isEmpty()) {
-                long daysSince = ChronoUnit.DAYS.between(clientNotes.get(0).getCallDate(), now);
-                totalDays += daysSince;
-                clientCount++;
-            }
+        Map<UUID, LocalDateTime> lastContact = new HashMap<>();
+        for (CallNote note : callNotes) {
+            if (note.getCallDate() == null) continue;
+            lastContact.merge(note.getClient().getId(), note.getCallDate(),
+                    (a, b) -> a.isAfter(b) ? a : b);
         }
-        int averageDays = clientCount > 0 ? totalDays / clientCount : 0;
+
+        LocalDateTime staleThreshold = now.minusDays(ValidationConstants.DAYS_WITHOUT_CONTACT_THRESHOLD);
+        long clientsWithoutRecentContact = clients.stream()
+                .map(c -> lastContact.get(c.getId()))
+                .filter(contacted -> contacted == null || contacted.isBefore(staleThreshold))
+                .count();
+
+        // Nur Kunden mit mindestens einem Gespräch — bei nie kontaktierten Kunden
+        // gibt es kein "seit". Die Bezugsgröße wandert mit ins DTO, damit die
+        // Oberfläche den Durchschnitt nicht ohne Basis zeigt.
+        List<Long> daysSinceContact = clients.stream()
+                .map(c -> lastContact.get(c.getId()))
+                .filter(Objects::nonNull)
+                .map(contacted -> ChronoUnit.DAYS.between(contacted, now))
+                .toList();
+        int averageDays = daysSinceContact.isEmpty() ? 0
+                : (int) (daysSinceContact.stream().mapToLong(Long::longValue).sum() / daysSinceContact.size());
 
         return PipelineHealthDto.builder()
                 .clientsByOutcome(clientsByOutcome)
@@ -198,27 +208,30 @@ public class DashboardAnalyticsService {
                 .followUpsDueNextWeek(followUpsDueNextWeek)
                 .clientsWithoutRecentContact(clientsWithoutRecentContact)
                 .averageDaysSinceLastContact(averageDays)
+                .clientsWithContact((long) daysSinceContact.size())
                 .build();
+    }
+
+    private long countFollowUpsBetween(List<CallNote> followUps, LocalDate fromInclusive, LocalDate toExclusive) {
+        return followUps.stream()
+                .filter(n -> !n.getFollowUpDate().isBefore(fromInclusive))
+                .filter(n -> n.getFollowUpDate().isBefore(toExclusive))
+                .count();
     }
 
     // ========================================
     // Property Portfolio Calculation
     // ========================================
 
-    private PropertyPortfolioDto calculatePropertyPortfolio(Agent agent) {
-        List<Property> allProperties = propertyRepository.findByAgent(agent, Pageable.unpaged()).getContent();
-
+    private PropertyPortfolioDto calculatePropertyPortfolio(List<Property> allProperties) {
         long totalProperties = allProperties.size();
 
-        // Properties by status
         Map<String, Long> propertiesByStatus = allProperties.stream()
                 .collect(Collectors.groupingBy(p -> p.getStatus().name(), Collectors.counting()));
 
-        // Properties by type
         Map<String, Long> propertiesByType = allProperties.stream()
                 .collect(Collectors.groupingBy(p -> p.getPropertyType().name(), Collectors.counting()));
 
-        // Average days on market (for AVAILABLE properties)
         LocalDateTime now = LocalDateTime.now();
         List<Property> availableProperties = allProperties.stream()
                 .filter(p -> p.getStatus() == PropertyStatus.AVAILABLE)
@@ -226,8 +239,7 @@ public class DashboardAnalyticsService {
 
         int totalDaysOnMarket = 0;
         for (Property property : availableProperties) {
-            long daysOnMarket = ChronoUnit.DAYS.between(property.getCreatedAt(), now);
-            totalDaysOnMarket += daysOnMarket;
+            totalDaysOnMarket += (int) ChronoUnit.DAYS.between(property.getCreatedAt(), now);
         }
         int averageDaysOnMarket = availableProperties.isEmpty() ? 0 : totalDaysOnMarket / availableProperties.size();
 
@@ -244,7 +256,6 @@ public class DashboardAnalyticsService {
                 .limit(5)
                 .collect(Collectors.toList());
 
-        // Properties with images and expose
         long propertiesWithImages = allProperties.stream()
                 .filter(p -> p.getImages() != null && !p.getImages().isEmpty())
                 .count();
@@ -253,10 +264,9 @@ public class DashboardAnalyticsService {
                 .filter(p -> p.getExposeFileName() != null && !p.getExposeFileName().isEmpty())
                 .count();
 
-        // Total portfolio value
         BigDecimal totalValue = allProperties.stream()
-                .filter(p -> p.getPrice() != null)
                 .map(Property::getPrice)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return PropertyPortfolioDto.builder()
@@ -275,8 +285,7 @@ public class DashboardAnalyticsService {
     // Revenue / Commission Calculation
     // ========================================
 
-    private RevenueDto calculateRevenue(Agent agent) {
-        List<Property> allProperties = propertyRepository.findByAgent(agent, Pageable.unpaged()).getContent();
+    private RevenueDto calculateRevenue(List<Property> allProperties) {
         int currentYear = LocalDate.now().getYear();
 
         // Abgeschlossene Objekte dieses Jahr (Status SOLD/RENTED, in diesem Jahr aktualisiert)
@@ -315,69 +324,49 @@ public class DashboardAnalyticsService {
     // Activity Trends Calculation
     // ========================================
 
-    private ActivityTrendsDto calculateActivityTrends(Agent agent) {
+    private ActivityTrendsDto calculateActivityTrends(List<Client> clients,
+                                                      List<CallNote> callNotes,
+                                                      List<Property> properties) {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startOfThisMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+        LocalDateTime startOfThisMonth = now.withDayOfMonth(1).toLocalDate().atStartOfDay();
         LocalDateTime startOfLastMonth = startOfThisMonth.minusMonths(1);
 
-        // Call notes this month vs last month
-        List<CallNote> thisMonthNotes = callNoteRepository.findRecentCallNotesByAgent(agent, startOfThisMonth);
-        long callNotesThisMonth = thisMonthNotes.stream()
-                .filter(n -> n.getCallDate().isBefore(now))
-                .count();
+        List<CallNote> datedNotes = callNotes.stream()
+                .filter(n -> n.getCallDate() != null && !n.getCallDate().isAfter(now))
+                .toList();
 
-        List<CallNote> lastMonthNotes = callNoteRepository.findRecentCallNotesByAgent(agent, startOfLastMonth);
-        long callNotesLastMonth = lastMonthNotes.stream()
-                .filter(n -> n.getCallDate().isBefore(startOfThisMonth))
-                .count();
+        long callNotesThisMonth = countBetween(datedNotes, CallNote::getCallDate, startOfThisMonth, now);
+        long callNotesLastMonth = countBetween(datedNotes, CallNote::getCallDate, startOfLastMonth, startOfThisMonth);
+        int callNotesGrowth = callNotesLastMonth > 0
+                ? (int) (((callNotesThisMonth - callNotesLastMonth) * 100.0) / callNotesLastMonth)
+                : 0;
 
-        int callNotesGrowth = callNotesLastMonth > 0 ?
-                (int) (((callNotesThisMonth - callNotesLastMonth) * 100.0) / callNotesLastMonth) : 0;
-
-        // New clients this month vs last month
-        List<Client> recentClients = clientRepository.findRecentClientsByAgent(agent, startOfLastMonth);
-        long newClientsThisMonth = recentClients.stream()
-                .filter(c -> c.getCreatedAt().isAfter(startOfThisMonth) && c.getCreatedAt().isBefore(now))
-                .count();
-        long newClientsLastMonth = recentClients.stream()
-                .filter(c -> c.getCreatedAt().isAfter(startOfLastMonth) && c.getCreatedAt().isBefore(startOfThisMonth))
-                .count();
-
-        // Deals closed this month vs last month
-        long dealsClosedThisMonth = thisMonthNotes.stream()
+        List<CallNote> closedNotes = datedNotes.stream()
                 .filter(n -> n.getOutcome() == CallOutcome.DEAL_CLOSED)
-                .filter(n -> n.getCallDate().isBefore(now))
-                .count();
+                .toList();
+        long dealsClosedThisMonth = countBetween(closedNotes, CallNote::getCallDate, startOfThisMonth, now);
+        long dealsClosedLastMonth = countBetween(closedNotes, CallNote::getCallDate, startOfLastMonth, startOfThisMonth);
 
-        long dealsClosedLastMonth = lastMonthNotes.stream()
-                .filter(n -> n.getOutcome() == CallOutcome.DEAL_CLOSED)
-                .filter(n -> n.getCallDate().isBefore(startOfThisMonth))
-                .count();
+        List<Client> datedClients = clients.stream().filter(c -> c.getCreatedAt() != null).toList();
+        long newClientsThisMonth = countBetween(datedClients, Client::getCreatedAt, startOfThisMonth, now);
+        long newClientsLastMonth = countBetween(datedClients, Client::getCreatedAt, startOfLastMonth, startOfThisMonth);
 
-        // New properties this month vs last month
-        List<Property> recentProperties = propertyRepository.findRecentPropertiesByAgent(agent, startOfLastMonth);
-        long newPropertiesThisMonth = recentProperties.stream()
-                .filter(p -> p.getCreatedAt().isAfter(startOfThisMonth) && p.getCreatedAt().isBefore(now))
-                .count();
-        long newPropertiesLastMonth = recentProperties.stream()
-                .filter(p -> p.getCreatedAt().isAfter(startOfLastMonth) && p.getCreatedAt().isBefore(startOfThisMonth))
-                .count();
+        List<Property> datedProperties = properties.stream().filter(p -> p.getCreatedAt() != null).toList();
+        long newPropertiesThisMonth = countBetween(datedProperties, Property::getCreatedAt, startOfThisMonth, now);
+        long newPropertiesLastMonth = countBetween(datedProperties, Property::getCreatedAt, startOfLastMonth, startOfThisMonth);
 
-        // Last 30 days daily activity (for charts) — pro Tag gruppiert, Lücken mit 0 gefüllt
+        // Tagesreihe der letzten 30 Tage, Lücken mit 0 gefüllt
         LocalDate startDay = LocalDate.now().minusDays(ValidationConstants.ACTIVITY_TRENDS_DAYS - 1L);
         LocalDateTime windowStart = startDay.atStartOfDay();
 
-        List<CallNote> windowNotes = callNoteRepository.findRecentCallNotesByAgent(agent, windowStart);
-        Map<LocalDate, Long> callsByDay = windowNotes.stream()
-                .filter(n -> n.getCallDate() != null && !n.getCallDate().isAfter(now))
+        Map<LocalDate, Long> callsByDay = datedNotes.stream()
+                .filter(n -> !n.getCallDate().isBefore(windowStart))
                 .collect(Collectors.groupingBy(n -> n.getCallDate().toLocalDate(), Collectors.counting()));
-        Map<LocalDate, Long> dealsByDay = windowNotes.stream()
-                .filter(n -> n.getOutcome() == CallOutcome.DEAL_CLOSED)
-                .filter(n -> n.getCallDate() != null && !n.getCallDate().isAfter(now))
+        Map<LocalDate, Long> dealsByDay = closedNotes.stream()
+                .filter(n -> !n.getCallDate().isBefore(windowStart))
                 .collect(Collectors.groupingBy(n -> n.getCallDate().toLocalDate(), Collectors.counting()));
-
-        Map<LocalDate, Long> newClientsByDay = clientRepository.findRecentClientsByAgent(agent, windowStart).stream()
-                .filter(c -> c.getCreatedAt() != null && !c.getCreatedAt().isBefore(windowStart) && !c.getCreatedAt().isAfter(now))
+        Map<LocalDate, Long> newClientsByDay = datedClients.stream()
+                .filter(c -> !c.getCreatedAt().isBefore(windowStart) && !c.getCreatedAt().isAfter(now))
                 .collect(Collectors.groupingBy(c -> c.getCreatedAt().toLocalDate(), Collectors.counting()));
 
         List<DailyActivityDto> dailyActivity = new ArrayList<>();
@@ -405,102 +394,13 @@ public class DashboardAnalyticsService {
                 .build();
     }
 
-    // ========================================
-    // AI-Powered Insights
-    // ========================================
-
-    private List<ClientInsightDto> identifyClientsNeedingAttention(Agent agent) {
-        List<ClientInsightDto> insights = new ArrayList<>();
-        LocalDateTime now = LocalDateTime.now();
-        LocalDate today = LocalDate.now();
-
-        // 1. Clients with overdue follow-ups (HIGHEST PRIORITY)
-        List<CallNote> allOverdue = callNoteRepository.findOverdueFollowUps(today);
-        List<CallNote> overdueNotes = allOverdue.stream()
-                .filter(note -> note.getAgent().getId().equals(agent.getId()))
-                .toList();
-        for (CallNote note : overdueNotes) {
-            long daysSince = ChronoUnit.DAYS.between(note.getFollowUpDate(), now);
-            insights.add(ClientInsightDto.builder()
-                    .clientId(note.getClient().getId().toString())
-                    .clientName(note.getClient().getFullName())
-                    .urgency("HIGH")
-                    .reason(String.format("Follow-up overdue by %d days", daysSince))
-                    .lastContactDate(note.getCallDate())
-                    .daysSinceContact((int) ChronoUnit.DAYS.between(note.getCallDate(), now))
-                    .recommendedAction("Contact client immediately to reschedule follow-up")
-                    .build());
-        }
-
-        // 2. Hot leads (INTERESTED clients not contacted in 7+ days)
-        List<Client> allClients = clientRepository.findByAgent(agent);
-        LocalDateTime sevenDaysAgo = now.minusDays(ValidationConstants.HOT_LEAD_DAYS_THRESHOLD);
-
-        for (Client client : allClients) {
-            List<CallNote> clientNotes = callNoteRepository.findByClientOrderByCallDateDesc(client, Pageable.unpaged()).getContent();
-            if (!clientNotes.isEmpty()) {
-                CallNote lastNote = clientNotes.get(0);
-                if (lastNote.getOutcome() == CallOutcome.INTERESTED &&
-                        lastNote.getCallDate().isBefore(sevenDaysAgo) &&
-                        overdueNotes.stream().noneMatch(n -> n.getClient().getId().equals(client.getId()))) {
-
-                    long daysSince = ChronoUnit.DAYS.between(lastNote.getCallDate(), now);
-                    insights.add(ClientInsightDto.builder()
-                            .clientId(client.getId().toString())
-                            .clientName(client.getFullName())
-                            .urgency("MEDIUM")
-                            .reason(String.format("Interested client - no contact in %d days", daysSince))
-                            .lastContactDate(lastNote.getCallDate())
-                            .daysSinceContact((int) daysSince)
-                            .recommendedAction("Send property matches or schedule viewing")
-                            .build());
-                }
-            }
-        }
-
-        // Limit to top N most urgent
-        return insights.stream()
-                .sorted((a, b) -> {
-                    int urgencyCompare = b.getUrgency().compareTo(a.getUrgency());
-                    if (urgencyCompare != 0) return urgencyCompare;
-                    return b.getDaysSinceContact().compareTo(a.getDaysSinceContact());
-                })
-                .limit(ValidationConstants.MAX_URGENT_CLIENT_INSIGHTS)
-                .collect(Collectors.toList());
-    }
-
-    private List<String> generateSuggestedActions(Agent agent) {
-        List<String> actions = new ArrayList<>();
-
-        // Check pipeline health
-        PipelineHealthDto health = calculatePipelineHealth(agent);
-
-        if (health.getOverdueFollowUps() > 0) {
-            actions.add(String.format("🚨 Contact %d clients with overdue follow-ups", health.getOverdueFollowUps()));
-        }
-
-        if (health.getFollowUpsDueThisWeek() > 0) {
-            actions.add(String.format("📅 Schedule %d follow-ups for this week", health.getFollowUpsDueThisWeek()));
-        }
-
-        if (health.getClientsWithoutRecentContact() > 3) {
-            actions.add(String.format("📧 Re-engage %d clients without recent contact", health.getClientsWithoutRecentContact()));
-        }
-
-        // Check property portfolio
-        PropertyPortfolioDto portfolio = calculatePropertyPortfolio(agent);
-        long propertiesWithoutImages = portfolio.getTotalProperties() - portfolio.getPropertiesWithImages();
-        if (propertiesWithoutImages > 0) {
-            actions.add(String.format("📸 Add images to %d properties", propertiesWithoutImages));
-        }
-
-        long propertiesWithoutExpose = portfolio.getTotalProperties() - portfolio.getPropertiesWithExpose();
-        if (propertiesWithoutExpose > 0) {
-            actions.add(String.format("📄 Upload exposés for %d properties", propertiesWithoutExpose));
-        }
-
-        return actions.isEmpty() ?
-                List.of("✅ All caught up! Great work!") :
-                actions.stream().limit(ValidationConstants.MAX_SUGGESTED_ACTIONS).collect(Collectors.toList());
+    private <T> long countBetween(List<T> items,
+                                  java.util.function.Function<T, LocalDateTime> timestamp,
+                                  LocalDateTime fromInclusive,
+                                  LocalDateTime toExclusive) {
+        return items.stream()
+                .map(timestamp)
+                .filter(t -> !t.isBefore(fromInclusive) && t.isBefore(toExclusive))
+                .count();
     }
 }

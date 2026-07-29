@@ -54,13 +54,6 @@ public class DashboardAnalyticsDto {
     private RevenueDto revenue;
 
     // ========================================
-    // AI-Powered Insights
-    // ========================================
-
-    private List<ClientInsightDto> clientsNeedingAttention;
-    private List<String> suggestedActions;
-
-    // ========================================
     // Nested DTOs
     // ========================================
 
@@ -69,11 +62,14 @@ public class DashboardAnalyticsDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ConversionFunnelDto {
+        // Kumulativ: jede Stufe zählt alle Kunden, die sie je erreicht haben.
+        // Ein Abschluss zählt also auch als Interessent.
         private Long totalClients;
         private Long interestedClients;
         private Long scheduledViewings;
         private Long offersMade;
         private Long dealsClosed;
+        private Long lostClients; // letztes Ergebnis NOT_INTERESTED — aus dem Trichter ausgestiegen
 
         // Conversion rates (%)
         private Double interestedRate;
@@ -94,6 +90,7 @@ public class DashboardAnalyticsDto {
         private Long followUpsDueNextWeek;
         private Long clientsWithoutRecentContact; // No contact in 30+ days
         private Integer averageDaysSinceLastContact;
+        private Long clientsWithContact; // Bezugsgröße des Durchschnitts — nie kontaktierte Kunden fehlen darin
     }
 
     @Data
@@ -164,20 +161,5 @@ public class DashboardAnalyticsDto {
         private Long callNotes;
         private Long newClients;
         private Long dealsClosed;
-    }
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ClientInsightDto {
-        private String clientId;
-        private String clientName;
-        private String urgency; // HIGH, MEDIUM, LOW
-        private String reason; // "Overdue follow-up", "No recent contact", "Hot lead"
-        private String aiSummary; // AI-generated quick insight
-        private LocalDateTime lastContactDate;
-        private Integer daysSinceContact;
-        private String recommendedAction;
     }
 }
