@@ -1063,6 +1063,24 @@
       "completeFollowUp": "Complete follow-up · Save note"
     }
   },
+  "globalSearch": {
+    "title": "Global search",
+    "open": "Open global search",
+    "trigger": "Search",
+    "shortcutCtrl": "Ctrl K",
+    "shortcutMac": "⌘ K",
+    "inputLabel": "Search clients, properties and call notes",
+    "placeholder": "Client, property, note …",
+    "resultsLabel": "Search results",
+    "minLength": "Type at least {{count}} characters",
+    "searching": "Searching …",
+    "failed": "The search failed. Please try again.",
+    "noResults": "No matches for “{{term}}”",
+    "resultCount": "{{count}} results",
+    "keyNavigate": "Navigate",
+    "keyOpen": "Open",
+    "keyClose": "Close"
+  },
   "search": {
     "criteria": "Search Criteria",
     "minSize": "Minimum Size",
@@ -1402,6 +1420,11 @@
       "FINANCIAL": "Financial Document",
       "INSPECTION_REPORT": "Inspection Report",
       "OTHER": "Other"
+    },
+    "searchResultType": {
+      "CLIENT": "Clients",
+      "PROPERTY": "Properties",
+      "NOTE": "Call notes"
     }
   },
   "attachments": {

@@ -138,6 +138,39 @@ public interface CallNoteRepository extends JpaRepository<CallNote, UUID> {
     );
 
     /**
+     * Global search (PostgreSQL): IDs of matching call notes, best match first.
+     * The agent filter is part of the WHERE clause and must never be dropped —
+     * the global search must never be able to surface another agent's notes.
+     */
+    @Query(value = "SELECT cn.id FROM call_notes cn "
+            + "WHERE cn.agent_id = :agentId "
+            + "  AND cn.search_vector @@ to_tsquery('german', CAST(:tsQuery AS text)) "
+            + "ORDER BY ts_rank(cn.search_vector, to_tsquery('german', CAST(:tsQuery AS text))) DESC, "
+            + "         cn.call_date DESC "
+            + "LIMIT :maxResults", nativeQuery = true)
+    List<UUID> searchIdsFullText(@Param("agentId") UUID agentId,
+                                 @Param("tsQuery") String tsQuery,
+                                 @Param("maxResults") int maxResults);
+
+    /**
+     * Global search fallback for databases without full-text search (SQLite in dev).
+     * The pattern must already be lower-cased and wrapped in %…%.
+     */
+    @Query("SELECT cn.id FROM CallNote cn WHERE cn.agent.id = :agentId AND ("
+            + "LOWER(cn.subject) LIKE :pattern OR "
+            + "LOWER(cn.notes) LIKE :pattern) "
+            + "ORDER BY cn.callDate DESC")
+    List<UUID> searchIdsByPattern(@Param("agentId") UUID agentId,
+                                  @Param("pattern") String pattern,
+                                  Pageable pageable);
+
+    /**
+     * Load call notes by ID with their client eagerly attached (global search result mapping).
+     */
+    @Query("SELECT cn FROM CallNote cn LEFT JOIN FETCH cn.client WHERE cn.id IN :ids")
+    List<CallNote> findByIdInWithClient(@Param("ids") List<UUID> ids);
+
+    /**
      * Batch-fetch last call date per client for a set of client IDs.
      * Returns Object[] pairs: [clientId (UUID), maxCallDate (LocalDateTime)]
      */

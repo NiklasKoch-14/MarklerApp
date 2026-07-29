@@ -1063,6 +1063,24 @@
       "completeFollowUp": "Follow-up erledigt · Notiz speichern"
     }
   },
+  "globalSearch": {
+    "title": "Globale Suche",
+    "open": "Globale Suche öffnen",
+    "trigger": "Suchen",
+    "shortcutCtrl": "Strg K",
+    "shortcutMac": "⌘ K",
+    "inputLabel": "Nach Kunden, Immobilien und Gesprächsnotizen suchen",
+    "placeholder": "Kunde, Immobilie, Notiz …",
+    "resultsLabel": "Suchergebnisse",
+    "minLength": "Mindestens {{count}} Zeichen eingeben",
+    "searching": "Wird gesucht …",
+    "failed": "Die Suche ist fehlgeschlagen. Bitte erneut versuchen.",
+    "noResults": "Keine Treffer für „{{term}}“",
+    "resultCount": "{{count}} Treffer",
+    "keyNavigate": "Navigieren",
+    "keyOpen": "Öffnen",
+    "keyClose": "Schließen"
+  },
   "search": {
     "criteria": "Suchkriterien",
     "minSize": "Mindestgröße",
@@ -1402,6 +1420,11 @@
       "FINANCIAL": "Finanzdokument",
       "INSPECTION_REPORT": "Gutachten",
       "OTHER": "Sonstiges"
+    },
+    "searchResultType": {
+      "CLIENT": "Kunden",
+      "PROPERTY": "Immobilien",
+      "NOTE": "Gesprächsnotizen"
     }
   },
   "attachments": {

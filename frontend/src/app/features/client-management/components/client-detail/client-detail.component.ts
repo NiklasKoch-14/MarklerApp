@@ -39,6 +39,9 @@ import { GdprExportService } from '../../services/gdpr-export.service';
     @keyframes recPulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.35; transform:scale(.8); } }
     .tl-row { display:flex; align-items:flex-start; gap:12px; padding:14px 0; border-bottom:1px solid var(--border); }
     .tl-row:last-child { border-bottom:none; }
+    /* Ziel eines Notiz-Treffers aus der globalen Suche: kurz hervorheben, dann verblassen. */
+    .tl-row--highlight { background:var(--accent-soft); border-radius:10px; padding-left:10px; padding-right:10px; animation:noteHighlight 2.4s ease forwards; }
+    @keyframes noteHighlight { 0%,55% { background:var(--accent-soft); } 100% { background:transparent; } }
     .match-link:hover { background:var(--surface) !important; }
   `],
   template: `
@@ -428,7 +431,11 @@ import { GdprExportService } from '../../services/gdpr-export.service';
               </div>
               <app-loading-spinner *ngIf="isLoadingCallNotes && !callNotesSummary" size="sm"></app-loading-spinner>
               <div *ngIf="recentCallNotes.length > 0">
-                <div *ngFor="let note of recentCallNotes" class="tl-row">
+                <div *ngFor="let note of recentCallNotes"
+                     class="tl-row"
+                     [id]="'note-' + note.id"
+                     [attr.tabindex]="note.id === highlightedNoteId ? -1 : null"
+                     [class.tl-row--highlight]="note.id === highlightedNoteId">
                   <!-- Icon -->
                   <div style="width:36px;height:36px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">
                     <i [class]="getCallTypeIcon(note.callType)" style="font-size:15px;color:var(--text-3);"></i>
@@ -764,6 +771,8 @@ export class ClientDetailComponent implements OnInit {
   recentCallNotes: CallNoteSummary[] = [];
   callNotesSummary: BulkSummary | null = null;
   isLoadingCallNotes = false;
+  /** Aus ?note= der globalen Suche: diese Notiz wird angesprungen und kurz hervorgehoben. */
+  highlightedNoteId: string | null = null;
 
   viewings: ViewingSummary[] = [];
   isLoadingViewings = false;
@@ -805,6 +814,9 @@ export class ClientDetailComponent implements OnInit {
 
   ngOnInit(): void {
     const clientId = this.route.snapshot.paramMap.get('id');
+    // ?note=<id> kommt aus der globalen Suche: der Treffer ist die Notiz, das Ziel
+    // aber die Kundenseite — also dorthin scrollen statt den Makler suchen zu lassen.
+    this.highlightedNoteId = this.route.snapshot.queryParamMap.get('note');
     if (clientId) {
       this.loadClient(clientId);
       this.loadCallNotes(clientId);
@@ -838,10 +850,15 @@ export class ClientDetailComponent implements OnInit {
 
   private loadCallNotes(clientId: string): void {
     this.isLoadingCallNotes = true;
-    this.callNotesService.getCallNotesByClient(clientId, 0, 5).subscribe({
+    // Kommt der Aufruf aus der globalen Suche, kann die gesuchte Notiz aelter als die
+    // letzten fuenf sein — dann wird ein groesseres Fenster geladen, sonst bleibt es
+    // bei der schlanken Standardansicht.
+    const pageSize = this.highlightedNoteId ? 50 : 5;
+    this.callNotesService.getCallNotesByClient(clientId, 0, pageSize).subscribe({
       next: (response: PagedResponse<CallNoteSummary>) => {
         this.recentCallNotes = response.content;
         this.isLoadingCallNotes = false;
+        this.scrollToHighlightedNote();
       },
       error: () => {
         this.isLoadingCallNotes = false;
@@ -852,6 +869,26 @@ export class ClientDetailComponent implements OnInit {
         this.callNotesSummary = summary;
       },
       error: () => {}
+    });
+  }
+
+  /**
+   * Springt zur per ?note= verlinkten Notiz. Der Fokus wandert mit — sonst waere der
+   * Sprung fuer Screenreader- und Tastaturnutzer unsichtbar und der naechste Tab
+   * landete wieder oben auf der Seite.
+   */
+  private scrollToHighlightedNote(): void {
+    if (!this.highlightedNoteId) {
+      return;
+    }
+    const noteId = this.highlightedNoteId;
+    setTimeout(() => {
+      const element = document.getElementById(`note-${noteId}`);
+      if (!element) {
+        return;
+      }
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      element.focus({ preventScroll: true });
     });
   }
 
