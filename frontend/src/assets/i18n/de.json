@@ -146,6 +146,7 @@
     "dashboard": "Dashboard",
     "clients": "Kunden",
     "properties": "Immobilien",
+    "viewings": "Besichtigungen",
     "settings": "Einstellungen",
     "profile": "Profil",
     "help": "Hilfe",
@@ -171,6 +172,7 @@
     "propertySearch": "Immobiliensuche",
     "propertyDetail": "Objektdetails",
     "propertyEdit": "Immobilie bearbeiten",
+    "viewings": "Besichtigungen",
     "login": "Anmelden",
     "register": "Registrieren",
     "forgotPassword": "Passwort vergessen",
@@ -883,7 +885,62 @@
     }
   },
   "viewings": {
-    "save": "Besichtigung speichern"
+    "save": "Besichtigung speichern",
+    "title": "Besichtigungen",
+    "listDescription": "Alle Termine auf einen Blick — heute, diese Woche und was noch offen ist",
+    "viewAgenda": "Agenda",
+    "viewWeek": "Woche",
+    "allStatuses": "Alle",
+    "rangeFilter": "Zeitraum",
+    "resultCount": "{{count}} Termine",
+    "previousWeek": "Vorherige Woche",
+    "nextWeek": "Nächste Woche",
+    "currentWeek": "Diese Woche",
+    "noViewingsThisDay": "Frei",
+    "noViewings": "Keine Besichtigungen",
+    "noViewingsHint": "Für den gewählten Zeitraum ist kein Termin eingetragen. Besichtigungen werden beim Kunden oder beim Objekt angelegt.",
+    "goToClients": "Zu den Kunden",
+    "openFeedbackTitle": "Feedback offen",
+    "openFeedbackHint": "Diese Termine liegen zurück, ohne dass ein Ergebnis festgehalten wurde.",
+    "range": {
+      "UPCOMING": "Kommende",
+      "WEEK": "Diese Woche",
+      "MONTH": "Nächste 30 Tage",
+      "PAST": "Vergangene",
+      "ALL": "Alle"
+    },
+    "group": {
+      "past": "Vergangen",
+      "today": "Heute",
+      "tomorrow": "Morgen",
+      "thisWeek": "Diese Woche",
+      "later": "Später"
+    },
+    "actions": {
+      "reschedule": "Verschieben",
+      "cancelViewing": "Absagen",
+      "complete": "Als erledigt markieren",
+      "addFeedback": "Feedback nachtragen"
+    },
+    "reschedule": {
+      "title": "Termin verschieben",
+      "dateLabel": "Neuer Termin",
+      "confirm": "Verschieben"
+    },
+    "complete": {
+      "title": "Besichtigung abschließen",
+      "feedbackLabel": "Kundenfeedback",
+      "notesLabel": "Notiz",
+      "notesPlaceholder": "Wie lief die Besichtigung?",
+      "followUpLabel": "Nächster Schritt",
+      "followUpPlaceholder": "z. B. Zweitbesichtigung anbieten",
+      "confirm": "Als erledigt speichern"
+    },
+    "cancelDialog": {
+      "title": "Besichtigung absagen",
+      "message": "Der Termin mit {{name}} am {{date}} wird als abgesagt markiert.",
+      "confirm": "Absagen"
+    }
   },
   "call-notes": {
     "title": "Gesprächsnotizen",
@@ -1282,6 +1339,16 @@
       "SCHEDULED_VIEWING": "Besichtigung vereinbart",
       "OFFER_MADE": "Angebot gemacht",
       "DEAL_CLOSED": "Geschäft abgeschlossen"
+    },
+    "viewingStatus": {
+      "SCHEDULED": "Geplant",
+      "COMPLETED": "Erledigt",
+      "CANCELLED": "Abgesagt"
+    },
+    "viewingFeedback": {
+      "LIKED": "Gefällt",
+      "NEUTRAL": "Neutral",
+      "DISLIKED": "Gefällt nicht"
     },
     "priority": {
       "LOW": "Niedrig",

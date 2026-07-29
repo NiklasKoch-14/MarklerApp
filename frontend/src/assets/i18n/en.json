@@ -146,6 +146,7 @@
     "dashboard": "Dashboard",
     "clients": "Clients",
     "properties": "Properties",
+    "viewings": "Viewings",
     "settings": "Settings",
     "profile": "Profile",
     "help": "Help",
@@ -171,6 +172,7 @@
     "propertySearch": "Property Search",
     "propertyDetail": "Property Details",
     "propertyEdit": "Edit Property",
+    "viewings": "Viewings",
     "login": "Sign In",
     "register": "Register",
     "forgotPassword": "Forgot Password",
@@ -883,7 +885,62 @@
     }
   },
   "viewings": {
-    "save": "Save viewing"
+    "save": "Save viewing",
+    "title": "Viewings",
+    "listDescription": "Every appointment at a glance — today, this week and what is still open",
+    "viewAgenda": "Agenda",
+    "viewWeek": "Week",
+    "allStatuses": "All",
+    "rangeFilter": "Time range",
+    "resultCount": "{{count}} appointments",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week",
+    "currentWeek": "This week",
+    "noViewingsThisDay": "Free",
+    "noViewings": "No viewings",
+    "noViewingsHint": "Nothing scheduled for the selected range. Viewings are created from a client or a property.",
+    "goToClients": "Go to clients",
+    "openFeedbackTitle": "Feedback pending",
+    "openFeedbackHint": "These appointments are in the past and no outcome was recorded.",
+    "range": {
+      "UPCOMING": "Upcoming",
+      "WEEK": "This week",
+      "MONTH": "Next 30 days",
+      "PAST": "Past",
+      "ALL": "All"
+    },
+    "group": {
+      "past": "Past",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "thisWeek": "This week",
+      "later": "Later"
+    },
+    "actions": {
+      "reschedule": "Reschedule",
+      "cancelViewing": "Cancel",
+      "complete": "Mark as done",
+      "addFeedback": "Add feedback"
+    },
+    "reschedule": {
+      "title": "Reschedule appointment",
+      "dateLabel": "New date and time",
+      "confirm": "Reschedule"
+    },
+    "complete": {
+      "title": "Complete viewing",
+      "feedbackLabel": "Client feedback",
+      "notesLabel": "Note",
+      "notesPlaceholder": "How did the viewing go?",
+      "followUpLabel": "Next step",
+      "followUpPlaceholder": "e.g. offer a second viewing",
+      "confirm": "Save as done"
+    },
+    "cancelDialog": {
+      "title": "Cancel viewing",
+      "message": "The appointment with {{name}} on {{date}} will be marked as cancelled.",
+      "confirm": "Cancel viewing"
+    }
   },
   "call-notes": {
     "title": "Call Notes",
@@ -1282,6 +1339,16 @@
       "SCHEDULED_VIEWING": "Viewing Scheduled",
       "OFFER_MADE": "Offer Made",
       "DEAL_CLOSED": "Deal Closed"
+    },
+    "viewingStatus": {
+      "SCHEDULED": "Scheduled",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
+    },
+    "viewingFeedback": {
+      "LIKED": "Liked",
+      "NEUTRAL": "Neutral",
+      "DISLIKED": "Disliked"
     },
     "priority": {
       "LOW": "Low",
