@@ -73,6 +73,14 @@ public class GdprPropertyData {
     private String energyConsumptionKwh;
     private String heatingType;
 
+    // Verknuepfter Eigentuemer (Issue #37). Der Auskunftsanspruch nach Art. 15 DSGVO
+    // umfasst auch, welche Objekte einer betroffenen Person zugeordnet sind -- als
+    // Freitextfeld war der Eigentuemer aus dem Export schlicht verschwunden.
+    private UUID ownerClientId;
+    private String ownerName;
+    private String ownerEmail;
+    private String ownerPhone;
+
     // Additional information
     private LocalDate availableFrom;
     private String contactPhone;

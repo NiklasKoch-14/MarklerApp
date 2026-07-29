@@ -488,7 +488,10 @@
     },
     "expectedCommission": "Estimated commission",
     "expectedCommissionPlaceholder": "e.g. 8500",
-    "expectedCommissionHint": "Feeds the pipeline total per column. Can be filled in from the prospect stage onwards."
+    "expectedCommissionHint": "Feeds the pipeline total per column. Can be filled in from the prospect stage onwards.",
+    "ownedProperties": {
+      "title": "Own properties"
+    }
   },
   "properties": {
     "title": "Properties",
@@ -598,10 +601,7 @@
       "energyConsumption": "Energy Consumption (kWh/m²a)",
       "heatingType": "Heating Type",
       "ownerSection": "Owner",
-      "ownerSectionHint": "Internal data — not visible in the exposé",
-      "ownerName": "Owner Name",
-      "ownerPhone": "Owner Phone",
-      "ownerEmail": "Owner Email",
+      "ownerSectionHint": "Linked client — internal, not visible in the exposé",
       "contactPhone": "Contact Phone",
       "contactEmail": "Contact Email",
       "virtualTour": "Virtual Tour URL",
@@ -880,6 +880,22 @@
       "legendCurrent": "This property",
       "legendProperties": "Other properties",
       "legendClients": "Client search locations"
+    },
+    "owner": {
+      "title": "Owner",
+      "internal": "internal",
+      "openClient": "Open client record",
+      "searchPlaceholder": "Search client (name, email) …",
+      "noResults": "No matching client found",
+      "noContactData": "No contact details on file",
+      "sellerBadge": "Seller",
+      "change": "Change",
+      "remove": "Remove",
+      "createNew": "Create new",
+      "createTitle": "Create owner as a new client",
+      "createConfirm": "Create and link",
+      "useExisting": "use this one",
+      "legalBasisHint": "Created as a seller with legal basis “contract initiation” — no consent required for this."
     }
   },
   "viewings": {
@@ -1079,7 +1095,6 @@
         "fileNameRequired": "File name is required.",
         "phoneInvalid": "Phone number format is invalid.",
         "emailInvalid": "Please enter a valid email address.",
-        "ownerEmailInvalid": "Owner email address is invalid.",
         "contactEmailInvalid": "Contact email address is invalid.",
         "postalCode5Digits": "Postal code must be 5 digits.",
         "postalCode5DigitsOrEmpty": "Postal code must be 5 digits or empty.",
@@ -1098,8 +1113,6 @@
         "districtMaxLength": "District must not exceed 100 characters.",
         "countryMaxLength": "Country must not exceed 100 characters.",
         "phoneMaxLength": "Phone number must not exceed 20 characters.",
-        "ownerNameMaxLength": "Owner name must not exceed 100 characters.",
-        "ownerPhoneMaxLength": "Owner phone must not exceed 20 characters.",
         "contactPhoneMaxLength": "Contact phone must not exceed 20 characters.",
         "virtualTourMaxLength": "Virtual tour URL must not exceed 500 characters.",
         "notesMaxLength5000": "Notes must not exceed 5000 characters.",

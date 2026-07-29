@@ -488,7 +488,10 @@
     },
     "expectedCommission": "Geschätzte Provision",
     "expectedCommissionPlaceholder": "z. B. 8500",
-    "expectedCommissionHint": "Fließt in die Pipeline-Summe pro Spalte ein. Schon ab Interessent pflegbar."
+    "expectedCommissionHint": "Fließt in die Pipeline-Summe pro Spalte ein. Schon ab Interessent pflegbar.",
+    "ownedProperties": {
+      "title": "Eigene Objekte"
+    }
   },
   "properties": {
     "title": "Immobilien",
@@ -598,10 +601,7 @@
       "energyConsumption": "Energieverbrauch (kWh/m²a)",
       "heatingType": "Heizungstyp",
       "ownerSection": "Eigentümer",
-      "ownerSectionHint": "Interne Daten — nicht im Exposé sichtbar",
-      "ownerName": "Eigentümer Name",
-      "ownerPhone": "Eigentümer Telefon",
-      "ownerEmail": "Eigentümer E-Mail",
+      "ownerSectionHint": "Verknüpfter Kunde — intern, nicht im Exposé sichtbar",
       "contactPhone": "Kontakt Telefon",
       "contactEmail": "Kontakt E-Mail",
       "virtualTour": "Virtueller Rundgang URL",
@@ -880,6 +880,22 @@
       "legendCurrent": "Dieses Objekt",
       "legendProperties": "Weitere Objekte",
       "legendClients": "Suchstandorte der Kunden"
+    },
+    "owner": {
+      "title": "Eigentümer",
+      "internal": "intern",
+      "openClient": "Zur Kundenakte",
+      "searchPlaceholder": "Kunde suchen (Name, E-Mail) …",
+      "noResults": "Kein passender Kunde gefunden",
+      "noContactData": "Keine Kontaktdaten hinterlegt",
+      "sellerBadge": "Verkäufer",
+      "change": "Ändern",
+      "remove": "Entfernen",
+      "createNew": "Neu anlegen",
+      "createTitle": "Eigentümer als neuen Kunden anlegen",
+      "createConfirm": "Anlegen und verknüpfen",
+      "useExisting": "diesen verwenden",
+      "legalBasisHint": "Wird als Verkäufer mit Rechtsgrundlage „Vertragsanbahnung“ angelegt — eine Einwilligung ist dafür nicht nötig."
     }
   },
   "viewings": {
@@ -1079,7 +1095,6 @@
         "fileNameRequired": "Dateiname ist erforderlich.",
         "phoneInvalid": "Telefonnummer hat ein ungültiges Format.",
         "emailInvalid": "Bitte eine gültige E-Mail-Adresse eingeben.",
-        "ownerEmailInvalid": "E-Mail des Eigentümers ist ungültig.",
         "contactEmailInvalid": "Kontakt-E-Mail ist ungültig.",
         "postalCode5Digits": "Postleitzahl muss aus 5 Ziffern bestehen.",
         "postalCode5DigitsOrEmpty": "Postleitzahl muss aus 5 Ziffern bestehen oder leer bleiben.",
@@ -1098,8 +1113,6 @@
         "districtMaxLength": "Stadtteil darf höchstens 100 Zeichen lang sein.",
         "countryMaxLength": "Land darf höchstens 100 Zeichen lang sein.",
         "phoneMaxLength": "Telefonnummer darf höchstens 20 Zeichen lang sein.",
-        "ownerNameMaxLength": "Name des Eigentümers darf höchstens 100 Zeichen lang sein.",
-        "ownerPhoneMaxLength": "Telefonnummer des Eigentümers darf höchstens 20 Zeichen lang sein.",
         "contactPhoneMaxLength": "Kontakt-Telefonnummer darf höchstens 20 Zeichen lang sein.",
         "virtualTourMaxLength": "URL des virtuellen Rundgangs darf höchstens 500 Zeichen lang sein.",
         "notesMaxLength5000": "Notiz darf höchstens 5000 Zeichen lang sein.",

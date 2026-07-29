@@ -15,6 +15,8 @@ import {
 import { PropertyImageUploadComponent } from '../property-image-upload/property-image-upload.component';
 import { PropertyExposeComponent } from '../property-expose/property-expose.component';
 import { PropertyImageDto } from '../../models/property-image.model';
+import { PropertyOwner } from '../../services/property.service';
+import { PropertyOwnerPickerComponent } from '../property-owner-picker/property-owner-picker.component';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ErrorHandlerService } from '../../../../core/services/error-handler.service';
@@ -22,7 +24,7 @@ import { ErrorHandlerService } from '../../../../core/services/error-handler.ser
 @Component({
   selector: 'app-property-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PropertyImageUploadComponent, PropertyExposeComponent, TranslateEnumPipe, TranslateModule],
+  imports: [CommonModule, ReactiveFormsModule, PropertyImageUploadComponent, PropertyExposeComponent, PropertyOwnerPickerComponent, TranslateEnumPipe, TranslateModule],
   templateUrl: './property-form.component.html',
   styleUrls: ['./property-form.component.scss']
 })
@@ -64,6 +66,9 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
 
   // Property images
   propertyImages: any[] = []; // Accept both PropertyImage and PropertyImageDto
+
+  // Bereits verknüpfter Eigentümer (#37) — füttert den Picker im Bearbeitungsmodus.
+  linkedOwner: PropertyOwner | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -128,10 +133,9 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
       energyConsumptionKwh: ['', [Validators.min(0), Validators.max(1000)]],
       heatingType: [''],
 
-      // Owner (internal, not in exposé)
-      ownerName:  ['', [Validators.maxLength(100)]],
-      ownerPhone: ['', [Validators.pattern('^[+]?[0-9\\s\\-()]*$'), Validators.maxLength(20)]],
-      ownerEmail: ['', [Validators.email]],
+      // Eigentümer: verknüpfter Kunde statt Freitext (#37). Steuerung sitzt im Picker,
+      // das Formular hält nur die ID.
+      ownerClientId: [null as string | null],
 
       // Additional
       contactPhone: ['', [Validators.pattern('^[+]?[0-9\\s\\-()]*$'), Validators.maxLength(20)]],
@@ -216,14 +220,14 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
           energyConsumptionKwh: property.energyConsumptionKwh,
           heatingType: property.heatingType,
 
-          ownerName:  property.ownerName,
-          ownerPhone: property.ownerPhone,
-          ownerEmail: property.ownerEmail,
+          ownerClientId: property.ownerClientId ?? null,
           contactPhone: property.contactPhone,
           contactEmail: property.contactEmail,
           virtualTourUrl: property.virtualTourUrl,
           notes: property.notes
         });
+
+        this.linkedOwner = property.owner ?? null;
 
         // Load property images if they exist
         if (property.images) {
@@ -422,8 +426,12 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
   }
 
   private saveFormDraft(): void {
+    // ownerClientId bleibt draussen: eine gespeicherte Kunden-ID ohne die zugehoerigen
+    // Anzeigedaten wuerde beim Wiederherstellen einen Eigentuemer suggerieren, den der
+    // Picker gar nicht anzeigen kann.
+    const { ownerClientId, ...draftValues } = this.propertyForm.value;
     const formData = {
-      ...this.propertyForm.value,
+      ...draftValues,
       currentSection: this.currentSection,
       timestamp: new Date().toISOString()
     };
@@ -435,6 +443,7 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
     if (savedForm) {
       try {
         const formData = JSON.parse(savedForm);
+        delete formData.ownerClientId;
         this.propertyForm.patchValue(formData);
         this.currentSection = formData.currentSection || 'basic';
         this.hasUnsavedChanges = true;
@@ -461,6 +470,15 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
     if (this.hasUnsavedChanges && !this.isEditMode) {
       $event.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
     }
+  }
+
+  /**
+   * Eigentümer-Auswahl aus dem Picker übernehmen (#37). null heißt "Zuordnung entfernt"
+   * und wird bewusst mitgesendet — das Backend unterscheidet das von "nicht gesendet".
+   */
+  onOwnerChanged(clientId: string | null): void {
+    this.propertyForm.get('ownerClientId')?.setValue(clientId);
+    this.propertyForm.get('ownerClientId')?.markAsDirty();
   }
 
   /**

@@ -1,6 +1,8 @@
 package com.marklerapp.crm.mapper;
 
 import com.marklerapp.crm.dto.PropertyDto;
+import com.marklerapp.crm.dto.PropertyOwnerDto;
+import com.marklerapp.crm.entity.Client;
 import com.marklerapp.crm.entity.Property;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Builder;
@@ -47,6 +49,8 @@ public interface PropertyMapper {
     @Mapping(target = "calculatedPricePerSqm", expression = "java(property.calculatePricePerSqm())")
     @Mapping(target = "mainImageUrl", expression = "java(getMainImageUrl(property))")
     @Mapping(target = "imageCount", expression = "java(getImageCount(property))")
+    @Mapping(target = "ownerClientId", source = "owner.id")
+    @Mapping(target = "owner", expression = "java(toOwnerDto(property.getOwner()))")
     PropertyDto toDto(Property property);
 
     /**
@@ -63,6 +67,12 @@ public interface PropertyMapper {
     @Mapping(target = "exposeFileData", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    // Der Eigentuemer wird nie aus dem DTO rekonstruiert, sondern ueber die ID aufgeloest
+    // und auf Agent-Zugehoerigkeit geprueft (PropertyService.resolveOwner).
+    @Mapping(target = "owner", ignore = true)
+    @Mapping(target = "legacyOwnerName", ignore = true)
+    @Mapping(target = "legacyOwnerPhone", ignore = true)
+    @Mapping(target = "legacyOwnerEmail", ignore = true)
     @BeanMapping(builder = @Builder(disableBuilder = true))
     Property toEntity(PropertyDto dto);
 
@@ -103,6 +113,27 @@ public interface PropertyMapper {
                 }
                 return null;
             });
+    }
+
+    /**
+     * Verknuepften Eigentuemer auf die schlanke Anzeigesicht abbilden (Issue #37).
+     *
+     * @param owner der verknuepfte Client oder null
+     * @return die Eigentuemer-Sicht oder null
+     */
+    default PropertyOwnerDto toOwnerDto(Client owner) {
+        if (owner == null) {
+            return null;
+        }
+        return PropertyOwnerDto.builder()
+            .id(owner.getId())
+            .firstName(owner.getFirstName())
+            .lastName(owner.getLastName())
+            .fullName(owner.getFullName())
+            .email(owner.getEmail())
+            .phone(owner.getPhone())
+            .clientType(owner.getClientType())
+            .build();
     }
 
     /**

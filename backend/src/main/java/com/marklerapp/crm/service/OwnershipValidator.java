@@ -99,6 +99,28 @@ public class OwnershipValidator {
     }
 
     /**
+     * Validates that a client may be linked as the owner of a property (issue #37).
+     *
+     * <p>Both sides are checked against the same agent. Without this, an agent could
+     * attach a foreign agent's client to their own property and would afterwards read
+     * that client's name, phone and e-mail straight off the property detail page —
+     * a cross-tenant data leak through a relation rather than through a query.</p>
+     *
+     * @param property the property the owner is being attached to
+     * @param owner the client to link as owner
+     * @param agentId the ID of the agent performing the assignment
+     * @throws AccessDeniedException if either side belongs to a different agent
+     * @throws IllegalArgumentException if property, owner or agentId is null
+     */
+    public void validateOwnerAssignment(Property property, Client owner, UUID agentId) {
+        validatePropertyOwnership(property, agentId);
+        validateClientOwnership(owner, agentId);
+
+        log.debug("Ownership validated: client {} may be linked as owner of property {}",
+                owner.getId(), property.getId());
+    }
+
+    /**
      * Validates that a call note belongs to the specified agent.
      *
      * @param callNote the call note entity to validate

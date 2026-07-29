@@ -64,6 +64,19 @@ export enum HeatingType {
 }
 
 /**
+ * Verknüpfter Eigentümer eines Objekts — schlanke Sicht auf einen Kunden (#37).
+ */
+export interface PropertyOwner {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  clientType?: string;
+}
+
+/**
  * Property interface matching backend PropertyDto
  */
 export interface Property {
@@ -130,9 +143,10 @@ export interface Property {
 
   // Additional Fields
   availableFrom?: string;
-  ownerName?: string;
-  ownerPhone?: string;
-  ownerEmail?: string;
+  /** Verknüpfter Eigentümer (Client-ID) — ersetzt die früheren Freitextfelder (#37). */
+  ownerClientId?: string;
+  /** Aufgelöster Eigentümer, read-only vom Backend. */
+  owner?: PropertyOwner;
   contactPhone?: string;
   contactEmail?: string;
   virtualTourUrl?: string;
