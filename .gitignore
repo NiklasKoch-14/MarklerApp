@@ -3,6 +3,11 @@ frontend/cypress.env.json
 frontend/cypress/screenshots/
 frontend/cypress/videos/
 
+# Playwright
+playwright-report/
+test-results/
+frontend/e2e/.auth/
+
 # Java / Spring Boot
 target/
 *.class
