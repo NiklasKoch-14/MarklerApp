@@ -47,6 +47,36 @@ public interface PropertyRepository extends JpaRepository<Property, UUID> {
     Page<Property> findByAgentId(@Param("agentId") UUID agentId, Pageable pageable);
 
     /**
+     * Global search (PostgreSQL): IDs of matching properties, best match first.
+     * The agent filter is part of the WHERE clause and must never be dropped —
+     * the global search must never be able to surface another agent's properties.
+     */
+    @Query(value = "SELECT p.id FROM properties p "
+            + "WHERE p.agent_id = :agentId "
+            + "  AND p.search_vector @@ to_tsquery('german', CAST(:tsQuery AS text)) "
+            + "ORDER BY ts_rank(p.search_vector, to_tsquery('german', CAST(:tsQuery AS text))) DESC, "
+            + "         p.title ASC "
+            + "LIMIT :maxResults", nativeQuery = true)
+    List<UUID> searchIdsFullText(@Param("agentId") UUID agentId,
+                                 @Param("tsQuery") String tsQuery,
+                                 @Param("maxResults") int maxResults);
+
+    /**
+     * Global search fallback for databases without full-text search (SQLite in dev).
+     * The pattern must already be lower-cased and wrapped in %…%.
+     */
+    @Query("SELECT p.id FROM Property p WHERE p.agent.id = :agentId AND ("
+            + "LOWER(p.title) LIKE :pattern OR "
+            + "LOWER(COALESCE(p.addressStreet, '')) LIKE :pattern OR "
+            + "LOWER(COALESCE(p.addressCity, '')) LIKE :pattern OR "
+            + "LOWER(COALESCE(p.addressPostalCode, '')) LIKE :pattern OR "
+            + "LOWER(COALESCE(p.addressDistrict, '')) LIKE :pattern) "
+            + "ORDER BY p.title ASC")
+    List<UUID> searchIdsByPattern(@Param("agentId") UUID agentId,
+                                  @Param("pattern") String pattern,
+                                  Pageable pageable);
+
+    /**
      * Find properties by agent and status
      */
     @Query("SELECT p FROM Property p " +
