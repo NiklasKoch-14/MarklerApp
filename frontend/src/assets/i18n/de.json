@@ -212,7 +212,13 @@
     "mapLegendProperties": "Immobilien ({{count}})",
     "mapLegendClients": "Suchstandorte der Kunden ({{count}})",
     "mapClickHint": "Klick auf einen Pin öffnet den Datensatz.",
-    "mapEmpty": "Für keine Immobilie und keinen Kunden liegen bisher Koordinaten vor."
+    "mapEmpty": "Für keine Immobilie und keinen Kunden liegen bisher Koordinaten vor.",
+    "leadSourceTitle": "Woher die Abschlüsse kommen",
+    "leadSourceSub": "Realisierte Provision je Akquisekanal. Gezählt werden Kunden in der Phase „Gewonnen“ mit ihrer gepflegten Provision.",
+    "leadSourceUnknown": "Ohne Angabe",
+    "leadSourceMeta": "{{won}} von {{clients}} Kunden gewonnen · {{rate}} % Quote",
+    "leadSourceEmpty": "Bei keinem Kunden ist bisher eine Quelle hinterlegt. Trag sie im Kundenformular ein — dann steht hier, welcher Kanal sich rechnet.",
+    "leadSourceNoCommission": "Noch keine Provision bei gewonnenen Kunden gepflegt — die Balken zeigen solange die Zahl der Abschlüsse."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -311,6 +317,8 @@
     "searchPlaceholder": "Name, E-Mail, Telefon, Ort …",
     "allStages": "Alle Phasen",
     "allTypes": "Alle Typen",
+    "allLeadSources": "Alle Quellen",
+    "leadSourceFilterHint": "Nach Akquisekanal filtern — z.B. um alle Empfehlungen zu sehen oder Kunden ohne Angabe nachzupflegen.",
     "marketingConsentFilterHint": "Nach Marketing-Einwilligung filtern — relevant z.B. vor einem Newsletter-Versand.",
     "marketingConsentFilter": {
       "ALL": "Marketing: Alle",
@@ -488,7 +496,10 @@
     },
     "expectedCommission": "Geschätzte Provision",
     "expectedCommissionPlaceholder": "z. B. 8500",
-    "expectedCommissionHint": "Fließt in die Pipeline-Summe pro Spalte ein. Schon ab Interessent pflegbar."
+    "expectedCommissionHint": "Fließt in die Pipeline-Summe pro Spalte ein. Schon ab Interessent pflegbar.",
+    "leadSource": "Woher kam der Kontakt",
+    "leadSourceNone": "Ohne Angabe",
+    "leadSourceHint": "Optional. Zeigt in der Auswertung, welcher Kanal tatsächlich Abschlüsse bringt."
   },
   "properties": {
     "title": "Immobilien",
@@ -1261,6 +1272,16 @@
     "legalBasis": {
       "CONTRACT_INITIATION": "Vertragsanbahnung",
       "LEGITIMATE_INTEREST": "Berechtigtes Interesse"
+    },
+    "leadSource": {
+      "REFERRAL": "Empfehlung",
+      "PORTAL": "Immobilienportal",
+      "WEBSITE": "Eigene Website",
+      "WALK_IN": "Laufkundschaft",
+      "SOCIAL_MEDIA": "Social Media",
+      "SIGNAGE": "Verkaufsschild",
+      "COLD_OUTREACH": "Kaltakquise",
+      "OTHER": "Sonstiges"
     },
     "preferredContactMethod": {
       "EMAIL": "E-Mail",

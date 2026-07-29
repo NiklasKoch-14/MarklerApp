@@ -60,6 +60,7 @@ public class ClientDto {
     private Client.FinancingStatus financingStatus;
     private Client.MoveInTimeline moveInTimeline;
     private Client.PipelineStage pipelineStage;
+    private Client.LeadSource leadSource;
 
     private LocalDateTime lastContactDate;
 

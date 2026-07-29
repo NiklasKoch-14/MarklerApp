@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormControl, FormGroup, Validators } 
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { ClientService, Client } from '../../services/client.service';
+import { ClientService, Client, LeadSource } from '../../services/client.service';
 import { LocationPickerMapComponent, SecondaryMarker } from '../../../../shared/components/location-picker-map/location-picker-map.component';
 import { PropertyType, PropertyService, Property } from '../../../property-management/services/property.service';
 import { filterWithinRadius } from '../../../../shared/utils/geo.util';
@@ -96,6 +96,15 @@ import { ErrorHandlerService } from '../../../../core/services/error-handler.ser
                       <span *ngIf="d.email"> · {{ d.email }}</span>
                     </div>
                   </div>
+                </div>
+
+                <div>
+                  <label class="form-label">{{ 'clients.leadSource' | translate }}</label>
+                  <select formControlName="leadSource" class="form-select">
+                    <option [ngValue]="null">{{ 'clients.leadSourceNone' | translate }}</option>
+                    <option *ngFor="let s of leadSourceOptions" [ngValue]="s">{{ s | translateEnum:'leadSource' }}</option>
+                  </select>
+                  <p style="margin-top:5px; font-size:12px; color:var(--text-3);">{{ 'clients.leadSourceHint' | translate }}</p>
                 </div>
 
                 <div>
@@ -430,6 +439,7 @@ export class ClientFormComponent implements OnInit {
       addressCity: [''],
       addressPostalCode: ['', [Validators.pattern('^[0-9]{5}$')]],
       addressCountry: ['Deutschland'],
+      leadSource: [null],
       clientType: ['BUYER'],
       expectedCommission: [null, [Validators.min(0)]],
       legalBasis: ['CONTRACT_INITIATION', [Validators.required]],
@@ -457,6 +467,7 @@ export class ClientFormComponent implements OnInit {
   }
 
   readonly propertyTypeOptions = Object.values(PropertyType);
+  readonly leadSourceOptions = Object.values(LeadSource);
 
   get isRenter(): boolean {
     return this.clientForm.get('clientType')?.value === 'RENTER';
@@ -588,6 +599,7 @@ export class ClientFormComponent implements OnInit {
           addressCity: client.addressCity,
           addressPostalCode: client.addressPostalCode,
           addressCountry: client.addressCountry,
+          leadSource: client.leadSource ?? null,
           clientType: client.clientType || 'BUYER',
           expectedCommission: client.expectedCommission ?? null,
           legalBasis: client.legalBasis || 'CONTRACT_INITIATION',
@@ -630,6 +642,7 @@ export class ClientFormComponent implements OnInit {
       const formValue = this.clientForm.value;
       const clientData = {
         ...formValue,
+        leadSource: formValue.leadSource || null,
         searchCriteria: this.prepareSearchCriteria(formValue.searchCriteria)
       };
 

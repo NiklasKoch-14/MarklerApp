@@ -54,6 +54,12 @@ public class DashboardAnalyticsDto {
     private RevenueDto revenue;
 
     // ========================================
+    // Akquisekanäle (Issue #41) — welcher Kanal bringt tatsächlich Abschlüsse
+    // ========================================
+
+    private List<LeadSourcePerformanceDto> leadSourcePerformance;
+
+    // ========================================
     // AI-Powered Insights
     // ========================================
 
@@ -132,6 +138,25 @@ public class DashboardAnalyticsDto {
         private BigDecimal pipelineCommission;      // Provision die noch im Bestand steckt (verfügbar/reserviert)
         private Long dealsClosedYtd;                // Anzahl abgeschlossener Objekte dieses Jahr
         private BigDecimal avgCommissionPerDeal;    // Durchschnittliche Provision je Abschluss (dieses Jahr)
+    }
+
+    /**
+     * Kennzahlen je Akquisekanal. {@code source} ist der Enum-Name von
+     * {@code Client.LeadSource} oder {@code null} für Kunden ohne erfasste Quelle —
+     * die Zeile bleibt bewusst enthalten, damit sich die Summen mit der Kundenliste decken.
+     * Übersetzt wird der Wert erst im Frontend (translateEnum-Pipe).
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class LeadSourcePerformanceDto {
+        private String source;
+        private Long totalClients;
+        private Long wonClients;              // Kunden in der Pipeline-Phase WON
+        private BigDecimal wonCommission;     // Summe der gepflegten Provisionen dieser Abschlüsse
+        private BigDecimal openCommission;    // Provision der noch offenen Kunden (weder WON noch LOST)
+        private Double winRate;               // Abschlüsse je Kunde dieses Kanals (%)
     }
 
     @Data
