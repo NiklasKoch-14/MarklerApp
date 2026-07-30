@@ -3,7 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { ClientService, Client, PipelineStage, ClientType, FinancingStatus, MoveInTimeline } from '../../services/client.service';
+import { ClientService, Client, PipelineStage, SellerPipelineStage, ClientType, FinancingStatus, MoveInTimeline } from '../../services/client.service';
+
+/** Eine waehlbare Pipeline-Stufe samt Farbgebung. Beschriftet wird im Template per translateEnum. */
+interface StageOption {
+  value: PipelineStage | SellerPipelineStage;
+  color: string;
+  bg: string;
+}
 import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse, CallNoteCreateRequest, CallType, CallOutcome, VoiceNoteDraft } from '../../../call-notes/services/call-notes.service';
 import { ViewingService, ViewingSummary, ViewingStatus } from '../../../viewing-management/services/viewing.service';
 import { ViewingAddDialogComponent } from '../../../viewing-management/components/viewing-add-dialog/viewing-add-dialog.component';
@@ -91,21 +98,21 @@ import { GdprExportService } from '../../services/gdpr-export.service';
               <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;">
                 <div *ngIf="client.id" style="position:relative;">
                   <button (click)="stageDropdownOpen = !stageDropdownOpen"
-                          [style.background]="getStageBg(client.pipelineStage)"
-                          [style.color]="getStageColor(client.pipelineStage)"
+                          [style.background]="getStageBg(currentStage)"
+                          [style.color]="getStageColor(currentStage)"
                           style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;">
-                    {{ getStageLabel(client.pipelineStage) }}
+                    {{ currentStage | translateEnum:stageEnumName }}
                     <i class="ri-arrow-down-s-line" style="font-size:11px;"></i>
                   </button>
                   <div *ngIf="stageDropdownOpen" (click)="stageDropdownOpen = false"
                        style="position:fixed;inset:0;z-index:99;"></div>
                   <div *ngIf="stageDropdownOpen"
                        style="position:absolute;top:100%;left:0;margin-top:4px;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:100;min-width:160px;overflow:hidden;">
-                    <button *ngFor="let s of pipelineStages" (click)="setStage(s.value)"
+                    <button *ngFor="let s of activeStages" (click)="setStage(s.value)"
                             class="stage-option"
                             style="width:100%;text-align:left;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:500;"
                             [style.color]="getStageColor(s.value)">
-                      {{ s.label }}
+                      {{ s.value | translateEnum:stageEnumName }}
                     </button>
                   </div>
                 </div>
@@ -742,11 +749,11 @@ import { GdprExportService } from '../../services/gdpr-export.service';
     <!-- Terminal Stage Change Confirmation (won/lost — same friction as delete/mark-inactive) -->
     <app-confirm-dialog
       [open]="pendingStageChange !== null"
-      [danger]="pendingStageChange === PipelineStage.LOST"
-      [icon]="pendingStageChange === PipelineStage.WON ? 'ri-trophy-line' : 'ri-close-circle-line'"
-      [title]="(pendingStageChange === PipelineStage.WON ? 'clients.confirmWonTitle' : 'clients.confirmLostTitle') | translate"
-      [message]="client ? ((pendingStageChange === PipelineStage.WON ? 'clients.confirmWonMessage' : 'clients.confirmLostMessage') | translate:{ name: client.firstName + ' ' + client.lastName }) : ''"
-      [confirmLabel]="(pendingStageChange === PipelineStage.WON ? 'clients.confirmWonTitle' : 'clients.confirmLostTitle') | translate"
+      [danger]="!pendingStageIsWin"
+      [icon]="pendingStageIsWin ? 'ri-trophy-line' : 'ri-close-circle-line'"
+      [title]="(pendingStageIsWin ? 'clients.confirmWonTitle' : 'clients.confirmLostTitle') | translate"
+      [message]="client ? ((pendingStageIsWin ? 'clients.confirmWonMessage' : 'clients.confirmLostMessage') | translate:{ name: client.firstName + ' ' + client.lastName }) : ''"
+      [confirmLabel]="(pendingStageIsWin ? 'clients.confirmWonTitle' : 'clients.confirmLostTitle') | translate"
       (cancel)="cancelStageChange()"
       (confirm)="confirmStageChange()">
     </app-confirm-dialog>
@@ -827,19 +834,60 @@ export class ClientDetailComponent implements OnInit {
 
   showAttachmentsDialog = false;
   stageDropdownOpen = false;
-  pendingStageChange: PipelineStage | null = null;
+  pendingStageChange: PipelineStage | SellerPipelineStage | null = null;
   showQuickMenu = false;
   showStageUpgradeHint = false;
   showDeleteConfirm = false;
   isExportingClientData = false;
 
-  pipelineStages = [
-    { value: PipelineStage.PROSPECT,      label: 'Interessent',    color: 'var(--stage-prospect)',      bg: 'var(--stage-prospect-bg)' },
-    { value: PipelineStage.ACTIVE_SEARCH, label: 'Aktive Suche',   color: 'var(--stage-active-search)', bg: 'var(--stage-active-search-bg)' },
-    { value: PipelineStage.VIEWING,       label: 'Besichtigungen', color: 'var(--stage-viewing)',       bg: 'var(--stage-viewing-bg)' },
-    { value: PipelineStage.WON,           label: 'Gewonnen',       color: 'var(--stage-won)',           bg: 'var(--stage-won-bg)' },
-    { value: PipelineStage.LOST,          label: 'Verloren',       color: 'var(--stage-lost)',          bg: 'var(--stage-lost-bg)' },
+  pipelineStages: StageOption[] = [
+    { value: PipelineStage.PROSPECT,      color: 'var(--stage-prospect)',      bg: 'var(--stage-prospect-bg)' },
+    { value: PipelineStage.ACTIVE_SEARCH, color: 'var(--stage-active-search)', bg: 'var(--stage-active-search-bg)' },
+    { value: PipelineStage.VIEWING,       color: 'var(--stage-viewing)',       bg: 'var(--stage-viewing-bg)' },
+    { value: PipelineStage.WON,           color: 'var(--stage-won)',           bg: 'var(--stage-won-bg)' },
+    { value: PipelineStage.LOST,          color: 'var(--stage-lost)',          bg: 'var(--stage-lost-bg)' },
   ];
+
+  /** Akquise-Stufen eines Eigentuemers (Issue #38). */
+  sellerStages: StageOption[] = [
+    { value: SellerPipelineStage.LEAD,      color: 'var(--stage-prospect)',      bg: 'var(--stage-prospect-bg)' },
+    { value: SellerPipelineStage.VALUATION, color: 'var(--stage-active-search)', bg: 'var(--stage-active-search-bg)' },
+    { value: SellerPipelineStage.PITCH,     color: 'var(--stage-viewing)',       bg: 'var(--stage-viewing-bg)' },
+    { value: SellerPipelineStage.MANDATE,   color: 'var(--primary)',             bg: 'var(--accent-soft)' },
+    { value: SellerPipelineStage.SOLD,      color: 'var(--stage-won)',           bg: 'var(--stage-won-bg)' },
+    { value: SellerPipelineStage.LOST,      color: 'var(--stage-lost)',          bg: 'var(--stage-lost-bg)' },
+  ];
+
+  /** Welche Stufen zur Auswahl stehen — richtet sich nach dem Kundentyp. */
+  get activeStages(): StageOption[] {
+    return this.client?.clientType === ClientType.SELLER ? this.sellerStages : this.pipelineStages;
+  }
+
+  /** Die aktuell gesetzte Stufe aus der jeweils gueltigen Pipeline. */
+  get currentStage(): PipelineStage | SellerPipelineStage | undefined {
+    if (!this.client) return undefined;
+    return this.client.clientType === ClientType.SELLER
+      ? (this.client.sellerPipelineStage ?? SellerPipelineStage.LEAD)
+      : this.client.pipelineStage;
+  }
+
+  /** Welcher enums-Block die Stufe beschriftet. */
+  get stageEnumName(): string {
+    return this.client?.clientType === ClientType.SELLER ? 'sellerPipelineStage' : 'pipelineStage';
+  }
+
+  /** Abschluss-Stufen brauchen eine Bestaetigung — je Pipeline andere Werte. */
+  private get terminalStages(): (PipelineStage | SellerPipelineStage)[] {
+    return this.client?.clientType === ClientType.SELLER
+      ? [SellerPipelineStage.SOLD, SellerPipelineStage.LOST]
+      : [PipelineStage.WON, PipelineStage.LOST];
+  }
+
+  /** Ob die anstehende Bestaetigung einen Erfolg oder einen Verlust betrifft. */
+  get pendingStageIsWin(): boolean {
+    return this.pendingStageChange === PipelineStage.WON
+        || this.pendingStageChange === SellerPipelineStage.SOLD;
+  }
 
   constructor(
     private route: ActivatedRoute,
@@ -1141,11 +1189,11 @@ export class ClientDetailComponent implements OnInit {
    * terminal stage (won/lost) gets a confirmation, just like the dashboard's "mark inactive"
    * and the delete flow do — normal forward progress through the pipeline stays frictionless.
    */
-  setStage(stage: PipelineStage): void {
+  setStage(stage: PipelineStage | SellerPipelineStage): void {
     if (!this.client?.id) return;
     this.stageDropdownOpen = false;
 
-    if (stage === PipelineStage.WON || stage === PipelineStage.LOST) {
+    if (this.terminalStages.includes(stage)) {
       this.pendingStageChange = stage;
       return;
     }
@@ -1161,9 +1209,12 @@ export class ClientDetailComponent implements OnInit {
     if (this.pendingStageChange) this.applyStage(this.pendingStageChange);
   }
 
-  private applyStage(stage: PipelineStage): void {
+  private applyStage(stage: PipelineStage | SellerPipelineStage): void {
     if (!this.client?.id) return;
-    this.clientService.updatePipelineStage(this.client.id, stage).subscribe({
+    const save$ = this.client.clientType === ClientType.SELLER
+      ? this.clientService.updateSellerPipelineStage(this.client.id, stage as SellerPipelineStage)
+      : this.clientService.updatePipelineStage(this.client.id, stage as PipelineStage);
+    save$.subscribe({
       next: (updated) => {
         this.client = updated;
         this.pendingStageChange = null;
@@ -1171,16 +1222,12 @@ export class ClientDetailComponent implements OnInit {
     });
   }
 
-  getStageLabel(stage?: PipelineStage): string {
-    return this.pipelineStages.find(s => s.value === stage)?.label ?? 'Interessent';
+  getStageBg(stage?: PipelineStage | SellerPipelineStage | null): string {
+    return this.activeStages.find(s => s.value === stage)?.bg ?? 'var(--stage-prospect-bg)';
   }
 
-  getStageBg(stage?: PipelineStage): string {
-    return this.pipelineStages.find(s => s.value === stage)?.bg ?? 'var(--stage-prospect-bg)';
-  }
-
-  getStageColor(stage?: PipelineStage): string {
-    return this.pipelineStages.find(s => s.value === stage)?.color ?? 'var(--stage-prospect)';
+  getStageColor(stage?: PipelineStage | SellerPipelineStage | null): string {
+    return this.activeStages.find(s => s.value === stage)?.color ?? 'var(--stage-prospect)';
   }
 
   getViewingStatusBg(status: ViewingStatus): string {

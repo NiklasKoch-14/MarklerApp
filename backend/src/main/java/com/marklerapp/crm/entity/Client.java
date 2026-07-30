@@ -82,6 +82,14 @@ public class Client extends BaseEntity {
     @Builder.Default
     private PipelineStage pipelineStage = PipelineStage.PROSPECT;
 
+    // Akquise-Pipeline fuer Verkaeufer (Issue #38). Bewusst eine zweite Spalte statt
+    // gemeinsamer Stufen: der Prozess ist ein anderer, und ein Enum mit allen Werten
+    // wuerde jede Auswertung mit Sonderfaellen durchsetzen. Nullable, weil die Spalte
+    // fuer Kaeufer/Mieter keine Bedeutung hat -- ein Default waere dort eine Luege.
+    @Enumerated(EnumType.STRING)
+    @Column(name = "seller_pipeline_stage")
+    private SellerPipelineStage sellerPipelineStage;
+
     @Column(name = "gdpr_consent_given", nullable = false)
     @Builder.Default
     private boolean gdprConsentGiven = false;
@@ -156,6 +164,39 @@ public class Client extends BaseEntity {
         VIEWING,
         WON,
         LOST
+    }
+
+    /** Akquise-Stufen eines Eigentuemers (Issue #38) -- gilt nur fuer {@link ClientType#SELLER}. */
+    public enum SellerPipelineStage {
+        LEAD,
+        VALUATION,
+        PITCH,
+        MANDATE,
+        SOLD,
+        LOST
+    }
+
+    /** Ob fuer diesen Kunden die Verkaeufer-Pipeline gilt statt der Kaeufer-Stufen. */
+    public boolean isSeller() {
+        return clientType == ClientType.SELLER;
+    }
+
+    /**
+     * Erfolgreich abgeschlossen -- je nach Kundentyp aus der passenden Pipeline gelesen.
+     * Ohne diese Unterscheidung zaehlte ein verkauftes Objekt in der Kanal-Auswertung
+     * (Issue #41) als "nicht gewonnen", weil Verkaeufer nie die Stufe WON erreichen.
+     */
+    public boolean isWon() {
+        return isSeller()
+                ? sellerPipelineStage == SellerPipelineStage.SOLD
+                : pipelineStage == PipelineStage.WON;
+    }
+
+    /** Verloren -- analog zu {@link #isWon()} aus der jeweils gueltigen Pipeline. */
+    public boolean isLost() {
+        return isSeller()
+                ? sellerPipelineStage == SellerPipelineStage.LOST
+                : pipelineStage == PipelineStage.LOST;
     }
 
     /**

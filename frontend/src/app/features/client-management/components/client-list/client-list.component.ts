@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { ClientService, Client, PipelineStage, ClientType, LeadSource } from '../../services/client.service';
+import { ClientService, Client, PipelineStage, SellerPipelineStage, ClientType, LeadSource } from '../../services/client.service';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { EnumTranslationService } from '../../../../shared/services/enum-translation.service';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
@@ -206,9 +206,9 @@ type SortDir = 'asc' | 'desc';
                 <!-- Phase (inline stage picker, the only colored badge) -->
                 <td (click)="$event.stopPropagation(); $event.preventDefault()">
                   <button class="pill-stage" (click)="toggleStagePicker(client.id!, $event)"
-                          [style.background]="getStageBg(client.pipelineStage)"
-                          [style.color]="getStageColor(client.pipelineStage)">
-                    {{ stageLabelKey(client.pipelineStage) | translate }}
+                          [style.background]="getStageBg(currentStageOf(client))"
+                          [style.color]="getStageColor(currentStageOf(client))">
+                    {{ currentStageOf(client) | translateEnum:enumNameFor(client) }}
                     <i class="ri-arrow-down-s-line" style="font-size:10px;"></i>
                   </button>
                 </td>
@@ -238,12 +238,12 @@ type SortDir = 'asc' | 'desc';
           <div (click)="activeStagePicker = null" style="position:fixed; inset:0; z-index:199;"></div>
           <div style="position:fixed; z-index:200; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.16); min-width:170px; overflow:hidden;"
                [style.top.px]="pickerTop" [style.left.px]="pickerLeft">
-            <button *ngFor="let s of stageOptions"
+            <button *ngFor="let s of pickerStages"
                     (click)="setStage(pickerId, s.value, $event)"
                     class="stage-opt"
                     style="width:100%; text-align:left; padding:9px 13px; border:none; background:none; cursor:pointer; font-size:13px; font-weight:500;"
                     [style.color]="getStageColor(s.value)">
-              {{ s.labelKey | translate }}
+              {{ s.value | translateEnum:(pickerClient ? enumNameFor(pickerClient) : 'pipelineStage') }}
             </button>
           </div>
         </ng-container>
@@ -276,6 +276,37 @@ export class ClientListComponent implements OnInit {
     { value: PipelineStage.LOST,          labelKey: 'clients.stage.LOST' },
   ];
 
+  /** Akquise-Stufen der Verkäufer (Issue #38) — der Stufen-Picker zeigt je Kunde nur eine der beiden Listen. */
+  readonly sellerStageOptions = [
+    { value: SellerPipelineStage.LEAD },
+    { value: SellerPipelineStage.VALUATION },
+    { value: SellerPipelineStage.PITCH },
+    { value: SellerPipelineStage.MANDATE },
+    { value: SellerPipelineStage.SOLD },
+    { value: SellerPipelineStage.LOST },
+  ];
+
+  /** Die Stufe, die für diesen Kunden tatsächlich gilt. */
+  currentStageOf(client: Client): PipelineStage | SellerPipelineStage | undefined {
+    return client.clientType === ClientType.SELLER
+      ? (client.sellerPipelineStage ?? SellerPipelineStage.LEAD)
+      : client.pipelineStage;
+  }
+
+  enumNameFor(client: Client): string {
+    return client.clientType === ClientType.SELLER ? 'sellerPipelineStage' : 'pipelineStage';
+  }
+
+  /** Der Kunde, dessen Stufen-Picker gerade offen ist — bestimmt, welche Stufen dort stehen. */
+  get pickerClient(): Client | undefined {
+    return this.allClients.find(c => c.id === this.activeStagePicker);
+  }
+
+  get pickerStages(): { value: PipelineStage | SellerPipelineStage }[] {
+    const client = this.pickerClient;
+    return client?.clientType === ClientType.SELLER ? this.sellerStageOptions : this.stageOptions;
+  }
+
   readonly leadSourceOptions = Object.values(LeadSource);
 
   readonly typeOptions = [
@@ -284,12 +315,19 @@ export class ClientListComponent implements OnInit {
     { value: ClientType.SELLER, labelKey: 'clients.type.SELLER' },
   ];
 
+  // Akquise- und Kaeufer-Stufen liegen auf einer gemeinsamen Skala, damit "nach Phase
+  // sortieren" eine gemischte Liste nicht in zwei unsortierte Bloecke zerlegt.
   private readonly stageOrder: Record<string, number> = {
     [PipelineStage.PROSPECT]: 0,
+    [SellerPipelineStage.LEAD]: 0,
     [PipelineStage.ACTIVE_SEARCH]: 1,
+    [SellerPipelineStage.VALUATION]: 1,
     [PipelineStage.VIEWING]: 2,
-    [PipelineStage.WON]: 3,
-    [PipelineStage.LOST]: 4,
+    [SellerPipelineStage.PITCH]: 2,
+    [SellerPipelineStage.MANDATE]: 3,
+    [PipelineStage.WON]: 4,
+    [SellerPipelineStage.SOLD]: 4,
+    [PipelineStage.LOST]: 5,
   };
 
   constructor(
@@ -320,7 +358,7 @@ export class ClientListComponent implements OnInit {
   applyView(): void {
     const term = this.searchTerm.trim().toLowerCase();
     let list = this.allClients.filter(c => {
-      if (this.stageFilter !== 'ALL' && c.pipelineStage !== this.stageFilter) return false;
+      if (this.stageFilter !== 'ALL' && this.currentStageOf(c) !== this.stageFilter) return false;
       if (this.typeFilter !== 'ALL' && c.clientType !== this.typeFilter) return false;
       if (this.leadSourceFilter === 'NONE' && c.leadSource) return false;
       if (this.leadSourceFilter !== 'ALL' && this.leadSourceFilter !== 'NONE' && c.leadSource !== this.leadSourceFilter) return false;
@@ -343,7 +381,7 @@ export class ClientListComponent implements OnInit {
           cmp = (a.lastName + a.firstName).localeCompare(b.lastName + b.firstName, 'de');
           break;
         case 'stage':
-          cmp = (this.stageOrder[a.pipelineStage ?? ''] ?? -1) - (this.stageOrder[b.pipelineStage ?? ''] ?? -1);
+          cmp = (this.stageOrder[this.currentStageOf(a) ?? ''] ?? -1) - (this.stageOrder[this.currentStageOf(b) ?? ''] ?? -1);
           break;
         case 'lastContact':
           // never-contacted (null) counts as most overdue
@@ -465,43 +503,61 @@ export class ClientListComponent implements OnInit {
     this.activeStagePicker = clientId;
   }
 
-  setStage(clientId: string, stage: PipelineStage, event: MouseEvent): void {
+  setStage(clientId: string, stage: PipelineStage | SellerPipelineStage, event: MouseEvent): void {
     event.stopPropagation();
     event.preventDefault();
     this.activeStagePicker = null;
     const client = this.allClients.find(c => c.id === clientId);
-    const previous = client?.pipelineStage;
-    if (client) client.pipelineStage = stage;
+    if (!client) return;
+
+    // Verkäufer laufen über die eigene Akquise-Pipeline (Issue #38) — der Käufer-Endpoint
+    // weist sie ab, deshalb entscheidet der Kundentyp und nicht der Stufenwert.
+    const isSeller = client.clientType === ClientType.SELLER;
+    const previous = isSeller ? client.sellerPipelineStage : client.pipelineStage;
+    if (isSeller) {
+      client.sellerPipelineStage = stage as SellerPipelineStage;
+    } else {
+      client.pipelineStage = stage as PipelineStage;
+    }
     this.applyView();
-    this.clientService.updatePipelineStage(clientId, stage).subscribe({
-      error: () => { if (client) { client.pipelineStage = previous; this.applyView(); } }
+
+    const save$ = isSeller
+      ? this.clientService.updateSellerPipelineStage(clientId, stage as SellerPipelineStage)
+      : this.clientService.updatePipelineStage(clientId, stage as PipelineStage);
+    save$.subscribe({
+      error: () => {
+        if (isSeller) {
+          client.sellerPipelineStage = previous as SellerPipelineStage | null | undefined;
+        } else {
+          client.pipelineStage = previous as PipelineStage | undefined;
+        }
+        this.applyView();
+      }
     });
   }
 
-  getStageBg(stage?: PipelineStage): string {
-    switch (stage) {
-      case PipelineStage.PROSPECT:      return 'color-mix(in srgb,var(--stage-prospect) 14%,var(--surface))';
-      case PipelineStage.ACTIVE_SEARCH: return 'color-mix(in srgb,var(--stage-active-search) 14%,var(--surface))';
-      case PipelineStage.VIEWING:       return 'color-mix(in srgb,var(--stage-viewing) 14%,var(--surface))';
-      case PipelineStage.WON:           return 'color-mix(in srgb,var(--stage-won) 14%,var(--surface))';
-      case PipelineStage.LOST:          return 'color-mix(in srgb,var(--stage-lost) 14%,var(--surface))';
-      default:                          return 'var(--surface-2)';
-    }
+  /** Farbgebung je Stufe. Die Akquise-Stufen teilen die Farbskala der Käufer-Stufen,
+   *  damit die Liste nicht zwei konkurrierende Farbsysteme zeigt. */
+  private readonly stageAccent: Record<string, string> = {
+    [PipelineStage.PROSPECT]:          'var(--stage-prospect)',
+    [PipelineStage.ACTIVE_SEARCH]:     'var(--stage-active-search)',
+    [PipelineStage.VIEWING]:           'var(--stage-viewing)',
+    [PipelineStage.WON]:               'var(--stage-won)',
+    [PipelineStage.LOST]:              'var(--stage-lost)',
+    [SellerPipelineStage.LEAD]:        'var(--stage-prospect)',
+    [SellerPipelineStage.VALUATION]:   'var(--stage-active-search)',
+    [SellerPipelineStage.PITCH]:       'var(--stage-viewing)',
+    [SellerPipelineStage.MANDATE]:     'var(--primary)',
+    [SellerPipelineStage.SOLD]:        'var(--stage-won)',
+  };
+
+  getStageBg(stage?: PipelineStage | SellerPipelineStage | null): string {
+    const accent = stage ? this.stageAccent[stage] : undefined;
+    return accent ? `color-mix(in srgb,${accent} 14%,var(--surface))` : 'var(--surface-2)';
   }
 
-  getStageColor(stage?: PipelineStage): string {
-    switch (stage) {
-      case PipelineStage.PROSPECT:      return 'var(--stage-prospect)';
-      case PipelineStage.ACTIVE_SEARCH: return 'var(--stage-active-search)';
-      case PipelineStage.VIEWING:       return 'var(--stage-viewing)';
-      case PipelineStage.WON:           return 'var(--stage-won)';
-      case PipelineStage.LOST:          return 'var(--stage-lost)';
-      default:                          return 'var(--text-3)';
-    }
-  }
-
-  stageLabelKey(stage?: PipelineStage): string {
-    return this.stageOptions.find(s => s.value === stage)?.labelKey ?? 'clients.stage.none';
+  getStageColor(stage?: PipelineStage | SellerPipelineStage | null): string {
+    return (stage ? this.stageAccent[stage] : undefined) ?? 'var(--text-3)';
   }
 
   trackById(index: number, item: Client): string | undefined {

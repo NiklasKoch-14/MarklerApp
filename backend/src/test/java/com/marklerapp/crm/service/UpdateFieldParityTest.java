@@ -122,6 +122,10 @@ class UpdateFieldParityTest {
             "gdprConsentDate",
             // Relation, handled by updateSearchCriteria / ownership, not by field copy.
             "searchCriteria",
+            // Wird kopiert, aber danach bewusst am clientType ausgerichtet (Issue #38):
+            // dieser Testkunde ist kein SELLER, also muss die Akquise-Stufe null bleiben.
+            // Die Ausrichtung selbst prüft ClientServiceTest.
+            "sellerPipelineStage",
             // JPA auditing fields (BaseEntity) — set by the persistence layer, never from the DTO.
             "createdAt", "updatedAt"
         ));

@@ -34,6 +34,20 @@ export enum PipelineStage {
   LOST = 'LOST'
 }
 
+/**
+ * Akquise-Stufen eines Eigentümers (Issue #38). Bewusst ein eigenes Enum: der Prozess
+ * eines Verkäufers hat mit „Aktive Suche" oder „Besichtigung" nichts zu tun.
+ * Gilt nur für clientType SELLER.
+ */
+export enum SellerPipelineStage {
+  LEAD = 'LEAD',
+  VALUATION = 'VALUATION',
+  PITCH = 'PITCH',
+  MANDATE = 'MANDATE',
+  SOLD = 'SOLD',
+  LOST = 'LOST'
+}
+
 export enum LegalBasis {
   CONTRACT_INITIATION = 'CONTRACT_INITIATION',
   LEGITIMATE_INTEREST = 'LEGITIMATE_INTEREST'
@@ -66,6 +80,8 @@ export interface Client {
   financingStatus?: FinancingStatus;
   moveInTimeline?: MoveInTimeline;
   pipelineStage?: PipelineStage;
+  /** Akquise-Stufe bei clientType SELLER (Issue #38); bei Käufern/Mietern immer null. */
+  sellerPipelineStage?: SellerPipelineStage | null;
   lastContactDate?: string;
   gdprConsentGiven: boolean;
   gdprConsentDate?: string;
@@ -214,6 +230,13 @@ export class ClientService {
     );
   }
 
+  /** Verkäufer gruppiert nach Akquise-Stufe (Issue #38) — zweite Ansicht des Kanban. */
+  getSellersByStage(): Observable<Record<SellerPipelineStage, Client[]>> {
+    return this.http.get<Record<SellerPipelineStage, Client[]>>(`${this.apiUrl}/by-seller-stage`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
+
   getSortedByLastContact(): Observable<Client[]> {
     return this.http.get<Client[]>(`${this.apiUrl}/sorted-by-contact`).pipe(
       catchError(err => this.errorHandler.handleError(err))
@@ -230,6 +253,14 @@ export class ClientService {
   updatePipelineStage(id: string, stage: PipelineStage): Observable<Client> {
     const params = new HttpParams().set('stage', stage);
     return this.http.patch<Client>(`${this.apiUrl}/${id}/pipeline-stage`, null, { params }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
+
+  /** Akquise-Stufe eines Verkäufers setzen (Issue #38). */
+  updateSellerPipelineStage(id: string, stage: SellerPipelineStage): Observable<Client> {
+    const params = new HttpParams().set('stage', stage);
+    return this.http.patch<Client>(`${this.apiUrl}/${id}/seller-pipeline-stage`, null, { params }).pipe(
       catchError(err => this.errorHandler.handleError(err))
     );
   }

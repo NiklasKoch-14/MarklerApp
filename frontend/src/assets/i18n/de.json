@@ -202,6 +202,16 @@
     "funnelOffer": "Angebot",
     "funnelClosed": "Abschluss",
     "funnelLost": "{{count}} Kunden zuletzt ohne Interesse — aus dem Trichter ausgestiegen.",
+    "sellerFunnelTitle": "Akquise-Trichter",
+    "sellerFunnelSub": "Eigentümer auf dem Weg zum Auftrag. Getrennt vom Käufer-Trichter, weil die Stufen andere sind.",
+    "sellerFunnelColOwners": "Eigentümer",
+    "sellerFunnelTotal": "Kontakte",
+    "sellerFunnelValuation": "Wertermittlung",
+    "sellerFunnelPitch": "Präsentation",
+    "sellerFunnelMandate": "Auftrag",
+    "sellerFunnelSold": "Verkauft",
+    "sellerMandateRate": "Aufträge je Kontakt:",
+    "sellerFunnelLost": "{{count}} Eigentümer verloren — an Wettbewerb oder Privatverkauf.",
     "weakestStep": "Schwächster Schritt:",
     "convertFurther": "kommen weiter",
     "activityTitle": "Aktivität (30 Tage)",
@@ -268,6 +278,8 @@
     "tabCards": "Karten",
     "tabPipeline": "Pipeline",
     "showClosedStages": "Gewonnen/Verloren anzeigen",
+    "pipelineBuyers": "Käufer",
+    "pipelineSellers": "Akquise",
     "openFollowups": "Offene Nachfassaktionen",
     "recentActivity": "Letzte Aktivität",
     "markDone": "Als erledigt markieren",
@@ -1414,6 +1426,21 @@
       "BUYER": "Käufer",
       "RENTER": "Mieter",
       "SELLER": "Verkäufer"
+    },
+    "pipelineStage": {
+      "PROSPECT": "Interessent",
+      "ACTIVE_SEARCH": "Aktive Suche",
+      "VIEWING": "Besichtigung",
+      "WON": "Gewonnen",
+      "LOST": "Verloren"
+    },
+    "sellerPipelineStage": {
+      "LEAD": "Kontakt",
+      "VALUATION": "Wertermittlung",
+      "PITCH": "Präsentation",
+      "MANDATE": "Auftrag",
+      "SOLD": "Verkauft",
+      "LOST": "Verloren"
     },
     "legalBasis": {
       "CONTRACT_INITIATION": "Vertragsanbahnung",

@@ -67,6 +67,7 @@ public class DashboardAnalyticsService {
 
         return DashboardAnalyticsDto.builder()
                 .conversionFunnel(calculateConversionFunnel(clients, callNotes))
+                .sellerPipeline(calculateSellerPipeline(clients))
                 .pipelineHealth(calculatePipelineHealth(clients, callNotes))
                 .propertyPortfolio(calculatePropertyPortfolio(properties))
                 .activityTrends(calculateActivityTrends(clients, callNotes, properties))
@@ -94,7 +95,18 @@ public class DashboardAnalyticsService {
         };
     }
 
-    private ConversionFunnelDto calculateConversionFunnel(List<Client> clients, List<CallNote> callNotes) {
+    /**
+     * Käufer-Trichter. Verkäufer bleiben außen vor (Issue #38): ihre Akquise läuft über
+     * eigene Stufen, und ihre Gesprächsergebnisse würden hier Interessenten- und
+     * Besichtigungsquoten aufblähen, die es für sie gar nicht gibt.
+     */
+    private ConversionFunnelDto calculateConversionFunnel(List<Client> allClients, List<CallNote> allCallNotes) {
+        List<Client> clients = allClients.stream().filter(c -> !c.isSeller()).toList();
+        Set<UUID> buyerIds = clients.stream().map(Client::getId).collect(Collectors.toSet());
+        List<CallNote> callNotes = allCallNotes.stream()
+                .filter(n -> buyerIds.contains(n.getClient().getId()))
+                .toList();
+
         long totalClients = clients.size();
 
         // Ein Trichter zählt kumulativ: wer ein Angebot bekommen hat, war vorher
@@ -135,6 +147,59 @@ public class DashboardAnalyticsService {
 
     private long countAtLeast(Map<UUID, Integer> furthestRank, int rank) {
         return furthestRank.values().stream().filter(r -> r >= rank).count();
+    }
+
+    // ========================================
+    // Seller Acquisition Funnel (Issue #38)
+    // ========================================
+
+    /**
+     * Rang einer Akquise-Stufe. SOLD schließt MANDATE ein, MANDATE schließt PITCH ein usw. --
+     * der Trichter zählt kumulativ, sonst verschwindet ein Eigentümer beim Fortschritt aus
+     * der vorherigen Stufe und die Quoten übersteigen 100 %. LOST ist ein Ausstieg,
+     * kein Fortschritt, und bekommt darum keinen Rang.
+     */
+    private static int sellerRank(Client.SellerPipelineStage stage) {
+        if (stage == null) return 0;
+        return switch (stage) {
+            case LEAD -> 0;
+            case VALUATION -> 1;
+            case PITCH -> 2;
+            case MANDATE -> 3;
+            case SOLD -> 4;
+            case LOST -> 0;
+        };
+    }
+
+    private SellerPipelineDto calculateSellerPipeline(List<Client> allClients) {
+        List<Client> sellers = allClients.stream().filter(Client::isSeller).toList();
+
+        long total = sellers.size();
+        long valuations = countSellersAtLeast(sellers, 1);
+        long pitches = countSellersAtLeast(sellers, 2);
+        long mandates = countSellersAtLeast(sellers, 3);
+        long sold = countSellersAtLeast(sellers, 4);
+        long lost = sellers.stream()
+                .filter(c -> c.getSellerPipelineStage() == Client.SellerPipelineStage.LOST)
+                .count();
+
+        return SellerPipelineDto.builder()
+                .totalSellers(total)
+                .valuations(valuations)
+                .pitches(pitches)
+                .mandates(mandates)
+                .sold(sold)
+                .lost(lost)
+                .valuationRate(percentage(valuations, total))
+                .pitchRate(percentage(pitches, valuations))
+                .mandateRate(percentage(mandates, pitches))
+                .soldRate(percentage(sold, mandates))
+                .overallMandateRate(percentage(mandates, total))
+                .build();
+    }
+
+    private long countSellersAtLeast(List<Client> sellers, int rank) {
+        return sellers.stream().filter(c -> sellerRank(c.getSellerPipelineStage()) >= rank).count();
     }
 
     private double percentage(long part, long whole) {
@@ -348,14 +413,11 @@ public class DashboardAnalyticsService {
         for (Map.Entry<String, List<Client>> entry : bySource.entrySet()) {
             List<Client> clients = entry.getValue();
 
-            List<Client> won = clients.stream()
-                    .filter(c -> c.getPipelineStage() == Client.PipelineStage.WON)
-                    .toList();
+            List<Client> won = clients.stream().filter(Client::isWon).toList();
 
             BigDecimal wonCommission = sumCommission(won);
             BigDecimal openCommission = sumCommission(clients.stream()
-                    .filter(c -> c.getPipelineStage() != Client.PipelineStage.WON
-                            && c.getPipelineStage() != Client.PipelineStage.LOST)
+                    .filter(c -> !c.isWon() && !c.isLost())
                     .toList());
 
             double winRate = clients.isEmpty() ? 0.0 : (won.size() * 100.0 / clients.size());

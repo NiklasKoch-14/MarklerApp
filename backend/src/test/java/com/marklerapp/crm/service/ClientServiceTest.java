@@ -824,4 +824,105 @@ class ClientServiceTest {
         verify(clientRepository).findById(clientId);
         verifyNoInteractions(clientMapper);
     }
+
+    // ========================================
+    // Seller acquisition pipeline (Issue #38)
+    // ========================================
+
+    private Client seller(Client.SellerPipelineStage stage) {
+        Client c = Client.builder()
+            .agent(testAgent)
+            .firstName("Erika")
+            .lastName("Eigentuemer")
+            .clientType(Client.ClientType.SELLER)
+            .sellerPipelineStage(stage)
+            .build();
+        c.setId(UUID.randomUUID());
+        return c;
+    }
+
+    @Test
+    void updateSellerPipelineStage_OnSeller_ShouldSetStage() {
+        Client testSeller = seller(Client.SellerPipelineStage.VALUATION);
+        when(clientRepository.findById(testSeller.getId())).thenReturn(Optional.of(testSeller));
+        when(clientRepository.save(any(Client.class))).thenReturn(testSeller);
+        when(clientMapper.toDto(testSeller)).thenReturn(testClientDto);
+
+        clientService.updateSellerPipelineStage(testSeller.getId(), agentId, Client.SellerPipelineStage.MANDATE);
+
+        assertThat(testSeller.getSellerPipelineStage()).isEqualTo(Client.SellerPipelineStage.MANDATE);
+        verify(clientRepository).save(testSeller);
+    }
+
+    @Test
+    void updateSellerPipelineStage_OnBuyer_ShouldThrow() {
+        when(clientRepository.findById(clientId)).thenReturn(Optional.of(testClient));
+
+        assertThatThrownBy(() -> clientService.updateSellerPipelineStage(
+                clientId, agentId, Client.SellerPipelineStage.MANDATE))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("not a seller");
+
+        verify(clientRepository, never()).save(any(Client.class));
+    }
+
+    @Test
+    void updatePipelineStage_OnSeller_ShouldThrow() {
+        Client testSeller = seller(Client.SellerPipelineStage.LEAD);
+        when(clientRepository.findById(testSeller.getId())).thenReturn(Optional.of(testSeller));
+
+        assertThatThrownBy(() -> clientService.updatePipelineStage(
+                testSeller.getId(), agentId, Client.PipelineStage.VIEWING))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("is a seller");
+
+        verify(clientRepository, never()).save(any(Client.class));
+    }
+
+    @Test
+    void getClientsByStage_ShouldExcludeSellers() {
+        Client testSeller = seller(Client.SellerPipelineStage.MANDATE);
+        testClient.setPipelineStage(Client.PipelineStage.PROSPECT);
+        when(agentRepository.findById(agentId)).thenReturn(Optional.of(testAgent));
+        when(clientRepository.findByAgent(testAgent)).thenReturn(List.of(testClient, testSeller));
+        when(clientMapper.toDto(testClient)).thenReturn(testClientDto);
+
+        var result = clientService.getClientsByStage(agentId);
+
+        assertThat(result.get(Client.PipelineStage.PROSPECT)).hasSize(1);
+        assertThat(result.values().stream().mapToLong(List::size).sum()).isEqualTo(1);
+        verify(clientMapper, never()).toDto(testSeller);
+    }
+
+    @Test
+    void getSellersByStage_ShouldGroupSellersAndTreatMissingStageAsLead() {
+        Client withMandate = seller(Client.SellerPipelineStage.MANDATE);
+        Client withoutStage = seller(null);
+        testClient.setPipelineStage(Client.PipelineStage.PROSPECT);
+        when(agentRepository.findById(agentId)).thenReturn(Optional.of(testAgent));
+        when(clientRepository.findByAgent(testAgent))
+            .thenReturn(List.of(testClient, withMandate, withoutStage));
+        when(clientMapper.toDto(any(Client.class))).thenReturn(testClientDto);
+
+        var result = clientService.getSellersByStage(agentId);
+
+        assertThat(result.get(Client.SellerPipelineStage.MANDATE)).hasSize(1);
+        assertThat(result.get(Client.SellerPipelineStage.LEAD)).hasSize(1);
+        assertThat(result.values().stream().mapToLong(List::size).sum()).isEqualTo(2);
+        assertThat(result).containsKeys(Client.SellerPipelineStage.values());
+    }
+
+    @Test
+    void isWon_ShouldReadFromTheStageThatAppliesToTheClientType() {
+        // Ein verkauftes Objekt darf in der Kanal-Auswertung nicht als "nicht gewonnen"
+        // zaehlen, nur weil Verkaeufer die Kaeufer-Stufe WON nie erreichen.
+        assertThat(seller(Client.SellerPipelineStage.SOLD).isWon()).isTrue();
+        assertThat(seller(Client.SellerPipelineStage.MANDATE).isWon()).isFalse();
+        assertThat(seller(Client.SellerPipelineStage.LOST).isLost()).isTrue();
+
+        testClient.setPipelineStage(Client.PipelineStage.WON);
+        assertThat(testClient.isWon()).isTrue();
+        testClient.setPipelineStage(Client.PipelineStage.LOST);
+        assertThat(testClient.isLost()).isTrue();
+    }
 }

@@ -89,8 +89,27 @@ export interface LeadSourcePerformance {
   winRate: number;
 }
 
+/**
+ * Akquise-Trichter der Verkäufer (Issue #38) — getrennt vom Käufer-Trichter, weil
+ * beides zu vermischen die Absprung-Erkennung verfälscht. Kumulativ gezählt.
+ */
+export interface SellerPipeline {
+  totalSellers: number;
+  valuations: number;
+  pitches: number;
+  mandates: number;
+  sold: number;
+  lost: number;
+  valuationRate: number;
+  pitchRate: number;
+  mandateRate: number;
+  soldRate: number;
+  overallMandateRate: number;
+}
+
 export interface DashboardAnalytics {
   conversionFunnel: ConversionFunnel;
+  sellerPipeline: SellerPipeline;
   pipelineHealth: PipelineHealth;
   propertyPortfolio: PropertyPortfolio;
   activityTrends: ActivityTrends;

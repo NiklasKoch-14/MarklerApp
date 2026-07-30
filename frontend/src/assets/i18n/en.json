@@ -202,6 +202,16 @@
     "funnelOffer": "Offer",
     "funnelClosed": "Deal closed",
     "funnelLost": "{{count}} clients last marked not interested — dropped out of the funnel.",
+    "sellerFunnelTitle": "Acquisition funnel",
+    "sellerFunnelSub": "Owners on the way to a mandate. Kept separate from the buyer funnel because the stages differ.",
+    "sellerFunnelColOwners": "Owners",
+    "sellerFunnelTotal": "Leads",
+    "sellerFunnelValuation": "Valuation",
+    "sellerFunnelPitch": "Pitch",
+    "sellerFunnelMandate": "Mandate",
+    "sellerFunnelSold": "Sold",
+    "sellerMandateRate": "Mandates per lead:",
+    "sellerFunnelLost": "{{count}} owners lost — to a competitor or a private sale.",
     "weakestStep": "Weakest step:",
     "convertFurther": "convert further",
     "activityTitle": "Activity (30 days)",
@@ -268,6 +278,8 @@
     "tabCards": "Cards",
     "tabPipeline": "Pipeline",
     "showClosedStages": "Show won/lost",
+    "pipelineBuyers": "Buyers",
+    "pipelineSellers": "Acquisition",
     "openFollowups": "Open Follow-ups",
     "recentActivity": "Recent Activity",
     "markDone": "Mark as done",
@@ -1414,6 +1426,21 @@
       "BUYER": "Buyer",
       "RENTER": "Renter",
       "SELLER": "Seller"
+    },
+    "pipelineStage": {
+      "PROSPECT": "Prospect",
+      "ACTIVE_SEARCH": "Active search",
+      "VIEWING": "Viewing",
+      "WON": "Won",
+      "LOST": "Lost"
+    },
+    "sellerPipelineStage": {
+      "LEAD": "Lead",
+      "VALUATION": "Valuation",
+      "PITCH": "Pitch",
+      "MANDATE": "Mandate",
+      "SOLD": "Sold",
+      "LOST": "Lost"
     },
     "legalBasis": {
       "CONTRACT_INITIATION": "Contract Initiation",

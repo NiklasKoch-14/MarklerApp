@@ -246,6 +246,16 @@ public class ClientController extends BaseController {
     }
 
     /**
+     * Get sellers grouped by acquisition stage (second Kanban view, issue #38)
+     */
+    @GetMapping("/by-seller-stage")
+    @Operation(summary = "Get sellers by acquisition stage", description = "Returns SELLER clients grouped by their acquisition pipeline stage")
+    public ResponseEntity<Map<Client.SellerPipelineStage, List<ClientDto>>> getSellersByStage(Authentication authentication) {
+        UUID agentId = getAgentIdFromAuth(authentication);
+        return ResponseEntity.ok(clientService.getSellersByStage(agentId));
+    }
+
+    /**
      * Get clients without recent contact
      */
     @GetMapping("/without-recent-contact")
@@ -268,6 +278,19 @@ public class ClientController extends BaseController {
             Authentication authentication) {
         UUID agentId = getAgentIdFromAuth(authentication);
         return ResponseEntity.ok(clientService.updatePipelineStage(clientId, agentId, stage));
+    }
+
+    /**
+     * Quick acquisition stage update for sellers (issue #38)
+     */
+    @PatchMapping("/{clientId}/seller-pipeline-stage")
+    @Operation(summary = "Update seller acquisition stage", description = "Quick update of a SELLER client's acquisition pipeline stage")
+    public ResponseEntity<ClientDto> updateSellerPipelineStage(
+            @PathVariable UUID clientId,
+            @RequestParam Client.SellerPipelineStage stage,
+            Authentication authentication) {
+        UUID agentId = getAgentIdFromAuth(authentication);
+        return ResponseEntity.ok(clientService.updateSellerPipelineStage(clientId, agentId, stage));
     }
 
     /**
