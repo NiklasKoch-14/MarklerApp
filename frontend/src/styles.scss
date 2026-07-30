@@ -561,6 +561,69 @@
     box-shadow: 0 1px 2px rgba(20,40,45,0.08);
   }
 
+  /* ── Wiederkehrende Bausteine ──────────────────────────────────────
+     Nur Muster, die im Bestand mehrfach vorkommen und eine eigene
+     Bedeutung tragen. Reine Typografie oder Layout gehoert NICHT hierher,
+     das drueckt Tailwind aus (text-13, flex items-center). Siehe
+     docs/adr/0001-styling-architektur.md. */
+
+  /* Sidebar-/Info-Karte. 13 Vorkommen als Inline-Style. Unterscheidet sich von
+     .card durch den fehlenden Schatten -- diese Karten sitzen in einer Spalte
+     untereinander, wo Schatten sich zu einem Streifenmuster addieren. */
+  .surface-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  /* Beschriftung-Wert-Zeile in Info-Karten. 11 Vorkommen als Inline-Style.
+     Die letzte Zeile einer Karte laesst den Trenner weg, sonst endet die
+     Karte auf einer Linie ohne Inhalt darunter. */
+  .kv-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .kv-row:last-child {
+    border-bottom: none;
+  }
+
+  .kv-label {
+    font-size: 12px;
+    color: var(--text-3);
+    flex-shrink: 0;
+  }
+
+  .kv-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    min-width: 0;
+  }
+
+  /* Rechtsbuendig nur innerhalb einer Zeile. Ausserhalb dient .kv-value als
+     schlichter Wert-Text und muss linksbuendig bleiben -- sonst rutschen
+     freistehende Werte (z.B. Betreff der letzten Notiz) an den rechten Rand. */
+  .kv-row .kv-value {
+    text-align: right;
+  }
+
+  /* Grossbuchstaben-Ueberschrift innerhalb einer Karte. 8 Vorkommen. */
+  .section-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 5px;
+  }
+
   /* ── Utility Buttons ───────────────────────────────────────────── */
   .btn-primary {
     height: 40px;

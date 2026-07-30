@@ -122,7 +122,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
                   Letzter Kontakt {{ callNotesSummary!.lastCallDate | date:'dd.MM.yy' }}
                 </span>
                 <span *ngIf="!callNotesSummary?.lastCallDate"
-                      style="font-size:12px;color:var(--text-3);">Noch kein Kontakt</span>
+                      class="kv-label">Noch kein Kontakt</span>
                 <span *ngIf="client.leadSource"
                       [title]="'clients.leadSource' | translate"
                       style="font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:4px;">
@@ -229,12 +229,12 @@ import { GdprExportService } from '../../services/gdpr-export.service';
           </div>
           <div class="form-grid-2" style="gap:12px;margin-bottom:12px;">
             <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.subject' | translate }}</label>
+              <label class="section-label">{{ 'callNotes.quickNote.subject' | translate }}</label>
               <input type="text" [(ngModel)]="quickNoteSubject" [placeholder]="'callNotes.quickNote.subjectPlaceholder' | translate"
                      style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);outline:none;box-sizing:border-box;">
             </div>
             <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.contactType' | translate }}</label>
+              <label class="section-label">{{ 'callNotes.quickNote.contactType' | translate }}</label>
               <select [(ngModel)]="quickNoteType"
                       style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
                 <option *ngFor="let type of callTypeOptions" [value]="type">{{ type | translateEnum:'callType' }}</option>
@@ -242,7 +242,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
             </div>
           </div>
           <div style="margin-bottom:12px;">
-            <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.content' | translate }}</label>
+            <label class="section-label">{{ 'callNotes.quickNote.content' | translate }}</label>
             <textarea [(ngModel)]="quickNoteText" [placeholder]="'callNotes.quickNote.contentPlaceholder' | translate" rows="3"
                       style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);resize:vertical;font-family:inherit;box-sizing:border-box;outline:none;">
             </textarea>
@@ -254,7 +254,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
                Gespraechsverlauf, den es zusammenfasst. -->
           <div class="form-grid-2" style="gap:12px;margin-bottom:12px;">
             <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.outcome' | translate }}</label>
+              <label class="section-label">{{ 'callNotes.quickNote.outcome' | translate }}</label>
               <select [(ngModel)]="quickNoteOutcome"
                       style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
                 <option value="">{{ 'callNotes.quickNote.outcomePlaceholder' | translate }}</option>
@@ -306,20 +306,20 @@ import { GdprExportService } from '../../services/gdpr-export.service';
           <div *ngIf="callNotesSummary?.mostRecentSubject"
                style="background:var(--surface-2);border-radius:8px;padding:10px 14px;margin-bottom:14px;border-left:3px solid var(--color-warning);">
             <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Geplanter Follow-up</div>
-            <div style="font-size:13px;font-weight:600;color:var(--text);">{{ callNotesSummary!.mostRecentSubject }}</div>
+            <div class="kv-value">{{ callNotesSummary!.mostRecentSubject }}</div>
           </div>
           <div style="font-size:13px;color:var(--text-2);margin-bottom:14px;">
             Was ist beim Follow-up passiert? Trag kurz ein, was besprochen wurde.
           </div>
           <div class="form-grid-2" style="gap:12px;margin-bottom:12px;">
             <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.subject' | translate }}</label>
+              <label class="section-label">{{ 'callNotes.quickNote.subject' | translate }}</label>
               <input type="text" [(ngModel)]="quickNoteSubject"
                      [placeholder]="callNotesSummary?.mostRecentSubject || ('callNotes.quickNote.subjectPlaceholder' | translate)"
                      style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);outline:none;box-sizing:border-box;">
             </div>
             <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.contactType' | translate }}</label>
+              <label class="section-label">{{ 'callNotes.quickNote.contactType' | translate }}</label>
               <select [(ngModel)]="quickNoteType"
                       style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
                 <option *ngFor="let type of callTypeOptions" [value]="type">{{ type | translateEnum:'callType' }}</option>
@@ -327,7 +327,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
             </div>
           </div>
           <div style="margin-bottom:12px;">
-            <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.content' | translate }}</label>
+            <label class="section-label">{{ 'callNotes.quickNote.content' | translate }}</label>
             <textarea [(ngModel)]="quickNoteText" [placeholder]="'callNotes.quickNote.contentPlaceholder' | translate" rows="3"
                       style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);resize:vertical;font-family:inherit;box-sizing:border-box;outline:none;">
             </textarea>
@@ -335,7 +335,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
 
           <div class="form-grid-2" style="gap:12px;margin-bottom:12px;">
             <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.outcome' | translate }}</label>
+              <label class="section-label">{{ 'callNotes.quickNote.outcome' | translate }}</label>
               <select [(ngModel)]="quickNoteOutcome"
                       style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
                 <option value="">{{ 'callNotes.quickNote.outcomePlaceholder' | translate }}</option>
@@ -536,7 +536,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
               <div *ngIf="!isLoadingOwnedProperties && ownedProperties.length > 0"
                    style="display:flex;flex-direction:column;gap:12px;">
                 <div *ngFor="let p of ownedProperties"
-                     style="border:1px solid var(--border);border-radius:11px;background:var(--surface-2);overflow:hidden;">
+                     class="surface-card" style="background:var(--surface-2);border-radius:11px;">
                   <a [routerLink]="['/properties', p.id]" class="match-link"
                      style="display:flex;align-items:center;gap:10px;padding:11px 12px;text-decoration:none;border-bottom:1px solid var(--border);">
                     <div style="flex:1;min-width:0;">
@@ -553,15 +553,15 @@ import { GdprExportService } from '../../services/gdpr-export.service';
 
                   <div style="padding:4px 12px 10px;">
                     <div *ngIf="p.mandateType"
-                         style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-                      <span style="font-size:12px;color:var(--text-3);">{{ 'clients.mandate.type' | translate }}</span>
-                      <span style="font-size:13px;font-weight:600;color:var(--text);">{{ p.mandateType | translateEnum:'mandateType' }}</span>
+                         class="kv-row">
+                      <span class="kv-label">{{ 'clients.mandate.type' | translate }}</span>
+                      <span class="kv-value">{{ p.mandateType | translateEnum:'mandateType' }}</span>
                     </div>
 
                     <div *ngIf="p.mandateStart || p.mandateEnd"
-                         style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-                      <span style="font-size:12px;color:var(--text-3);">{{ 'clients.mandate.period' | translate }}</span>
-                      <span style="font-size:13px;font-weight:600;color:var(--text);">
+                         class="kv-row">
+                      <span class="kv-label">{{ 'clients.mandate.period' | translate }}</span>
+                      <span class="kv-value">
                         {{ (p.mandateStart | date:'dd.MM.yy') || '–' }} – {{ (p.mandateEnd | date:'dd.MM.yy') || '–' }}
                       </span>
                     </div>
@@ -583,27 +583,27 @@ import { GdprExportService } from '../../services/gdpr-export.service';
                     <!-- Wunschpreis gegen Angebotspreis: die Differenz ist das Dauerthema
                          jedes Preisgespraechs, also steht sie hier und nicht im Kopf des Maklers. -->
                     <div *ngIf="p.ownerPriceExpectation != null"
-                         style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-                      <span style="font-size:12px;color:var(--text-3);">{{ 'clients.mandate.ownerPrice' | translate }}</span>
-                      <span style="font-size:13px;font-weight:600;color:var(--text);">{{ p.ownerPriceExpectation | number:'1.0-0' }} €</span>
+                         class="kv-row">
+                      <span class="kv-label">{{ 'clients.mandate.ownerPrice' | translate }}</span>
+                      <span class="kv-value">{{ p.ownerPriceExpectation | number:'1.0-0' }} €</span>
                     </div>
                     <div *ngIf="p.price != null"
-                         style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-                      <span style="font-size:12px;color:var(--text-3);">{{ 'clients.mandate.listedPrice' | translate }}</span>
-                      <span style="font-size:13px;font-weight:600;color:var(--text);">{{ p.price | number:'1.0-0' }} €</span>
+                         class="kv-row">
+                      <span class="kv-label">{{ 'clients.mandate.listedPrice' | translate }}</span>
+                      <span class="kv-value">{{ p.price | number:'1.0-0' }} €</span>
                     </div>
                     <div *ngIf="priceGap(p) !== null"
-                         style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-                      <span style="font-size:12px;color:var(--text-3);">{{ 'clients.mandate.priceGap' | translate }}</span>
+                         class="kv-row">
+                      <span class="kv-label">{{ 'clients.mandate.priceGap' | translate }}</span>
                       <span style="font-size:13px;font-weight:700;" [style.color]="priceGap(p)! > 0 ? 'var(--color-warning)' : 'var(--color-success)'">
                         {{ priceGap(p)! > 0 ? '+' : '' }}{{ priceGap(p) | number:'1.0-0' }} €
                       </span>
                     </div>
 
                     <div *ngIf="p.commissionSellerPercent != null || p.commissionBuyerPercent != null"
-                         style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;">
-                      <span style="font-size:12px;color:var(--text-3);">{{ 'clients.mandate.commission' | translate }}</span>
-                      <span style="font-size:13px;font-weight:600;color:var(--text);">
+                         class="kv-row">
+                      <span class="kv-label">{{ 'clients.mandate.commission' | translate }}</span>
+                      <span class="kv-value">
                         <ng-container *ngIf="p.commissionSellerPercent != null">
                           {{ 'clients.mandate.commissionSeller' | translate }} {{ p.commissionSellerPercent | number:'1.0-2' }}%
                         </ng-container>
@@ -637,44 +637,44 @@ import { GdprExportService } from '../../services/gdpr-export.service';
               <!-- Key-value rows -->
               <div>
                 <div *ngIf="client.clientType"
-                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-                  <span style="font-size:12px;color:var(--text-3);">{{ 'clients.clientType' | translate }}</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ client.clientType | translateEnum:'clientType' }}</span>
+                     class="kv-row">
+                  <span class="kv-label">{{ 'clients.clientType' | translate }}</span>
+                  <span class="kv-value">{{ client.clientType | translateEnum:'clientType' }}</span>
                 </div>
                 <div *ngIf="client.searchCriteria?.propertyTypes?.length"
-                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-                  <span style="font-size:12px;color:var(--text-3);">Objekttyp</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--text);"><ng-container *ngFor="let pt of client.searchCriteria!.propertyTypes!; let last = last">{{ pt | translateEnum:'propertyType' }}{{ last ? '' : ', ' }}</ng-container></span>
+                     class="kv-row">
+                  <span class="kv-label">Objekttyp</span>
+                  <span class="kv-value"><ng-container *ngFor="let pt of client.searchCriteria!.propertyTypes!; let last = last">{{ pt | translateEnum:'propertyType' }}{{ last ? '' : ', ' }}</ng-container></span>
                 </div>
                 <div *ngIf="hasBudgetOrRent()"
-                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-                  <span style="font-size:12px;color:var(--text-3);">{{ client.clientType === ClientType.RENTER ? 'Miete' : 'Kaufpreis' }}</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ formatBudget() }}</span>
+                     class="kv-row">
+                  <span class="kv-label">{{ client.clientType === ClientType.RENTER ? 'Miete' : 'Kaufpreis' }}</span>
+                  <span class="kv-value">{{ formatBudget() }}</span>
                 </div>
                 <div *ngIf="client.searchCriteria?.minSquareMeters || client.searchCriteria?.maxSquareMeters"
-                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-                  <span style="font-size:12px;color:var(--text-3);">Wohnfläche</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ formatSqm() }}</span>
+                     class="kv-row">
+                  <span class="kv-label">Wohnfläche</span>
+                  <span class="kv-value">{{ formatSqm() }}</span>
                 </div>
                 <div *ngIf="client.searchCriteria?.minRooms || client.searchCriteria?.maxRooms"
-                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-                  <span style="font-size:12px;color:var(--text-3);">Zimmer</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ formatRooms() }}</span>
+                     class="kv-row">
+                  <span class="kv-label">Zimmer</span>
+                  <span class="kv-value">{{ formatRooms() }}</span>
                 </div>
                 <div *ngIf="client.searchCriteria?.preferredLocations?.length"
-                     style="display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border);">
-                  <span style="font-size:12px;color:var(--text-3);">Lage</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--text);text-align:right;max-width:60%;">{{ client.searchCriteria!.preferredLocations!.join(', ') }}</span>
+                     class="kv-row">
+                  <span class="kv-label">Lage</span>
+                  <span class="kv-value">{{ client.searchCriteria!.preferredLocations!.join(', ') }}</span>
                 </div>
                 <div *ngIf="client.financingStatus && client.clientType !== ClientType.SELLER"
-                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-                  <span style="font-size:12px;color:var(--text-3);">Finanzierung</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ getFinancingLabel() }}</span>
+                     class="kv-row">
+                  <span class="kv-label">Finanzierung</span>
+                  <span class="kv-value">{{ getFinancingLabel() }}</span>
                 </div>
                 <div *ngIf="client.moveInTimeline && client.clientType !== ClientType.SELLER"
-                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;">
-                  <span style="font-size:12px;color:var(--text-3);">Einzug</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ getMoveInLabel() }}</span>
+                     class="kv-row">
+                  <span class="kv-label">Einzug</span>
+                  <span class="kv-value">{{ getMoveInLabel() }}</span>
                 </div>
               </div>
             </div>
@@ -770,7 +770,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
                               </span>
                             }
                           </div>
-                          <div style="font-size:12px;color:var(--text-3);">{{ match.property.addressCity }}</div>
+                          <div class="kv-label">{{ match.property.addressCity }}</div>
                         </div>
                         <i class="ri-arrow-right-line" style="font-size:14px;color:var(--text-3);flex-shrink:0;"></i>
                       </a>
@@ -799,7 +799,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
                      style="font-size:17px;"></i>
                 </div>
                 <div>
-                  <div style="font-size:13px;font-weight:600;color:var(--text);">{{ 'clients.gdprConsent' | translate }}</div>
+                  <div class="kv-value">{{ 'clients.gdprConsent' | translate }}</div>
                   <div style="font-size:12px;color:var(--text-3);margin-top:1px;">
                     {{ (client.gdprConsentGiven ? 'clients.consentStatusGiven' : 'clients.gdprPending') | translate }}<ng-container *ngIf="client.gdprConsentGiven && client.gdprConsentDate"> · {{ client.gdprConsentDate | date:'dd.MM.yyyy' }}</ng-container>
                   </div>
@@ -834,7 +834,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
           </div>
           <div style="flex:1;">
             <div style="font-size:16px;font-weight:700;color:var(--text);">{{ 'attachments.sectionTitle' | translate }}</div>
-            <div style="font-size:12px;color:var(--text-3);">{{ client.firstName }} {{ client.lastName }}</div>
+            <div class="kv-label">{{ client.firstName }} {{ client.lastName }}</div>
           </div>
           <button (click)="showAttachmentsDialog = false"
                   style="width:32px;height:32px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-3);font-size:16px;">

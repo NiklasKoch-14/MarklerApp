@@ -18,7 +18,7 @@ import { ThemeService } from '../../core/services/theme.service';
 
       <!-- Makler-Profil -->
       <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:16px;">
-        <div style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;">Makler-Profil</div>
+        <div class="section-label" style="margin-bottom:12px;">Makler-Profil</div>
         <div style="font-size:16px;font-weight:700;color:var(--text);">{{ user?.firstName }} {{ user?.lastName }}</div>
         <div style="font-size:13px;color:var(--text-3);margin-top:4px;">{{ user?.email }}</div>
 
@@ -49,7 +49,7 @@ import { ThemeService } from '../../core/services/theme.service';
 
       <!-- Darstellung -->
       <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:16px;">
-        <div style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;">Darstellung</div>
+        <div class="section-label" style="margin-bottom:12px;">Darstellung</div>
 
         <!-- Theme -->
         <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">

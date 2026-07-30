@@ -567,7 +567,7 @@
         </div>
 
         <div style="padding:14px 18px 0;border-top:1px solid var(--border);">
-          <span style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;">{{ 'properties.location.title' | translate }}</span>
+          <span class="section-label" style="margin-bottom:0;">{{ 'properties.location.title' | translate }}</span>
         </div>
         <div *ngIf="property.latitude != null && property.longitude != null" style="padding-top:10px;">
           <app-location-picker-map

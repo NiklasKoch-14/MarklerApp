@@ -12,42 +12,42 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
   standalone: true,
   imports: [CommonModule, TranslateModule, LoadingSpinnerComponent],
   template: `
-    <div class="bg-white shadow rounded-lg p-6">
-      <h3 class="text-lg font-medium text-gray-900 mb-4">
+    <div class="bg-surface shadow rounded-lg p-6">
+      <h3 class="text-lg font-medium text-body mb-4">
         {{ 'properties.expose.title' | translate }}
       </h3>
 
       <!-- No Expose State -->
       <div *ngIf="!expose && !uploading" class="text-center py-8">
-        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="mx-auto h-12 w-12 text-body-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
         </svg>
-        <h3 class="mt-2 text-sm font-medium text-gray-900">{{ 'properties.expose.noExpose' | translate }}</h3>
-        <p class="mt-1 text-sm text-gray-500">{{ 'properties.expose.uploadDescription' | translate }}</p>
+        <h3 class="mt-2 text-sm font-medium text-body">{{ 'properties.expose.noExpose' | translate }}</h3>
+        <p class="mt-1 text-sm text-body-3">{{ 'properties.expose.uploadDescription' | translate }}</p>
 
         <!-- File Input -->
         <div class="mt-6">
-          <label class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[var(--primary)] hover:bg-[var(--primary-hover)] cursor-pointer">
+          <label class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-primary-fg bg-primary hover:bg-primary-600 cursor-pointer">
             <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
             </svg>
             {{ 'properties.expose.selectPdf' | translate }}
             <input type="file" class="hidden" accept=".pdf" (change)="onFileSelected($event)" [disabled]="uploading">
           </label>
-          <p class="mt-2 text-xs text-gray-500">{{ 'properties.expose.maxSize' | translate }}</p>
+          <p class="mt-2 text-xs text-body-3">{{ 'properties.expose.maxSize' | translate }}</p>
         </div>
       </div>
 
       <!-- Has Expose State -->
       <div *ngIf="expose && !uploading" class="space-y-4">
         <!-- Expose Info Card -->
-        <div class="flex items-start p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <svg class="mt-1 h-8 w-8 text-[var(--color-error)] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <div class="flex items-start p-4 bg-surface-2 rounded-lg border border-border">
+          <svg class="mt-1 h-8 w-8 text-error flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
           </svg>
           <div class="ml-4 flex-1">
-            <h4 class="text-sm font-medium text-gray-900">{{ expose.fileName }}</h4>
-            <p class="text-sm text-gray-500">
+            <h4 class="text-sm font-medium text-body">{{ expose.fileName }}</h4>
+            <p class="text-sm text-body-3">
               {{ propertyService.formatFileSize(expose.fileSize) }}
               <span *ngIf="expose.uploadedAt" class="mx-2">•</span>
               <span *ngIf="expose.uploadedAt">{{ 'properties.expose.uploaded' | translate }}: {{ formatDate(expose.uploadedAt) }}</span>
@@ -61,7 +61,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
             type="button"
             (click)="downloadExpose()"
             [disabled]="downloading"
-            class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] disabled:opacity-50">
+            class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-border shadow-sm text-sm font-medium rounded-md text-body-2 bg-surface hover:bg-surface-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50">
             <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
             </svg>
@@ -72,7 +72,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
             type="button"
             (click)="previewExpose()"
             [disabled]="previewing"
-            class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--primary)] disabled:opacity-50">
+            class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-border shadow-sm text-sm font-medium rounded-md text-body-2 bg-surface hover:bg-surface-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50">
             <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
@@ -84,7 +84,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
             type="button"
             (click)="confirmDelete()"
             [disabled]="deleting"
-            class="inline-flex items-center px-4 py-2 border border-[var(--color-error)] shadow-sm text-sm font-medium rounded-md text-[var(--color-error)] bg-white hover:bg-[var(--color-error-soft)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-error)] disabled:opacity-50">
+            class="inline-flex items-center px-4 py-2 border border-error shadow-sm text-sm font-medium rounded-md text-error bg-surface hover:bg-error-soft focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-error disabled:opacity-50">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
             </svg>
@@ -92,8 +92,8 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
         </div>
 
         <!-- Replace Button -->
-        <div class="border-t border-gray-200 pt-4">
-          <label class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
+        <div class="border-t border-border pt-4">
+          <label class="inline-flex items-center px-4 py-2 border border-border shadow-sm text-sm font-medium rounded-md text-body-2 bg-surface hover:bg-surface-2 cursor-pointer">
             <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
@@ -106,17 +106,17 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
       <!-- Uploading State -->
       <div *ngIf="uploading" class="text-center py-8">
         <app-loading-spinner size="lg"></app-loading-spinner>
-        <p class="mt-4 text-sm text-gray-500">{{ 'properties.expose.uploading' | translate }}</p>
+        <p class="mt-4 text-sm text-body-3">{{ 'properties.expose.uploading' | translate }}</p>
       </div>
 
       <!-- Error Alert -->
-      <div *ngIf="error" class="mt-4 rounded-md bg-[var(--color-error-soft)] p-4">
+      <div *ngIf="error" class="mt-4 rounded-md bg-error-soft p-4">
         <div class="flex">
-          <svg class="h-5 w-5 text-[var(--color-error)]" viewBox="0 0 20 20" fill="currentColor">
+          <svg class="h-5 w-5 text-error" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
           </svg>
           <div class="ml-3">
-            <h3 class="text-sm font-medium text-[var(--color-error)]">{{ error }}</h3>
+            <h3 class="text-sm font-medium text-error">{{ error }}</h3>
           </div>
         </div>
       </div>
@@ -125,30 +125,30 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
       <div *ngIf="showDeleteConfirm" class="fixed inset-0 z-50 overflow-y-auto">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
           <div class="fixed inset-0 transition-opacity" (click)="cancelDelete()">
-            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            <div class="absolute inset-0 bg-surface-20 opacity-75"></div>
           </div>
 
-          <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div class="inline-block align-bottom bg-surface rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-surface px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
               <div class="sm:flex sm:items-start">
-                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-[var(--color-error-soft)] sm:mx-0 sm:h-10 sm:w-10">
-                  <svg class="h-6 w-6 text-[var(--color-error)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-error-soft sm:mx-0 sm:h-10 sm:w-10">
+                  <svg class="h-6 w-6 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   </svg>
                 </div>
                 <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                  <h3 class="text-lg leading-6 font-medium text-gray-900">
+                  <h3 class="text-lg leading-6 font-medium text-body">
                     {{ 'properties.expose.deleteConfirmTitle' | translate }}
                   </h3>
                   <div class="mt-2">
-                    <p class="text-sm text-gray-500">
+                    <p class="text-sm text-body-3">
                       {{ 'properties.expose.deleteConfirmMessage' | translate }}
                     </p>
                   </div>
                 </div>
               </div>
             </div>
-            <div class="form-actions form-actions--centered bg-gray-50 px-4 py-3 sm:px-6">
+            <div class="form-actions form-actions--centered bg-surface-2 px-4 py-3 sm:px-6">
               <!-- Loeschen traegt die Signalfarbe statt --primary, sonst laese sich der
                    destruktive Vorgang wie eine gewoehnliche Bestaetigung. -->
               <button
