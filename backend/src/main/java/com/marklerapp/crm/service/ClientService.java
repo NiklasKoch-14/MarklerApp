@@ -8,6 +8,7 @@ import com.marklerapp.crm.dto.ClientImportRowResult;
 import com.marklerapp.crm.dto.PropertySearchCriteriaDto;
 import com.marklerapp.crm.entity.Agent;
 import com.marklerapp.crm.entity.Client;
+import com.marklerapp.crm.entity.Property;
 import com.marklerapp.crm.entity.PropertySearchCriteria;
 import com.marklerapp.crm.mapper.ClientMapper;
 import com.marklerapp.crm.mapper.PropertySearchCriteriaMapper;
@@ -15,6 +16,7 @@ import com.marklerapp.crm.repository.AgentRepository;
 import com.marklerapp.crm.repository.CallNoteRepository;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.FileAttachmentRepository;
+import com.marklerapp.crm.repository.PropertyRepository;
 import com.marklerapp.crm.repository.PropertySearchCriteriaRepository;
 import com.marklerapp.crm.repository.ViewingRepository;
 import com.marklerapp.crm.util.CsvParseUtil;
@@ -60,6 +62,7 @@ public class ClientService {
     private final ViewingRepository viewingRepository;
     private final FileAttachmentRepository fileAttachmentRepository;
     private final ClientDeletionAuditService clientDeletionAuditService;
+    private final PropertyRepository propertyRepository;
 
     /**
      * Get all clients for an agent with pagination
@@ -244,6 +247,9 @@ public class ClientService {
         existingClient.setAddressPostalCode(clientDto.getAddressPostalCode());
         existingClient.setAddressCountry(clientDto.getAddressCountry());
         existingClient.setExpectedCommission(clientDto.getExpectedCommission());
+        // Bewusst ohne Null-Guard: "keine Angabe" muss wieder einstellbar sein, sonst
+        // liesse sich eine einmal falsch gesetzte Quelle nie mehr zuruecknehmen.
+        existingClient.setLeadSource(clientDto.getLeadSource());
         if (clientDto.getClientType() != null) {
             existingClient.setClientType(clientDto.getClientType());
         }
@@ -330,6 +336,18 @@ public class ClientService {
         // Delete associated search criteria
         if (client.getSearchCriteria() != null) {
             searchCriteriaRepository.delete(client.getSearchCriteria());
+        }
+
+        // Eigentuemer-Verknuepfungen loesen (Issue #37). Die FK-Regel in V32 ist
+        // ON DELETE SET NULL, aber Hibernate wuerde die Objekte im Persistenzkontext mit
+        // einem Verweis auf einen geloeschten Kunden zuruecklassen. Das Objekt selbst
+        // bleibt bestehen -- geloescht wird der Kontakt, nicht die Immobilie.
+        List<Property> ownedProperties = propertyRepository.findByOwner(client);
+        if (!ownedProperties.isEmpty()) {
+            ownedProperties.forEach(property -> property.setOwner(null));
+            propertyRepository.saveAll(ownedProperties);
+            log.info("Unlinked client {} as owner from {} properties before deletion",
+                    clientId, ownedProperties.size());
         }
 
         clientRepository.delete(client);

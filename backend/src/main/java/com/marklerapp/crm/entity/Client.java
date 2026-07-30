@@ -104,8 +104,25 @@ public class Client extends BaseEntity {
     @DecimalMin(value = "0.0", message = "Expected commission must be non-negative")
     private BigDecimal expectedCommission;
 
+    // Akquisekanal (Issue #41). Bewusst nullable und ohne Default: ein vorbelegter Wert waere
+    // eine erfundene Angabe und wuerde genau die Auswertung verfaelschen, fuer die das Feld da ist.
+    @Enumerated(EnumType.STRING)
+    @Column(name = "lead_source")
+    private LeadSource leadSource;
+
     @OneToOne(mappedBy = "client", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private PropertySearchCriteria searchCriteria;
+
+    public enum LeadSource {
+        REFERRAL,
+        PORTAL,
+        WEBSITE,
+        WALK_IN,
+        SOCIAL_MEDIA,
+        SIGNAGE,
+        COLD_OUTREACH,
+        OTHER
+    }
 
     public enum LegalBasis {
         CONTRACT_INITIATION,

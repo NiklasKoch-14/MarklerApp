@@ -12,11 +12,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -69,13 +71,15 @@ public class ViewingController extends BaseController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all viewings for the authenticated agent (paginated)")
+    @Operation(summary = "Get all viewings for the authenticated agent (paginated, optionally restricted to a date range)")
     public ResponseEntity<Page<ViewingDto.Summary>> getViewingsByAgent(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
             @PageableDefault(size = PaginationConstants.DEFAULT_PAGE_SIZE, sort = "viewingDate", direction = Sort.Direction.DESC)
             Pageable pageable,
             Authentication authentication) {
         UUID agentId = getAgentIdFromAuth(authentication);
-        return ResponseEntity.ok(viewingService.getViewingsByAgent(agentId, pageable));
+        return ResponseEntity.ok(viewingService.getViewingsByAgent(agentId, from, to, pageable));
     }
 
     @GetMapping("/client/{clientId}")

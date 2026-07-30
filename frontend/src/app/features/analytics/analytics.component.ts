@@ -4,8 +4,9 @@ import { Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { AnalyticsService, DashboardAnalytics, DailyActivity, PropertyOnMarket } from './services/analytics.service';
+import { AnalyticsService, DashboardAnalytics, DailyActivity, PropertyOnMarket, LeadSourcePerformance } from './services/analytics.service';
 import { LoadingSpinnerComponent } from '../../shared/components/loading-spinner/loading-spinner.component';
+import { TranslateEnumPipe } from '../../shared/pipes/translate-enum.pipe';
 import { LocationPickerMapComponent, SecondaryMarker } from '../../shared/components/location-picker-map/location-picker-map.component';
 import { PropertyService } from '../property-management/services/property.service';
 import { ClientService } from '../client-management/services/client.service';
@@ -28,6 +29,15 @@ interface TrendPoint {
   dateLabel: string;
 }
 
+interface LeadSourceBar {
+  source: string | null;   // null = Kunden ohne erfasste Quelle
+  clients: number;
+  won: number;
+  winRate: number;
+  commissionLabel: string;
+  widthPct: number;
+}
+
 interface MarketBar {
   id: string;
   title: string;
@@ -42,7 +52,7 @@ interface MarketBar {
 @Component({
   selector: 'app-analytics',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule, LoadingSpinnerComponent, LocationPickerMapComponent],
+  imports: [CommonModule, RouterLink, TranslateModule, LoadingSpinnerComponent, LocationPickerMapComponent, TranslateEnumPipe],
   styles: [`
     .an-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); }
     .an-card-head { padding:16px 20px 4px; }
@@ -247,6 +257,49 @@ interface MarketBar {
 
         </div>
 
+        <!-- ══ Akquisekanäle — welcher Kanal bringt Abschlüsse ══ -->
+        <div class="an-card" style="margin-bottom:20px;">
+          <div class="an-card-head">
+            <div class="an-title"><i class="ri-inbox-archive-fill" style="color:var(--color-closed);"></i>{{ 'analytics.leadSourceTitle' | translate }}</div>
+            <div class="an-sub">{{ 'analytics.leadSourceSub' | translate }}</div>
+          </div>
+          <div style="padding:8px 20px 16px;">
+            <div *ngIf="!hasLeadSourceData" style="padding:22px 0; text-align:center; color:var(--text-3); font-size:13px; line-height:1.5;">
+              {{ 'analytics.leadSourceEmpty' | translate }}
+            </div>
+
+            <ng-container *ngIf="hasLeadSourceData">
+              <div *ngIf="leadSourceScale === 'deals'" style="font-size:12.5px; color:var(--text-3); padding:2px 0 10px;">
+                {{ 'analytics.leadSourceNoCommission' | translate }}
+              </div>
+
+              <div *ngFor="let r of leadSourceBars"
+                   style="display:flex; align-items:center; gap:14px; padding:11px 4px; border-bottom:1px solid var(--border);">
+                <div style="flex:1; min-width:0;">
+                  <div style="font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+                       [style.color]="r.source ? 'var(--text)' : 'var(--text-3)'">
+                    {{ r.source ? (r.source | translateEnum:'leadSource') : ('analytics.leadSourceUnknown' | translate) }}
+                  </div>
+                  <div style="font-size:12px; color:var(--text-3); margin-top:1px;">
+                    {{ 'analytics.leadSourceMeta' | translate:{ won: r.won, clients: r.clients, rate: r.winRate } }}
+                  </div>
+                </div>
+                <div style="width:min(46%,300px); flex-shrink:0; display:flex; align-items:center; gap:10px;">
+                  <div style="flex:1; height:8px; background:var(--surface-2); border-radius:6px; overflow:hidden;">
+                    <div [style.width.%]="r.widthPct"
+                         [style.background]="r.source ? 'var(--color-closed)' : 'var(--text-3)'"
+                         style="height:100%; border-radius:6px; transition:width .5s;"></div>
+                  </div>
+                  <span style="font-size:12.5px; font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums; min-width:74px; text-align:right;"
+                        [style.color]="r.source ? 'var(--text)' : 'var(--text-3)'">
+                    {{ r.commissionLabel }}
+                  </span>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+
         <!-- ══ Objekte am längsten am Markt — Preisdruck-Gespräch ══ -->
         <div class="an-card" style="margin-bottom:20px;">
           <div class="an-card-head">
@@ -326,6 +379,9 @@ export class AnalyticsComponent implements OnInit {
   trendAreaPath = '';
   trendStartLabel = '';
   marketBars: MarketBar[] = [];
+  leadSourceBars: LeadSourceBar[] = [];
+  hasLeadSourceData = false;
+  leadSourceScale: 'commission' | 'deals' = 'commission';
   tooFewData = false;
 
   mapMarkers: SecondaryMarker[] = [];
@@ -348,6 +404,7 @@ export class AnalyticsComponent implements OnInit {
         this.buildFunnel(d);
         this.buildTrend(d.activityTrends.last30DaysActivity);
         this.buildMarketBars(d.propertyPortfolio.longestOnMarket);
+        this.buildLeadSources(d.leadSourcePerformance);
         this.tooFewData = d.conversionFunnel.totalClients < 3;
         this.loading = false;
       },
@@ -483,6 +540,35 @@ export class AnalyticsComponent implements OnInit {
         widthPct: Math.max(6, (i.daysOnMarket / max) * 100),
         color: c.fg,
         bg: c.bg,
+      };
+    });
+  }
+
+  /**
+   * Balkenlänge = realisierte Provision je Kanal. Solange nirgends eine Provision gepflegt ist,
+   * wären alle Balken null — dann skaliert die Grafik auf die Zahl der Abschlüsse und sagt das
+   * im Hinweis darüber auch, statt eine leere Karte zu zeigen.
+   */
+  private buildLeadSources(rows: LeadSourcePerformance[]): void {
+    const list = rows ?? [];
+    this.hasLeadSourceData = list.some(r => r.source !== null);
+    if (!this.hasLeadSourceData) { this.leadSourceBars = []; return; }
+
+    const maxCommission = Math.max(0, ...list.map(r => r.wonCommission ?? 0));
+    this.leadSourceScale = maxCommission > 0 ? 'commission' : 'deals';
+    const max = this.leadSourceScale === 'commission'
+      ? maxCommission
+      : Math.max(0, ...list.map(r => r.wonClients ?? 0));
+
+    this.leadSourceBars = list.map(r => {
+      const value = this.leadSourceScale === 'commission' ? (r.wonCommission ?? 0) : (r.wonClients ?? 0);
+      return {
+        source: r.source,
+        clients: r.totalClients,
+        won: r.wonClients,
+        winRate: r.winRate,
+        commissionLabel: this.money(r.wonCommission),
+        widthPct: max > 0 ? (value / max) * 100 : 0,
       };
     });
   }

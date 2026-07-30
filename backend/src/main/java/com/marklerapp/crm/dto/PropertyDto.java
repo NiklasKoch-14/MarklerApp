@@ -199,15 +199,17 @@ public class PropertyDto {
 
     private LocalDate availableFrom;
 
-    @Size(max = 100, message = "Owner name must not exceed 100 characters")
-    private String ownerName;
+    /**
+     * ID des verknuepften Eigentuemers (Client, i.d.R. {@code SELLER}) -- Issue #37.
+     * Ersetzt die frueheren Freitextfelder ownerName/ownerPhone/ownerEmail.
+     */
+    private UUID ownerClientId;
 
-    @Pattern(regexp = "^[+]?[0-9\\s\\-()]*$", message = "Phone number format is invalid")
-    @Size(max = 20, message = "Owner phone must not exceed 20 characters")
-    private String ownerPhone;
-
-    @Email(message = "Owner email should be valid")
-    private String ownerEmail;
+    /**
+     * Aufgeloester Eigentuemer fuer die Anzeige (read-only). Beim Schreiben zaehlt
+     * ausschliesslich {@code ownerClientId}.
+     */
+    private PropertyOwnerDto owner;
 
     @Pattern(regexp = "^[+]?[0-9\\s\\-()]*$", message = "Phone number format is invalid")
     @Size(max = 20, message = "Contact phone must not exceed 20 characters")

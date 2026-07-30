@@ -47,6 +47,36 @@ public interface PropertyRepository extends JpaRepository<Property, UUID> {
     Page<Property> findByAgentId(@Param("agentId") UUID agentId, Pageable pageable);
 
     /**
+     * Global search (PostgreSQL): IDs of matching properties, best match first.
+     * The agent filter is part of the WHERE clause and must never be dropped —
+     * the global search must never be able to surface another agent's properties.
+     */
+    @Query(value = "SELECT p.id FROM properties p "
+            + "WHERE p.agent_id = :agentId "
+            + "  AND p.search_vector @@ to_tsquery('german', CAST(:tsQuery AS text)) "
+            + "ORDER BY ts_rank(p.search_vector, to_tsquery('german', CAST(:tsQuery AS text))) DESC, "
+            + "         p.title ASC "
+            + "LIMIT :maxResults", nativeQuery = true)
+    List<UUID> searchIdsFullText(@Param("agentId") UUID agentId,
+                                 @Param("tsQuery") String tsQuery,
+                                 @Param("maxResults") int maxResults);
+
+    /**
+     * Global search fallback for databases without full-text search (SQLite in dev).
+     * The pattern must already be lower-cased and wrapped in %…%.
+     */
+    @Query("SELECT p.id FROM Property p WHERE p.agent.id = :agentId AND ("
+            + "LOWER(p.title) LIKE :pattern OR "
+            + "LOWER(COALESCE(p.addressStreet, '')) LIKE :pattern OR "
+            + "LOWER(COALESCE(p.addressCity, '')) LIKE :pattern OR "
+            + "LOWER(COALESCE(p.addressPostalCode, '')) LIKE :pattern OR "
+            + "LOWER(COALESCE(p.addressDistrict, '')) LIKE :pattern) "
+            + "ORDER BY p.title ASC")
+    List<UUID> searchIdsByPattern(@Param("agentId") UUID agentId,
+                                  @Param("pattern") String pattern,
+                                  Pageable pageable);
+
+    /**
      * Find properties by agent and status
      */
     @Query("SELECT p FROM Property p " +
@@ -207,6 +237,23 @@ public interface PropertyRepository extends JpaRepository<Property, UUID> {
      */
     @Query("SELECT DISTINCT p FROM Property p LEFT JOIN FETCH p.images WHERE p.agent = :agent")
     List<Property> findByAgentWithImages(@Param("agent") Agent agent);
+
+    /**
+     * Objekte eines Eigentuemers (Issue #37). Der Agent-Filter ist keine Redundanz:
+     * er haelt die Abfrage auch dann mandantensicher, wenn eine fremde Client-ID
+     * hereingereicht wird.
+     */
+    @Query("SELECT p FROM Property p " +
+           "JOIN FETCH p.owner o " +
+           "WHERE p.agent = :agent AND o.id = :ownerId " +
+           "ORDER BY p.createdAt DESC")
+    List<Property> findByAgentAndOwnerId(@Param("agent") Agent agent, @Param("ownerId") UUID ownerId);
+
+    /**
+     * Alle Objekte, die auf einen bestimmten Kunden als Eigentuemer zeigen. Wird vor dem
+     * Loeschen eines Kunden gebraucht, um die Verknuepfung sauber aufzuloesen.
+     */
+    List<Property> findByOwner(Client owner);
 
     /**
      * Find recently added properties

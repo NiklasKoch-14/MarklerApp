@@ -3,9 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { ClientService, Client, PipelineStage, ClientType } from '../../services/client.service';
+import { ClientService, Client, PipelineStage, ClientType, LeadSource } from '../../services/client.service';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { EnumTranslationService } from '../../../../shared/services/enum-translation.service';
+import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 
 type SortKey = 'name' | 'stage' | 'lastContact';
 type SortDir = 'asc' | 'desc';
@@ -13,7 +14,7 @@ type SortDir = 'asc' | 'desc';
 @Component({
   selector: 'app-client-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, LoadingSpinnerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, LoadingSpinnerComponent, TranslateEnumPipe],
   styles: [`
     .toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:16px; }
     .search-box { position:relative; flex:1; min-width:220px; max-width:340px; }
@@ -121,6 +122,13 @@ type SortDir = 'asc' | 'desc';
           <select class="type-select" [(ngModel)]="typeFilter" (ngModelChange)="applyView()">
             <option value="ALL">{{ 'clients.allTypes' | translate }}</option>
             <option *ngFor="let t of typeOptions" [value]="t.value">{{ t.labelKey | translate }}</option>
+          </select>
+
+          <select class="type-select" [(ngModel)]="leadSourceFilter" (ngModelChange)="applyView()"
+                  [title]="'clients.leadSourceFilterHint' | translate">
+            <option value="ALL">{{ 'clients.allLeadSources' | translate }}</option>
+            <option *ngFor="let s of leadSourceOptions" [value]="s">{{ s | translateEnum:'leadSource' }}</option>
+            <option value="NONE">{{ 'clients.leadSourceNone' | translate }}</option>
           </select>
 
           <select class="type-select" [(ngModel)]="consentFilter" (ngModelChange)="applyView()"
@@ -254,6 +262,7 @@ export class ClientListComponent implements OnInit {
   searchTerm = '';
   stageFilter: PipelineStage | 'ALL' = 'ALL';
   typeFilter: ClientType | 'ALL' = 'ALL';
+  leadSourceFilter: LeadSource | 'ALL' | 'NONE' = 'ALL';
   consentFilter: 'ALL' | 'GIVEN' | 'MISSING' = 'ALL';
   incompleteOnly = false;
   sortKey: SortKey = 'lastContact';
@@ -266,6 +275,8 @@ export class ClientListComponent implements OnInit {
     { value: PipelineStage.WON,           labelKey: 'clients.stage.WON' },
     { value: PipelineStage.LOST,          labelKey: 'clients.stage.LOST' },
   ];
+
+  readonly leadSourceOptions = Object.values(LeadSource);
 
   readonly typeOptions = [
     { value: ClientType.BUYER,  labelKey: 'clients.type.BUYER' },
@@ -311,6 +322,8 @@ export class ClientListComponent implements OnInit {
     let list = this.allClients.filter(c => {
       if (this.stageFilter !== 'ALL' && c.pipelineStage !== this.stageFilter) return false;
       if (this.typeFilter !== 'ALL' && c.clientType !== this.typeFilter) return false;
+      if (this.leadSourceFilter === 'NONE' && c.leadSource) return false;
+      if (this.leadSourceFilter !== 'ALL' && this.leadSourceFilter !== 'NONE' && c.leadSource !== this.leadSourceFilter) return false;
       if (this.consentFilter === 'GIVEN' && !c.gdprConsentGiven) return false;
       if (this.consentFilter === 'MISSING' && c.gdprConsentGiven) return false;
       if (this.incompleteOnly && !this.isIncomplete(c)) return false;
@@ -363,6 +376,7 @@ export class ClientListComponent implements OnInit {
     this.searchTerm = '';
     this.stageFilter = 'ALL';
     this.typeFilter = 'ALL';
+    this.leadSourceFilter = 'ALL';
     this.consentFilter = 'ALL';
     this.incompleteOnly = false;
     this.applyView();

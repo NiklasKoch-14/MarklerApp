@@ -146,6 +146,7 @@
     "dashboard": "Dashboard",
     "clients": "Kunden",
     "properties": "Immobilien",
+    "viewings": "Besichtigungen",
     "settings": "Einstellungen",
     "profile": "Profil",
     "help": "Hilfe",
@@ -171,6 +172,7 @@
     "propertySearch": "Immobiliensuche",
     "propertyDetail": "Objektdetails",
     "propertyEdit": "Immobilie bearbeiten",
+    "viewings": "Besichtigungen",
     "login": "Anmelden",
     "register": "Registrieren",
     "forgotPassword": "Passwort vergessen",
@@ -222,7 +224,13 @@
     "mapLegendProperties": "Immobilien ({{count}})",
     "mapLegendClients": "Suchstandorte der Kunden ({{count}})",
     "mapClickHint": "Klick auf einen Pin öffnet den Datensatz.",
-    "mapEmpty": "Für keine Immobilie und keinen Kunden liegen bisher Koordinaten vor."
+    "mapEmpty": "Für keine Immobilie und keinen Kunden liegen bisher Koordinaten vor.",
+    "leadSourceTitle": "Woher die Abschlüsse kommen",
+    "leadSourceSub": "Realisierte Provision je Akquisekanal. Gezählt werden Kunden in der Phase „Gewonnen“ mit ihrer gepflegten Provision.",
+    "leadSourceUnknown": "Ohne Angabe",
+    "leadSourceMeta": "{{won}} von {{clients}} Kunden gewonnen · {{rate}} % Quote",
+    "leadSourceEmpty": "Bei keinem Kunden ist bisher eine Quelle hinterlegt. Trag sie im Kundenformular ein — dann steht hier, welcher Kanal sich rechnet.",
+    "leadSourceNoCommission": "Noch keine Provision bei gewonnenen Kunden gepflegt — die Balken zeigen solange die Zahl der Abschlüsse."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -321,6 +329,8 @@
     "searchPlaceholder": "Name, E-Mail, Telefon, Ort …",
     "allStages": "Alle Phasen",
     "allTypes": "Alle Typen",
+    "allLeadSources": "Alle Quellen",
+    "leadSourceFilterHint": "Nach Akquisekanal filtern — z.B. um alle Empfehlungen zu sehen oder Kunden ohne Angabe nachzupflegen.",
     "marketingConsentFilterHint": "Nach Marketing-Einwilligung filtern — relevant z.B. vor einem Newsletter-Versand.",
     "marketingConsentFilter": {
       "ALL": "Marketing: Alle",
@@ -498,7 +508,13 @@
     },
     "expectedCommission": "Geschätzte Provision",
     "expectedCommissionPlaceholder": "z. B. 8500",
-    "expectedCommissionHint": "Fließt in die Pipeline-Summe pro Spalte ein. Schon ab Interessent pflegbar."
+    "expectedCommissionHint": "Fließt in die Pipeline-Summe pro Spalte ein. Schon ab Interessent pflegbar.",
+    "leadSource": "Woher kam der Kontakt",
+    "leadSourceNone": "Ohne Angabe",
+    "leadSourceHint": "Optional. Zeigt in der Auswertung, welcher Kanal tatsächlich Abschlüsse bringt.",
+    "ownedProperties": {
+      "title": "Eigene Objekte"
+    }
   },
   "properties": {
     "title": "Immobilien",
@@ -608,10 +624,7 @@
       "energyConsumption": "Energieverbrauch (kWh/m²a)",
       "heatingType": "Heizungstyp",
       "ownerSection": "Eigentümer",
-      "ownerSectionHint": "Interne Daten — nicht im Exposé sichtbar",
-      "ownerName": "Eigentümer Name",
-      "ownerPhone": "Eigentümer Telefon",
-      "ownerEmail": "Eigentümer E-Mail",
+      "ownerSectionHint": "Verknüpfter Kunde — intern, nicht im Exposé sichtbar",
       "contactPhone": "Kontakt Telefon",
       "contactEmail": "Kontakt E-Mail",
       "virtualTour": "Virtueller Rundgang URL",
@@ -938,10 +951,81 @@
       "legendCurrent": "Dieses Objekt",
       "legendProperties": "Weitere Objekte",
       "legendClients": "Suchstandorte der Kunden"
+    },
+    "owner": {
+      "title": "Eigentümer",
+      "internal": "intern",
+      "openClient": "Zur Kundenakte",
+      "searchPlaceholder": "Kunde suchen (Name, E-Mail) …",
+      "noResults": "Kein passender Kunde gefunden",
+      "noContactData": "Keine Kontaktdaten hinterlegt",
+      "sellerBadge": "Verkäufer",
+      "change": "Ändern",
+      "remove": "Entfernen",
+      "createNew": "Neu anlegen",
+      "createTitle": "Eigentümer als neuen Kunden anlegen",
+      "createConfirm": "Anlegen und verknüpfen",
+      "useExisting": "diesen verwenden",
+      "legalBasisHint": "Wird als Verkäufer mit Rechtsgrundlage „Vertragsanbahnung“ angelegt — eine Einwilligung ist dafür nicht nötig."
     }
   },
   "viewings": {
-    "save": "Besichtigung speichern"
+    "save": "Besichtigung speichern",
+    "title": "Besichtigungen",
+    "listDescription": "Alle Termine auf einen Blick — heute, diese Woche und was noch offen ist",
+    "viewAgenda": "Agenda",
+    "viewWeek": "Woche",
+    "allStatuses": "Alle",
+    "rangeFilter": "Zeitraum",
+    "resultCount": "{{count}} Termine",
+    "previousWeek": "Vorherige Woche",
+    "nextWeek": "Nächste Woche",
+    "currentWeek": "Diese Woche",
+    "noViewingsThisDay": "Frei",
+    "noViewings": "Keine Besichtigungen",
+    "noViewingsHint": "Für den gewählten Zeitraum ist kein Termin eingetragen. Besichtigungen werden beim Kunden oder beim Objekt angelegt.",
+    "goToClients": "Zu den Kunden",
+    "openFeedbackTitle": "Feedback offen",
+    "openFeedbackHint": "Diese Termine liegen zurück, ohne dass ein Ergebnis festgehalten wurde.",
+    "range": {
+      "UPCOMING": "Kommende",
+      "WEEK": "Diese Woche",
+      "MONTH": "Nächste 30 Tage",
+      "PAST": "Vergangene",
+      "ALL": "Alle"
+    },
+    "group": {
+      "past": "Vergangen",
+      "today": "Heute",
+      "tomorrow": "Morgen",
+      "thisWeek": "Diese Woche",
+      "later": "Später"
+    },
+    "actions": {
+      "reschedule": "Verschieben",
+      "cancelViewing": "Absagen",
+      "complete": "Als erledigt markieren",
+      "addFeedback": "Feedback nachtragen"
+    },
+    "reschedule": {
+      "title": "Termin verschieben",
+      "dateLabel": "Neuer Termin",
+      "confirm": "Verschieben"
+    },
+    "complete": {
+      "title": "Besichtigung abschließen",
+      "feedbackLabel": "Kundenfeedback",
+      "notesLabel": "Notiz",
+      "notesPlaceholder": "Wie lief die Besichtigung?",
+      "followUpLabel": "Nächster Schritt",
+      "followUpPlaceholder": "z. B. Zweitbesichtigung anbieten",
+      "confirm": "Als erledigt speichern"
+    },
+    "cancelDialog": {
+      "title": "Besichtigung absagen",
+      "message": "Der Termin mit {{name}} am {{date}} wird als abgesagt markiert.",
+      "confirm": "Absagen"
+    }
   },
   "call-notes": {
     "title": "Gesprächsnotizen",
@@ -1053,6 +1137,24 @@
       "completeFollowUp": "Follow-up erledigt · Notiz speichern"
     }
   },
+  "globalSearch": {
+    "title": "Globale Suche",
+    "open": "Globale Suche öffnen",
+    "trigger": "Suchen",
+    "shortcutCtrl": "Strg K",
+    "shortcutMac": "⌘ K",
+    "inputLabel": "Nach Kunden, Immobilien und Gesprächsnotizen suchen",
+    "placeholder": "Kunde, Immobilie, Notiz …",
+    "resultsLabel": "Suchergebnisse",
+    "minLength": "Mindestens {{count}} Zeichen eingeben",
+    "searching": "Wird gesucht …",
+    "failed": "Die Suche ist fehlgeschlagen. Bitte erneut versuchen.",
+    "noResults": "Keine Treffer für „{{term}}“",
+    "resultCount": "{{count}} Treffer",
+    "keyNavigate": "Navigieren",
+    "keyOpen": "Öffnen",
+    "keyClose": "Schließen"
+  },
   "search": {
     "criteria": "Suchkriterien",
     "minSize": "Mindestgröße",
@@ -1137,7 +1239,6 @@
         "fileNameRequired": "Dateiname ist erforderlich.",
         "phoneInvalid": "Telefonnummer hat ein ungültiges Format.",
         "emailInvalid": "Bitte eine gültige E-Mail-Adresse eingeben.",
-        "ownerEmailInvalid": "E-Mail des Eigentümers ist ungültig.",
         "contactEmailInvalid": "Kontakt-E-Mail ist ungültig.",
         "postalCode5Digits": "Postleitzahl muss aus 5 Ziffern bestehen.",
         "postalCode5DigitsOrEmpty": "Postleitzahl muss aus 5 Ziffern bestehen oder leer bleiben.",
@@ -1156,8 +1257,6 @@
         "districtMaxLength": "Stadtteil darf höchstens 100 Zeichen lang sein.",
         "countryMaxLength": "Land darf höchstens 100 Zeichen lang sein.",
         "phoneMaxLength": "Telefonnummer darf höchstens 20 Zeichen lang sein.",
-        "ownerNameMaxLength": "Name des Eigentümers darf höchstens 100 Zeichen lang sein.",
-        "ownerPhoneMaxLength": "Telefonnummer des Eigentümers darf höchstens 20 Zeichen lang sein.",
         "contactPhoneMaxLength": "Kontakt-Telefonnummer darf höchstens 20 Zeichen lang sein.",
         "virtualTourMaxLength": "URL des virtuellen Rundgangs darf höchstens 500 Zeichen lang sein.",
         "notesMaxLength5000": "Notiz darf höchstens 5000 Zeichen lang sein.",
@@ -1320,6 +1419,16 @@
       "CONTRACT_INITIATION": "Vertragsanbahnung",
       "LEGITIMATE_INTEREST": "Berechtigtes Interesse"
     },
+    "leadSource": {
+      "REFERRAL": "Empfehlung",
+      "PORTAL": "Immobilienportal",
+      "WEBSITE": "Eigene Website",
+      "WALK_IN": "Laufkundschaft",
+      "SOCIAL_MEDIA": "Social Media",
+      "SIGNAGE": "Verkaufsschild",
+      "COLD_OUTREACH": "Kaltakquise",
+      "OTHER": "Sonstiges"
+    },
     "preferredContactMethod": {
       "EMAIL": "E-Mail",
       "PHONE": "Telefon",
@@ -1340,6 +1449,16 @@
       "SCHEDULED_VIEWING": "Besichtigung vereinbart",
       "OFFER_MADE": "Angebot gemacht",
       "DEAL_CLOSED": "Geschäft abgeschlossen"
+    },
+    "viewingStatus": {
+      "SCHEDULED": "Geplant",
+      "COMPLETED": "Erledigt",
+      "CANCELLED": "Abgesagt"
+    },
+    "viewingFeedback": {
+      "LIKED": "Gefällt",
+      "NEUTRAL": "Neutral",
+      "DISLIKED": "Gefällt nicht"
     },
     "priority": {
       "LOW": "Niedrig",
@@ -1372,6 +1491,11 @@
       "FINANCIAL": "Finanzdokument",
       "INSPECTION_REPORT": "Gutachten",
       "OTHER": "Sonstiges"
+    },
+    "searchResultType": {
+      "CLIENT": "Kunden",
+      "PROPERTY": "Immobilien",
+      "NOTE": "Gesprächsnotizen"
     }
   },
   "attachments": {

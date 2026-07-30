@@ -15,7 +15,7 @@ import { PropertyMatchResult, MatchWeights } from '../../../property-management/
 import { MatchScorePopoverComponent } from '../../../property-management/components/match-breakdown/match-score-popover.component';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 import { LocationPickerMapComponent, SecondaryMarker } from '../../../../shared/components/location-picker-map/location-picker-map.component';
-import { PropertyService } from '../../../property-management/services/property.service';
+import { Property, PropertyService } from '../../../property-management/services/property.service';
 import { filterWithinRadius } from '../../../../shared/utils/geo.util';
 import { GeocodingService } from '../../../../shared/services/geocoding.service';
 import { GdprExportService } from '../../services/gdpr-export.service';
@@ -40,6 +40,9 @@ import { GdprExportService } from '../../services/gdpr-export.service';
     @keyframes recPulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.35; transform:scale(.8); } }
     .tl-row { display:flex; align-items:flex-start; gap:12px; padding:14px 0; border-bottom:1px solid var(--border); }
     .tl-row:last-child { border-bottom:none; }
+    /* Ziel eines Notiz-Treffers aus der globalen Suche: kurz hervorheben, dann verblassen. */
+    .tl-row--highlight { background:var(--accent-soft); border-radius:10px; padding-left:10px; padding-right:10px; animation:noteHighlight 2.4s ease forwards; }
+    @keyframes noteHighlight { 0%,55% { background:var(--accent-soft); } 100% { background:transparent; } }
     .match-link:hover { background:var(--surface) !important; }
   `],
   template: `
@@ -113,6 +116,12 @@ import { GdprExportService } from '../../services/gdpr-export.service';
                 </span>
                 <span *ngIf="!callNotesSummary?.lastCallDate"
                       style="font-size:12px;color:var(--text-3);">Noch kein Kontakt</span>
+                <span *ngIf="client.leadSource"
+                      [title]="'clients.leadSource' | translate"
+                      style="font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:4px;">
+                  <i class="ri-inbox-archive-line" style="font-size:12px;"></i>
+                  {{ client.leadSource | translateEnum:'leadSource' }}
+                </span>
               </div>
             </div>
 
@@ -423,7 +432,11 @@ import { GdprExportService } from '../../services/gdpr-export.service';
               </div>
               <app-loading-spinner *ngIf="isLoadingCallNotes && !callNotesSummary" size="sm"></app-loading-spinner>
               <div *ngIf="recentCallNotes.length > 0">
-                <div *ngFor="let note of recentCallNotes" class="tl-row">
+                <div *ngFor="let note of recentCallNotes"
+                     class="tl-row"
+                     [id]="'note-' + note.id"
+                     [attr.tabindex]="note.id === highlightedNoteId ? -1 : null"
+                     [class.tl-row--highlight]="note.id === highlightedNoteId">
                   <!-- Icon -->
                   <div style="width:36px;height:36px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">
                     <i [class]="getCallTypeIcon(note.callType)" style="font-size:15px;color:var(--text-3);"></i>
@@ -567,6 +580,32 @@ import { GdprExportService } from '../../services/gdpr-export.service';
                 <i class="ri-map-pin-2-fill" style="color:#2563eb;"></i>
                 {{ 'location.propertiesInRadius' | translate:{ count: radiusPropertyMarkers.length } }}
               </p>
+            </div>
+
+            <!-- Eigene Objekte (#37) -->
+            <div *ngIf="ownedProperties.length > 0"
+                 style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                <i class="ri-home-4-line" style="font-size:15px;color:var(--primary);"></i>
+                <span style="font-size:15px;font-weight:700;color:var(--text);flex:1;">{{ 'clients.ownedProperties.title' | translate }}</span>
+                <span style="font-size:12px;font-weight:700;color:var(--primary);background:var(--accent-soft);padding:2px 8px;border-radius:10px;">
+                  {{ ownedProperties.length }}
+                </span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <a *ngFor="let p of ownedProperties"
+                   [routerLink]="['/properties', p.id]"
+                   class="match-link"
+                   style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);text-decoration:none;">
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ p.title }}</div>
+                    <div style="font-size:11px;color:var(--text-3);">
+                      {{ p.addressCity }}<ng-container *ngIf="p.status"> · {{ p.status | translateEnum:'propertyStatus' }}</ng-container>
+                    </div>
+                  </div>
+                  <i class="ri-arrow-right-line" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
+                </a>
+              </div>
             </div>
 
             <!-- Passende Objekte -->
@@ -769,6 +808,8 @@ export class ClientDetailComponent implements OnInit {
   recentCallNotes: CallNoteSummary[] = [];
   callNotesSummary: BulkSummary | null = null;
   isLoadingCallNotes = false;
+  /** Aus ?note= der globalen Suche: diese Notiz wird angesprungen und kurz hervorgehoben. */
+  highlightedNoteId: string | null = null;
 
   viewings: ViewingSummary[] = [];
   isLoadingViewings = false;
@@ -777,6 +818,9 @@ export class ClientDetailComponent implements OnInit {
   matchingProperties: PropertyMatchResult[] = [];
   /** Gewichte, mit denen der Backend-Score tatsaechlich gerechnet wurde */
   matchingPropertyWeights?: MatchWeights;
+  /** Objekte, bei denen dieser Kunde als Eigentuemer verknuepft ist (#37). */
+  ownedProperties: Property[] = [];
+  isLoadingOwnedProperties = false;
   searchLocationLabel: string | null = null;
   isLoadingMatches = false;
   radiusPropertyMarkers: SecondaryMarker[] = [];
@@ -812,6 +856,9 @@ export class ClientDetailComponent implements OnInit {
 
   ngOnInit(): void {
     const clientId = this.route.snapshot.paramMap.get('id');
+    // ?note=<id> kommt aus der globalen Suche: der Treffer ist die Notiz, das Ziel
+    // aber die Kundenseite — also dorthin scrollen statt den Makler suchen zu lassen.
+    this.highlightedNoteId = this.route.snapshot.queryParamMap.get('note');
     if (clientId) {
       this.loadClient(clientId);
       this.loadCallNotes(clientId);
@@ -827,6 +874,9 @@ export class ClientDetailComponent implements OnInit {
         this.isLoading = false;
         if (client.searchCriteria && client.id) {
           this.loadMatchingProperties(client.id);
+        }
+        if (client.id) {
+          this.loadOwnedProperties(client.id);
         }
         if (client.searchCriteria?.latitude != null && client.searchCriteria?.longitude != null) {
           this.loadSearchLocationLabel(client.searchCriteria.latitude, client.searchCriteria.longitude);
@@ -845,10 +895,15 @@ export class ClientDetailComponent implements OnInit {
 
   private loadCallNotes(clientId: string): void {
     this.isLoadingCallNotes = true;
-    this.callNotesService.getCallNotesByClient(clientId, 0, 5).subscribe({
+    // Kommt der Aufruf aus der globalen Suche, kann die gesuchte Notiz aelter als die
+    // letzten fuenf sein — dann wird ein groesseres Fenster geladen, sonst bleibt es
+    // bei der schlanken Standardansicht.
+    const pageSize = this.highlightedNoteId ? 50 : 5;
+    this.callNotesService.getCallNotesByClient(clientId, 0, pageSize).subscribe({
       next: (response: PagedResponse<CallNoteSummary>) => {
         this.recentCallNotes = response.content;
         this.isLoadingCallNotes = false;
+        this.scrollToHighlightedNote();
       },
       error: () => {
         this.isLoadingCallNotes = false;
@@ -859,6 +914,26 @@ export class ClientDetailComponent implements OnInit {
         this.callNotesSummary = summary;
       },
       error: () => {}
+    });
+  }
+
+  /**
+   * Springt zur per ?note= verlinkten Notiz. Der Fokus wandert mit — sonst waere der
+   * Sprung fuer Screenreader- und Tastaturnutzer unsichtbar und der naechste Tab
+   * landete wieder oben auf der Seite.
+   */
+  private scrollToHighlightedNote(): void {
+    if (!this.highlightedNoteId) {
+      return;
+    }
+    const noteId = this.highlightedNoteId;
+    setTimeout(() => {
+      const element = document.getElementById(`note-${noteId}`);
+      if (!element) {
+        return;
+      }
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      element.focus({ preventScroll: true });
     });
   }
 
@@ -897,6 +972,24 @@ export class ClientDetailComponent implements OnInit {
       error: () => {
         // Karte funktioniert ohne Immobilien-Pins weiter — Fehler hier nicht blockierend.
         this.radiusPropertyMarkers = [];
+      }
+    });
+  }
+
+  /**
+   * Objekte, die diesem Kunden als Eigentuemer zugeordnet sind (#37). Bewusst nur die
+   * Liste -- der Ausbau zur Auftrags-Karte ist ein eigenes Thema.
+   */
+  private loadOwnedProperties(clientId: string): void {
+    this.isLoadingOwnedProperties = true;
+    this.propertyService.getPropertiesByOwner(clientId).subscribe({
+      next: properties => {
+        this.ownedProperties = properties;
+        this.isLoadingOwnedProperties = false;
+      },
+      error: () => {
+        this.ownedProperties = [];
+        this.isLoadingOwnedProperties = false;
       }
     });
   }

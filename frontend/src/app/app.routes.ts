@@ -61,6 +61,10 @@ export const routes: Routes = [
         loadChildren: () => import('./features/property-management/property-management.routes').then(r => r.propertyRoutes)
       },
       {
+        path: 'viewings',
+        loadChildren: () => import('./features/viewing-management/viewing-management.routes').then(r => r.viewingRoutes)
+      },
+      {
         path: 'settings',
         loadComponent: () => import('./features/settings/settings.component').then(c => c.SettingsComponent),
         title: 'pageTitles.settings'

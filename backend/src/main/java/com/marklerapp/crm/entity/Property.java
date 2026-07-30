@@ -227,18 +227,29 @@ public class Property extends BaseEntity {
     @Column(name = "available_from")
     private LocalDate availableFrom;
 
-    @Column(name = "owner_name")
-    @Size(max = 100, message = "Owner name must not exceed 100 characters")
-    private String ownerName;
+    // Eigentuemer als echter Kontakt (Issue #37). Nullable: nicht jedes Objekt hat einen
+    // erfassten Eigentuemer, und der Backfill in V32 kann nur Objekte mit owner_name
+    // verknuepfen. Der Client gehoert per Invariante demselben Agent wie das Objekt --
+    // durchgesetzt in OwnershipValidator.validateOwnerAssignment.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_client_id")
+    private Client owner;
 
-    @Column(name = "owner_phone")
-    @Pattern(regexp = "^[+]?[0-9\\s\\-()]*$", message = "Phone number format is invalid")
-    @Size(max = 20, message = "Owner phone must not exceed 20 characters")
-    private String ownerPhone;
+    // Abgeloest durch {@link #owner} (Issue #37). Bleibt als Sicherheitsnetz fuer den
+    // V32-Backfill lesbar erhalten, wird von der Anwendung aber nicht mehr geschrieben
+    // und nicht mehr ausgeliefert -- die Freitextfelder hatten weder DSGVO-Export noch
+    // Loeschprotokoll noch Gespraechshistorie.
+    // Ohne Bean-Validation: die Werte stammen aus Altbestand und sind nicht mehr
+    // beschreibbar. Eine Format-Regel darauf koennte nur noch eine unbeteiligte
+    // Aenderung am Objekt blockieren.
+    @Column(name = "owner_name", insertable = false, updatable = false)
+    private String legacyOwnerName;
 
-    @Column(name = "owner_email")
-    @Email(message = "Owner email should be valid")
-    private String ownerEmail;
+    @Column(name = "owner_phone", insertable = false, updatable = false)
+    private String legacyOwnerPhone;
+
+    @Column(name = "owner_email", insertable = false, updatable = false)
+    private String legacyOwnerEmail;
 
     @Column(name = "contact_phone")
     @Pattern(regexp = "^[+]?[0-9\\s\\-()]*$", message = "Phone number format is invalid")

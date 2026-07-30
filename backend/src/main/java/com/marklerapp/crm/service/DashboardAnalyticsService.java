@@ -71,6 +71,7 @@ public class DashboardAnalyticsService {
                 .propertyPortfolio(calculatePropertyPortfolio(properties))
                 .activityTrends(calculateActivityTrends(clients, callNotes, properties))
                 .revenue(calculateRevenue(properties))
+                .leadSourcePerformance(calculateLeadSourcePerformance(clients))
                 .build();
     }
 
@@ -318,6 +319,72 @@ public class DashboardAnalyticsService {
                 .dealsClosedYtd(dealsClosedYtd)
                 .avgCommissionPerDeal(avgCommission)
                 .build();
+    }
+
+    // ========================================
+    // Akquisekanäle (Issue #41)
+    // ========================================
+
+    /** Platzhalter-Schlüssel für Kunden ohne erfasste Quelle — groupingBy verträgt keine null-Keys. */
+    private static final String LEAD_SOURCE_UNASSIGNED = "";
+
+    /**
+     * Abschlüsse und Provision je Akquisekanal.
+     *
+     * <p>Bezugsgröße ist bewusst der Kunde, nicht das Objekt: die Quelle hängt am Lead, und
+     * nur so lässt sich "welcher Kanal bringt Abschlüsse" überhaupt beantworten. Als Abschluss
+     * zählt die Pipeline-Phase WON, als Provision der am Kunden gepflegte Wert (V30).</p>
+     *
+     * <p>Kunden ohne Quelle bleiben als eigene Zeile erhalten (source == null) und stehen immer
+     * am Ende — sonst würden Bestandsdaten die eigentlichen Kanäle verdrängen und die Summen
+     * würden nicht mehr zur Kundenliste passen.</p>
+     */
+    private List<LeadSourcePerformanceDto> calculateLeadSourcePerformance(List<Client> allClients) {
+        Map<String, List<Client>> bySource = allClients.stream()
+                .collect(Collectors.groupingBy(
+                        c -> c.getLeadSource() != null ? c.getLeadSource().name() : LEAD_SOURCE_UNASSIGNED));
+
+        List<LeadSourcePerformanceDto> rows = new ArrayList<>();
+        for (Map.Entry<String, List<Client>> entry : bySource.entrySet()) {
+            List<Client> clients = entry.getValue();
+
+            List<Client> won = clients.stream()
+                    .filter(c -> c.getPipelineStage() == Client.PipelineStage.WON)
+                    .toList();
+
+            BigDecimal wonCommission = sumCommission(won);
+            BigDecimal openCommission = sumCommission(clients.stream()
+                    .filter(c -> c.getPipelineStage() != Client.PipelineStage.WON
+                            && c.getPipelineStage() != Client.PipelineStage.LOST)
+                    .toList());
+
+            double winRate = clients.isEmpty() ? 0.0 : (won.size() * 100.0 / clients.size());
+
+            rows.add(LeadSourcePerformanceDto.builder()
+                    .source(LEAD_SOURCE_UNASSIGNED.equals(entry.getKey()) ? null : entry.getKey())
+                    .totalClients((long) clients.size())
+                    .wonClients((long) won.size())
+                    .wonCommission(wonCommission)
+                    .openCommission(openCommission)
+                    .winRate(Math.round(winRate * ValidationConstants.PERCENTAGE_ROUNDING_PRECISION)
+                            / ValidationConstants.PERCENTAGE_ROUNDING_PRECISION)
+                    .build());
+        }
+
+        rows.sort(Comparator
+                .comparing((LeadSourcePerformanceDto r) -> r.getSource() == null)   // "ohne Angabe" ans Ende
+                .thenComparing(LeadSourcePerformanceDto::getWonCommission, Comparator.reverseOrder())
+                .thenComparing(LeadSourcePerformanceDto::getWonClients, Comparator.reverseOrder())
+                .thenComparing(LeadSourcePerformanceDto::getTotalClients, Comparator.reverseOrder()));
+
+        return rows;
+    }
+
+    private BigDecimal sumCommission(List<Client> clients) {
+        return clients.stream()
+                .map(Client::getExpectedCommission)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     // ========================================

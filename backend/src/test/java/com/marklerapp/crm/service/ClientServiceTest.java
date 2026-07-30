@@ -5,6 +5,7 @@ import com.marklerapp.crm.dto.ClientDto;
 import com.marklerapp.crm.dto.PropertySearchCriteriaDto;
 import com.marklerapp.crm.entity.Agent;
 import com.marklerapp.crm.entity.Client;
+import com.marklerapp.crm.entity.Property;
 import com.marklerapp.crm.entity.PropertySearchCriteria;
 import com.marklerapp.crm.mapper.ClientMapper;
 import com.marklerapp.crm.mapper.PropertySearchCriteriaMapper;
@@ -12,6 +13,7 @@ import com.marklerapp.crm.repository.AgentRepository;
 import com.marklerapp.crm.repository.CallNoteRepository;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.FileAttachmentRepository;
+import com.marklerapp.crm.repository.PropertyRepository;
 import com.marklerapp.crm.repository.PropertySearchCriteriaRepository;
 import com.marklerapp.crm.repository.ViewingRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,6 +73,9 @@ class ClientServiceTest {
     @Mock
     private ClientDeletionAuditService clientDeletionAuditService;
 
+    @Mock
+    private PropertyRepository propertyRepository;
+
     private OwnershipValidator ownershipValidator;
 
     private ClientService clientService;
@@ -98,7 +103,8 @@ class ClientServiceTest {
             ownershipValidator,
             viewingRepository,
             fileAttachmentRepository,
-            clientDeletionAuditService
+            clientDeletionAuditService,
+            propertyRepository
         );
 
         testAgent = Agent.builder()
@@ -568,6 +574,22 @@ class ClientServiceTest {
 
         // Then
         verify(clientRepository).findById(clientId);
+        verify(clientRepository).delete(testClient);
+    }
+
+    @Test
+    void deleteClient_ShouldUnlinkOwnedPropertiesButKeepThem() {
+        // Issue #37: das Loeschen eines Kunden ist ein DSGVO-Vorgang und darf weder an
+        // einer verknuepften Immobilie scheitern noch diese mitnehmen.
+        Property owned = Property.builder().agent(testAgent).owner(testClient).title("Objekt").build();
+        when(clientRepository.findById(clientId)).thenReturn(Optional.of(testClient));
+        when(propertyRepository.findByOwner(testClient)).thenReturn(List.of(owned));
+
+        clientService.deleteClient(clientId, agentId);
+
+        assertThat(owned.getOwner()).isNull();
+        verify(propertyRepository).saveAll(List.of(owned));
+        verify(propertyRepository, never()).delete(any());
         verify(clientRepository).delete(testClient);
     }
 

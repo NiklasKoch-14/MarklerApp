@@ -61,6 +61,36 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
                                          Pageable pageable);
 
     /**
+     * Global search (PostgreSQL): IDs of matching clients, best match first.
+     * The agent filter is part of the WHERE clause and must never be dropped —
+     * the global search must never be able to surface another agent's clients.
+     */
+    @Query(value = "SELECT c.id FROM clients c "
+            + "WHERE c.agent_id = :agentId "
+            + "  AND c.search_vector @@ to_tsquery('german', CAST(:tsQuery AS text)) "
+            + "ORDER BY ts_rank(c.search_vector, to_tsquery('german', CAST(:tsQuery AS text))) DESC, "
+            + "         c.last_name ASC "
+            + "LIMIT :maxResults", nativeQuery = true)
+    List<UUID> searchIdsFullText(@Param("agentId") UUID agentId,
+                                 @Param("tsQuery") String tsQuery,
+                                 @Param("maxResults") int maxResults);
+
+    /**
+     * Global search fallback for databases without full-text search (SQLite in dev).
+     * The pattern must already be lower-cased and wrapped in %…%.
+     */
+    @Query("SELECT c.id FROM Client c WHERE c.agent.id = :agentId AND ("
+            + "LOWER(c.firstName) LIKE :pattern OR "
+            + "LOWER(c.lastName) LIKE :pattern OR "
+            + "LOWER(CONCAT(c.firstName, ' ', c.lastName)) LIKE :pattern OR "
+            + "LOWER(COALESCE(c.email, '')) LIKE :pattern OR "
+            + "LOWER(COALESCE(c.phone, '')) LIKE :pattern) "
+            + "ORDER BY c.lastName ASC, c.firstName ASC")
+    List<UUID> searchIdsByPattern(@Param("agentId") UUID agentId,
+                                  @Param("pattern") String pattern,
+                                  Pageable pageable);
+
+    /**
      * Find client by email within agent's clients
      */
     Optional<Client> findByAgentAndEmail(Agent agent, String email);

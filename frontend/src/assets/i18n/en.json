@@ -146,6 +146,7 @@
     "dashboard": "Dashboard",
     "clients": "Clients",
     "properties": "Properties",
+    "viewings": "Viewings",
     "settings": "Settings",
     "profile": "Profile",
     "help": "Help",
@@ -171,6 +172,7 @@
     "propertySearch": "Property Search",
     "propertyDetail": "Property Details",
     "propertyEdit": "Edit Property",
+    "viewings": "Viewings",
     "login": "Sign In",
     "register": "Register",
     "forgotPassword": "Forgot Password",
@@ -222,7 +224,13 @@
     "mapLegendProperties": "Properties ({{count}})",
     "mapLegendClients": "Client search locations ({{count}})",
     "mapClickHint": "Click a pin to open the record.",
-    "mapEmpty": "No property or client has coordinates yet."
+    "mapEmpty": "No property or client has coordinates yet.",
+    "leadSourceTitle": "Where the deals come from",
+    "leadSourceSub": "Realised commission per acquisition channel. Counts clients in the \"Won\" stage with the commission recorded on them.",
+    "leadSourceUnknown": "Not specified",
+    "leadSourceMeta": "{{won}} of {{clients}} clients won · {{rate}} % rate",
+    "leadSourceEmpty": "No client has a source recorded yet. Add it in the client form — then this shows which channel pays off.",
+    "leadSourceNoCommission": "No commission recorded on won clients yet — bars show the number of deals until then."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -321,6 +329,8 @@
     "searchPlaceholder": "Name, email, phone, city …",
     "allStages": "All stages",
     "allTypes": "All types",
+    "allLeadSources": "All sources",
+    "leadSourceFilterHint": "Filter by acquisition channel — e.g. to review all referrals or to fill in clients without a source.",
     "marketingConsentFilterHint": "Filter by marketing consent — relevant e.g. before sending a newsletter.",
     "marketingConsentFilter": {
       "ALL": "Marketing: All",
@@ -498,7 +508,13 @@
     },
     "expectedCommission": "Estimated commission",
     "expectedCommissionPlaceholder": "e.g. 8500",
-    "expectedCommissionHint": "Feeds the pipeline total per column. Can be filled in from the prospect stage onwards."
+    "expectedCommissionHint": "Feeds the pipeline total per column. Can be filled in from the prospect stage onwards.",
+    "leadSource": "Where the contact came from",
+    "leadSourceNone": "Not specified",
+    "leadSourceHint": "Optional. Shows in analytics which channel actually produces deals.",
+    "ownedProperties": {
+      "title": "Own properties"
+    }
   },
   "properties": {
     "title": "Properties",
@@ -608,10 +624,7 @@
       "energyConsumption": "Energy Consumption (kWh/m²a)",
       "heatingType": "Heating Type",
       "ownerSection": "Owner",
-      "ownerSectionHint": "Internal data — not visible in the exposé",
-      "ownerName": "Owner Name",
-      "ownerPhone": "Owner Phone",
-      "ownerEmail": "Owner Email",
+      "ownerSectionHint": "Linked client — internal, not visible in the exposé",
       "contactPhone": "Contact Phone",
       "contactEmail": "Contact Email",
       "virtualTour": "Virtual Tour URL",
@@ -938,10 +951,81 @@
       "legendCurrent": "This property",
       "legendProperties": "Other properties",
       "legendClients": "Client search locations"
+    },
+    "owner": {
+      "title": "Owner",
+      "internal": "internal",
+      "openClient": "Open client record",
+      "searchPlaceholder": "Search client (name, email) …",
+      "noResults": "No matching client found",
+      "noContactData": "No contact details on file",
+      "sellerBadge": "Seller",
+      "change": "Change",
+      "remove": "Remove",
+      "createNew": "Create new",
+      "createTitle": "Create owner as a new client",
+      "createConfirm": "Create and link",
+      "useExisting": "use this one",
+      "legalBasisHint": "Created as a seller with legal basis “contract initiation” — no consent required for this."
     }
   },
   "viewings": {
-    "save": "Save viewing"
+    "save": "Save viewing",
+    "title": "Viewings",
+    "listDescription": "Every appointment at a glance — today, this week and what is still open",
+    "viewAgenda": "Agenda",
+    "viewWeek": "Week",
+    "allStatuses": "All",
+    "rangeFilter": "Time range",
+    "resultCount": "{{count}} appointments",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week",
+    "currentWeek": "This week",
+    "noViewingsThisDay": "Free",
+    "noViewings": "No viewings",
+    "noViewingsHint": "Nothing scheduled for the selected range. Viewings are created from a client or a property.",
+    "goToClients": "Go to clients",
+    "openFeedbackTitle": "Feedback pending",
+    "openFeedbackHint": "These appointments are in the past and no outcome was recorded.",
+    "range": {
+      "UPCOMING": "Upcoming",
+      "WEEK": "This week",
+      "MONTH": "Next 30 days",
+      "PAST": "Past",
+      "ALL": "All"
+    },
+    "group": {
+      "past": "Past",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "thisWeek": "This week",
+      "later": "Later"
+    },
+    "actions": {
+      "reschedule": "Reschedule",
+      "cancelViewing": "Cancel",
+      "complete": "Mark as done",
+      "addFeedback": "Add feedback"
+    },
+    "reschedule": {
+      "title": "Reschedule appointment",
+      "dateLabel": "New date and time",
+      "confirm": "Reschedule"
+    },
+    "complete": {
+      "title": "Complete viewing",
+      "feedbackLabel": "Client feedback",
+      "notesLabel": "Note",
+      "notesPlaceholder": "How did the viewing go?",
+      "followUpLabel": "Next step",
+      "followUpPlaceholder": "e.g. offer a second viewing",
+      "confirm": "Save as done"
+    },
+    "cancelDialog": {
+      "title": "Cancel viewing",
+      "message": "The appointment with {{name}} on {{date}} will be marked as cancelled.",
+      "confirm": "Cancel viewing"
+    }
   },
   "call-notes": {
     "title": "Call Notes",
@@ -1053,6 +1137,24 @@
       "completeFollowUp": "Complete follow-up · Save note"
     }
   },
+  "globalSearch": {
+    "title": "Global search",
+    "open": "Open global search",
+    "trigger": "Search",
+    "shortcutCtrl": "Ctrl K",
+    "shortcutMac": "⌘ K",
+    "inputLabel": "Search clients, properties and call notes",
+    "placeholder": "Client, property, note …",
+    "resultsLabel": "Search results",
+    "minLength": "Type at least {{count}} characters",
+    "searching": "Searching …",
+    "failed": "The search failed. Please try again.",
+    "noResults": "No matches for “{{term}}”",
+    "resultCount": "{{count}} results",
+    "keyNavigate": "Navigate",
+    "keyOpen": "Open",
+    "keyClose": "Close"
+  },
   "search": {
     "criteria": "Search Criteria",
     "minSize": "Minimum Size",
@@ -1137,7 +1239,6 @@
         "fileNameRequired": "File name is required.",
         "phoneInvalid": "Phone number format is invalid.",
         "emailInvalid": "Please enter a valid email address.",
-        "ownerEmailInvalid": "Owner email address is invalid.",
         "contactEmailInvalid": "Contact email address is invalid.",
         "postalCode5Digits": "Postal code must be 5 digits.",
         "postalCode5DigitsOrEmpty": "Postal code must be 5 digits or empty.",
@@ -1156,8 +1257,6 @@
         "districtMaxLength": "District must not exceed 100 characters.",
         "countryMaxLength": "Country must not exceed 100 characters.",
         "phoneMaxLength": "Phone number must not exceed 20 characters.",
-        "ownerNameMaxLength": "Owner name must not exceed 100 characters.",
-        "ownerPhoneMaxLength": "Owner phone must not exceed 20 characters.",
         "contactPhoneMaxLength": "Contact phone must not exceed 20 characters.",
         "virtualTourMaxLength": "Virtual tour URL must not exceed 500 characters.",
         "notesMaxLength5000": "Notes must not exceed 5000 characters.",
@@ -1320,6 +1419,16 @@
       "CONTRACT_INITIATION": "Contract Initiation",
       "LEGITIMATE_INTEREST": "Legitimate Interest"
     },
+    "leadSource": {
+      "REFERRAL": "Referral",
+      "PORTAL": "Property portal",
+      "WEBSITE": "Own website",
+      "WALK_IN": "Walk-in",
+      "SOCIAL_MEDIA": "Social media",
+      "SIGNAGE": "For-sale sign",
+      "COLD_OUTREACH": "Cold outreach",
+      "OTHER": "Other"
+    },
     "preferredContactMethod": {
       "EMAIL": "Email",
       "PHONE": "Phone",
@@ -1340,6 +1449,16 @@
       "SCHEDULED_VIEWING": "Viewing Scheduled",
       "OFFER_MADE": "Offer Made",
       "DEAL_CLOSED": "Deal Closed"
+    },
+    "viewingStatus": {
+      "SCHEDULED": "Scheduled",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
+    },
+    "viewingFeedback": {
+      "LIKED": "Liked",
+      "NEUTRAL": "Neutral",
+      "DISLIKED": "Disliked"
     },
     "priority": {
       "LOW": "Low",
@@ -1372,6 +1491,11 @@
       "FINANCIAL": "Financial Document",
       "INSPECTION_REPORT": "Inspection Report",
       "OTHER": "Other"
+    },
+    "searchResultType": {
+      "CLIENT": "Clients",
+      "PROPERTY": "Properties",
+      "NOTE": "Call notes"
     }
   },
   "attachments": {

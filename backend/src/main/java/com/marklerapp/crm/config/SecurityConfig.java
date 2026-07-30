@@ -85,6 +85,7 @@ public class SecurityConfig {
                         .requestMatchers("/clients/**").authenticated()
                         .requestMatchers("/properties/**").authenticated()
                         .requestMatchers("/call-notes/**").authenticated()
+                        .requestMatchers("/search/**").authenticated()
                         .requestMatchers("/agents/**").authenticated()
                         .requestMatchers("/gdpr/**").authenticated()
                         .requestMatchers("/actuator/**").hasRole("ADMIN")

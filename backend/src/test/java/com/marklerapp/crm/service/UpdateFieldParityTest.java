@@ -11,6 +11,7 @@ import com.marklerapp.crm.repository.AgentRepository;
 import com.marklerapp.crm.repository.CallNoteRepository;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.FileAttachmentRepository;
+import com.marklerapp.crm.repository.PropertyRepository;
 import com.marklerapp.crm.repository.PropertySearchCriteriaRepository;
 import com.marklerapp.crm.repository.ViewingRepository;
 import org.junit.jupiter.api.Test;
@@ -71,6 +72,8 @@ class UpdateFieldParityTest {
     private FileAttachmentRepository fileAttachmentRepository;
     @Mock
     private ClientDeletionAuditService clientDeletionAuditService;
+    @Mock
+    private PropertyRepository propertyRepository;
 
     // ========================================
     // PropertyService.updatePropertyFields
@@ -80,7 +83,7 @@ class UpdateFieldParityTest {
     void updatePropertyFields_CopiesEverySharedRequestField() throws Exception {
         // updatePropertyFields only touches its two parameters, so the service's
         // collaborators are irrelevant here.
-        PropertyService propertyService = new PropertyService(null, null, null, null, null, null, null);
+        PropertyService propertyService = new PropertyService(null, null, null, null, null, null, null, null);
 
         Property property = new Property();
         UpdatePropertyRequest request = new UpdatePropertyRequest();
@@ -103,7 +106,7 @@ class UpdateFieldParityTest {
         ClientService clientService = new ClientService(
             clientRepository, agentRepository, searchCriteriaRepository, callNoteRepository,
             clientMapper, new PropertySearchCriteriaMapperImpl(), new OwnershipValidator(),
-            viewingRepository, fileAttachmentRepository, clientDeletionAuditService);
+            viewingRepository, fileAttachmentRepository, clientDeletionAuditService, propertyRepository);
 
         UUID agentId = UUID.randomUUID();
         UUID clientId = UUID.randomUUID();

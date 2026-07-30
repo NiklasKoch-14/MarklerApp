@@ -311,6 +311,97 @@
     min-width: 0;
   }
 
+  /* Top bar — Einstieg in die globale Suche (Issue #42). Auf Mobile traegt sie
+     zusaetzlich die Marke, weil die Sidebar dort zur Tab-Bar unten wird. */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-shrink: 0;
+    padding: 10px 32px;
+    border-bottom: 1.5px solid var(--border);
+    background: var(--surface);
+  }
+
+  .topbar-brand {
+    display: none;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .topbar-logo {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #3d8597, #2f6b7a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .topbar-brand-name {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+
+  .topbar-search {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 320px;
+    max-width: 100%;
+    min-width: 0;
+    padding: 7px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-2);
+    color: var(--text-3);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color .15s ease, color .15s ease;
+  }
+
+  .topbar-search:hover {
+    border-color: var(--primary);
+    color: var(--text-2);
+  }
+
+  .topbar-search:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  .topbar-search i {
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .topbar-search-label {
+    flex: 1;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .topbar-search-kbd {
+    flex-shrink: 0;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 5px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
   /* Page content */
   .page-content {
     flex: 1;
@@ -926,6 +1017,15 @@
   .sidebar-settings-link { flex: 1; min-width: 0; margin-top: 0; }
 
   .page-content { padding: 16px 14px 32px; }
+
+  /* Top-Bar traegt jetzt die Marke; die Suche schrumpft auf die Lupe,
+     die Beschriftung uebernimmt das aria-label. */
+  .topbar { padding: 8px 14px; }
+  .topbar-brand { display: flex; }
+  .topbar-search { width: auto; padding: 7px 10px; }
+  .topbar-search-label,
+  .topbar-search-kbd { display: none; }
+  .topbar-search i { font-size: 19px; }
 
   .detail-page { padding: 16px 14px; }
 

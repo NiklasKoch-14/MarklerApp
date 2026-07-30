@@ -30,6 +30,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ViewingService {
 
+    private static final LocalDateTime OPEN_RANGE_START = LocalDateTime.of(1900, 1, 1, 0, 0);
+    private static final LocalDateTime OPEN_RANGE_END = LocalDateTime.of(2999, 12, 31, 23, 59);
+
     private final ViewingRepository viewingRepository;
     private final ClientRepository clientRepository;
     private final AgentRepository agentRepository;
@@ -132,10 +135,26 @@ public class ViewingService {
 
     @Transactional(readOnly = true)
     public Page<ViewingDto.Summary> getViewingsByAgent(UUID agentId, Pageable pageable) {
+        return getViewingsByAgent(agentId, null, null, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ViewingDto.Summary> getViewingsByAgent(UUID agentId, LocalDateTime from, LocalDateTime to, Pageable pageable) {
         Agent agent = agentRepository.findById(agentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Agent not found: " + agentId));
 
-        return viewingRepository.findByAgentOrderByViewingDateDesc(agent, pageable)
+        if (from == null && to == null) {
+            return viewingRepository.findByAgentOrderByViewingDateDesc(agent, pageable)
+                    .map(viewingMapper::toSummary);
+        }
+
+        // Half-open ranges get sentinel bounds instead of nullable parameters: a
+        // "(:from IS NULL OR ...)" predicate makes PostgreSQL fail to infer the
+        // parameter type for an untyped NULL timestamp.
+        LocalDateTime start = from != null ? from : OPEN_RANGE_START;
+        LocalDateTime end = to != null ? to : OPEN_RANGE_END;
+
+        return viewingRepository.findByAgentAndViewingDateRange(agent, start, end, pageable)
                 .map(viewingMapper::toSummary);
     }
 

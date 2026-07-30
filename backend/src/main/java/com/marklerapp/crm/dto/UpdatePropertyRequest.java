@@ -1,5 +1,6 @@
 package com.marklerapp.crm.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.marklerapp.crm.entity.*;
 import jakarta.validation.constraints.*;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
 /**
  * Request DTO for updating an existing property.
@@ -173,15 +175,24 @@ public class UpdatePropertyRequest {
 
     private LocalDate availableFrom;
 
-    @Size(max = 100, message = "Owner name must not exceed 100 characters")
-    private String ownerName;
+    /**
+     * Verknuepfter Eigentuemer (Client-ID) statt der frueheren Freitextfelder -- Issue #37.
+     *
+     * <p>Dieses eine Feld bricht mit der "null bedeutet unveraendert"-Regel des restlichen
+     * DTOs, weil {@code null} hier eine echte Bedeutung hat: der Makler hat die
+     * Eigentuemer-Zuordnung entfernt. Deshalb wird ueber {@link #ownerClientIdPresent}
+     * mitgeschrieben, ob der Schluessel ueberhaupt im JSON stand -- Jackson ruft den
+     * Setter nur dann auf.</p>
+     */
+    private UUID ownerClientId;
 
-    @Pattern(regexp = "^[+]?[0-9\\s\\-()]*$|^$", message = "Phone number format is invalid")
-    @Size(max = 20, message = "Owner phone must not exceed 20 characters")
-    private String ownerPhone;
+    @JsonIgnore
+    private boolean ownerClientIdPresent;
 
-    @Email(message = "Owner email should be valid")
-    private String ownerEmail;
+    public void setOwnerClientId(UUID ownerClientId) {
+        this.ownerClientId = ownerClientId;
+        this.ownerClientIdPresent = true;
+    }
 
     @Pattern(regexp = "^[+]?[0-9\\s\\-()]*$|^$", message = "Phone number format is invalid")
     @Size(max = 20, message = "Contact phone must not exceed 20 characters")
@@ -213,7 +224,7 @@ public class UpdatePropertyRequest {
                price == null && pricePerSqm == null &&
                hasElevator == null && hasBalcony == null && hasGarden == null &&
                energyEfficiencyClass == null && heatingType == null &&
-               availableFrom == null && ownerName == null && ownerPhone == null && ownerEmail == null &&
+               availableFrom == null && !ownerClientIdPresent &&
                contactPhone == null && contactEmail == null && notes == null;
     }
 

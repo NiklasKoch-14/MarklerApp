@@ -271,6 +271,9 @@ public class GdprPdfService {
             addDataRow(table, "Living Area:", property.getLivingAreaSqm() != null ? property.getLivingAreaSqm() + " sqm" : "N/A");
             addDataRow(table, "Rooms:", property.getRooms());
             addDataRow(table, "Bedrooms:", property.getBedrooms() != null ? String.valueOf(property.getBedrooms()) : "N/A");
+            // Eigentuemer gehoert in die Auskunft (Issue #37) — als Freitextfeld fehlte er hier.
+            addDataRow(table, "Owner:", property.getOwnerName());
+            addDataRow(table, "Owner Contact:", buildOwnerContact(property));
             addDataRow(table, "Images:", property.getImages() != null ? String.valueOf(property.getImages().size()) : "0");
             table.setMarginBottom(10);
             document.add(table);
@@ -456,6 +459,18 @@ public class GdprPdfService {
                 .setPadding(3);
         table.addCell(labelCell);
         table.addCell(valueCell);
+    }
+
+    /** E-Mail und Telefon des verknuepften Eigentuemers in einer Zeile (Issue #37). */
+    private String buildOwnerContact(GdprPropertyData property) {
+        java.util.List<String> parts = new java.util.ArrayList<>();
+        if (property.getOwnerEmail() != null && !property.getOwnerEmail().isBlank()) {
+            parts.add(property.getOwnerEmail());
+        }
+        if (property.getOwnerPhone() != null && !property.getOwnerPhone().isBlank()) {
+            parts.add(property.getOwnerPhone());
+        }
+        return parts.isEmpty() ? null : String.join(" · ", parts);
     }
 
     private String formatRange(Object min, Object max, String unit) {
