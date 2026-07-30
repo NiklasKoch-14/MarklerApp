@@ -6,7 +6,8 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { forkJoin, of, Subject } from 'rxjs';
 import { catchError, takeUntil } from 'rxjs/operators';
 
-import { ClientService, PipelineStage } from '../client-management/services/client.service';
+import { ClientService, PipelineStage, SellerPipelineStage } from '../client-management/services/client.service';
+import { TranslateEnumPipe } from '../../shared/pipes/translate-enum.pipe';
 import { PropertyService } from '../property-management/services/property.service';
 import {
   CallNotesService,
@@ -60,7 +61,7 @@ interface ViewingRow {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, DatePipe, ConfirmDialogComponent, DragDropModule],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, DatePipe, ConfirmDialogComponent, DragDropModule, TranslateEnumPipe],
   template: `
     <div style="max-width:1180px; margin:0 auto;">
 
@@ -394,7 +395,19 @@ interface ViewingRow {
 
       <!-- Pipeline view -->
       @if (view === 'pipeline') {
-        <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+        <!-- Eine Umschaltung, nicht zwei Boards nebeneinander: zwei Kanbans untereinander
+             machen das Dashboard auf Mobile unbenutzbar (Issue #38). -->
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+          <div class="view-tabs">
+            <button class="view-tab" [class.active]="pipelineMode === 'buyers'" (click)="setPipelineMode('buyers')">
+              <i class="ri-user-search-line" style="font-size:15px;"></i>
+              {{ 'dashboard.pipelineBuyers' | translate }}
+            </button>
+            <button class="view-tab" [class.active]="pipelineMode === 'sellers'" (click)="setPipelineMode('sellers')">
+              <i class="ri-home-4-line" style="font-size:15px;"></i>
+              {{ 'dashboard.pipelineSellers' | translate }}
+            </button>
+          </div>
           <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text-2); cursor:pointer; user-select:none;">
             <input type="checkbox" [(ngModel)]="showClosedStages" style="cursor:pointer;">
             {{ 'dashboard.showClosedStages' | translate }}
@@ -406,7 +419,9 @@ interface ViewingRow {
               <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:14px; padding:6px;">
                 <div style="display:flex; align-items:center; gap:8px; padding:11px 12px 2px;">
                   <span style="width:9px; height:9px; border-radius:50%;" [style.background]="col.color"></span>
-                  <span style="font-size:13px; font-weight:700; flex:1; color:var(--text);">{{ col.label }}</span>
+                  <span style="font-size:13px; font-weight:700; flex:1; color:var(--text);">
+                    {{ col.stage | translateEnum:pipelineEnumName }}
+                  </span>
                   <span style="font-size:12px; font-weight:700; color:var(--text-3); font-variant-numeric:tabular-nums;">
                     {{ col.items.length }}
                   </span>
@@ -609,9 +624,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
   pendingInactiveClient: { id: string; name: string } | null = null;
   isMarkingInactive = false;
 
-  pipelineCols: { stage: PipelineStage; label: string; color: string; closed: boolean; items: any[] }[] = [];
+  /** stage bleibt bewusst untypisiert-schmal: die Spalten tragen je nach Modus Käufer- oder
+   *  Verkäufer-Stufen (Issue #38), und der Wert wird nur weitergereicht, nie gerechnet. */
+  pipelineCols: { stage: PipelineStage | SellerPipelineStage; color: string; closed: boolean; items: any[] }[] = [];
+  pipelineMode: 'buyers' | 'sellers' = 'buyers';
   showClosedStages = false;
   isMovingCard = false;
+
+  private clientsByStage: Record<string, any[]> = {};
+  private sellersByStage: Record<string, any[]> = {};
+
+  /** Welcher enums-Block die Spaltenköpfe beschriftet. */
+  get pipelineEnumName(): string {
+    return this.pipelineMode === 'sellers' ? 'sellerPipelineStage' : 'pipelineStage';
+  }
+
+  setPipelineMode(mode: 'buyers' | 'sellers'): void {
+    if (this.pipelineMode === mode) return;
+    this.pipelineMode = mode;
+    this.rebuildPipelineCols();
+  }
 
   /** Überfällige Rückrufe — die dringendste Zahl der Aktions-Zeile. */
   get overdueCount(): number {
@@ -627,7 +659,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
    *  brandneuer, leerer Account mit denselben Erfolgsmeldungen wie ein erfahrener Nutzer,
    *  der seinen Tag durchgearbeitet hat. */
   get hasAnyClients(): boolean {
-    return this.pipelineCols.some(col => col.items.length > 0) || this.recentActivity.length > 0;
+    // Beide Pipelines, nicht nur die gerade sichtbare — ein Makler, der ausschliesslich
+    // Akquise gemacht hat, hat sonst laut Dashboard "noch nie Daten angelegt".
+    const anyIn = (m: Record<string, any[]>) => Object.values(m).some(list => list.length > 0);
+    return anyIn(this.clientsByStage) || anyIn(this.sellersByStage) || this.recentActivity.length > 0;
   }
 
   /** Aktions-Zeile klickbar: zur passenden Sektion springen (in Cards-Ansicht, da manche Widgets nur dort liegen). */
@@ -710,17 +745,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
       followUps:      this.callNotesService.getFollowUpReminders().pipe(catchError(() => of([]))),
       todayViewings:  this.viewingService.getTodaysViewings().pipe(catchError(() => of([]))),
       clientsByStage: this.clientService.getClientsByStage().pipe(catchError(() => of({}))),
+      sellersByStage: this.clientService.getSellersByStage().pipe(catchError(() => of({}))),
       staleClients:   this.clientService.getClientsWithoutRecentContact(30).pipe(catchError(() => of([]))),
     })
     .pipe(takeUntil(this.destroy$))
-    .subscribe(({ notes, followUps, todayViewings, clientsByStage, staleClients }) => {
+    .subscribe(({ notes, followUps, todayViewings, clientsByStage, sellersByStage, staleClients }) => {
       this.loading = false;
 
       this.buildTodayViewings(todayViewings as ViewingSummary[]);
       this.buildStaleClients(staleClients as any[]);
       this.buildFollowUps(followUps as FollowUpReminder[]);
       this.buildActivity((notes as any).content ?? []);
-      this.buildPipelineFromStages(clientsByStage as Record<PipelineStage, any[]>);
+      this.clientsByStage = clientsByStage as Record<string, any[]>;
+      this.sellersByStage = sellersByStage as Record<string, any[]>;
+      this.rebuildPipelineCols();
     });
   }
 
@@ -783,49 +821,64 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /** Drag&Drop between Kanban columns — persists the new stage, reloads from the server on failure. */
-  onCardDropped(event: CdkDragDrop<any[]>, targetStage: PipelineStage): void {
+  onCardDropped(event: CdkDragDrop<any[]>, targetStage: PipelineStage | SellerPipelineStage): void {
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
       return;
     }
     const item = event.previousContainer.data[event.previousIndex];
     transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
-    this.clientService.updatePipelineStage(item.clientId, targetStage).subscribe({
-      error: () => this.loadData()
-    });
+    // Das Board zeigt nie beide Pipelines gleichzeitig, also bestimmt der Modus den Endpoint —
+    // die Stufe allein waere nicht eindeutig, LOST gibt es in beiden Enums.
+    const save$ = this.pipelineMode === 'sellers'
+      ? this.clientService.updateSellerPipelineStage(item.clientId, targetStage as SellerPipelineStage)
+      : this.clientService.updatePipelineStage(item.clientId, targetStage as PipelineStage);
+    save$.subscribe({ error: () => this.loadData() });
   }
 
-  private buildPipelineFromStages(clientsByStage: Record<PipelineStage, any[]>): void {
-    const stageMeta: { stage: PipelineStage; label: string; color: string; closed: boolean }[] = [
-      { stage: PipelineStage.PROSPECT,      label: 'Interessent',    color: 'var(--stage-prospect)',      closed: false },
-      { stage: PipelineStage.ACTIVE_SEARCH, label: 'Aktive Suche',   color: 'var(--stage-active-search)', closed: false },
-      { stage: PipelineStage.VIEWING,       label: 'Besichtigung',   color: 'var(--stage-viewing)',       closed: false },
-      { stage: PipelineStage.WON,           label: 'Gewonnen',       color: 'var(--stage-won)',           closed: true },
-      { stage: PipelineStage.LOST,          label: 'Verloren',       color: 'var(--stage-lost)',          closed: true },
-    ];
+  /** Käufer-Stufen. Die Beschriftung kommt im Template aus enums.pipelineStage. */
+  private static readonly BUYER_STAGES: { stage: PipelineStage; color: string; closed: boolean }[] = [
+    { stage: PipelineStage.PROSPECT,      color: 'var(--stage-prospect)',      closed: false },
+    { stage: PipelineStage.ACTIVE_SEARCH, color: 'var(--stage-active-search)', closed: false },
+    { stage: PipelineStage.VIEWING,       color: 'var(--stage-viewing)',       closed: false },
+    { stage: PipelineStage.WON,           color: 'var(--stage-won)',           closed: true },
+    { stage: PipelineStage.LOST,          color: 'var(--stage-lost)',          closed: true },
+  ];
 
-    this.pipelineCols = stageMeta.map(meta => {
-      const clients = clientsByStage[meta.stage] ?? [];
-      return {
-        stage: meta.stage,
-        label: meta.label,
-        color: meta.color,
-        closed: meta.closed,
-        items: clients.map((c: any) => {
-          const nameParts = ((c.firstName ?? '') + ' ' + (c.lastName ?? '')).trim().split(' ');
-          const initials = nameParts.slice(0, 2).map((p: string) => p.charAt(0).toUpperCase()).join('');
-          return {
-            clientId: c.id,
-            customerName: (c.firstName ?? '') + ' ' + (c.lastName ?? ''),
-            initials,
-            subject: c.searchCriteria?.additionalRequirements ?? (c.addressCity ? c.addressCity : ''),
-            typeIcon: 'ri-user-line',
-            dateFmt: c.updatedAt ? new Date(c.updatedAt).toLocaleDateString('de-DE', { day: '2-digit', month: 'short' }) : '',
-            expectedCommission: c.expectedCommission ?? null,
-          };
-        }),
-      };
-    });
+  /** Akquise-Stufen der Verkäufer (Issue #38), beschriftet aus enums.sellerPipelineStage. */
+  private static readonly SELLER_STAGES: { stage: SellerPipelineStage; color: string; closed: boolean }[] = [
+    { stage: SellerPipelineStage.LEAD,      color: 'var(--stage-prospect)',      closed: false },
+    { stage: SellerPipelineStage.VALUATION, color: 'var(--stage-active-search)', closed: false },
+    { stage: SellerPipelineStage.PITCH,     color: 'var(--stage-viewing)',       closed: false },
+    { stage: SellerPipelineStage.MANDATE,   color: 'var(--primary)',             closed: false },
+    { stage: SellerPipelineStage.SOLD,      color: 'var(--stage-won)',           closed: true },
+    { stage: SellerPipelineStage.LOST,      color: 'var(--stage-lost)',          closed: true },
+  ];
+
+  private rebuildPipelineCols(): void {
+    const sellers = this.pipelineMode === 'sellers';
+    const meta: { stage: PipelineStage | SellerPipelineStage; color: string; closed: boolean }[] =
+      sellers ? [...DashboardComponent.SELLER_STAGES] : [...DashboardComponent.BUYER_STAGES];
+    const source = sellers ? this.sellersByStage : this.clientsByStage;
+
+    this.pipelineCols = meta.map(m => ({
+      stage: m.stage,
+      color: m.color,
+      closed: m.closed,
+      items: (source[m.stage] ?? []).map((c: any) => {
+        const nameParts = ((c.firstName ?? '') + ' ' + (c.lastName ?? '')).trim().split(' ');
+        const initials = nameParts.slice(0, 2).map((p: string) => p.charAt(0).toUpperCase()).join('');
+        return {
+          clientId: c.id,
+          customerName: (c.firstName ?? '') + ' ' + (c.lastName ?? ''),
+          initials,
+          subject: c.searchCriteria?.additionalRequirements ?? (c.addressCity ? c.addressCity : ''),
+          typeIcon: sellers ? 'ri-home-4-line' : 'ri-user-line',
+          dateFmt: c.updatedAt ? new Date(c.updatedAt).toLocaleDateString('de-DE', { day: '2-digit', month: 'short' }) : '',
+          expectedCommission: c.expectedCommission ?? null,
+        };
+      }),
+    }));
   }
 
   /**

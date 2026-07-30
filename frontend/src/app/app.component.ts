@@ -11,7 +11,9 @@ import { environment } from '../environments/environment';
   standalone: true,
   imports: [CommonModule, RouterOutlet, TranslateModule],
   template: `
-    <div class="min-h-screen bg-gray-50">
+    <!-- bg-page statt eines festen Graus: sonst ueberschreibt diese Flaeche im
+         Dark Mode den --bg-Hintergrund, den styles.scss auf body setzt. -->
+    <div class="min-h-screen bg-page">
       <router-outlet></router-outlet>
     </div>
   `

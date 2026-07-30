@@ -667,6 +667,12 @@ public class PropertyService {
             .additionalCosts(request.getAdditionalCosts())
             .heatingCosts(request.getHeatingCosts())
             .commission(request.getCommission())
+            .mandateType(request.getMandateType())
+            .mandateStart(request.getMandateStart())
+            .mandateEnd(request.getMandateEnd())
+            .ownerPriceExpectation(request.getOwnerPriceExpectation())
+            .commissionSellerPercent(request.getCommissionSellerPercent())
+            .commissionBuyerPercent(request.getCommissionBuyerPercent())
             .hasElevator(request.getHasElevator() != null ? request.getHasElevator() : false)
             .hasBalcony(request.getHasBalcony() != null ? request.getHasBalcony() : false)
             .hasTerrace(request.getHasTerrace() != null ? request.getHasTerrace() : false)
@@ -732,6 +738,14 @@ public class PropertyService {
         if (request.getAdditionalCosts() != null) property.setAdditionalCosts(request.getAdditionalCosts());
         if (request.getHeatingCosts() != null) property.setHeatingCosts(request.getHeatingCosts());
         if (request.getCommission() != null) property.setCommission(request.getCommission());
+
+        // Auftragsdaten (Issue #39)
+        if (request.getMandateType() != null) property.setMandateType(request.getMandateType());
+        if (request.getMandateStart() != null) property.setMandateStart(request.getMandateStart());
+        if (request.getMandateEnd() != null) property.setMandateEnd(request.getMandateEnd());
+        if (request.getOwnerPriceExpectation() != null) property.setOwnerPriceExpectation(request.getOwnerPriceExpectation());
+        if (request.getCommissionSellerPercent() != null) property.setCommissionSellerPercent(request.getCommissionSellerPercent());
+        if (request.getCommissionBuyerPercent() != null) property.setCommissionBuyerPercent(request.getCommissionBuyerPercent());
 
         // Features
         if (request.getHasElevator() != null) property.setHasElevator(request.getHasElevator());

@@ -220,7 +220,7 @@ const EMPTY_PAGE: PagedResponse<ViewingSummary> = {
             @for (day of weekDays; track day.key) {
               <div class="week-col" [class.today]="day.isToday">
                 <div style="margin-bottom:8px;">
-                  <div style="font-size:11px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:.04em;">{{ day.weekdayFmt }}</div>
+                  <div class="section-label" style="margin-bottom:0;">{{ day.weekdayFmt }}</div>
                   <div style="font-size:14px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums;">{{ day.dateFmt }}</div>
                 </div>
                 @for (row of day.rows; track row.id) {

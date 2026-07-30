@@ -166,6 +166,7 @@ public class ClientService {
         if (client.getLegalBasis() == null) {
             client.setLegalBasis(Client.LegalBasis.CONTRACT_INITIATION);
         }
+        alignSellerPipelineStage(client);
 
         Client savedClient = clientRepository.save(client);
 
@@ -262,9 +263,16 @@ public class ClientService {
         if (clientDto.getPipelineStage() != null) {
             existingClient.setPipelineStage(clientDto.getPipelineStage());
         }
+        if (clientDto.getSellerPipelineStage() != null) {
+            existingClient.setSellerPipelineStage(clientDto.getSellerPipelineStage());
+        }
         if (clientDto.getLegalBasis() != null) {
             existingClient.setLegalBasis(clientDto.getLegalBasis());
         }
+        // Nach dem Typwechsel, damit ein Kunde, der erst jetzt Verkaeufer wird, eine
+        // Akquise-Stufe bekommt -- und ein Verkaeufer, der zum Kaeufer umgewidmet wird,
+        // keine Stufe behaelt, die fuer ihn nicht mehr gilt.
+        alignSellerPipelineStage(existingClient);
 
         // Handle GDPR consent updates
         if (clientDto.isGdprConsentGiven() && !existingClient.isGdprConsentGiven()) {
@@ -287,10 +295,54 @@ public class ClientService {
     }
 
     /**
+     * Hält die beiden Pipeline-Spalten zum clientType konsistent (Issue #38): ein Verkäufer
+     * hat immer eine Akquise-Stufe, alle anderen haben keine. Ohne das könnte ein Kunde
+     * gleichzeitig in beiden Kanban-Ansichten oder in keiner auftauchen.
+     */
+    private void alignSellerPipelineStage(Client client) {
+        if (client.isSeller()) {
+            if (client.getSellerPipelineStage() == null) {
+                client.setSellerPipelineStage(Client.SellerPipelineStage.LEAD);
+            }
+        } else {
+            client.setSellerPipelineStage(null);
+        }
+    }
+
+    /**
      * Update just the pipeline stage of a client (quick dropdown action)
      */
     @Transactional
     public ClientDto updatePipelineStage(UUID clientId, UUID agentId, Client.PipelineStage stage) {
+        Client client = loadOwnedClient(clientId, agentId);
+        if (client.isSeller()) {
+            throw new IllegalArgumentException(
+                    "Client " + clientId + " is a seller — use the seller pipeline stage endpoint");
+        }
+        client.setPipelineStage(stage);
+        Client saved = clientRepository.save(client);
+        log.info("Pipeline stage for client {} set to {} by agent {}", clientId, stage, agentId);
+        return clientMapper.toDto(saved);
+    }
+
+    /**
+     * Akquise-Stufe eines Verkäufers setzen (Issue #38) — das Gegenstück zu
+     * {@link #updatePipelineStage} für das Verkäufer-Kanban.
+     */
+    @Transactional
+    public ClientDto updateSellerPipelineStage(UUID clientId, UUID agentId, Client.SellerPipelineStage stage) {
+        Client client = loadOwnedClient(clientId, agentId);
+        if (!client.isSeller()) {
+            throw new IllegalArgumentException(
+                    "Client " + clientId + " is not a seller — use the buyer pipeline stage endpoint");
+        }
+        client.setSellerPipelineStage(stage);
+        Client saved = clientRepository.save(client);
+        log.info("Seller pipeline stage for client {} set to {} by agent {}", clientId, stage, agentId);
+        return clientMapper.toDto(saved);
+    }
+
+    private Client loadOwnedClient(UUID clientId, UUID agentId) {
         Client client = clientRepository.findById(clientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Client", "id", clientId));
         try {
@@ -298,10 +350,7 @@ public class ClientService {
         } catch (AccessDeniedException e) {
             throw new ResourceNotFoundException("Client not found or access denied");
         }
-        client.setPipelineStage(stage);
-        Client saved = clientRepository.save(client);
-        log.info("Pipeline stage for client {} set to {} by agent {}", clientId, stage, agentId);
-        return clientMapper.toDto(saved);
+        return client;
     }
 
     /**
@@ -375,6 +424,9 @@ public class ClientService {
     /**
      * Get clients grouped by pipeline stage for Kanban dashboard view. Includes WON/LOST
      * buckets — the frontend decides whether to render them as optional, collapsible columns.
+     *
+     * <p>Verkäufer sind ausgenommen: sie durchlaufen die eigene Akquise-Pipeline
+     * (Issue #38) und würden hier in Spalten landen, die ihren Zustand nicht beschreiben.</p>
      */
     @Transactional(readOnly = true)
     public Map<Client.PipelineStage, List<ClientDto>> getClientsByStage(UUID agentId) {
@@ -385,8 +437,32 @@ public class ClientService {
             result.put(stage, new java.util.ArrayList<>());
         }
         for (Client c : clients) {
+            if (c.isSeller()) continue;
             List<ClientDto> bucket = result.get(c.getPipelineStage());
             if (bucket != null) bucket.add(clientMapper.toDto(c));
+        }
+        return result;
+    }
+
+    /**
+     * Verkäufer gruppiert nach Akquise-Stufe (Issue #38) — die zweite Ansicht des
+     * Kanban-Boards. Verkäufer ohne gesetzte Stufe (Bestandsdaten, die die Migration
+     * nicht erfasst hat) zählen als LEAD, damit sie nicht unsichtbar werden.
+     */
+    @Transactional(readOnly = true)
+    public Map<Client.SellerPipelineStage, List<ClientDto>> getSellersByStage(UUID agentId) {
+        Agent agent = getAgentById(agentId);
+        List<Client> clients = clientRepository.findByAgent(agent);
+        Map<Client.SellerPipelineStage, List<ClientDto>> result = new java.util.LinkedHashMap<>();
+        for (Client.SellerPipelineStage stage : Client.SellerPipelineStage.values()) {
+            result.put(stage, new java.util.ArrayList<>());
+        }
+        for (Client c : clients) {
+            if (!c.isSeller()) continue;
+            Client.SellerPipelineStage stage = c.getSellerPipelineStage() != null
+                    ? c.getSellerPipelineStage()
+                    : Client.SellerPipelineStage.LEAD;
+            result.get(stage).add(clientMapper.toDto(c));
         }
         return result;
     }

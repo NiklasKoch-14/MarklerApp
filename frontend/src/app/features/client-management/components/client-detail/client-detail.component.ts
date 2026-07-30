@@ -3,7 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { ClientService, Client, PipelineStage, ClientType, FinancingStatus, MoveInTimeline } from '../../services/client.service';
+import { ClientService, Client, PipelineStage, SellerPipelineStage, ClientType, FinancingStatus, MoveInTimeline } from '../../services/client.service';
+
+/** Eine waehlbare Pipeline-Stufe samt Farbgebung. Beschriftet wird im Template per translateEnum. */
+interface StageOption {
+  value: PipelineStage | SellerPipelineStage;
+  color: string;
+  bg: string;
+}
 import { CallNotesService, CallNoteSummary, BulkSummary, PagedResponse, CallNoteCreateRequest, CallType, CallOutcome, VoiceNoteDraft } from '../../../call-notes/services/call-notes.service';
 import { ViewingService, ViewingSummary, ViewingStatus } from '../../../viewing-management/services/viewing.service';
 import { ViewingAddDialogComponent } from '../../../viewing-management/components/viewing-add-dialog/viewing-add-dialog.component';
@@ -91,21 +98,21 @@ import { GdprExportService } from '../../services/gdpr-export.service';
               <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;">
                 <div *ngIf="client.id" style="position:relative;">
                   <button (click)="stageDropdownOpen = !stageDropdownOpen"
-                          [style.background]="getStageBg(client.pipelineStage)"
-                          [style.color]="getStageColor(client.pipelineStage)"
+                          [style.background]="getStageBg(currentStage)"
+                          [style.color]="getStageColor(currentStage)"
                           style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;">
-                    {{ getStageLabel(client.pipelineStage) }}
+                    {{ currentStage | translateEnum:stageEnumName }}
                     <i class="ri-arrow-down-s-line" style="font-size:11px;"></i>
                   </button>
                   <div *ngIf="stageDropdownOpen" (click)="stageDropdownOpen = false"
                        style="position:fixed;inset:0;z-index:99;"></div>
                   <div *ngIf="stageDropdownOpen"
                        style="position:absolute;top:100%;left:0;margin-top:4px;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:100;min-width:160px;overflow:hidden;">
-                    <button *ngFor="let s of pipelineStages" (click)="setStage(s.value)"
+                    <button *ngFor="let s of activeStages" (click)="setStage(s.value)"
                             class="stage-option"
                             style="width:100%;text-align:left;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:500;"
                             [style.color]="getStageColor(s.value)">
-                      {{ s.label }}
+                      {{ s.value | translateEnum:stageEnumName }}
                     </button>
                   </div>
                 </div>
@@ -115,7 +122,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
                   Letzter Kontakt {{ callNotesSummary!.lastCallDate | date:'dd.MM.yy' }}
                 </span>
                 <span *ngIf="!callNotesSummary?.lastCallDate"
-                      style="font-size:12px;color:var(--text-3);">Noch kein Kontakt</span>
+                      class="kv-label">Noch kein Kontakt</span>
                 <span *ngIf="client.leadSource"
                       [title]="'clients.leadSource' | translate"
                       style="font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:4px;">
@@ -222,12 +229,12 @@ import { GdprExportService } from '../../services/gdpr-export.service';
           </div>
           <div class="form-grid-2" style="gap:12px;margin-bottom:12px;">
             <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.subject' | translate }}</label>
+              <label class="section-label">{{ 'callNotes.quickNote.subject' | translate }}</label>
               <input type="text" [(ngModel)]="quickNoteSubject" [placeholder]="'callNotes.quickNote.subjectPlaceholder' | translate"
                      style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);outline:none;box-sizing:border-box;">
             </div>
             <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.contactType' | translate }}</label>
+              <label class="section-label">{{ 'callNotes.quickNote.contactType' | translate }}</label>
               <select [(ngModel)]="quickNoteType"
                       style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
                 <option *ngFor="let type of callTypeOptions" [value]="type">{{ type | translateEnum:'callType' }}</option>
@@ -235,7 +242,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
             </div>
           </div>
           <div style="margin-bottom:12px;">
-            <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.content' | translate }}</label>
+            <label class="section-label">{{ 'callNotes.quickNote.content' | translate }}</label>
             <textarea [(ngModel)]="quickNoteText" [placeholder]="'callNotes.quickNote.contentPlaceholder' | translate" rows="3"
                       style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);resize:vertical;font-family:inherit;box-sizing:border-box;outline:none;">
             </textarea>
@@ -247,7 +254,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
                Gespraechsverlauf, den es zusammenfasst. -->
           <div class="form-grid-2" style="gap:12px;margin-bottom:12px;">
             <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.outcome' | translate }}</label>
+              <label class="section-label">{{ 'callNotes.quickNote.outcome' | translate }}</label>
               <select [(ngModel)]="quickNoteOutcome"
                       style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
                 <option value="">{{ 'callNotes.quickNote.outcomePlaceholder' | translate }}</option>
@@ -299,20 +306,20 @@ import { GdprExportService } from '../../services/gdpr-export.service';
           <div *ngIf="callNotesSummary?.mostRecentSubject"
                style="background:var(--surface-2);border-radius:8px;padding:10px 14px;margin-bottom:14px;border-left:3px solid var(--color-warning);">
             <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Geplanter Follow-up</div>
-            <div style="font-size:13px;font-weight:600;color:var(--text);">{{ callNotesSummary!.mostRecentSubject }}</div>
+            <div class="kv-value">{{ callNotesSummary!.mostRecentSubject }}</div>
           </div>
           <div style="font-size:13px;color:var(--text-2);margin-bottom:14px;">
             Was ist beim Follow-up passiert? Trag kurz ein, was besprochen wurde.
           </div>
           <div class="form-grid-2" style="gap:12px;margin-bottom:12px;">
             <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.subject' | translate }}</label>
+              <label class="section-label">{{ 'callNotes.quickNote.subject' | translate }}</label>
               <input type="text" [(ngModel)]="quickNoteSubject"
                      [placeholder]="callNotesSummary?.mostRecentSubject || ('callNotes.quickNote.subjectPlaceholder' | translate)"
                      style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);outline:none;box-sizing:border-box;">
             </div>
             <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.contactType' | translate }}</label>
+              <label class="section-label">{{ 'callNotes.quickNote.contactType' | translate }}</label>
               <select [(ngModel)]="quickNoteType"
                       style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
                 <option *ngFor="let type of callTypeOptions" [value]="type">{{ type | translateEnum:'callType' }}</option>
@@ -320,7 +327,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
             </div>
           </div>
           <div style="margin-bottom:12px;">
-            <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.content' | translate }}</label>
+            <label class="section-label">{{ 'callNotes.quickNote.content' | translate }}</label>
             <textarea [(ngModel)]="quickNoteText" [placeholder]="'callNotes.quickNote.contentPlaceholder' | translate" rows="3"
                       style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);resize:vertical;font-family:inherit;box-sizing:border-box;outline:none;">
             </textarea>
@@ -328,7 +335,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
 
           <div class="form-grid-2" style="gap:12px;margin-bottom:12px;">
             <div>
-              <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;">{{ 'callNotes.quickNote.outcome' | translate }}</label>
+              <label class="section-label">{{ 'callNotes.quickNote.outcome' | translate }}</label>
               <select [(ngModel)]="quickNoteOutcome"
                       style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--surface-2);cursor:pointer;">
                 <option value="">{{ 'callNotes.quickNote.outcomePlaceholder' | translate }}</option>
@@ -501,8 +508,123 @@ import { GdprExportService } from '../../services/gdpr-export.service';
           <!-- RIGHT: Info sidebar -->
           <div style="display:flex;flex-direction:column;gap:16px;">
 
+            <!-- Auftrags-Karte (#39) — ersetzt bei Verkaeufern das Suchprofil. Ein
+                 Eigentuemer sucht nichts; ihn interessiert, was er verkauft, zu welchem
+                 Preis, mit welchem Auftrag und bis wann. -->
+            <div *ngIf="isSellerClient"
+                 style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                <i class="ri-file-paper-2-line" style="font-size:15px;color:var(--primary);"></i>
+                <span style="font-size:15px;font-weight:700;color:var(--text);flex:1;">{{ 'clients.mandate.title' | translate }}</span>
+                <span *ngIf="ownedProperties.length > 0"
+                      style="font-size:12px;font-weight:700;color:var(--primary);background:var(--accent-soft);padding:2px 8px;border-radius:10px;">
+                  {{ ownedProperties.length }}
+                </span>
+              </div>
+
+              <div *ngIf="isLoadingOwnedProperties" style="font-size:13px;color:var(--text-3);">
+                {{ 'common.loading' | translate }}
+              </div>
+
+              <!-- Kein verknuepftes Objekt: der Auftrag haengt am Objekt, also fuehrt der
+                   einzige sinnvolle naechste Schritt zum Anlegen bzw. Verknuepfen. -->
+              <div *ngIf="!isLoadingOwnedProperties && ownedProperties.length === 0"
+                   style="font-size:13px;color:var(--text-3);line-height:1.5;">
+                {{ 'clients.mandate.noProperties' | translate }}
+              </div>
+
+              <div *ngIf="!isLoadingOwnedProperties && ownedProperties.length > 0"
+                   style="display:flex;flex-direction:column;gap:12px;">
+                <div *ngFor="let p of ownedProperties"
+                     class="surface-card" style="background:var(--surface-2);border-radius:11px;">
+                  <a [routerLink]="['/properties', p.id]" class="match-link"
+                     style="display:flex;align-items:center;gap:10px;padding:11px 12px;text-decoration:none;border-bottom:1px solid var(--border);">
+                    <div style="flex:1;min-width:0;">
+                      <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ p.title }}</div>
+                      <div style="font-size:11px;color:var(--text-3);">
+                        {{ p.addressCity }}<ng-container *ngIf="p.status"> · {{ p.status | translateEnum:'propertyStatus' }}</ng-container>
+                        <ng-container *ngIf="daysOnMarket(p) !== null">
+                          · {{ 'clients.mandate.daysOnMarket' | translate:{ days: daysOnMarket(p) } }}
+                        </ng-container>
+                      </div>
+                    </div>
+                    <i class="ri-arrow-right-line" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
+                  </a>
+
+                  <div style="padding:4px 12px 10px;">
+                    <div *ngIf="p.mandateType"
+                         class="kv-row">
+                      <span class="kv-label">{{ 'clients.mandate.type' | translate }}</span>
+                      <span class="kv-value">{{ p.mandateType | translateEnum:'mandateType' }}</span>
+                    </div>
+
+                    <div *ngIf="p.mandateStart || p.mandateEnd"
+                         class="kv-row">
+                      <span class="kv-label">{{ 'clients.mandate.period' | translate }}</span>
+                      <span class="kv-value">
+                        {{ (p.mandateStart | date:'dd.MM.yy') || '–' }} – {{ (p.mandateEnd | date:'dd.MM.yy') || '–' }}
+                      </span>
+                    </div>
+
+                    <!-- Auslaufende Alleinauftraege sind der klassische stille Umsatzverlust,
+                         darum eine echte Warnung und keine stille Datumszeile. -->
+                    <div *ngIf="mandateDaysLeft(p) !== null"
+                         style="display:flex;align-items:center;gap:7px;padding:8px 10px;margin:7px 0;border-radius:8px;"
+                         [style.background]="mandateExpiryColorSoft(p)">
+                      <i [class]="mandateExpired(p) ? 'ri-error-warning-line' : 'ri-alarm-warning-line'"
+                         style="font-size:14px;flex-shrink:0;" [style.color]="mandateExpiryColor(p)"></i>
+                      <span style="font-size:12px;font-weight:600;" [style.color]="mandateExpiryColor(p)">
+                        {{ mandateExpired(p)
+                            ? ('clients.mandate.expired' | translate:{ days: -mandateDaysLeft(p)! })
+                            : ('clients.mandate.expiresSoon' | translate:{ days: mandateDaysLeft(p)! }) }}
+                      </span>
+                    </div>
+
+                    <!-- Wunschpreis gegen Angebotspreis: die Differenz ist das Dauerthema
+                         jedes Preisgespraechs, also steht sie hier und nicht im Kopf des Maklers. -->
+                    <div *ngIf="p.ownerPriceExpectation != null"
+                         class="kv-row">
+                      <span class="kv-label">{{ 'clients.mandate.ownerPrice' | translate }}</span>
+                      <span class="kv-value">{{ p.ownerPriceExpectation | number:'1.0-0' }} €</span>
+                    </div>
+                    <div *ngIf="p.price != null"
+                         class="kv-row">
+                      <span class="kv-label">{{ 'clients.mandate.listedPrice' | translate }}</span>
+                      <span class="kv-value">{{ p.price | number:'1.0-0' }} €</span>
+                    </div>
+                    <div *ngIf="priceGap(p) !== null"
+                         class="kv-row">
+                      <span class="kv-label">{{ 'clients.mandate.priceGap' | translate }}</span>
+                      <span style="font-size:13px;font-weight:700;" [style.color]="priceGap(p)! > 0 ? 'var(--color-warning)' : 'var(--color-success)'">
+                        {{ priceGap(p)! > 0 ? '+' : '' }}{{ priceGap(p) | number:'1.0-0' }} €
+                      </span>
+                    </div>
+
+                    <div *ngIf="p.commissionSellerPercent != null || p.commissionBuyerPercent != null"
+                         class="kv-row">
+                      <span class="kv-label">{{ 'clients.mandate.commission' | translate }}</span>
+                      <span class="kv-value">
+                        <ng-container *ngIf="p.commissionSellerPercent != null">
+                          {{ 'clients.mandate.commissionSeller' | translate }} {{ p.commissionSellerPercent | number:'1.0-2' }}%
+                        </ng-container>
+                        <ng-container *ngIf="p.commissionSellerPercent != null && p.commissionBuyerPercent != null"> · </ng-container>
+                        <ng-container *ngIf="p.commissionBuyerPercent != null">
+                          {{ 'clients.mandate.commissionBuyer' | translate }} {{ p.commissionBuyerPercent | number:'1.0-2' }}%
+                        </ng-container>
+                      </span>
+                    </div>
+
+                    <div *ngIf="!hasMandateData(p)"
+                         style="padding:7px 0;font-size:12px;color:var(--text-3);line-height:1.5;">
+                      {{ 'clients.mandate.noData' | translate }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Suchprofil -->
-            <div *ngIf="client.searchCriteria || client.clientType"
+            <div *ngIf="!isSellerClient && (client.searchCriteria || client.clientType)"
                  style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
                 <div style="display:flex;align-items:center;gap:8px;">
@@ -515,50 +637,50 @@ import { GdprExportService } from '../../services/gdpr-export.service';
               <!-- Key-value rows -->
               <div>
                 <div *ngIf="client.clientType"
-                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-                  <span style="font-size:12px;color:var(--text-3);">Angebotsart</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ getAngebotsart() }}</span>
+                     class="kv-row">
+                  <span class="kv-label">{{ 'clients.clientType' | translate }}</span>
+                  <span class="kv-value">{{ client.clientType | translateEnum:'clientType' }}</span>
                 </div>
                 <div *ngIf="client.searchCriteria?.propertyTypes?.length"
-                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-                  <span style="font-size:12px;color:var(--text-3);">Objekttyp</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--text);"><ng-container *ngFor="let pt of client.searchCriteria!.propertyTypes!; let last = last">{{ pt | translateEnum:'propertyType' }}{{ last ? '' : ', ' }}</ng-container></span>
+                     class="kv-row">
+                  <span class="kv-label">Objekttyp</span>
+                  <span class="kv-value"><ng-container *ngFor="let pt of client.searchCriteria!.propertyTypes!; let last = last">{{ pt | translateEnum:'propertyType' }}{{ last ? '' : ', ' }}</ng-container></span>
                 </div>
                 <div *ngIf="hasBudgetOrRent()"
-                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-                  <span style="font-size:12px;color:var(--text-3);">{{ client.clientType === ClientType.RENTER ? 'Miete' : 'Kaufpreis' }}</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ formatBudget() }}</span>
+                     class="kv-row">
+                  <span class="kv-label">{{ client.clientType === ClientType.RENTER ? 'Miete' : 'Kaufpreis' }}</span>
+                  <span class="kv-value">{{ formatBudget() }}</span>
                 </div>
                 <div *ngIf="client.searchCriteria?.minSquareMeters || client.searchCriteria?.maxSquareMeters"
-                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-                  <span style="font-size:12px;color:var(--text-3);">Wohnfläche</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ formatSqm() }}</span>
+                     class="kv-row">
+                  <span class="kv-label">Wohnfläche</span>
+                  <span class="kv-value">{{ formatSqm() }}</span>
                 </div>
                 <div *ngIf="client.searchCriteria?.minRooms || client.searchCriteria?.maxRooms"
-                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-                  <span style="font-size:12px;color:var(--text-3);">Zimmer</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ formatRooms() }}</span>
+                     class="kv-row">
+                  <span class="kv-label">Zimmer</span>
+                  <span class="kv-value">{{ formatRooms() }}</span>
                 </div>
                 <div *ngIf="client.searchCriteria?.preferredLocations?.length"
-                     style="display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border);">
-                  <span style="font-size:12px;color:var(--text-3);">Lage</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--text);text-align:right;max-width:60%;">{{ client.searchCriteria!.preferredLocations!.join(', ') }}</span>
+                     class="kv-row">
+                  <span class="kv-label">Lage</span>
+                  <span class="kv-value">{{ client.searchCriteria!.preferredLocations!.join(', ') }}</span>
                 </div>
                 <div *ngIf="client.financingStatus && client.clientType !== ClientType.SELLER"
-                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-                  <span style="font-size:12px;color:var(--text-3);">Finanzierung</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ getFinancingLabel() }}</span>
+                     class="kv-row">
+                  <span class="kv-label">Finanzierung</span>
+                  <span class="kv-value">{{ getFinancingLabel() }}</span>
                 </div>
                 <div *ngIf="client.moveInTimeline && client.clientType !== ClientType.SELLER"
-                     style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;">
-                  <span style="font-size:12px;color:var(--text-3);">Einzug</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ getMoveInLabel() }}</span>
+                     class="kv-row">
+                  <span class="kv-label">Einzug</span>
+                  <span class="kv-value">{{ getMoveInLabel() }}</span>
                 </div>
               </div>
             </div>
 
             <!-- Suchradius -->
-            <div *ngIf="client.searchCriteria?.latitude != null && client.searchCriteria?.longitude != null"
+            <div *ngIf="!isSellerClient && client.searchCriteria?.latitude != null && client.searchCriteria?.longitude != null"
                  style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
                 <i class="ri-map-pin-line" style="font-size:15px;color:var(--text-3);"></i>
@@ -582,8 +704,9 @@ import { GdprExportService } from '../../services/gdpr-export.service';
               </p>
             </div>
 
-            <!-- Eigene Objekte (#37) -->
-            <div *ngIf="ownedProperties.length > 0"
+            <!-- Eigene Objekte (#37). Bei Verkaeufern uebernimmt die Auftrags-Karte (#39)
+                 diese Liste mitsamt Auftragsdaten, hier waere sie eine Dublette. -->
+            <div *ngIf="!isSellerClient && ownedProperties.length > 0"
                  style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
                 <i class="ri-home-4-line" style="font-size:15px;color:var(--primary);"></i>
@@ -609,7 +732,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
             </div>
 
             <!-- Passende Objekte -->
-            <div *ngIf="client.searchCriteria"
+            <div *ngIf="!isSellerClient && client.searchCriteria"
                  style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
                 <i class="ri-shuffle-fill" style="font-size:15px;color:var(--primary);"></i>
@@ -647,7 +770,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
                               </span>
                             }
                           </div>
-                          <div style="font-size:12px;color:var(--text-3);">{{ match.property.addressCity }}</div>
+                          <div class="kv-label">{{ match.property.addressCity }}</div>
                         </div>
                         <i class="ri-arrow-right-line" style="font-size:14px;color:var(--text-3);flex-shrink:0;"></i>
                       </a>
@@ -676,7 +799,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
                      style="font-size:17px;"></i>
                 </div>
                 <div>
-                  <div style="font-size:13px;font-weight:600;color:var(--text);">{{ 'clients.gdprConsent' | translate }}</div>
+                  <div class="kv-value">{{ 'clients.gdprConsent' | translate }}</div>
                   <div style="font-size:12px;color:var(--text-3);margin-top:1px;">
                     {{ (client.gdprConsentGiven ? 'clients.consentStatusGiven' : 'clients.gdprPending') | translate }}<ng-container *ngIf="client.gdprConsentGiven && client.gdprConsentDate"> · {{ client.gdprConsentDate | date:'dd.MM.yyyy' }}</ng-container>
                   </div>
@@ -711,7 +834,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
           </div>
           <div style="flex:1;">
             <div style="font-size:16px;font-weight:700;color:var(--text);">{{ 'attachments.sectionTitle' | translate }}</div>
-            <div style="font-size:12px;color:var(--text-3);">{{ client.firstName }} {{ client.lastName }}</div>
+            <div class="kv-label">{{ client.firstName }} {{ client.lastName }}</div>
           </div>
           <button (click)="showAttachmentsDialog = false"
                   style="width:32px;height:32px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-3);font-size:16px;">
@@ -742,11 +865,11 @@ import { GdprExportService } from '../../services/gdpr-export.service';
     <!-- Terminal Stage Change Confirmation (won/lost — same friction as delete/mark-inactive) -->
     <app-confirm-dialog
       [open]="pendingStageChange !== null"
-      [danger]="pendingStageChange === PipelineStage.LOST"
-      [icon]="pendingStageChange === PipelineStage.WON ? 'ri-trophy-line' : 'ri-close-circle-line'"
-      [title]="(pendingStageChange === PipelineStage.WON ? 'clients.confirmWonTitle' : 'clients.confirmLostTitle') | translate"
-      [message]="client ? ((pendingStageChange === PipelineStage.WON ? 'clients.confirmWonMessage' : 'clients.confirmLostMessage') | translate:{ name: client.firstName + ' ' + client.lastName }) : ''"
-      [confirmLabel]="(pendingStageChange === PipelineStage.WON ? 'clients.confirmWonTitle' : 'clients.confirmLostTitle') | translate"
+      [danger]="!pendingStageIsWin"
+      [icon]="pendingStageIsWin ? 'ri-trophy-line' : 'ri-close-circle-line'"
+      [title]="(pendingStageIsWin ? 'clients.confirmWonTitle' : 'clients.confirmLostTitle') | translate"
+      [message]="client ? ((pendingStageIsWin ? 'clients.confirmWonMessage' : 'clients.confirmLostMessage') | translate:{ name: client.firstName + ' ' + client.lastName }) : ''"
+      [confirmLabel]="(pendingStageIsWin ? 'clients.confirmWonTitle' : 'clients.confirmLostTitle') | translate"
       (cancel)="cancelStageChange()"
       (confirm)="confirmStageChange()">
     </app-confirm-dialog>
@@ -827,19 +950,110 @@ export class ClientDetailComponent implements OnInit {
 
   showAttachmentsDialog = false;
   stageDropdownOpen = false;
-  pendingStageChange: PipelineStage | null = null;
+  pendingStageChange: PipelineStage | SellerPipelineStage | null = null;
   showQuickMenu = false;
   showStageUpgradeHint = false;
   showDeleteConfirm = false;
   isExportingClientData = false;
 
-  pipelineStages = [
-    { value: PipelineStage.PROSPECT,      label: 'Interessent',    color: 'var(--stage-prospect)',      bg: 'var(--stage-prospect-bg)' },
-    { value: PipelineStage.ACTIVE_SEARCH, label: 'Aktive Suche',   color: 'var(--stage-active-search)', bg: 'var(--stage-active-search-bg)' },
-    { value: PipelineStage.VIEWING,       label: 'Besichtigungen', color: 'var(--stage-viewing)',       bg: 'var(--stage-viewing-bg)' },
-    { value: PipelineStage.WON,           label: 'Gewonnen',       color: 'var(--stage-won)',           bg: 'var(--stage-won-bg)' },
-    { value: PipelineStage.LOST,          label: 'Verloren',       color: 'var(--stage-lost)',          bg: 'var(--stage-lost-bg)' },
+  pipelineStages: StageOption[] = [
+    { value: PipelineStage.PROSPECT,      color: 'var(--stage-prospect)',      bg: 'var(--stage-prospect-bg)' },
+    { value: PipelineStage.ACTIVE_SEARCH, color: 'var(--stage-active-search)', bg: 'var(--stage-active-search-bg)' },
+    { value: PipelineStage.VIEWING,       color: 'var(--stage-viewing)',       bg: 'var(--stage-viewing-bg)' },
+    { value: PipelineStage.WON,           color: 'var(--stage-won)',           bg: 'var(--stage-won-bg)' },
+    { value: PipelineStage.LOST,          color: 'var(--stage-lost)',          bg: 'var(--stage-lost-bg)' },
   ];
+
+  /** Akquise-Stufen eines Eigentuemers (Issue #38). */
+  sellerStages: StageOption[] = [
+    { value: SellerPipelineStage.LEAD,      color: 'var(--stage-prospect)',      bg: 'var(--stage-prospect-bg)' },
+    { value: SellerPipelineStage.VALUATION, color: 'var(--stage-active-search)', bg: 'var(--stage-active-search-bg)' },
+    { value: SellerPipelineStage.PITCH,     color: 'var(--stage-viewing)',       bg: 'var(--stage-viewing-bg)' },
+    { value: SellerPipelineStage.MANDATE,   color: 'var(--primary)',             bg: 'var(--accent-soft)' },
+    { value: SellerPipelineStage.SOLD,      color: 'var(--stage-won)',           bg: 'var(--stage-won-bg)' },
+    { value: SellerPipelineStage.LOST,      color: 'var(--stage-lost)',          bg: 'var(--stage-lost-bg)' },
+  ];
+
+  /** Verkäufer bekommen die Auftrags-Karte statt Suchprofil, Suchradius und Matching (#39). */
+  get isSellerClient(): boolean {
+    return this.client?.clientType === ClientType.SELLER;
+  }
+
+  /** Tage am Markt aus dem Anlagedatum — ein eigenes Listing-Datum führt das Objekt nicht. */
+  daysOnMarket(p: Property): number | null {
+    if (!p.createdAt) return null;
+    const ms = Date.now() - new Date(p.createdAt).getTime();
+    return Math.max(0, Math.floor(ms / 86400000));
+  }
+
+  /**
+   * Resttage des Auftrags. null, wenn kein Enddatum gepflegt ist oder es weiter als
+   * 30 Tage entfernt liegt — dann ist es keine Warnung, sondern nur ein Datum, und das
+   * steht schon in der Laufzeit-Zeile.
+   */
+  mandateDaysLeft(p: Property): number | null {
+    if (!p.mandateEnd) return null;
+    const end = new Date(p.mandateEnd);
+    const days = Math.ceil((end.getTime() - Date.now()) / 86400000);
+    return days <= 30 ? days : null;
+  }
+
+  mandateExpired(p: Property): boolean {
+    const days = this.mandateDaysLeft(p);
+    return days !== null && days < 0;
+  }
+
+  mandateExpiryColor(p: Property): string {
+    return this.mandateExpired(p) ? 'var(--color-error)' : 'var(--color-warning)';
+  }
+
+  mandateExpiryColorSoft(p: Property): string {
+    return this.mandateExpired(p) ? 'var(--color-error-soft)' : 'var(--color-warning-soft)';
+  }
+
+  /** Wunschpreis minus Angebotspreis. Positiv heißt: der Eigentümer will mehr, als eingestellt ist. */
+  priceGap(p: Property): number | null {
+    if (p.ownerPriceExpectation == null || p.price == null) return null;
+    return p.ownerPriceExpectation - p.price;
+  }
+
+  /** Ob überhaupt Auftragsdaten gepflegt sind — sonst bleibt die Karte ein leeres Gerüst. */
+  hasMandateData(p: Property): boolean {
+    return p.mandateType != null || p.mandateStart != null || p.mandateEnd != null
+        || p.ownerPriceExpectation != null
+        || p.commissionSellerPercent != null || p.commissionBuyerPercent != null;
+  }
+
+  /** Welche Stufen zur Auswahl stehen — richtet sich nach dem Kundentyp. */
+  get activeStages(): StageOption[] {
+    return this.client?.clientType === ClientType.SELLER ? this.sellerStages : this.pipelineStages;
+  }
+
+  /** Die aktuell gesetzte Stufe aus der jeweils gueltigen Pipeline. */
+  get currentStage(): PipelineStage | SellerPipelineStage | undefined {
+    if (!this.client) return undefined;
+    return this.client.clientType === ClientType.SELLER
+      ? (this.client.sellerPipelineStage ?? SellerPipelineStage.LEAD)
+      : this.client.pipelineStage;
+  }
+
+  /** Welcher enums-Block die Stufe beschriftet. */
+  get stageEnumName(): string {
+    return this.client?.clientType === ClientType.SELLER ? 'sellerPipelineStage' : 'pipelineStage';
+  }
+
+  /** Abschluss-Stufen brauchen eine Bestaetigung — je Pipeline andere Werte. */
+  private get terminalStages(): (PipelineStage | SellerPipelineStage)[] {
+    return this.client?.clientType === ClientType.SELLER
+      ? [SellerPipelineStage.SOLD, SellerPipelineStage.LOST]
+      : [PipelineStage.WON, PipelineStage.LOST];
+  }
+
+  /** Ob die anstehende Bestaetigung einen Erfolg oder einen Verlust betrifft. */
+  get pendingStageIsWin(): boolean {
+    return this.pendingStageChange === PipelineStage.WON
+        || this.pendingStageChange === SellerPipelineStage.SOLD;
+  }
 
   constructor(
     private route: ActivatedRoute,
@@ -1141,11 +1355,11 @@ export class ClientDetailComponent implements OnInit {
    * terminal stage (won/lost) gets a confirmation, just like the dashboard's "mark inactive"
    * and the delete flow do — normal forward progress through the pipeline stays frictionless.
    */
-  setStage(stage: PipelineStage): void {
+  setStage(stage: PipelineStage | SellerPipelineStage): void {
     if (!this.client?.id) return;
     this.stageDropdownOpen = false;
 
-    if (stage === PipelineStage.WON || stage === PipelineStage.LOST) {
+    if (this.terminalStages.includes(stage)) {
       this.pendingStageChange = stage;
       return;
     }
@@ -1161,9 +1375,12 @@ export class ClientDetailComponent implements OnInit {
     if (this.pendingStageChange) this.applyStage(this.pendingStageChange);
   }
 
-  private applyStage(stage: PipelineStage): void {
+  private applyStage(stage: PipelineStage | SellerPipelineStage): void {
     if (!this.client?.id) return;
-    this.clientService.updatePipelineStage(this.client.id, stage).subscribe({
+    const save$ = this.client.clientType === ClientType.SELLER
+      ? this.clientService.updateSellerPipelineStage(this.client.id, stage as SellerPipelineStage)
+      : this.clientService.updatePipelineStage(this.client.id, stage as PipelineStage);
+    save$.subscribe({
       next: (updated) => {
         this.client = updated;
         this.pendingStageChange = null;
@@ -1171,16 +1388,12 @@ export class ClientDetailComponent implements OnInit {
     });
   }
 
-  getStageLabel(stage?: PipelineStage): string {
-    return this.pipelineStages.find(s => s.value === stage)?.label ?? 'Interessent';
+  getStageBg(stage?: PipelineStage | SellerPipelineStage | null): string {
+    return this.activeStages.find(s => s.value === stage)?.bg ?? 'var(--stage-prospect-bg)';
   }
 
-  getStageBg(stage?: PipelineStage): string {
-    return this.pipelineStages.find(s => s.value === stage)?.bg ?? 'var(--stage-prospect-bg)';
-  }
-
-  getStageColor(stage?: PipelineStage): string {
-    return this.pipelineStages.find(s => s.value === stage)?.color ?? 'var(--stage-prospect)';
+  getStageColor(stage?: PipelineStage | SellerPipelineStage | null): string {
+    return this.activeStages.find(s => s.value === stage)?.color ?? 'var(--stage-prospect)';
   }
 
   getViewingStatusBg(status: ViewingStatus): string {
@@ -1249,15 +1462,6 @@ export class ClientDetailComponent implements OnInit {
       case 'OFFER_MADE':        return 'Angebot gemacht';
       case 'DEAL_CLOSED':       return 'Abschluss';
       default:                  return outcome;
-    }
-  }
-
-  getAngebotsart(): string {
-    switch (this.client?.clientType) {
-      case ClientType.BUYER:  return 'Kauf';
-      case ClientType.RENTER: return 'Miete';
-      case ClientType.SELLER: return 'Verkauf';
-      default:                return '–';
     }
   }
 

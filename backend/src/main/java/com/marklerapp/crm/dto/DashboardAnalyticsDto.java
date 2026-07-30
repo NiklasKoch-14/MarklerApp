@@ -30,6 +30,12 @@ public class DashboardAnalyticsDto {
     private ConversionFunnelDto conversionFunnel;
 
     // ========================================
+    // Akquise-Pipeline Verkäufer (Issue #38)
+    // ========================================
+
+    private SellerPipelineDto sellerPipeline;
+
+    // ========================================
     // Pipeline Health
     // ========================================
 
@@ -83,6 +89,31 @@ public class DashboardAnalyticsDto {
         private Double offerRate;
         private Double closingRate;
         private Double overallConversionRate;
+    }
+
+    /**
+     * Akquise-Trichter der Verkäufer (Issue #38). Bewusst getrennt vom Käufer-Trichter:
+     * die Stufen sind andere, und beides zu vermischen würde die Absprung-Erkennung
+     * verfälschen. Kumulativ wie der Käufer-Trichter — wer einen Auftrag hat, hatte
+     * zwangsläufig auch eine Wertermittlung.
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SellerPipelineDto {
+        private Long totalSellers;
+        private Long valuations;   // mindestens Wertermittlung erreicht
+        private Long pitches;      // mindestens Präsentation erreicht
+        private Long mandates;     // mindestens Auftrag erreicht
+        private Long sold;
+        private Long lost;
+
+        private Double valuationRate;   // Wertermittlungen je Lead (%)
+        private Double pitchRate;       // Präsentationen je Wertermittlung (%)
+        private Double mandateRate;     // Aufträge je Präsentation (%)
+        private Double soldRate;        // Verkäufe je Auftrag (%)
+        private Double overallMandateRate; // Aufträge je Lead (%) — die Kennzahl der Akquise
     }
 
     @Data

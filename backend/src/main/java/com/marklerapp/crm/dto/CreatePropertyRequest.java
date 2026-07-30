@@ -144,6 +144,24 @@ public class CreatePropertyRequest {
     @DecimalMin(value = "0.0", message = "Commission must be non-negative")
     private BigDecimal commission;
 
+    // Auftragsdaten (Issue #39) -- haengen am Objekt, nicht am Eigentuemer:
+    // ein Eigentuemer kann mehrere Objekte mit unterschiedlichen Auftraegen haben.
+    private MandateType mandateType;
+    private LocalDate mandateStart;
+    private LocalDate mandateEnd;
+
+    @DecimalMin(value = "0.0", message = "Owner price expectation must be non-negative")
+    private BigDecimal ownerPriceExpectation;
+
+    // Prozentsaetze -- im Unterschied zu commission, das einen Eurobetrag fuehrt.
+    @DecimalMin(value = "0.0", message = "Seller commission must be non-negative")
+    @DecimalMax(value = "100.0", message = "Seller commission must not exceed 100%")
+    private BigDecimal commissionSellerPercent;
+
+    @DecimalMin(value = "0.0", message = "Buyer commission must be non-negative")
+    @DecimalMax(value = "100.0", message = "Buyer commission must not exceed 100%")
+    private BigDecimal commissionBuyerPercent;
+
     // ========================================
     // Features and Amenities
     // ========================================

@@ -312,6 +312,111 @@
         </div>
       </div>
 
+      <!-- Eigentümer-Report (#40) — der Tätigkeitsnachweis, den der Makler im
+           Alleinauftrag schuldet. Bildschirmansicht mit Namen; der PDF-Export
+           pseudonymisiert, weil er an einen Dritten geht. -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <i class="ri-file-chart-line" style="color:var(--primary);font-size:16px;"></i>
+            <span style="font-size:14px;font-weight:700;color:var(--text);">{{ 'properties.ownerReport.title' | translate }}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div class="view-tabs">
+              <button class="view-tab" [class.active]="reportPeriod === 'FOUR_WEEKS'" (click)="setReportPeriod('FOUR_WEEKS')">
+                {{ 'properties.ownerReport.lastFourWeeks' | translate }}
+              </button>
+              <button class="view-tab" [class.active]="reportPeriod === 'MANDATE'"
+                      [disabled]="!property.mandateStart"
+                      [title]="!property.mandateStart ? ('properties.ownerReport.needsMandateStart' | translate) : ''"
+                      (click)="setReportPeriod('MANDATE')">
+                {{ 'properties.ownerReport.sinceMandate' | translate }}
+              </button>
+            </div>
+            <button class="btn-secondary" style="padding:7px 12px;font-size:13px;"
+                    [disabled]="isDownloadingReport || !ownerReport"
+                    (click)="downloadOwnerReport()">
+              <i class="ri-download-line" style="font-size:14px;"></i>
+              {{ (isDownloadingReport ? 'properties.ownerReport.downloading' : 'properties.ownerReport.exportPdf') | translate }}
+            </button>
+          </div>
+        </div>
+
+        <div style="padding:16px 20px;">
+          <div *ngIf="isLoadingReport" style="text-align:center;padding:20px 0;color:var(--text-3);">
+            <div style="width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;"></div>
+          </div>
+
+          <ng-container *ngIf="!isLoadingReport && ownerReport as r">
+            <div style="font-size:12px;color:var(--text-3);margin-bottom:14px;">
+              {{ r.periodFrom | date:'dd.MM.yyyy' }} – {{ reportPeriodEnd | date:'dd.MM.yyyy' }}
+            </div>
+
+            <!-- Kennzahlen -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:18px;">
+              <div *ngFor="let k of reportKeyFigures"
+                   style="background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+                <div style="font-size:20px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;">{{ k.value }}</div>
+                <div style="font-size:11.5px;color:var(--text-3);margin-top:3px;">{{ k.labelKey | translate }}</div>
+              </div>
+            </div>
+
+            <!-- Feedback-Verteilung: das stärkste Argument im Preisgespräch -->
+            <div *ngIf="hasFeedback" style="margin-bottom:18px;">
+              <div style="font-size:12px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:9px;">
+                {{ 'properties.ownerReport.feedbackTitle' | translate }}
+              </div>
+              <div style="display:flex;flex-direction:column;gap:7px;">
+                <div *ngFor="let f of feedbackBars" style="display:grid;grid-template-columns:minmax(76px,auto) 1fr 32px;align-items:center;gap:10px;">
+                  <span style="font-size:12.5px;color:var(--text-2);">{{ f.key | translateEnum:'viewingFeedback' }}</span>
+                  <div style="height:22px;background:var(--surface-2);border-radius:6px;overflow:hidden;">
+                    <div style="height:100%;transition:width .4s;" [style.width.%]="f.widthPct" [style.background]="f.color"></div>
+                  </div>
+                  <span style="font-size:13px;font-weight:700;color:var(--text);text-align:right;font-variant-numeric:tabular-nums;">{{ f.count }}</span>
+                </div>
+                <div *ngIf="r.viewingsWithoutFeedback > 0" style="font-size:11.5px;color:var(--text-3);margin-top:2px;">
+                  {{ 'properties.ownerReport.withoutFeedback' | translate:{ count: r.viewingsWithoutFeedback } }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Chronologie -->
+            <div style="font-size:12px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:9px;">
+              {{ 'properties.ownerReport.activityTitle' | translate }}
+            </div>
+            <div *ngIf="r.activities.length === 0" style="font-size:13px;color:var(--text-3);">
+              {{ 'properties.ownerReport.noActivity' | translate }}
+            </div>
+            <div *ngIf="r.activities.length > 0" style="display:flex;flex-direction:column;gap:8px;">
+              <div *ngFor="let a of r.activities"
+                   style="display:flex;align-items:flex-start;gap:11px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;">
+                <i [class]="a.type === 'VIEWING' ? 'ri-group-line' : 'ri-phone-line'"
+                   style="font-size:14px;color:var(--text-3);margin-top:2px;flex-shrink:0;"></i>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:13px;font-weight:600;color:var(--text);">
+                    {{ a.clientName || ('properties.ownerReport.prospect' | translate:{ label: a.clientLabel }) }}
+                  </div>
+                  <div style="font-size:11.5px;color:var(--text-3);margin-top:2px;">
+                    {{ a.date | date:'dd.MM.yyyy HH:mm' }}
+                    <ng-container *ngIf="a.status"> · {{ a.status | translateEnum:'viewingStatus' }}</ng-container>
+                    <ng-container *ngIf="a.notes"> · {{ a.notes }}</ng-container>
+                  </div>
+                </div>
+                <span *ngIf="a.outcome"
+                      [style.background]="outcomeBg(a)" [style.color]="outcomeColor(a)"
+                      style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:10px;white-space:nowrap;flex-shrink:0;">
+                  {{ a.outcome | translateEnum:(a.type === 'VIEWING' ? 'viewingFeedback' : 'callOutcome') }}
+                </span>
+              </div>
+            </div>
+
+            <div style="font-size:11px;color:var(--text-3);margin-top:14px;line-height:1.5;">
+              {{ 'properties.ownerReport.privacyNote' | translate }}
+            </div>
+          </ng-container>
+        </div>
+      </div>
+
       <!-- File Attachments -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
         <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
@@ -462,7 +567,7 @@
         </div>
 
         <div style="padding:14px 18px 0;border-top:1px solid var(--border);">
-          <span style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;">{{ 'properties.location.title' | translate }}</span>
+          <span class="section-label" style="margin-bottom:0;">{{ 'properties.location.title' | translate }}</span>
         </div>
         <div *ngIf="property.latitude != null && property.longitude != null" style="padding-top:10px;">
           <app-location-picker-map

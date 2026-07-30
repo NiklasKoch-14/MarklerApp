@@ -47,7 +47,7 @@ interface BreakdownRow {
           <div style="display:flex;align-items:baseline;gap:8px;"
                [style.flex]="row.compact ? '1' : null"
                [style.margin-bottom]="row.compact ? '0' : '3px'">
-            <span style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap;">
+            <span class="section-label" style="white-space:nowrap;">
               {{ row.labelKey | translate }}
             </span>
             @if (row.compact) {
@@ -80,7 +80,7 @@ interface BreakdownRow {
       }
 
       <div style="display:flex;align-items:baseline;gap:8px;padding-top:9px;border-top:1px solid var(--border);">
-        <span style="flex:1;font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.4px;">
+        <span class="section-label" style="flex:1;">
           {{ 'properties.matching.totalScore' | translate }}
         </span>
         <span style="font-size:14px;color:var(--text);font-weight:800;font-variant-numeric:tabular-nums;">{{ matchScore }}%</span>

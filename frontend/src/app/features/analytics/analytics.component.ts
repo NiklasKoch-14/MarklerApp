@@ -212,6 +212,46 @@ interface MarketBar {
             </div>
           </div>
 
+          <!-- ══ Akquise-Trichter (Issue #38) — nur wenn es Verkäufer gibt, sonst
+                    stünde hier eine Karte aus lauter Nullen ══ -->
+          <div class="an-card" *ngIf="data.sellerPipeline && data.sellerPipeline.totalSellers > 0">
+            <div class="an-card-head">
+              <div class="an-title">{{ 'analytics.sellerFunnelTitle' | translate }}</div>
+              <div class="an-sub">{{ 'analytics.sellerFunnelSub' | translate }}</div>
+            </div>
+            <div style="padding:16px 20px 20px;">
+              <div class="funnel">
+                <div class="funnel-head"></div>
+                <div class="funnel-head"></div>
+                <div class="funnel-head">{{ 'analytics.sellerFunnelColOwners' | translate }}</div>
+                <div class="funnel-head">{{ 'analytics.funnelColRate' | translate }}</div>
+
+                <ng-container *ngFor="let s of sellerFunnelStages">
+                  <div class="funnel-label">{{ s.labelKey | translate }}</div>
+                  <div class="funnel-track">
+                    <div class="funnel-fill"
+                         [style.width.%]="s.widthPct"
+                         [style.minWidth.px]="s.count > 0 ? 4 : 0"
+                         [style.background]="s.color"
+                         [style.opacity]="s.opacity"></div>
+                  </div>
+                  <div class="funnel-count">{{ s.count }}</div>
+                  <div class="funnel-rate" [class.is-leak]="s.isLeak">
+                    {{ s.rate === null ? '—' : (s.rate | number:'1.0-0') + '%' }}
+                  </div>
+                </ng-container>
+              </div>
+
+              <div class="funnel-foot">
+                <div>
+                  {{ 'analytics.sellerMandateRate' | translate }}
+                  <strong style="color:var(--text-2);">{{ data.sellerPipeline.overallMandateRate | number:'1.0-1' }}%</strong>
+                </div>
+                <div>{{ 'analytics.sellerFunnelLost' | translate:{ count: data.sellerPipeline.lost } }}</div>
+              </div>
+            </div>
+          </div>
+
           <!-- ══ Aktivitätsverlauf — telefoniere ich genug ══ -->
           <div class="an-card">
             <div class="an-card-head">
@@ -370,6 +410,7 @@ export class AnalyticsComponent implements OnInit {
   data: DashboardAnalytics | null = null;
 
   funnelStages: FunnelStage[] = [];
+  sellerFunnelStages: FunnelStage[] = [];
   leakFromKey = '';
   leakToKey = '';
   leakRate = 0;
@@ -402,6 +443,7 @@ export class AnalyticsComponent implements OnInit {
       next: (d) => {
         this.data = d;
         this.buildFunnel(d);
+        this.buildSellerFunnel(d);
         this.buildTrend(d.activityTrends.last30DaysActivity);
         this.buildMarketBars(d.propertyPortfolio.longestOnMarket);
         this.buildLeadSources(d.leadSourcePerformance);
@@ -494,6 +536,44 @@ export class AnalyticsComponent implements OnInit {
     this.leakFromKey = leakIdx > 0 ? raw[leakIdx - 1].key : '';
     this.leakToKey = leakIdx > 0 ? raw[leakIdx].key : '';
     this.leakRate = leakIdx > 0 ? lowest : 0;
+  }
+
+  /**
+   * Akquise-Trichter (Issue #38). Gleiche Darstellung wie beim Käufer-Trichter, aber
+   * eigene Karte: die Stufen sind andere, und ein gemeinsamer Balken würde suggerieren,
+   * dass ein Eigentümer und ein Interessent dasselbe durchlaufen.
+   */
+  private buildSellerFunnel(d: DashboardAnalytics): void {
+    const s = d.sellerPipeline;
+    if (!s) { this.sellerFunnelStages = []; return; }
+
+    const raw = [
+      { key: 'analytics.sellerFunnelTotal',     count: s.totalSellers, color: 'var(--color-neutral)', opacity: 0.45, rate: null as number | null },
+      { key: 'analytics.sellerFunnelValuation', count: s.valuations,   color: 'var(--primary)',       opacity: 0.45, rate: s.valuationRate },
+      { key: 'analytics.sellerFunnelPitch',     count: s.pitches,      color: 'var(--primary)',       opacity: 0.65, rate: s.pitchRate },
+      { key: 'analytics.sellerFunnelMandate',   count: s.mandates,     color: 'var(--primary)',       opacity: 0.85, rate: s.mandateRate },
+      { key: 'analytics.sellerFunnelSold',      count: s.sold,         color: 'var(--color-closed)',  opacity: 1,    rate: s.soldRate },
+    ];
+    const base = Math.max(1, s.totalSellers);
+
+    let leakIdx = -1;
+    let lowest = Infinity;
+    for (let i = 1; i < raw.length; i++) {
+      if (raw[i - 1].count > 0 && raw[i].rate !== null && raw[i].rate! < lowest) {
+        lowest = raw[i].rate!;
+        leakIdx = i;
+      }
+    }
+
+    this.sellerFunnelStages = raw.map((r, i) => ({
+      labelKey: r.key,
+      count: r.count,
+      widthPct: (r.count / base) * 100,
+      color: r.color,
+      opacity: r.opacity,
+      rate: r.rate,
+      isLeak: i === leakIdx,
+    }));
   }
 
   private buildTrend(days: DailyActivity[]): void {

@@ -9,12 +9,15 @@ import {
   PropertyStatus,
   PropertyType,
   ListingType,
-  HeatingType
+  HeatingType,
+  OwnerReport,
+  OwnerReportActivity
 } from '../../services/property.service';
 import { FileAttachmentManagerComponent } from '../../../../shared/components/file-attachment-manager/file-attachment-manager.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { FormsModule } from '@angular/forms';
+import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 import { ViewingService, ViewingSummary, ViewingStatus } from '../../../viewing-management/services/viewing.service';
 import { ViewingAddDialogComponent } from '../../../viewing-management/components/viewing-add-dialog/viewing-add-dialog.component';
 import { PropertyMatchingService } from '../../services/property-matching.service';
@@ -28,7 +31,7 @@ import { catchError } from 'rxjs/operators';
 @Component({
   selector: 'app-property-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent, ConfirmDialogComponent, LocationPickerMapComponent, MatchScorePopoverComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent, ConfirmDialogComponent, LocationPickerMapComponent, MatchScorePopoverComponent, TranslateEnumPipe],
   templateUrl: './property-detail.component.html',
   styleUrls: ['./property-detail.component.scss']
 })
@@ -63,6 +66,12 @@ export class PropertyDetailComponent implements OnInit {
    * Objekt selbst ist der grüne Haupt-Pin und darf hier nicht doppelt auftauchen. */
   mapMarkers: SecondaryMarker[] = [];
 
+  // Eigentuemer-Report (Issue #40)
+  ownerReport: OwnerReport | null = null;
+  isLoadingReport = false;
+  isDownloadingReport = false;
+  reportPeriod: 'FOUR_WEEKS' | 'MANDATE' = 'FOUR_WEEKS';
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -80,7 +89,114 @@ export class PropertyDetailComponent implements OnInit {
       this.loadViewings(propertyId);
       this.loadMatchingClients(propertyId);
       this.loadMapMarkers(propertyId);
+      this.loadOwnerReport(propertyId);
     }
+  }
+
+  // ========================================
+  // Eigentuemer-Report (Issue #40)
+  // ========================================
+
+  private loadOwnerReport(propertyId: string): void {
+    this.isLoadingReport = true;
+    this.propertyService.getOwnerReport(propertyId, this.reportFrom())
+      .pipe(catchError(() => of(null)))
+      .subscribe(report => {
+        this.ownerReport = report;
+        this.isLoadingReport = false;
+      });
+  }
+
+  /**
+   * Bei "seit Auftragsbeginn" schickt die Oberflaeche das Datum mit; bei "letzte 4 Wochen"
+   * bleibt der Parameter leer, damit der Standard aus dem Backend gilt -- der beruecksichtigt
+   * auch einen Auftrag, der erst vor wenigen Tagen begonnen hat.
+   */
+  private reportFrom(): string | undefined {
+    if (this.reportPeriod === 'MANDATE' && this.property?.mandateStart) {
+      return this.property.mandateStart;
+    }
+    return undefined;
+  }
+
+  setReportPeriod(period: 'FOUR_WEEKS' | 'MANDATE'): void {
+    if (this.reportPeriod === period) return;
+    if (period === 'MANDATE' && !this.property?.mandateStart) return;
+    this.reportPeriod = period;
+    if (this.property?.id) this.loadOwnerReport(this.property.id);
+  }
+
+  /** periodTo ist exklusiv; angezeigt wird der letzte enthaltene Tag. */
+  get reportPeriodEnd(): Date | null {
+    if (!this.ownerReport?.periodTo) return null;
+    const to = new Date(this.ownerReport.periodTo);
+    to.setDate(to.getDate() - 1);
+    return to;
+  }
+
+  get reportKeyFigures(): { labelKey: string; value: number }[] {
+    const r = this.ownerReport;
+    if (!r) return [];
+    return [
+      { labelKey: 'properties.ownerReport.inquiries', value: r.inquiries },
+      { labelKey: 'properties.ownerReport.viewingsCompleted', value: r.viewingsCompleted },
+      { labelKey: 'properties.ownerReport.viewingsCancelled', value: r.viewingsCancelled },
+      { labelKey: 'properties.ownerReport.viewingsScheduled', value: r.viewingsScheduled },
+      { labelKey: 'properties.ownerReport.daysOnMarket', value: r.daysOnMarket ?? 0 },
+    ];
+  }
+
+  get hasFeedback(): boolean {
+    const d = this.ownerReport?.feedbackDistribution;
+    return !!d && Object.values(d).some(v => v > 0);
+  }
+
+  /**
+   * Balken je Rueckmeldung. Bezugsgroesse ist der hoechste Einzelwert, nicht die Summe --
+   * bei drei Kategorien wuerde eine Summenskala alle Balken zu Streifen zusammendruecken.
+   */
+  get feedbackBars(): { key: string; count: number; widthPct: number; color: string }[] {
+    const d = this.ownerReport?.feedbackDistribution ?? {};
+    const max = Math.max(1, ...Object.values(d));
+    return Object.entries(d).map(([key, count]) => ({
+      key,
+      count,
+      widthPct: (count / max) * 100,
+      color: key === 'LIKED' ? 'var(--color-success)'
+           : key === 'DISLIKED' ? 'var(--color-error)'
+           : 'var(--color-warning)',
+    }));
+  }
+
+  outcomeColor(a: OwnerReportActivity): string {
+    if (a.type !== 'VIEWING') return 'var(--text-2)';
+    return a.outcome === 'LIKED' ? 'var(--color-success)'
+         : a.outcome === 'DISLIKED' ? 'var(--color-error)'
+         : 'var(--color-warning)';
+  }
+
+  outcomeBg(a: OwnerReportActivity): string {
+    if (a.type !== 'VIEWING') return 'var(--surface-2)';
+    return a.outcome === 'LIKED' ? 'var(--color-success-soft)'
+         : a.outcome === 'DISLIKED' ? 'var(--color-error-soft)'
+         : 'var(--color-warning-soft)';
+  }
+
+  downloadOwnerReport(): void {
+    if (!this.property?.id || this.isDownloadingReport) return;
+    this.isDownloadingReport = true;
+    this.propertyService.downloadOwnerReportPdf(this.property.id, this.reportFrom())
+      .pipe(catchError(() => of(null)))
+      .subscribe(blob => {
+        this.isDownloadingReport = false;
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `taetigkeitsnachweis_${this.property?.id}.pdf`;
+        link.click();
+        URL.revokeObjectURL(url);
+      });
   }
 
   /**

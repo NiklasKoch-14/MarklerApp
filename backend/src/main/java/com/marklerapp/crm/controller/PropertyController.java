@@ -5,6 +5,8 @@ import com.marklerapp.crm.dto.*;
 import com.marklerapp.crm.entity.ListingType;
 import com.marklerapp.crm.entity.PropertyStatus;
 import com.marklerapp.crm.entity.PropertyType;
+import com.marklerapp.crm.service.OwnerReportPdfService;
+import com.marklerapp.crm.service.OwnerReportService;
 import com.marklerapp.crm.service.PropertyImageService;
 import com.marklerapp.crm.service.PropertyService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +23,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -70,6 +74,8 @@ public class PropertyController extends BaseController {
 
     private final PropertyService propertyService;
     private final PropertyImageService propertyImageService;
+    private final OwnerReportService ownerReportService;
+    private final OwnerReportPdfService ownerReportPdfService;
 
     // ========================================
     // Core CRUD Operations
@@ -723,6 +729,59 @@ public class PropertyController extends BaseController {
         log.debug("Getting properties owned by client: {} for agent: {}", clientId, agentId);
 
         return ResponseEntity.ok(propertyService.getPropertiesByOwner(clientId, agentId));
+    }
+
+    /**
+     * Taetigkeitsnachweis fuer den Eigentuemer (Issue #40) — Bildschirmansicht.
+     * Enthaelt Interessentennamen; der PDF-Export unten tut das bewusst nicht.
+     */
+    @GetMapping("/{id}/owner-report")
+    @Operation(summary = "Get owner activity report",
+               description = "Aggregated viewings, inquiries and feedback for one property. "
+                           + "Internal view — includes prospect names.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Report generated successfully"),
+        @ApiResponse(responseCode = "404", description = "Property not found or not owned by this agent")
+    })
+    public ResponseEntity<OwnerReportDto> getOwnerReport(
+            @Parameter(description = "Property ID") @PathVariable UUID id,
+            @Parameter(description = "First day of the period; defaults to 28 days back or the mandate start")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @Parameter(description = "Exclusive last day of the period; defaults to tomorrow")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        return ResponseEntity.ok(ownerReportService.generateReport(id, agentId, from, to));
+    }
+
+    /**
+     * Derselbe Nachweis als PDF — das Dokument, das an den Eigentuemer geht.
+     * Interessenten erscheinen ausschliesslich pseudonymisiert.
+     */
+    @GetMapping(value = "/{id}/owner-report/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @Operation(summary = "Export owner activity report as PDF",
+               description = "The document sent to the owner. Prospects appear pseudonymised "
+                           + "(\"Interessent A\") — no names or contact details are included.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "PDF generated successfully"),
+        @ApiResponse(responseCode = "404", description = "Property not found or not owned by this agent")
+    })
+    public ResponseEntity<byte[]> getOwnerReportPdf(
+            @Parameter(description = "Property ID") @PathVariable UUID id,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            Authentication authentication) {
+
+        UUID agentId = getAgentIdFromAuth(authentication);
+        OwnerReportDto report = ownerReportService.generateReport(id, agentId, from, to);
+        byte[] pdf = ownerReportPdfService.generate(report.anonymized());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.set(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=\"taetigkeitsnachweis_" + id + ".pdf\"");
+        return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
     }
 
     /**

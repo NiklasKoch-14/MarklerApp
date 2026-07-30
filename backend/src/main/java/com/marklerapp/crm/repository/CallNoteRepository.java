@@ -201,4 +201,20 @@ public interface CallNoteRepository extends JpaRepository<CallNote, UUID> {
         @Param("agent") Agent agent,
         @Param("sinceDate") LocalDateTime sinceDate
     );
+
+    /**
+     * Objektbezogene Notizen in einem Zeitraum — Grundlage des Eigentuemer-Reports
+     * (Issue #40). JOIN FETCH auf client, weil der Report je Eintrag den Interessenten
+     * braucht; ohne das eine Query pro Notiz.
+     */
+    @Query("SELECT cn FROM CallNote cn " +
+           "LEFT JOIN FETCH cn.client " +
+           "WHERE cn.property.id = :propertyId " +
+           "AND cn.callDate >= :from AND cn.callDate < :to " +
+           "ORDER BY cn.callDate DESC")
+    List<CallNote> findByPropertyAndCallDateRange(
+        @Param("propertyId") UUID propertyId,
+        @Param("from") LocalDateTime from,
+        @Param("to") LocalDateTime to
+    );
 }

@@ -60,6 +60,8 @@ public class ClientDto {
     private Client.FinancingStatus financingStatus;
     private Client.MoveInTimeline moveInTimeline;
     private Client.PipelineStage pipelineStage;
+    /** Nur fuer clientType SELLER gesetzt (Issue #38); fuer Kaeufer/Mieter immer null. */
+    private Client.SellerPipelineStage sellerPipelineStage;
     private Client.LeadSource leadSource;
 
     private LocalDateTime lastContactDate;

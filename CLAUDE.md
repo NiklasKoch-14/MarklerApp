@@ -176,6 +176,41 @@ Always use `translateEnum` pipe in templates. NEVER format enums in service meth
 
 `JacksonConfig.java` coerces empty strings to null for enums — needed because frontend sends `""` for optional enums.
 
+### Styling — drei Systeme, drei Zuständigkeiten (ADR 0001)
+
+Volle Begründung mit Zahlen: `docs/adr/0001-styling-architektur.md`. Die Kurzform:
+
+| Wofür | Womit |
+|---|---|
+| Farben | **nur** CSS-Variablen — `bg-surface`, `text-body-2`, `border-border`, `bg-page`, `text-error`, `bg-success-soft`. Sie sind themefähig; **kein `dark:` nötig** |
+| Layout, Abstand, Typografie | Tailwind — `flex`, `grid`, `gap-3`, `text-13`, `font-semibold` |
+| Wiederkehrende Bausteine | Klassen in `styles.scss` — `.surface-card`, `.kv-row`/`.kv-label`/`.kv-value`, `.section-label`, `.btn-primary`, `.form-input` |
+| Berechnete Werte | `[style.x]`-Binding |
+
+**Nie** `bg-white`, `text-gray-*`, `border-gray-*` in neuem Code — das sind eingefrorene
+Hellmodus-Farben und im Dark Mode falsch. `tailwind.config.js` führt keine eigenen Hex-Werte
+mehr; neue Farben kommen als CSS-Variable dazu und werden dort verlinkt.
+
+Die Schriftgrade des Projekts sind Tailwind-Tokens: `text-11` … `text-26`. Tailwinds
+Standardskala passt nicht (`text-sm` = 14px, das Projekt benutzt 278× 13px).
+
+```html
+<!-- RICHTIG: statisches Styling in Klassen, Datenwerte per Binding -->
+<div class="surface-card">
+  <div class="kv-row"><span class="kv-label">Preis</span><span class="kv-value">…</span></div>
+</div>
+<div class="funnel-fill" [style.width.%]="s.widthPct" [style.background]="s.color"></div>
+
+<!-- FALSCH: konstantes Styling inline -->
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;">
+<span style="font-size:13px;font-weight:600;color:var(--text);">
+```
+
+Statisches `style="…"` mit konstanten Werten ist ein Review-Befund. Bestand wird
+**opportunistisch** migriert (wer die Datei anfasst, stellt die berührten Stellen um) —
+kein Sammel-Refactor. Eine neue Klasse in `styles.scss` braucht mindestens eine
+Aufrufstelle; ungenutzte Klassen löschen.
+
 ### Buttons & Icons (Issue #28)
 
 Never style a button inline — use `.btn-primary` (filled `--primary`) or `.btn-secondary`
@@ -231,3 +266,11 @@ git push -u origin feature/description   # No PR creation
 - No hardcoded UI strings
 - Both `de.json` and `en.json` updated
 - Flyway migrations are PostgreSQL-compatible (valid UUIDs, no SQLite-specific syntax)
+- Kein `bg-white` / `text-gray-*` / `border-gray-*` in neuem Markup (ADR 0001)
+- Kein statisches `style="…"` in neuem Markup — Klassen oder `[style.x]`-Binding
+
+```bash
+# Prüft beides in den geänderten Dateien:
+git diff --name-only main | grep -E '\.(html|ts)$' | xargs grep -nE \
+  'class="[^"]*(bg-white|text-gray-|border-gray-)|style="[a-z-]+:[^"]*"' 2>/dev/null
+```
