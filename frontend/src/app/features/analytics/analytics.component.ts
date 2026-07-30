@@ -12,12 +12,13 @@ import { PropertyService } from '../property-management/services/property.servic
 import { ClientService } from '../client-management/services/client.service';
 
 interface FunnelStage {
-  label: string;
+  labelKey: string;
   count: number;
-  widthPct: number;   // bar width relative to the widest stage
+  widthPct: number;      // Anteil an allen Kunden — nicht an der breitesten Stufe
   color: string;
-  dropLabel: string;  // conversion rate into this stage, e.g. "72 %"
-  isLeak: boolean;    // biggest drop-off → highlighted
+  opacity: number;
+  rate: number | null;   // Anteil, der aus der Vorstufe hierher gekommen ist
+  isLeak: boolean;       // schwächster Übergang
 }
 
 interface TrendPoint {
@@ -55,7 +56,7 @@ interface MarketBar {
   styles: [`
     .an-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); }
     .an-card-head { padding:16px 20px 4px; }
-    .an-title { font-size:16px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:9px; }
+    .an-title { font-size:16px; font-weight:700; color:var(--text); }
     .an-sub { font-size:12.5px; color:var(--text-3); margin-top:3px; line-height:1.45; }
     .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
     .kpi { background:var(--surface); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); padding:18px 20px; }
@@ -63,8 +64,24 @@ interface MarketBar {
     .kpi-lbl { font-size:12.5px; color:var(--text-2); font-weight:600; margin-top:4px; }
     .kpi-cap { font-size:12px; margin-top:7px; font-weight:500; }
     .market-row:hover { background:var(--surface-2); }
+
+    /* Trichter als Tabelle: Stufe · Balken · Kunden · Übergangsquote.
+       Die Balken messen alle gegen die Gesamtzahl der Kunden, damit die
+       Verjüngung nach unten die echte Grössenordnung zeigt. */
+    .funnel { display:grid; grid-template-columns:minmax(84px,auto) 1fr 44px 58px; align-items:center; row-gap:7px; column-gap:14px; }
+    .funnel-head,.funnel-count,.funnel-rate { text-align:right; font-variant-numeric:tabular-nums; }
+    .funnel-head { font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--text-3); }
+    .funnel-label { font-size:12.5px; font-weight:600; color:var(--text-2); }
+    .funnel-track { height:26px; background:var(--surface-2); border-radius:7px; overflow:hidden; }
+    .funnel-fill { height:100%; transition:width .5s cubic-bezier(.2,.7,.3,1); }
+    .funnel-count { font-size:14px; font-weight:700; color:var(--text); }
+    .funnel-rate { font-size:12.5px; font-weight:600; color:var(--text-3); }
+    .funnel-rate.is-leak { color:var(--color-error); font-weight:700; }
+    .funnel-foot { margin-top:16px; padding-top:13px; border-top:1px solid var(--border); font-size:12.5px; color:var(--text-3); line-height:1.5; }
+
     @media (max-width:1024px){ .kpi-grid{ grid-template-columns:repeat(2,1fr); } .an-two{ grid-template-columns:1fr !important; } }
-    @media (max-width:560px){ .kpi-grid{ grid-template-columns:repeat(2,1fr); gap:10px; } .kpi{ padding:14px; } .kpi-val{ font-size:21px; } }
+    @media (max-width:560px){ .kpi-grid{ grid-template-columns:repeat(2,1fr); gap:10px; } .kpi{ padding:14px; } .kpi-val{ font-size:21px; }
+      .funnel{ grid-template-columns:minmax(70px,auto) 1fr 36px 48px; column-gap:9px; } }
   `],
   template: `
     <div style="max-width:1180px; margin:0 auto;">
@@ -122,7 +139,7 @@ interface MarketBar {
         <!-- ══ Portfolio-Karte — wo liegt alles, und wer sucht dort ══ -->
         <div class="an-card" style="margin-bottom:20px;">
           <div class="an-card-head">
-            <div class="an-title"><i class="ri-map-2-fill" style="color:var(--primary);"></i>{{ 'analytics.mapTitle' | translate }}</div>
+            <div class="an-title">{{ 'analytics.mapTitle' | translate }}</div>
             <div class="an-sub">{{ 'analytics.mapSub' | translate }}</div>
           </div>
           <div style="padding:8px 20px 16px;">
@@ -158,31 +175,39 @@ interface MarketBar {
           <!-- ══ Conversion Funnel — wo versickern die Leads ══ -->
           <div class="an-card">
             <div class="an-card-head">
-              <div class="an-title"><i class="ri-filter-3-fill" style="color:var(--primary);"></i>{{ 'analytics.funnelTitle' | translate }}</div>
+              <div class="an-title">{{ 'analytics.funnelTitle' | translate }}</div>
               <div class="an-sub">{{ 'analytics.funnelSub' | translate }}</div>
             </div>
-            <div style="padding:14px 20px 20px;">
-              <div *ngFor="let s of funnelStages; let i = index" style="margin-bottom:2px;">
-                <!-- Drop-off connector -->
-                <div *ngIf="i > 0" style="display:flex; align-items:center; gap:7px; padding:5px 0 5px 4px;">
-                  <i class="ri-corner-down-right-line" style="font-size:13px;" [style.color]="s.isLeak ? 'var(--color-error)' : 'var(--text-3)'"></i>
-                  <span style="font-size:12px; font-weight:600;" [style.color]="s.isLeak ? 'var(--color-error)' : 'var(--text-3)'">
-                    {{ s.dropLabel }} {{ 'analytics.convertFurther' | translate }}
-                  </span>
-                  <span *ngIf="s.isLeak" style="font-size:10.5px; font-weight:700; color:var(--color-error); background:var(--color-error-soft); padding:1px 7px; border-radius:20px;">
-                    {{ 'analytics.biggestLeak' | translate }}
-                  </span>
-                </div>
-                <!-- Stage bar -->
-                <div style="display:flex; align-items:center; gap:12px;">
-                  <div style="width:98px; flex-shrink:0; font-size:12.5px; font-weight:600; color:var(--text-2); text-align:right;">{{ s.label }}</div>
-                  <div style="flex:1; min-width:0;">
-                    <div [style.width.%]="s.widthPct" [style.background]="s.color"
-                         style="height:34px; border-radius:8px; min-width:44px; display:flex; align-items:center; justify-content:flex-end; padding-right:11px; transition:width .5s cubic-bezier(.2,.7,.3,1);">
-                      <span style="font-size:14px; font-weight:800; color:#fff; font-variant-numeric:tabular-nums;">{{ s.count }}</span>
-                    </div>
+            <div style="padding:16px 20px 20px;">
+              <div class="funnel">
+                <div class="funnel-head"></div>
+                <div class="funnel-head"></div>
+                <div class="funnel-head">{{ 'analytics.funnelColClients' | translate }}</div>
+                <div class="funnel-head">{{ 'analytics.funnelColRate' | translate }}</div>
+
+                <ng-container *ngFor="let s of funnelStages">
+                  <div class="funnel-label">{{ s.labelKey | translate }}</div>
+                  <div class="funnel-track">
+                    <div class="funnel-fill"
+                         [style.width.%]="s.widthPct"
+                         [style.minWidth.px]="s.count > 0 ? 4 : 0"
+                         [style.background]="s.color"
+                         [style.opacity]="s.opacity"></div>
                   </div>
+                  <div class="funnel-count">{{ s.count }}</div>
+                  <div class="funnel-rate" [class.is-leak]="s.isLeak">
+                    {{ s.rate === null ? '—' : (s.rate | number:'1.0-0') + '%' }}
+                  </div>
+                </ng-container>
+              </div>
+
+              <div class="funnel-foot">
+                <div *ngIf="leakToKey">
+                  {{ 'analytics.weakestStep' | translate }}
+                  <strong style="color:var(--color-error);">{{ leakFromKey | translate }} → {{ leakToKey | translate }}</strong>
+                  · {{ leakRate | number:'1.0-0' }}% {{ 'analytics.convertFurther' | translate }}
                 </div>
+                <div>{{ 'analytics.funnelLost' | translate:{ count: data.conversionFunnel.lostClients } }}</div>
               </div>
             </div>
           </div>
@@ -190,7 +215,7 @@ interface MarketBar {
           <!-- ══ Aktivitätsverlauf — telefoniere ich genug ══ -->
           <div class="an-card">
             <div class="an-card-head">
-              <div class="an-title"><i class="ri-pulse-fill" style="color:var(--color-viewing);"></i>{{ 'analytics.activityTitle' | translate }}</div>
+              <div class="an-title">{{ 'analytics.activityTitle' | translate }}</div>
               <div class="an-sub">
                 {{ data.activityTrends.callNotesThisMonth }} {{ 'analytics.callsThisMonth' | translate }}
                 <span [style.color]="data.activityTrends.callNotesGrowthPercent >= 0 ? 'var(--color-closed)' : 'var(--color-error)'" style="font-weight:700;">
@@ -222,6 +247,10 @@ interface MarketBar {
                   {{ 'analytics.dealMarker' | translate }}
                 </span>
                 <span>{{ 'analytics.today' | translate }}</span>
+              </div>
+              <!-- Ohne Skala zeigt die Kurve nur die Form — der Spitzenwert gibt ihr eine Groessenordnung. -->
+              <div *ngIf="trendPoints.length > 1" style="margin-top:4px; font-size:11px; color:var(--text-3);">
+                {{ 'analytics.peakPerDay' | translate:{ count: trendPeak } }}
               </div>
             </div>
           </div>
@@ -274,7 +303,7 @@ interface MarketBar {
         <!-- ══ Objekte am längsten am Markt — Preisdruck-Gespräch ══ -->
         <div class="an-card" style="margin-bottom:20px;">
           <div class="an-card-head">
-            <div class="an-title"><i class="ri-timer-fill" style="color:var(--color-warning);"></i>{{ 'analytics.longestTitle' | translate }}</div>
+            <div class="an-title">{{ 'analytics.longestTitle' | translate }}</div>
             <div class="an-sub">{{ 'analytics.longestSub' | translate }}</div>
           </div>
           <div style="padding:8px 20px 14px;">
@@ -303,7 +332,7 @@ interface MarketBar {
         <!-- ══ Pipeline-Gesundheit — mein Gewissen ══ -->
         <div class="an-card">
           <div class="an-card-head">
-            <div class="an-title"><i class="ri-heart-pulse-fill" style="color:var(--color-error);"></i>{{ 'analytics.healthTitle' | translate }}</div>
+            <div class="an-title">{{ 'analytics.healthTitle' | translate }}</div>
           </div>
           <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:0; padding:12px 8px 16px;">
             <div style="padding:8px 16px; text-align:center; border-right:1px solid var(--border);">
@@ -325,6 +354,9 @@ interface MarketBar {
                 {{ data.pipelineHealth.averageDaysSinceLastContact }}
               </div>
               <div style="font-size:12.5px; color:var(--text-2); font-weight:600; margin-top:3px;">{{ 'analytics.avgDaysSinceContact' | translate }}</div>
+              <div style="font-size:11px; color:var(--text-3); margin-top:3px;">
+                {{ 'analytics.contactBase' | translate:{ count: data.pipelineHealth.clientsWithContact } }}
+              </div>
             </div>
           </div>
         </div>
@@ -338,7 +370,11 @@ export class AnalyticsComponent implements OnInit {
   data: DashboardAnalytics | null = null;
 
   funnelStages: FunnelStage[] = [];
+  leakFromKey = '';
+  leakToKey = '';
+  leakRate = 0;
   trendPoints: TrendPoint[] = [];
+  trendPeak = 0;
   trendLinePath = '';
   trendAreaPath = '';
   trendStartLabel = '';
@@ -422,16 +458,20 @@ export class AnalyticsComponent implements OnInit {
 
   private buildFunnel(d: DashboardAnalytics): void {
     const f = d.conversionFunnel;
+    // Eine Farbe, die nach unten kräftiger wird — der Balken schrumpft, die Farbe
+    // verdichtet sich. Die Kanban-Stufenfarben scheiden aus: --stage-viewing und
+    // --color-offer sind beide --color-warning, zwei Stufen wären ununterscheidbar.
     const raw = [
-      { label: 'Kunden gesamt', count: f.totalClients,       color: 'var(--stage-prospect)',      rate: null as number | null },
-      { label: 'Interessiert',  count: f.interestedClients,  color: 'var(--stage-active-search)', rate: f.interestedRate },
-      { label: 'Besichtigung',  count: f.scheduledViewings,  color: 'var(--stage-viewing)',       rate: f.viewingRate },
-      { label: 'Angebot',       count: f.offersMade,         color: 'var(--color-offer)',         rate: f.offerRate },
-      { label: 'Abschluss',     count: f.dealsClosed,        color: 'var(--color-closed)',        rate: f.closingRate },
+      { key: 'analytics.funnelTotal',      count: f.totalClients,      color: 'var(--color-neutral)', opacity: 0.45, rate: null as number | null },
+      { key: 'analytics.funnelInterested', count: f.interestedClients, color: 'var(--primary)',       opacity: 0.45, rate: f.interestedRate },
+      { key: 'analytics.funnelViewing',    count: f.scheduledViewings, color: 'var(--primary)',       opacity: 0.65, rate: f.viewingRate },
+      { key: 'analytics.funnelOffer',      count: f.offersMade,        color: 'var(--primary)',       opacity: 0.85, rate: f.offerRate },
+      { key: 'analytics.funnelClosed',     count: f.dealsClosed,       color: 'var(--color-closed)',  opacity: 1,    rate: f.closingRate },
     ];
-    const max = Math.max(1, ...raw.map(r => r.count));
+    const base = Math.max(1, f.totalClients);
 
-    // Find the biggest leak: the transition with the lowest conversion rate (only where the previous stage had clients)
+    // Schwächster Übergang: die niedrigste Quote, aber nur dort wo die Vorstufe
+    // überhaupt Kunden hatte — sonst ist eine 0-%-Quote nur ein leerer Trichter.
     let leakIdx = -1;
     let lowest = Infinity;
     for (let i = 1; i < raw.length; i++) {
@@ -442,20 +482,26 @@ export class AnalyticsComponent implements OnInit {
     }
 
     this.funnelStages = raw.map((r, i) => ({
-      label: r.label,
+      labelKey: r.key,
       count: r.count,
-      widthPct: Math.max(12, (r.count / max) * 100),
+      widthPct: (r.count / base) * 100,
       color: r.color,
-      dropLabel: r.rate !== null ? `${Math.round(r.rate)}%` : '',
+      opacity: r.opacity,
+      rate: r.rate,
       isLeak: i === leakIdx,
     }));
+
+    this.leakFromKey = leakIdx > 0 ? raw[leakIdx - 1].key : '';
+    this.leakToKey = leakIdx > 0 ? raw[leakIdx].key : '';
+    this.leakRate = leakIdx > 0 ? lowest : 0;
   }
 
   private buildTrend(days: DailyActivity[]): void {
-    if (!days || days.length < 2) { this.trendPoints = []; return; }
+    if (!days || days.length < 2) { this.trendPoints = []; this.trendPeak = 0; return; }
     const W = 320, H = 96, pad = 3;
     const max = Math.max(1, ...days.map(d => d.callNotes));
     const n = days.length;
+    this.trendPeak = Math.max(0, ...days.map(d => d.callNotes));
 
     this.trendPoints = days.map((d, i) => {
       const x = (i / (n - 1)) * W;

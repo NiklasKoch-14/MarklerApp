@@ -39,9 +39,32 @@ export interface MatchScoreBreakdown {
   locationScore?: number;
   areaScore?: number;
   roomScore?: number;
+  /** Property-type score — weighted by featureWeight, hence the name */
   featureScore?: number;
-  typeScore?: number;
-  additionalFactors?: { [key: string]: number };
+}
+
+/**
+ * The weights (whole percentages summing to 100) a match score was calculated with.
+ * Echoed by the backend so the UI never has to assume the defaults.
+ */
+export interface MatchWeights {
+  priceWeight: number;
+  locationWeight: number;
+  areaWeight: number;
+  roomWeight: number;
+  featureWeight: number;
+}
+
+export type MatchReasonCategory = 'PRICE' | 'LOCATION' | 'AREA' | 'ROOM' | 'TYPE';
+
+/**
+ * A single reason behind a score, as a translatable code plus raw params.
+ * Wording lives in de.json/en.json, never in the API response.
+ */
+export interface MatchReason {
+  code: string;
+  category: MatchReasonCategory;
+  params: { [key: string]: string | number };
 }
 
 /**
@@ -51,8 +74,8 @@ export interface PropertyMatchResult {
   property: Property;
   matchScore: number;
   scoreBreakdown?: MatchScoreBreakdown;
-  matchReasons?: string[];
-  mismatchReasons?: string[];
+  matchReasons?: MatchReason[];
+  mismatchReasons?: MatchReason[];
   previouslyContacted?: boolean;
   viewCount?: number;
   lastContactDate?: string;
@@ -65,8 +88,8 @@ export interface ClientMatchResult {
   client: any; // ClientDto interface from client-management
   matchScore: number;
   scoreBreakdown?: MatchScoreBreakdown;
-  matchReasons?: string[];
-  mismatchReasons?: string[];
+  matchReasons?: MatchReason[];
+  mismatchReasons?: MatchReason[];
   previouslyContacted?: boolean;
   viewCount?: number;
   lastContactDate?: string;
@@ -82,4 +105,5 @@ export interface PropertyMatchResponse {
   returnedMatches?: number;
   matchThreshold?: number;
   executionTimeMs?: number;
+  appliedWeights?: MatchWeights;
 }

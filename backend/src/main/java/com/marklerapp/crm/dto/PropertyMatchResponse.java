@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * DTO for property-client matching response.
@@ -57,6 +56,12 @@ public class PropertyMatchResponse {
      */
     private Long executionTimeMs;
 
+    /**
+     * The normalized weights the overall scores were actually calculated with.
+     * Echoed back so clients can show how a score is composed without assuming defaults.
+     */
+    private MatchWeights appliedWeights;
+
     // ========================================
     // Nested Classes
     // ========================================
@@ -89,12 +94,12 @@ public class PropertyMatchResponse {
         /**
          * Reasons why this property matches
          */
-        private List<String> matchReasons;
+        private List<MatchReasonDto> matchReasons;
 
         /**
          * Reasons why this property doesn't fully match
          */
-        private List<String> mismatchReasons;
+        private List<MatchReasonDto> mismatchReasons;
 
         /**
          * Whether this property has been previously contacted
@@ -140,12 +145,12 @@ public class PropertyMatchResponse {
         /**
          * Reasons why this client matches
          */
-        private List<String> matchReasons;
+        private List<MatchReasonDto> matchReasons;
 
         /**
          * Reasons why this client doesn't fully match
          */
-        private List<String> mismatchReasons;
+        private List<MatchReasonDto> mismatchReasons;
 
         /**
          * Whether this client has been previously contacted about this property
@@ -194,74 +199,27 @@ public class PropertyMatchResponse {
         private Integer roomScore;
 
         /**
-         * Feature match score (0-100)
+         * Property-type match score (0-100).
+         * Carried under the "feature" name because it is weighted by featureWeight.
          */
         private Integer featureScore;
+    }
 
-        /**
-         * Type match score (0-100)
-         * Includes property type and listing type matching
-         */
-        private Integer typeScore;
+    /**
+     * The normalized weights (percentages summing to 100) used to combine the
+     * individual category scores into the overall match score.
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class MatchWeights {
 
-        /**
-         * Additional factors affecting the score
-         */
-        private Map<String, Integer> additionalFactors;
-
-        /**
-         * Get the average score across all categories.
-         *
-         * @return average score
-         */
-        public double getAverageScore() {
-            int count = 0;
-            int sum = 0;
-
-            if (priceScore != null) { sum += priceScore; count++; }
-            if (locationScore != null) { sum += locationScore; count++; }
-            if (areaScore != null) { sum += areaScore; count++; }
-            if (roomScore != null) { sum += roomScore; count++; }
-            if (featureScore != null) { sum += featureScore; count++; }
-            if (typeScore != null) { sum += typeScore; count++; }
-
-            return count > 0 ? (double) sum / count : 0.0;
-        }
-
-        /**
-         * Get the lowest score across all categories.
-         *
-         * @return lowest score
-         */
-        public Integer getLowestScore() {
-            Integer lowest = null;
-
-            if (priceScore != null) lowest = (lowest == null) ? priceScore : Math.min(lowest, priceScore);
-            if (locationScore != null) lowest = (lowest == null) ? locationScore : Math.min(lowest, locationScore);
-            if (areaScore != null) lowest = (lowest == null) ? areaScore : Math.min(lowest, areaScore);
-            if (roomScore != null) lowest = (lowest == null) ? roomScore : Math.min(lowest, roomScore);
-            if (featureScore != null) lowest = (lowest == null) ? featureScore : Math.min(lowest, featureScore);
-            if (typeScore != null) lowest = (lowest == null) ? typeScore : Math.min(lowest, typeScore);
-
-            return lowest;
-        }
-
-        /**
-         * Get the highest score across all categories.
-         *
-         * @return highest score
-         */
-        public Integer getHighestScore() {
-            Integer highest = null;
-
-            if (priceScore != null) highest = (highest == null) ? priceScore : Math.max(highest, priceScore);
-            if (locationScore != null) highest = (highest == null) ? locationScore : Math.max(highest, locationScore);
-            if (areaScore != null) highest = (highest == null) ? areaScore : Math.max(highest, areaScore);
-            if (roomScore != null) highest = (highest == null) ? roomScore : Math.max(highest, roomScore);
-            if (featureScore != null) highest = (highest == null) ? featureScore : Math.max(highest, featureScore);
-            if (typeScore != null) highest = (highest == null) ? typeScore : Math.max(highest, typeScore);
-
-            return highest;
-        }
+        private Integer priceWeight;
+        private Integer locationWeight;
+        private Integer areaWeight;
+        private Integer roomWeight;
+        private Integer featureWeight;
     }
 }

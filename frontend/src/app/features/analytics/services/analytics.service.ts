@@ -5,12 +5,14 @@ import { catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
+/** Stufen sind kumulativ: wer ein Angebot bekam, zaehlt auch als Interessent. */
 export interface ConversionFunnel {
   totalClients: number;
   interestedClients: number;
   scheduledViewings: number;
   offersMade: number;
   dealsClosed: number;
+  lostClients: number;
   interestedRate: number;
   viewingRate: number;
   offerRate: number;
@@ -25,6 +27,7 @@ export interface PipelineHealth {
   followUpsDueNextWeek: number;
   clientsWithoutRecentContact: number;
   averageDaysSinceLastContact: number;
+  clientsWithContact: number;
 }
 
 export interface PropertyOnMarket {
@@ -93,8 +96,6 @@ export interface DashboardAnalytics {
   activityTrends: ActivityTrends;
   revenue: Revenue;
   leadSourcePerformance: LeadSourcePerformance[];
-  clientsNeedingAttention: unknown[];
-  suggestedActions: string[];
 }
 
 @Injectable({ providedIn: 'root' })
