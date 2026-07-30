@@ -986,6 +986,25 @@
       "legendProperties": "Weitere Objekte",
       "legendClients": "Suchstandorte der Kunden"
     },
+    "ownerReport": {
+      "title": "Eigentümer-Report",
+      "lastFourWeeks": "Letzte 4 Wochen",
+      "sinceMandate": "Seit Auftragsbeginn",
+      "needsMandateStart": "Kein Auftragsbeginn am Objekt hinterlegt",
+      "exportPdf": "Als PDF",
+      "downloading": "Wird erstellt…",
+      "inquiries": "Anfragen",
+      "viewingsCompleted": "Besichtigungen",
+      "viewingsCancelled": "Abgesagt",
+      "viewingsScheduled": "Offene Termine",
+      "daysOnMarket": "Tage am Markt",
+      "feedbackTitle": "Rückmeldungen",
+      "withoutFeedback": "{{count}} durchgeführte Besichtigungen ohne erfasste Rückmeldung",
+      "activityTitle": "Aktivitäten",
+      "noActivity": "Im gewählten Zeitraum wurden keine Aktivitäten erfasst.",
+      "prospect": "Interessent {{label}}",
+      "privacyNote": "Diese Ansicht zeigt Interessentennamen. Im PDF-Export an den Eigentümer erscheinen sie pseudonymisiert — Namen und Kontaktdaten werden nicht weitergegeben."
+    },
     "owner": {
       "title": "Eigentümer",
       "internal": "intern",

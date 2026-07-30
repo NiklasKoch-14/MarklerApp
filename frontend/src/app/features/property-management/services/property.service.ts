@@ -209,6 +209,44 @@ export interface Property {
   calculatedPricePerSqm?: number;
 }
 
+/**
+ * Taetigkeitsnachweis pro Objekt (Issue #40).
+ *
+ * `clientName` ist nur in dieser internen Ansicht gefuellt; im PDF-Export an den
+ * Eigentuemer erscheint ausschliesslich `clientLabel` ("Interessent A").
+ */
+export interface OwnerReportActivity {
+  date: string;
+  type: 'VIEWING' | 'CALL_NOTE';
+  clientName?: string | null;
+  clientLabel?: string | null;
+  outcome?: string | null;
+  status?: string | null;
+  notes?: string | null;
+}
+
+export interface OwnerReport {
+  propertyId: string;
+  title?: string;
+  addressCity?: string;
+  listedPrice?: number | null;
+  ownerPriceExpectation?: number | null;
+  mandateType?: MandateType | null;
+  mandateStart?: string | null;
+  mandateEnd?: string | null;
+  periodFrom: string;
+  periodTo: string;
+  daysOnMarket?: number | null;
+  inquiries: number;
+  viewingsCompleted: number;
+  viewingsCancelled: number;
+  viewingsScheduled: number;
+  /** Gezaehlt je ViewingFeedback-Wert; Null-Zeilen bleiben bewusst enthalten. */
+  feedbackDistribution: Record<string, number>;
+  viewingsWithoutFeedback: number;
+  activities: OwnerReportActivity[];
+}
+
 export interface PropertyExpose {
   propertyId?: string;
   fileName: string;
@@ -321,6 +359,35 @@ export class PropertyService {
    */
   getProperty(id: string): Observable<Property> {
     return this.http.get<Property>(`${this.apiUrl}/${id}`).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
+
+  /**
+   * Taetigkeitsnachweis fuer den Eigentuemer (Issue #40) — interne Ansicht mit Namen.
+   * `from` inklusive, `to` exklusiv; leer lassen heisst "letzte 4 Wochen bzw. seit Auftragsbeginn".
+   */
+  getOwnerReport(propertyId: string, from?: string, to?: string): Observable<OwnerReport> {
+    let params = new HttpParams();
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
+    return this.http.get<OwnerReport>(`${this.apiUrl}/${propertyId}/owner-report`, { params }).pipe(
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
+
+  /**
+   * Derselbe Nachweis als PDF. Interessenten sind darin pseudonymisiert — das Dokument
+   * geht an den Eigentuemer, also an einen Dritten.
+   */
+  downloadOwnerReportPdf(propertyId: string, from?: string, to?: string): Observable<Blob> {
+    let params = new HttpParams();
+    if (from) params = params.set('from', from);
+    if (to) params = params.set('to', to);
+    return this.http.get(`${this.apiUrl}/${propertyId}/owner-report/pdf`, {
+      params,
+      responseType: 'blob',
+    }).pipe(
       catchError(err => this.errorHandler.handleError(err))
     );
   }

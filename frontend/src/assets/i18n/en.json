@@ -986,6 +986,25 @@
       "legendProperties": "Other properties",
       "legendClients": "Client search locations"
     },
+    "ownerReport": {
+      "title": "Owner report",
+      "lastFourWeeks": "Last 4 weeks",
+      "sinceMandate": "Since mandate start",
+      "needsMandateStart": "No mandate start recorded on this property",
+      "exportPdf": "As PDF",
+      "downloading": "Generating…",
+      "inquiries": "Inquiries",
+      "viewingsCompleted": "Viewings",
+      "viewingsCancelled": "Cancelled",
+      "viewingsScheduled": "Open appointments",
+      "daysOnMarket": "Days on market",
+      "feedbackTitle": "Feedback",
+      "withoutFeedback": "{{count}} completed viewings without recorded feedback",
+      "activityTitle": "Activity",
+      "noActivity": "No activity recorded in the selected period.",
+      "prospect": "Prospect {{label}}",
+      "privacyNote": "This view shows prospect names. In the PDF export sent to the owner they appear pseudonymised — names and contact details are never shared."
+    },
     "owner": {
       "title": "Owner",
       "internal": "internal",
