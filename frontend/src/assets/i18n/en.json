@@ -1381,6 +1381,20 @@
       "passwordHint": "You sign in with your email and password.",
       "googleOnlyHint": "You are signed in with your Google account — no password is set for this account.",
       "googleAndPasswordHint": "Your Google account is linked. You can sign in with it or with your password."
+    },
+    "calendar": {
+      "title": "Calendar subscription",
+      "description": "Viewings in your own calendar — subscribe to this link once and new appointments appear automatically. Read-only: changes made in the calendar do not flow back into the app.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "howToIos": "iPhone: Settings → Calendar → Accounts → Add Account → Other → Add Subscribed Calendar",
+      "howToGoogle": "Google Calendar: Other calendars → From URL → paste the link",
+      "howToOutlook": "Outlook: Add calendar → Subscribe from web",
+      "rotateTitle": "Issue a new link",
+      "rotateHint": "Invalidates the previous link.",
+      "rotate": "Regenerate",
+      "rotateConfirm": "The previous link stops working. Existing subscriptions will no longer receive new appointments and must be set up again with the new link.",
+      "loadFailed": "The calendar subscription could not be loaded."
     }
   },
   "gdpr": {

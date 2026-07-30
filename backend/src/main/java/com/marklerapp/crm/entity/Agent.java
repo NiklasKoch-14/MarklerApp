@@ -55,6 +55,15 @@ public class Agent extends BaseEntity {
     private boolean isActive = true;
 
     /**
+     * Langlebiger Token fuer den oeffentlichen ICS-Kalenderfeed (Issue #34).
+     * Null, solange der Makler das Abo nie geoeffnet hat -- ein Token auf Vorrat
+     * waere ein unbenutztes Geheimnis in der Datenbank. Neu erzeugen macht den
+     * alten Link ungueltig; das ist der Widerruf.
+     */
+    @Column(name = "calendar_feed_token", unique = true)
+    private String calendarFeedToken;
+
+    /**
      * Get the full name of the agent
      */
     public String getFullName() {

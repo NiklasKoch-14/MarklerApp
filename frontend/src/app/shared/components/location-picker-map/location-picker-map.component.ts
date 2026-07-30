@@ -85,7 +85,12 @@ export interface SecondaryMarker {
         </div>
       </div>
 
-      <div #mapContainer style="overflow:hidden;" [style.height]="height" [style.border-radius]="mapBorderRadius" [class.location-picker-map--interactive]="!readOnly"></div>
+      <!-- map-zoom-autohide blendet die Zoom-Steuerung ein, waehrend der Zeiger ueber
+           der Karte ist (Issue #31). Die Regel steht global in styles.scss, weil Leaflet
+           die Controls selbst ins DOM haengt und Angulars Style-Scoping sie nicht erfasst.
+           Die frueher hier gesetzte Klasse location-picker-map--interactive hatte
+           projektweit keine Regel und ist entfallen. -->
+      <div #mapContainer class="map-zoom-autohide" style="overflow:hidden;" [style.height]="height" [style.border-radius]="mapBorderRadius"></div>
 
       <div *ngIf="!readOnly && showRadiusControl && hasPin" style="display:flex;align-items:center;gap:10px;">
         <label style="font-size:12px;color:var(--text-2);white-space:nowrap;">{{ 'location.radiusLabel' | translate }}</label>

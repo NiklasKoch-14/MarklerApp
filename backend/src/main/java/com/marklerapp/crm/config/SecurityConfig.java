@@ -78,6 +78,12 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/swagger-ui.html").permitAll()
 
+                        // ICS-Kalenderfeed (Issue #34): Kalender-Clients koennen keinen
+                        // Authorization-Header setzen, der Pfad-Token ist die Authentifizierung.
+                        // Bewusst eng auf *.ics begrenzt -- /calendar/subscription verwaltet
+                        // den Token und bleibt damit unter anyRequest().authenticated().
+                        .requestMatchers("/calendar/*.ics").permitAll()
+
                         // CORS preflight requests
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
