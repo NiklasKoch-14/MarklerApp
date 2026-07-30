@@ -1,16 +1,18 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Subject, of } from 'rxjs';
+import { takeUntil, catchError } from 'rxjs/operators';
 import { AuthService, Agent } from '../../core/auth/auth.service';
 import { AgentService, AgentProfile } from '../../core/services/agent.service';
 import { ThemeService } from '../../core/services/theme.service';
+import { CalendarFeedService } from '../../core/services/calendar-feed.service';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, TranslateModule, ConfirmDialogComponent],
   template: `
     <div class="detail-page" style="max-width:640px;">
 
@@ -83,6 +85,72 @@ import { ThemeService } from '../../core/services/theme.service';
         </div>
       </div>
 
+      <!-- Kalender-Abo (Issue #34) -->
+      <div class="surface-card" style="border-width:1.5px;padding:20px 24px;margin-bottom:16px;">
+        <div class="section-label" style="margin-bottom:12px;">{{ 'settings.calendar.title' | translate }}</div>
+        <p style="font-size:13px;color:var(--text-2);margin:0 0 14px;line-height:1.5;">
+          {{ 'settings.calendar.description' | translate }}
+        </p>
+
+        <div *ngIf="isLoadingFeed" style="font-size:13px;color:var(--text-3);">
+          {{ 'common.loading' | translate }}
+        </div>
+
+        <ng-container *ngIf="!isLoadingFeed && feedUrl">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+            <input type="text" class="form-input" readonly [value]="feedUrl"
+                   (focus)="$any($event.target).select()"
+                   style="flex:1;font-size:12px;font-family:ui-monospace,monospace;">
+            <button class="btn-secondary" style="flex-shrink:0;" (click)="copyFeedUrl()">
+              <i [class]="copied ? 'ri-check-line' : 'ri-file-copy-line'" style="font-size:14px;"></i>
+              {{ (copied ? 'settings.calendar.copied' : 'settings.calendar.copy') | translate }}
+            </button>
+          </div>
+
+          <!-- Kurzanleitung: ohne sie landet die URL im Browser statt im Kalender,
+               und der laedt eine Datei herunter statt zu abonnieren. -->
+          <ul style="margin:0 0 14px;padding-left:18px;font-size:12px;color:var(--text-3);line-height:1.7;">
+            <li>{{ 'settings.calendar.howToIos' | translate }}</li>
+            <li>{{ 'settings.calendar.howToGoogle' | translate }}</li>
+            <li>{{ 'settings.calendar.howToOutlook' | translate }}</li>
+          </ul>
+
+          <div class="kv-row" style="border-top:1px solid var(--border);border-bottom:none;padding-top:12px;">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text);">
+                {{ 'settings.calendar.rotateTitle' | translate }}
+              </div>
+              <div style="font-size:12px;color:var(--text-3);margin-top:2px;">
+                {{ 'settings.calendar.rotateHint' | translate }}
+              </div>
+            </div>
+            <button class="btn-secondary" style="flex-shrink:0;"
+                    [disabled]="isRotating" (click)="showRotateConfirm = true">
+              <i class="ri-refresh-line" style="font-size:14px;"></i>
+              {{ 'settings.calendar.rotate' | translate }}
+            </button>
+          </div>
+        </ng-container>
+
+        <div *ngIf="!isLoadingFeed && !feedUrl" style="font-size:13px;color:var(--color-error);">
+          {{ 'settings.calendar.loadFailed' | translate }}
+        </div>
+      </div>
+
+      <!-- Neuen Link erzeugen macht das bestehende Abo still kaputt — gleiche
+           Reibung wie bei anderen nicht umkehrbaren Aktionen. -->
+      <app-confirm-dialog
+        [open]="showRotateConfirm"
+        [danger]="true"
+        icon="ri-refresh-line"
+        [title]="'settings.calendar.rotateTitle' | translate"
+        [message]="'settings.calendar.rotateConfirm' | translate"
+        [confirmLabel]="'settings.calendar.rotate' | translate"
+        [busy]="isRotating"
+        (cancel)="showRotateConfirm = false"
+        (confirm)="rotateFeed()">
+      </app-confirm-dialog>
+
       <!-- Abmelden -->
       <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:20px 24px;">
         <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -107,14 +175,51 @@ export class SettingsComponent implements OnInit, OnDestroy {
   isDark = false;
   currentLang = 'de';
 
+  // Kalender-Abo (Issue #34)
+  feedUrl: string | null = null;
+  isLoadingFeed = true;
+  isRotating = false;
+  showRotateConfirm = false;
+  copied = false;
+
   private destroy$ = new Subject<void>();
 
   constructor(
     private authService: AuthService,
     private agentService: AgentService,
     private themeService: ThemeService,
+    private calendarFeedService: CalendarFeedService,
     private translate: TranslateService
   ) {}
+
+  private loadCalendarSubscription(): void {
+    this.isLoadingFeed = true;
+    this.calendarFeedService.getSubscription()
+      .pipe(takeUntil(this.destroy$), catchError(() => of(null)))
+      .subscribe(sub => {
+        this.feedUrl = sub?.feedUrl ?? null;
+        this.isLoadingFeed = false;
+      });
+  }
+
+  rotateFeed(): void {
+    this.isRotating = true;
+    this.calendarFeedService.rotate()
+      .pipe(takeUntil(this.destroy$), catchError(() => of(null)))
+      .subscribe(sub => {
+        if (sub) this.feedUrl = sub.feedUrl;
+        this.isRotating = false;
+        this.showRotateConfirm = false;
+      });
+  }
+
+  copyFeedUrl(): void {
+    if (!this.feedUrl) return;
+    navigator.clipboard.writeText(this.feedUrl).then(() => {
+      this.copied = true;
+      setTimeout(() => (this.copied = false), 2000);
+    });
+  }
 
   get signInMethodHint(): string {
     if (!this.profile) {
@@ -132,6 +237,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.authService.currentUser$
       .pipe(takeUntil(this.destroy$))
       .subscribe(user => this.user = user);
+
+    this.loadCalendarSubscription();
 
     this.agentService.getMe()
       .pipe(takeUntil(this.destroy$))

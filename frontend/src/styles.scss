@@ -624,6 +624,41 @@
     margin-bottom: 5px;
   }
 
+  /* Kurze Markierung fuer ein automatisch ergaenztes Adressfeld (Issue #29).
+     Ohne sie sieht der Makler nur, dass da ploetzlich etwas steht, aber nicht,
+     dass es nicht von ihm kam -- und prueft es dann auch nicht nach. */
+  .field-autofilled {
+    border-color: var(--primary) !important;
+    background: var(--accent-soft) !important;
+    transition: border-color 0.3s ease, background 0.3s ease;
+  }
+
+  /* ── Karte: Zoom-Steuerung nur bei Zeiger ueber der Karte (Issue #31) ──
+     Die +/--Buttons sind sonst auf jeder Seite dauerhaft praesent, obwohl sie
+     nur waehrend der Arbeit mit der Karte gebraucht werden.
+
+     Bewusst nur auf Zeigergeraeten: Touch kennt kein Hover, dort blieben die
+     Controls unerreichbar. :focus-within haelt sie sichtbar, sobald ein
+     Zoom-Button per Tab fokussiert ist -- sonst fokussiert man ein unsichtbares
+     Element. pointer-events statt visibility, damit die Buttons fuer
+     Screenreader erreichbar bleiben.
+
+     Leaflet erzeugt .leaflet-control-zoom selbst, ausserhalb von Angulars
+     Style-Scoping -- deshalb global und nicht in der Komponente. */
+  @media (hover: hover) and (pointer: fine) {
+    .map-zoom-autohide .leaflet-control-zoom {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease;
+    }
+
+    .map-zoom-autohide:hover .leaflet-control-zoom,
+    .map-zoom-autohide:focus-within .leaflet-control-zoom {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
   /* ── Utility Buttons ───────────────────────────────────────────── */
   .btn-primary {
     height: 40px;

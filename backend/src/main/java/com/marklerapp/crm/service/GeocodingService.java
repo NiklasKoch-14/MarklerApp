@@ -2,6 +2,7 @@ package com.marklerapp.crm.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklerapp.crm.config.GeocodingProperties;
+import com.marklerapp.crm.dto.AddressLookupDto;
 import com.marklerapp.crm.dto.GeocodingSuggestionDto;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -78,6 +79,86 @@ public class GeocodingService {
             log.warn("Geocoding failed for '{}': {}", query, e.getMessage());
             return Optional.empty();
         }
+    }
+
+    /**
+     * Strukturierte Adressauflösung für die Formular-Vervollständigung (Issue #29).
+     *
+     * <p>Bewusst auf Deutschland begrenzt ({@code countrycodes=de}): weder das
+     * 5-Ziffern-PLZ-Format noch die Annahme "PLZ bestimmt den Ort" gelten international,
+     * und ein falsch gefülltes Feld ist schlimmer als ein leeres — nach Ort und PLZ wird
+     * später gefiltert und gematcht.</p>
+     *
+     * <p>Gleicher Fail-Soft-Vertrag wie die übrigen Methoden: jeder Fehler ergibt
+     * {@link Optional#empty()}, das Formular bleibt normal ausfüllbar.</p>
+     */
+    public Optional<AddressLookupDto> lookupAddress(String street, String houseNumber,
+                                                     String postalCode, String city) {
+        if (!props.isEnabled()) {
+            return Optional.empty();
+        }
+        String query = buildAddressQuery(street, houseNumber, postalCode, city, null);
+        if (query.isBlank()) {
+            return Optional.empty();
+        }
+
+        try {
+            JsonNode results = client.get()
+                .uri(uriBuilder -> uriBuilder
+                    .path("/search")
+                    .queryParam("format", "json")
+                    // Ohne addressdetails liefert Nominatim gar kein address-Objekt.
+                    .queryParam("addressdetails", 1)
+                    .queryParam("countrycodes", "de")
+                    .queryParam("limit", 1)
+                    .queryParam("q", query)
+                    .build())
+                .retrieve()
+                .body(JsonNode.class);
+
+            if (results == null || !results.isArray() || results.isEmpty()) {
+                log.debug("Address lookup found no result for: {}", query);
+                return Optional.empty();
+            }
+            return Optional.of(toAddressLookup(results.get(0)));
+        } catch (Exception e) {
+            log.warn("Address lookup failed for '{}': {}", query, e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Nominatim benennt die Ortsangabe je nach Groesse anders: {@code city} in
+     * Grossstaedten, {@code town} in Kleinstaedten, {@code village} auf dem Land.
+     * Wer nur {@code city} liest, bekommt fuer die halbe Republik nichts.
+     */
+    // Package-private statt private: die Feld-Zuordnung ist die eigentliche Logik hier
+    // und wird direkt getestet. Diese Klasse mockt bewusst kein HTTP (siehe
+    // GeocodingServiceTest), also gaebe es sonst keinen Weg an die Zuordnung heran.
+    AddressLookupDto toAddressLookup(JsonNode node) {
+        JsonNode a = node.path("address");
+        return AddressLookupDto.builder()
+            .road(text(a, "road"))
+            .houseNumber(text(a, "house_number"))
+            .postalCode(text(a, "postcode"))
+            .city(firstNonBlank(text(a, "city"), text(a, "town"), text(a, "village"), text(a, "municipality")))
+            .district(firstNonBlank(text(a, "suburb"), text(a, "city_district"), text(a, "borough")))
+            .state(text(a, "state"))
+            .country(text(a, "country"))
+            .latitude(node.hasNonNull("lat") ? new BigDecimal(node.path("lat").asText()) : null)
+            .longitude(node.hasNonNull("lon") ? new BigDecimal(node.path("lon").asText()) : null)
+            .build();
+    }
+
+    private String text(JsonNode node, String field) {
+        return node.hasNonNull(field) ? node.get(field).asText() : null;
+    }
+
+    private String firstNonBlank(String... values) {
+        for (String v : values) {
+            if (v != null && !v.isBlank()) return v;
+        }
+        return null;
     }
 
     /**

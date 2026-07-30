@@ -1,11 +1,13 @@
 package com.marklerapp.crm.controller;
 
+import com.marklerapp.crm.dto.AddressLookupDto;
 import com.marklerapp.crm.dto.GeocodingSuggestionDto;
 import com.marklerapp.crm.service.GeocodingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -34,6 +36,32 @@ public class GeocodingController {
             @Parameter(description = "Free-text address query", required = true)
             @RequestParam String q) {
         return geocodingService.search(q);
+    }
+
+    /**
+     * Adressauflösung für die Formular-Vervollständigung (Issue #29).
+     *
+     * <p>Läuft bewusst über diesen Proxy und nicht direkt aus dem Browser: Nominatims
+     * Nutzungsrichtlinie verlangt einen aussagekräftigen User-Agent und begrenzt auf
+     * eine Anfrage pro Sekunde — beides lässt sich clientseitig nicht zusichern.</p>
+     */
+    @GetMapping("/address")
+    @Operation(summary = "Resolve address components",
+               description = "Returns structured address parts (city, state, district, postcode) for "
+                           + "form auto-completion. Germany only. Empty body when nothing resolves — "
+                           + "the form stays usable either way.")
+    public ResponseEntity<AddressLookupDto> address(
+            @Parameter(description = "Postal code (5 digits)")
+            @RequestParam(required = false) String postalCode,
+            @Parameter(description = "City name")
+            @RequestParam(required = false) String city,
+            @Parameter(description = "Street name")
+            @RequestParam(required = false) String street,
+            @Parameter(description = "House number")
+            @RequestParam(required = false) String houseNumber) {
+        return geocodingService.lookupAddress(street, houseNumber, postalCode, city)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     @GetMapping("/reverse")

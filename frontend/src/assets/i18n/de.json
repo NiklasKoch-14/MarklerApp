@@ -1381,6 +1381,20 @@
       "passwordHint": "Sie melden sich mit E-Mail und Passwort an.",
       "googleOnlyHint": "Sie sind über Ihr Google-Konto angemeldet — für dieses Konto ist kein Passwort gesetzt.",
       "googleAndPasswordHint": "Ihr Google-Konto ist verknüpft. Sie können sich damit oder mit Ihrem Passwort anmelden."
+    },
+    "calendar": {
+      "title": "Kalender-Abo",
+      "description": "Besichtigungen im eigenen Kalender — abonniere diesen Link einmal, dann erscheinen neue Termine automatisch. Nur lesend: Änderungen im Kalender wirken nicht zurück in die App.",
+      "copy": "Kopieren",
+      "copied": "Kopiert",
+      "howToIos": "iPhone: Einstellungen → Kalender → Accounts → Account hinzufügen → Andere → Kalenderabo hinzufügen",
+      "howToGoogle": "Google Kalender: Weitere Kalender → Per URL → Link einfügen",
+      "howToOutlook": "Outlook: Kalender hinzufügen → Aus dem Internet abonnieren",
+      "rotateTitle": "Neuen Link erzeugen",
+      "rotateHint": "Macht den bisherigen Link ungültig.",
+      "rotate": "Neu erzeugen",
+      "rotateConfirm": "Der bisherige Link hört auf zu funktionieren. Bereits eingerichtete Abos zeigen dann keine neuen Termine mehr und müssen mit dem neuen Link erneut angelegt werden.",
+      "loadFailed": "Das Kalender-Abo konnte nicht geladen werden."
     }
   },
   "gdpr": {

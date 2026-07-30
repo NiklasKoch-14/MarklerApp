@@ -41,4 +41,12 @@ public interface AgentRepository extends JpaRepository<Agent, UUID> {
      */
     @Query("SELECT COUNT(a) FROM Agent a WHERE a.isActive = true")
     long countActiveAgents();
+
+    /**
+     * Agent zu einem Kalenderfeed-Token (Issue #34). Nur aktive Agents -- ein
+     * deaktiviertes Konto darf seine Termine nicht weiter ausliefern, auch wenn
+     * der Link noch in einem Kalender-Client steht.
+     */
+    @Query("SELECT a FROM Agent a WHERE a.calendarFeedToken = :token AND a.isActive = true")
+    Optional<Agent> findActiveByCalendarFeedToken(@Param("token") String token);
 }

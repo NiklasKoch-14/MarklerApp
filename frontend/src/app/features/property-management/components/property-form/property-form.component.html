@@ -169,6 +169,7 @@
                 type="text"
                 id="addressCity"
                 formControlName="addressCity"
+                [class.field-autofilled]="isAutoFilled('addressCity')"
                 class="form-input"
                 placeholder="Berlin">
               <div *ngIf="isFieldInvalid('addressCity')" class="form-error">
@@ -183,6 +184,7 @@
                 type="text"
                 id="addressPostalCode"
                 formControlName="addressPostalCode"
+                [class.field-autofilled]="isAutoFilled('addressPostalCode')"
                 class="form-input"
                 placeholder="10115">
               <div *ngIf="isFieldInvalid('addressPostalCode')" class="form-error">
@@ -197,6 +199,7 @@
                 type="text"
                 id="addressDistrict"
                 formControlName="addressDistrict"
+                [class.field-autofilled]="isAutoFilled('addressDistrict')"
                 class="form-input"
                 placeholder="Mitte">
             </div>
@@ -210,6 +213,7 @@
                 type="text"
                 id="addressState"
                 formControlName="addressState"
+                [class.field-autofilled]="isAutoFilled('addressState')"
                 class="form-input"
                 placeholder="Berlin">
             </div>

@@ -2,8 +2,8 @@ import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Subject } from 'rxjs';
-import { debounceTime, takeUntil } from 'rxjs/operators';
+import { Subject, merge } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, map, switchMap, takeUntil } from 'rxjs/operators';
 import {
   PropertyService,
   PropertyType,
@@ -18,6 +18,7 @@ import { PropertyExposeComponent } from '../property-expose/property-expose.comp
 import { PropertyImageDto } from '../../models/property-image.model';
 import { PropertyOwner } from '../../services/property.service';
 import { PropertyOwnerPickerComponent } from '../property-owner-picker/property-owner-picker.component';
+import { GeocodingService } from '../../../../shared/services/geocoding.service';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ErrorHandlerService } from '../../../../core/services/error-handler.service';
@@ -78,7 +79,8 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private translate: TranslateService,
-    private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
+    private geocodingService: GeocodingService
   ) {
     this.propertyForm = this.fb.group({
       // Basic Information
@@ -171,6 +173,84 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
     if (!this.isEditMode) {
       this.setupAutoSave();
     }
+
+    this.setupAddressCompletion();
+  }
+
+  // ========================================
+  // Adress-Vervollstaendigung (Issue #29)
+  // ========================================
+
+  /** Felder, die die Automatik gerade gefuellt hat -- fuer die kurze optische Markierung. */
+  autoFilledFields = new Set<string>();
+
+  /**
+   * Zwei Richtungen mit unterschiedlicher Verlaesslichkeit:
+   *
+   * 1. PLZ -> Ort, Bundesland, Stadtteil. In Deutschland nahezu eindeutig, wird
+   *    automatisch gefuellt.
+   * 2. Strasse + Ort -> PLZ. Bewusst NUR mit Strasse. Aus dem Ort allein waere die
+   *    PLZ geraten -- Berlin hat rund 190 -- und nach der PLZ wird spaeter gefiltert
+   *    und gematcht, eine falsche ist schlimmer als eine leere.
+   *
+   * Ueberschrieben wird nie: nur leere Felder werden ergaenzt. Was der Makler selbst
+   * getippt hat, gewinnt immer gegen den Geocoder.
+   */
+  private setupAddressCompletion(): void {
+    const plz = this.propertyForm.get('addressPostalCode');
+    const street = this.propertyForm.get('addressStreet');
+    const city = this.propertyForm.get('addressCity');
+    if (!plz || !street || !city) return;
+
+    // 400 ms wie die Kartensuche -- Nominatim erlaubt rund 1 Anfrage/Sekunde.
+    plz.valueChanges.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+      filter((value: string) => /^[0-9]{5}$/.test((value ?? '').trim())),
+      switchMap((value: string) => this.geocodingService.lookupAddress({ postalCode: value.trim() })),
+      takeUntil(this.destroy$)
+    ).subscribe(result => {
+      if (!result) return;
+      this.fillIfEmpty('addressCity', result.city);
+      this.fillIfEmpty('addressState', result.state);
+      this.fillIfEmpty('addressDistrict', result.district);
+    });
+
+    // Richtung 2 loest erst aus, wenn Strasse UND Ort stehen und die PLZ leer ist.
+    merge(street.valueChanges, city.valueChanges).pipe(
+      debounceTime(600),
+      map(() => ({
+        street: (street.value ?? '').trim(),
+        city: (city.value ?? '').trim(),
+        plz: (plz.value ?? '').trim(),
+      })),
+      filter(v => v.street.length > 2 && v.city.length > 1 && v.plz.length === 0),
+      distinctUntilChanged((a, b) => a.street === b.street && a.city === b.city),
+      switchMap(v => this.geocodingService.lookupAddress({ street: v.street, city: v.city })),
+      takeUntil(this.destroy$)
+    ).subscribe(result => {
+      if (!result?.postalCode) return;
+      this.fillIfEmpty('addressPostalCode', result.postalCode);
+      this.fillIfEmpty('addressState', result.state);
+    });
+  }
+
+  /** Ergaenzt nur leere Felder und markiert sie kurz, damit die Herkunft erkennbar ist. */
+  private fillIfEmpty(controlName: string, value?: string | null): void {
+    if (!value) return;
+    const control = this.propertyForm.get(controlName);
+    if (!control) return;
+    const current = (control.value ?? '').toString().trim();
+    if (current.length > 0) return;
+
+    control.setValue(value);
+    control.markAsDirty();
+    this.autoFilledFields.add(controlName);
+    setTimeout(() => this.autoFilledFields.delete(controlName), 2500);
+  }
+
+  isAutoFilled(controlName: string): boolean {
+    return this.autoFilledFields.has(controlName);
   }
 
   ngOnDestroy(): void {

@@ -1,15 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Subject, merge } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, map, switchMap, takeUntil } from 'rxjs/operators';
 import { ClientService, Client, LeadSource } from '../../services/client.service';
 import { LocationPickerMapComponent, SecondaryMarker } from '../../../../shared/components/location-picker-map/location-picker-map.component';
 import { PropertyType, PropertyService, Property } from '../../../property-management/services/property.service';
 import { filterWithinRadius } from '../../../../shared/utils/geo.util';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
 import { ErrorHandlerService } from '../../../../core/services/error-handler.service';
+import { GeocodingService } from '../../../../shared/services/geocoding.service';
 
 @Component({
   selector: 'app-client-form',
@@ -115,7 +117,7 @@ import { ErrorHandlerService } from '../../../../core/services/error-handler.ser
                 <div class="form-grid-plz">
                   <div>
                     <label class="form-label">{{ 'clients.postalCode' | translate }}</label>
-                    <input type="text" formControlName="addressPostalCode" class="form-input"
+                    <input type="text" formControlName="addressPostalCode" class="form-input" [class.field-autofilled]="isAutoFilled('addressPostalCode')"
                       [placeholder]="'clients.postalCodePlaceholder' | translate">
                     <div *ngIf="clientForm.get('addressPostalCode')?.invalid && clientForm.get('addressPostalCode')?.touched" class="form-error">
                       {{ 'clients.postalCodeInvalid' | translate }}
@@ -123,7 +125,7 @@ import { ErrorHandlerService } from '../../../../core/services/error-handler.ser
                   </div>
                   <div>
                     <label class="form-label">{{ 'clients.city' | translate }}</label>
-                    <input type="text" formControlName="addressCity" class="form-input"
+                    <input type="text" formControlName="addressCity" class="form-input" [class.field-autofilled]="isAutoFilled('addressCity')"
                       [placeholder]="'clients.cityPlaceholder' | translate">
                   </div>
                   <div>
@@ -407,7 +409,7 @@ import { ErrorHandlerService } from '../../../../core/services/error-handler.ser
     </div>
   `
 })
-export class ClientFormComponent implements OnInit {
+export class ClientFormComponent implements OnInit, OnDestroy {
   clientForm: FormGroup;
   isLoading = false;
   errorMessage = '';
@@ -428,7 +430,8 @@ export class ClientFormComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private errorHandler: ErrorHandlerService,
-    private propertyService: PropertyService
+    private propertyService: PropertyService,
+    private geocodingService: GeocodingService
   ) {
     this.clientForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
@@ -530,6 +533,8 @@ export class ClientFormComponent implements OnInit {
       this.watchForDuplicates();
     }
 
+    this.setupAddressCompletion();
+
     // Größe 1000: ein Agent hat realistisch weit weniger Objekte; erspart Paging-Logik hier.
     this.propertyService.getProperties(0, 1000).subscribe({
       next: page => {
@@ -559,6 +564,75 @@ export class ClientFormComponent implements OnInit {
   }
 
   /** Non-blocking duplicate-lead check while a new client is being entered (create mode only). */
+  private destroy$ = new Subject<void>();
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // ========================================
+  // Adress-Vervollstaendigung (Issue #29)
+  // ========================================
+
+  /** Felder, die die Automatik gerade gefuellt hat -- fuer die kurze optische Markierung. */
+  autoFilledFields = new Set<string>();
+
+  /**
+   * Nur die verlaessliche Richtung: PLZ -> Ort. Der Kundenblock fuehrt weder
+   * Bundesland noch Stadtteil, und die Gegenrichtung Ort -> PLZ waere hier ohne
+   * Strasse geraten -- siehe property-form.component.ts fuer die ausfuehrliche
+   * Begruendung.
+   */
+  private setupAddressCompletion(): void {
+    const plz = this.clientForm.get('addressPostalCode');
+    const street = this.clientForm.get('addressStreet');
+    const city = this.clientForm.get('addressCity');
+    if (!plz || !street || !city) return;
+
+    plz.valueChanges.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+      filter((value: string) => /^[0-9]{5}$/.test((value ?? '').trim())),
+      switchMap((value: string) => this.geocodingService.lookupAddress({ postalCode: value.trim() })),
+      takeUntil(this.destroy$)
+    ).subscribe(result => {
+      if (result?.city) this.fillIfEmpty('addressCity', result.city);
+    });
+
+    merge(street.valueChanges, city.valueChanges).pipe(
+      debounceTime(600),
+      map(() => ({
+        street: (street.value ?? '').trim(),
+        city: (city.value ?? '').trim(),
+        plz: (plz.value ?? '').trim(),
+      })),
+      filter(v => v.street.length > 2 && v.city.length > 1 && v.plz.length === 0),
+      distinctUntilChanged((a, b) => a.street === b.street && a.city === b.city),
+      switchMap(v => this.geocodingService.lookupAddress({ street: v.street, city: v.city })),
+      takeUntil(this.destroy$)
+    ).subscribe(result => {
+      if (result?.postalCode) this.fillIfEmpty('addressPostalCode', result.postalCode);
+    });
+  }
+
+  /** Ergaenzt nur leere Felder -- was der Makler selbst getippt hat, gewinnt immer. */
+  private fillIfEmpty(controlName: string, value?: string | null): void {
+    if (!value) return;
+    const control = this.clientForm.get(controlName);
+    if (!control) return;
+    if ((control.value ?? '').toString().trim().length > 0) return;
+
+    control.setValue(value);
+    control.markAsDirty();
+    this.autoFilledFields.add(controlName);
+    setTimeout(() => this.autoFilledFields.delete(controlName), 2500);
+  }
+
+  isAutoFilled(controlName: string): boolean {
+    return this.autoFilledFields.has(controlName);
+  }
+
   private watchForDuplicates(): void {
     this.clientForm.get('lastName')!.valueChanges.pipe(
       debounceTime(400),
