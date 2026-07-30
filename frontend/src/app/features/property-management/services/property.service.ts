@@ -6,6 +6,17 @@ import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
 // Property Enums matching backend Java enums
+/**
+ * Auftragsart, mit der ein Objekt vermarktet wird (Issue #39).
+ * Uebersetzt wird ueber enums.mandateType.
+ */
+export enum MandateType {
+  EXCLUSIVE_QUALIFIED = 'EXCLUSIVE_QUALIFIED',
+  EXCLUSIVE = 'EXCLUSIVE',
+  SIMPLE = 'SIMPLE',
+  NONE = 'NONE'
+}
+
 export enum PropertyType {
   APARTMENT = 'APARTMENT',
   HOUSE = 'HOUSE',
@@ -140,6 +151,17 @@ export interface Property {
   additionalCosts?: number;
   heatingCosts?: number;
   commission?: number;
+
+  // Auftragsdaten (Issue #39) — haengen am Objekt, nicht am Eigentuemer.
+  mandateType?: MandateType | null;
+  mandateStart?: string | null;
+  mandateEnd?: string | null;
+  /** Wunschpreis des Eigentuemers; die Differenz zu price traegt das Preisgespraech. */
+  ownerPriceExpectation?: number | null;
+  /** Innenprovision in Prozent (zahlt der Eigentuemer). */
+  commissionSellerPercent?: number | null;
+  /** Aussenprovision in Prozent (zahlt der Kaeufer). */
+  commissionBuyerPercent?: number | null;
 
   // Features
   hasElevator?: boolean;

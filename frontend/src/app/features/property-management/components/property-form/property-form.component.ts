@@ -9,6 +9,7 @@ import {
   PropertyType,
   ListingType,
   PropertyStatus,
+  MandateType,
   HeatingType
 } from '../../services/property.service';
 
@@ -55,6 +56,7 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
   propertyTypes = Object.values(PropertyType);
   listingTypes = Object.values(ListingType);
   propertyStatuses = Object.values(PropertyStatus);
+  mandateTypes = Object.values(MandateType);
   heatingTypes = Object.values(HeatingType);
 
   // Form persistence
@@ -114,6 +116,15 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
       additionalCosts: ['', [Validators.min(0)]],
       heatingCosts: ['', [Validators.min(0)]],
       commission: ['', [Validators.min(0)]],
+
+      // Auftrag (Issue #39) — haengt am Objekt, weil ein Eigentuemer mehrere Objekte
+      // mit unterschiedlichen Auftraegen haben kann.
+      mandateType: [''],
+      mandateStart: [''],
+      mandateEnd: [''],
+      ownerPriceExpectation: ['', [Validators.min(0)]],
+      commissionSellerPercent: ['', [Validators.min(0), Validators.max(100)]],
+      commissionBuyerPercent: ['', [Validators.min(0), Validators.max(100)]],
 
       // Features
       hasElevator: [false],
@@ -203,6 +214,13 @@ export class PropertyFormComponent implements OnInit, OnDestroy {
           additionalCosts: property.additionalCosts,
           heatingCosts: property.heatingCosts,
           commission: property.commission,
+
+          mandateType: property.mandateType ?? '',
+          mandateStart: property.mandateStart ?? '',
+          mandateEnd: property.mandateEnd ?? '',
+          ownerPriceExpectation: property.ownerPriceExpectation,
+          commissionSellerPercent: property.commissionSellerPercent,
+          commissionBuyerPercent: property.commissionBuyerPercent,
 
           hasElevator: property.hasElevator,
           hasBalcony: property.hasBalcony,

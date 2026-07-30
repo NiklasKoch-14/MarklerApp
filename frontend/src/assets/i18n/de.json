@@ -526,6 +526,22 @@
     "leadSourceHint": "Optional. Zeigt in der Auswertung, welcher Kanal tatsächlich Abschlüsse bringt.",
     "ownedProperties": {
       "title": "Eigene Objekte"
+    },
+    "mandate": {
+      "title": "Auftrag",
+      "noProperties": "Kein Objekt verknüpft. Der Auftrag hängt am Objekt — verknüpfe dieses Kundenkonto als Eigentümer eines Objekts, damit hier Auftragsart, Laufzeit und Preisvorstellung erscheinen.",
+      "noData": "Keine Auftragsdaten gepflegt. Auftragsart, Laufzeit und Wunschpreis lassen sich im Objekt hinterlegen.",
+      "type": "Auftragsart",
+      "period": "Laufzeit",
+      "daysOnMarket": "{{days}} Tage am Markt",
+      "expiresSoon": "Auftrag läuft in {{days}} Tagen aus",
+      "expired": "Auftrag seit {{days}} Tagen abgelaufen",
+      "ownerPrice": "Wunschpreis",
+      "listedPrice": "Angebotspreis",
+      "priceGap": "Differenz",
+      "commission": "Provision",
+      "commissionSeller": "innen",
+      "commissionBuyer": "außen"
     }
   },
   "properties": {
@@ -621,6 +637,12 @@
       "additionalCosts": "Nebenkosten (€)",
       "heatingCosts": "Heizkosten (€)",
       "commission": "Provision (€)",
+      "mandateType": "Auftragsart",
+      "mandateStart": "Auftrag von",
+      "mandateEnd": "Auftrag bis",
+      "ownerPriceExpectation": "Wunschpreis Eigentümer (€)",
+      "commissionSellerPercent": "Innenprovision (%)",
+      "commissionBuyerPercent": "Außenprovision (%)",
       "hasElevator": "Aufzug",
       "hasBalcony": "Balkon",
       "hasTerrace": "Terrasse",
@@ -1426,6 +1448,12 @@
       "BUYER": "Käufer",
       "RENTER": "Mieter",
       "SELLER": "Verkäufer"
+    },
+    "mandateType": {
+      "EXCLUSIVE_QUALIFIED": "Qualifizierter Alleinauftrag",
+      "EXCLUSIVE": "Alleinauftrag",
+      "SIMPLE": "Einfacher Auftrag",
+      "NONE": "Kein Auftrag"
     },
     "pipelineStage": {
       "PROSPECT": "Interessent",

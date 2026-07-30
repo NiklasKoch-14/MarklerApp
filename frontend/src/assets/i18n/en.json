@@ -526,6 +526,22 @@
     "leadSourceHint": "Optional. Shows in analytics which channel actually produces deals.",
     "ownedProperties": {
       "title": "Own properties"
+    },
+    "mandate": {
+      "title": "Mandate",
+      "noProperties": "No property linked. The mandate belongs to the property — link this client as the owner of a property to see mandate type, term and price expectation here.",
+      "noData": "No mandate details recorded. Mandate type, term and asking price can be set on the property.",
+      "type": "Mandate type",
+      "period": "Term",
+      "daysOnMarket": "{{days}} days on market",
+      "expiresSoon": "Mandate expires in {{days}} days",
+      "expired": "Mandate expired {{days}} days ago",
+      "ownerPrice": "Owner's price",
+      "listedPrice": "Listed price",
+      "priceGap": "Difference",
+      "commission": "Commission",
+      "commissionSeller": "seller",
+      "commissionBuyer": "buyer"
     }
   },
   "properties": {
@@ -621,6 +637,12 @@
       "additionalCosts": "Additional Costs (€)",
       "heatingCosts": "Heating Costs (€)",
       "commission": "Commission (€)",
+      "mandateType": "Mandate type",
+      "mandateStart": "Mandate from",
+      "mandateEnd": "Mandate until",
+      "ownerPriceExpectation": "Owner's asking price (€)",
+      "commissionSellerPercent": "Seller commission (%)",
+      "commissionBuyerPercent": "Buyer commission (%)",
       "hasElevator": "Elevator",
       "hasBalcony": "Balcony",
       "hasTerrace": "Terrace",
@@ -1426,6 +1448,12 @@
       "BUYER": "Buyer",
       "RENTER": "Renter",
       "SELLER": "Seller"
+    },
+    "mandateType": {
+      "EXCLUSIVE_QUALIFIED": "Qualified exclusive mandate",
+      "EXCLUSIVE": "Exclusive mandate",
+      "SIMPLE": "Simple mandate",
+      "NONE": "No mandate"
     },
     "pipelineStage": {
       "PROSPECT": "Prospect",

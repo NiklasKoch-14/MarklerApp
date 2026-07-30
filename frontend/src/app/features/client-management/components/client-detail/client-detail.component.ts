@@ -508,8 +508,123 @@ import { GdprExportService } from '../../services/gdpr-export.service';
           <!-- RIGHT: Info sidebar -->
           <div style="display:flex;flex-direction:column;gap:16px;">
 
+            <!-- Auftrags-Karte (#39) — ersetzt bei Verkaeufern das Suchprofil. Ein
+                 Eigentuemer sucht nichts; ihn interessiert, was er verkauft, zu welchem
+                 Preis, mit welchem Auftrag und bis wann. -->
+            <div *ngIf="isSellerClient"
+                 style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                <i class="ri-file-paper-2-line" style="font-size:15px;color:var(--primary);"></i>
+                <span style="font-size:15px;font-weight:700;color:var(--text);flex:1;">{{ 'clients.mandate.title' | translate }}</span>
+                <span *ngIf="ownedProperties.length > 0"
+                      style="font-size:12px;font-weight:700;color:var(--primary);background:var(--accent-soft);padding:2px 8px;border-radius:10px;">
+                  {{ ownedProperties.length }}
+                </span>
+              </div>
+
+              <div *ngIf="isLoadingOwnedProperties" style="font-size:13px;color:var(--text-3);">
+                {{ 'common.loading' | translate }}
+              </div>
+
+              <!-- Kein verknuepftes Objekt: der Auftrag haengt am Objekt, also fuehrt der
+                   einzige sinnvolle naechste Schritt zum Anlegen bzw. Verknuepfen. -->
+              <div *ngIf="!isLoadingOwnedProperties && ownedProperties.length === 0"
+                   style="font-size:13px;color:var(--text-3);line-height:1.5;">
+                {{ 'clients.mandate.noProperties' | translate }}
+              </div>
+
+              <div *ngIf="!isLoadingOwnedProperties && ownedProperties.length > 0"
+                   style="display:flex;flex-direction:column;gap:12px;">
+                <div *ngFor="let p of ownedProperties"
+                     style="border:1px solid var(--border);border-radius:11px;background:var(--surface-2);overflow:hidden;">
+                  <a [routerLink]="['/properties', p.id]" class="match-link"
+                     style="display:flex;align-items:center;gap:10px;padding:11px 12px;text-decoration:none;border-bottom:1px solid var(--border);">
+                    <div style="flex:1;min-width:0;">
+                      <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ p.title }}</div>
+                      <div style="font-size:11px;color:var(--text-3);">
+                        {{ p.addressCity }}<ng-container *ngIf="p.status"> · {{ p.status | translateEnum:'propertyStatus' }}</ng-container>
+                        <ng-container *ngIf="daysOnMarket(p) !== null">
+                          · {{ 'clients.mandate.daysOnMarket' | translate:{ days: daysOnMarket(p) } }}
+                        </ng-container>
+                      </div>
+                    </div>
+                    <i class="ri-arrow-right-line" style="font-size:13px;color:var(--text-3);flex-shrink:0;"></i>
+                  </a>
+
+                  <div style="padding:4px 12px 10px;">
+                    <div *ngIf="p.mandateType"
+                         style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
+                      <span style="font-size:12px;color:var(--text-3);">{{ 'clients.mandate.type' | translate }}</span>
+                      <span style="font-size:13px;font-weight:600;color:var(--text);">{{ p.mandateType | translateEnum:'mandateType' }}</span>
+                    </div>
+
+                    <div *ngIf="p.mandateStart || p.mandateEnd"
+                         style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
+                      <span style="font-size:12px;color:var(--text-3);">{{ 'clients.mandate.period' | translate }}</span>
+                      <span style="font-size:13px;font-weight:600;color:var(--text);">
+                        {{ (p.mandateStart | date:'dd.MM.yy') || '–' }} – {{ (p.mandateEnd | date:'dd.MM.yy') || '–' }}
+                      </span>
+                    </div>
+
+                    <!-- Auslaufende Alleinauftraege sind der klassische stille Umsatzverlust,
+                         darum eine echte Warnung und keine stille Datumszeile. -->
+                    <div *ngIf="mandateDaysLeft(p) !== null"
+                         style="display:flex;align-items:center;gap:7px;padding:8px 10px;margin:7px 0;border-radius:8px;"
+                         [style.background]="mandateExpiryColorSoft(p)">
+                      <i [class]="mandateExpired(p) ? 'ri-error-warning-line' : 'ri-alarm-warning-line'"
+                         style="font-size:14px;flex-shrink:0;" [style.color]="mandateExpiryColor(p)"></i>
+                      <span style="font-size:12px;font-weight:600;" [style.color]="mandateExpiryColor(p)">
+                        {{ mandateExpired(p)
+                            ? ('clients.mandate.expired' | translate:{ days: -mandateDaysLeft(p)! })
+                            : ('clients.mandate.expiresSoon' | translate:{ days: mandateDaysLeft(p)! }) }}
+                      </span>
+                    </div>
+
+                    <!-- Wunschpreis gegen Angebotspreis: die Differenz ist das Dauerthema
+                         jedes Preisgespraechs, also steht sie hier und nicht im Kopf des Maklers. -->
+                    <div *ngIf="p.ownerPriceExpectation != null"
+                         style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
+                      <span style="font-size:12px;color:var(--text-3);">{{ 'clients.mandate.ownerPrice' | translate }}</span>
+                      <span style="font-size:13px;font-weight:600;color:var(--text);">{{ p.ownerPriceExpectation | number:'1.0-0' }} €</span>
+                    </div>
+                    <div *ngIf="p.price != null"
+                         style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
+                      <span style="font-size:12px;color:var(--text-3);">{{ 'clients.mandate.listedPrice' | translate }}</span>
+                      <span style="font-size:13px;font-weight:600;color:var(--text);">{{ p.price | number:'1.0-0' }} €</span>
+                    </div>
+                    <div *ngIf="priceGap(p) !== null"
+                         style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
+                      <span style="font-size:12px;color:var(--text-3);">{{ 'clients.mandate.priceGap' | translate }}</span>
+                      <span style="font-size:13px;font-weight:700;" [style.color]="priceGap(p)! > 0 ? 'var(--color-warning)' : 'var(--color-success)'">
+                        {{ priceGap(p)! > 0 ? '+' : '' }}{{ priceGap(p) | number:'1.0-0' }} €
+                      </span>
+                    </div>
+
+                    <div *ngIf="p.commissionSellerPercent != null || p.commissionBuyerPercent != null"
+                         style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;">
+                      <span style="font-size:12px;color:var(--text-3);">{{ 'clients.mandate.commission' | translate }}</span>
+                      <span style="font-size:13px;font-weight:600;color:var(--text);">
+                        <ng-container *ngIf="p.commissionSellerPercent != null">
+                          {{ 'clients.mandate.commissionSeller' | translate }} {{ p.commissionSellerPercent | number:'1.0-2' }}%
+                        </ng-container>
+                        <ng-container *ngIf="p.commissionSellerPercent != null && p.commissionBuyerPercent != null"> · </ng-container>
+                        <ng-container *ngIf="p.commissionBuyerPercent != null">
+                          {{ 'clients.mandate.commissionBuyer' | translate }} {{ p.commissionBuyerPercent | number:'1.0-2' }}%
+                        </ng-container>
+                      </span>
+                    </div>
+
+                    <div *ngIf="!hasMandateData(p)"
+                         style="padding:7px 0;font-size:12px;color:var(--text-3);line-height:1.5;">
+                      {{ 'clients.mandate.noData' | translate }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Suchprofil -->
-            <div *ngIf="client.searchCriteria || client.clientType"
+            <div *ngIf="!isSellerClient && (client.searchCriteria || client.clientType)"
                  style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
                 <div style="display:flex;align-items:center;gap:8px;">
@@ -523,8 +638,8 @@ import { GdprExportService } from '../../services/gdpr-export.service';
               <div>
                 <div *ngIf="client.clientType"
                      style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
-                  <span style="font-size:12px;color:var(--text-3);">Angebotsart</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ getAngebotsart() }}</span>
+                  <span style="font-size:12px;color:var(--text-3);">{{ 'clients.clientType' | translate }}</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--text);">{{ client.clientType | translateEnum:'clientType' }}</span>
                 </div>
                 <div *ngIf="client.searchCriteria?.propertyTypes?.length"
                      style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
@@ -565,7 +680,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
             </div>
 
             <!-- Suchradius -->
-            <div *ngIf="client.searchCriteria?.latitude != null && client.searchCriteria?.longitude != null"
+            <div *ngIf="!isSellerClient && client.searchCriteria?.latitude != null && client.searchCriteria?.longitude != null"
                  style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
                 <i class="ri-map-pin-line" style="font-size:15px;color:var(--text-3);"></i>
@@ -589,8 +704,9 @@ import { GdprExportService } from '../../services/gdpr-export.service';
               </p>
             </div>
 
-            <!-- Eigene Objekte (#37) -->
-            <div *ngIf="ownedProperties.length > 0"
+            <!-- Eigene Objekte (#37). Bei Verkaeufern uebernimmt die Auftrags-Karte (#39)
+                 diese Liste mitsamt Auftragsdaten, hier waere sie eine Dublette. -->
+            <div *ngIf="!isSellerClient && ownedProperties.length > 0"
                  style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
                 <i class="ri-home-4-line" style="font-size:15px;color:var(--primary);"></i>
@@ -616,7 +732,7 @@ import { GdprExportService } from '../../services/gdpr-export.service';
             </div>
 
             <!-- Passende Objekte -->
-            <div *ngIf="client.searchCriteria"
+            <div *ngIf="!isSellerClient && client.searchCriteria"
                  style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
                 <i class="ri-shuffle-fill" style="font-size:15px;color:var(--primary);"></i>
@@ -857,6 +973,56 @@ export class ClientDetailComponent implements OnInit {
     { value: SellerPipelineStage.SOLD,      color: 'var(--stage-won)',           bg: 'var(--stage-won-bg)' },
     { value: SellerPipelineStage.LOST,      color: 'var(--stage-lost)',          bg: 'var(--stage-lost-bg)' },
   ];
+
+  /** Verkäufer bekommen die Auftrags-Karte statt Suchprofil, Suchradius und Matching (#39). */
+  get isSellerClient(): boolean {
+    return this.client?.clientType === ClientType.SELLER;
+  }
+
+  /** Tage am Markt aus dem Anlagedatum — ein eigenes Listing-Datum führt das Objekt nicht. */
+  daysOnMarket(p: Property): number | null {
+    if (!p.createdAt) return null;
+    const ms = Date.now() - new Date(p.createdAt).getTime();
+    return Math.max(0, Math.floor(ms / 86400000));
+  }
+
+  /**
+   * Resttage des Auftrags. null, wenn kein Enddatum gepflegt ist oder es weiter als
+   * 30 Tage entfernt liegt — dann ist es keine Warnung, sondern nur ein Datum, und das
+   * steht schon in der Laufzeit-Zeile.
+   */
+  mandateDaysLeft(p: Property): number | null {
+    if (!p.mandateEnd) return null;
+    const end = new Date(p.mandateEnd);
+    const days = Math.ceil((end.getTime() - Date.now()) / 86400000);
+    return days <= 30 ? days : null;
+  }
+
+  mandateExpired(p: Property): boolean {
+    const days = this.mandateDaysLeft(p);
+    return days !== null && days < 0;
+  }
+
+  mandateExpiryColor(p: Property): string {
+    return this.mandateExpired(p) ? 'var(--color-error)' : 'var(--color-warning)';
+  }
+
+  mandateExpiryColorSoft(p: Property): string {
+    return this.mandateExpired(p) ? 'var(--color-error-soft)' : 'var(--color-warning-soft)';
+  }
+
+  /** Wunschpreis minus Angebotspreis. Positiv heißt: der Eigentümer will mehr, als eingestellt ist. */
+  priceGap(p: Property): number | null {
+    if (p.ownerPriceExpectation == null || p.price == null) return null;
+    return p.ownerPriceExpectation - p.price;
+  }
+
+  /** Ob überhaupt Auftragsdaten gepflegt sind — sonst bleibt die Karte ein leeres Gerüst. */
+  hasMandateData(p: Property): boolean {
+    return p.mandateType != null || p.mandateStart != null || p.mandateEnd != null
+        || p.ownerPriceExpectation != null
+        || p.commissionSellerPercent != null || p.commissionBuyerPercent != null;
+  }
 
   /** Welche Stufen zur Auswahl stehen — richtet sich nach dem Kundentyp. */
   get activeStages(): StageOption[] {
@@ -1296,15 +1462,6 @@ export class ClientDetailComponent implements OnInit {
       case 'OFFER_MADE':        return 'Angebot gemacht';
       case 'DEAL_CLOSED':       return 'Abschluss';
       default:                  return outcome;
-    }
-  }
-
-  getAngebotsart(): string {
-    switch (this.client?.clientType) {
-      case ClientType.BUYER:  return 'Kauf';
-      case ClientType.RENTER: return 'Miete';
-      case ClientType.SELLER: return 'Verkauf';
-      default:                return '–';
     }
   }
 

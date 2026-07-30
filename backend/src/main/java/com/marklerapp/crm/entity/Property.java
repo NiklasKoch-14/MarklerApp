@@ -235,6 +235,38 @@ public class Property extends BaseEntity {
     @JoinColumn(name = "owner_client_id")
     private Client owner;
 
+    // Auftragsdaten (Issue #39). Sie haengen fachlich an der Beziehung Eigentuemer<->Objekt,
+    // nicht am Kunden: ein Eigentuemer kann mehrere Objekte mit unterschiedlichen Auftraegen
+    // haben. Alle nullable -- ein Objekt kann im CRM stehen, bevor ein Auftrag existiert.
+    @Enumerated(EnumType.STRING)
+    @Column(name = "mandate_type")
+    private MandateType mandateType;
+
+    @Column(name = "mandate_start")
+    private LocalDate mandateStart;
+
+    @Column(name = "mandate_end")
+    private LocalDate mandateEnd;
+
+    // Wunschpreis des Eigentuemers. Die Differenz zum eingestellten {@link #price} ist das
+    // Dauerthema jedes Preisgespraechs, darum bewusst als eigenes Feld und nicht als Notiz.
+    @Column(name = "owner_price_expectation", precision = 12, scale = 2)
+    @DecimalMin(value = "0.0", message = "Owner price expectation must be non-negative")
+    private BigDecimal ownerPriceExpectation;
+
+    // Provisionssaetze in Prozent -- im Unterschied zu {@link #commission}, das einen
+    // Eurobetrag fuer das Expose fuehrt. Innenprovision zahlt der Eigentuemer,
+    // Aussenprovision der Kaeufer.
+    @Column(name = "commission_seller_percent", precision = 5, scale = 2)
+    @DecimalMin(value = "0.0", message = "Seller commission must be non-negative")
+    @DecimalMax(value = "100.0", message = "Seller commission must not exceed 100%")
+    private BigDecimal commissionSellerPercent;
+
+    @Column(name = "commission_buyer_percent", precision = 5, scale = 2)
+    @DecimalMin(value = "0.0", message = "Buyer commission must be non-negative")
+    @DecimalMax(value = "100.0", message = "Buyer commission must not exceed 100%")
+    private BigDecimal commissionBuyerPercent;
+
     // Abgeloest durch {@link #owner} (Issue #37). Bleibt als Sicherheitsnetz fuer den
     // V32-Backfill lesbar erhalten, wird von der Anwendung aber nicht mehr geschrieben
     // und nicht mehr ausgeliefert -- die Freitextfelder hatten weder DSGVO-Export noch

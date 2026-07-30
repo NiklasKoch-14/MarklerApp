@@ -466,6 +466,68 @@
                 {{ getFieldError('commission') }}
               </div>
             </div>
+
+            <!-- Auftragsart (Issue #39) -->
+            <div>
+              <label for="mandateType" class="form-label">{{ 'properties.form.mandateType' | translate }}</label>
+              <select id="mandateType" formControlName="mandateType" class="form-input">
+                <option value="">{{ 'properties.form.mandateType' | translate }}</option>
+                <option *ngFor="let m of mandateTypes" [value]="m">{{ m | translateEnum:'mandateType' }}</option>
+              </select>
+            </div>
+
+            <!-- Auftragslaufzeit -->
+            <div>
+              <label for="mandateStart" class="form-label">{{ 'properties.form.mandateStart' | translate }}</label>
+              <input type="date" id="mandateStart" formControlName="mandateStart" class="form-input">
+            </div>
+            <div>
+              <label for="mandateEnd" class="form-label">{{ 'properties.form.mandateEnd' | translate }}</label>
+              <input type="date" id="mandateEnd" formControlName="mandateEnd" class="form-input">
+            </div>
+
+            <!-- Wunschpreis des Eigentuemers -->
+            <div>
+              <label for="ownerPriceExpectation" class="form-label">{{ 'properties.form.ownerPriceExpectation' | translate }}</label>
+              <input
+                type="number"
+                id="ownerPriceExpectation"
+                formControlName="ownerPriceExpectation"
+                step="0.01"
+                class="form-input"
+                placeholder="450000.00">
+              <div *ngIf="isFieldInvalid('ownerPriceExpectation')" class="form-error">
+                {{ getFieldError('ownerPriceExpectation') }}
+              </div>
+            </div>
+
+            <!-- Provisionssaetze -->
+            <div>
+              <label for="commissionSellerPercent" class="form-label">{{ 'properties.form.commissionSellerPercent' | translate }}</label>
+              <input
+                type="number"
+                id="commissionSellerPercent"
+                formControlName="commissionSellerPercent"
+                step="0.01"
+                class="form-input"
+                placeholder="3.57">
+              <div *ngIf="isFieldInvalid('commissionSellerPercent')" class="form-error">
+                {{ getFieldError('commissionSellerPercent') }}
+              </div>
+            </div>
+            <div>
+              <label for="commissionBuyerPercent" class="form-label">{{ 'properties.form.commissionBuyerPercent' | translate }}</label>
+              <input
+                type="number"
+                id="commissionBuyerPercent"
+                formControlName="commissionBuyerPercent"
+                step="0.01"
+                class="form-input"
+                placeholder="3.57">
+              <div *ngIf="isFieldInvalid('commissionBuyerPercent')" class="form-error">
+                {{ getFieldError('commissionBuyerPercent') }}
+              </div>
+            </div>
           </div>
         </div>
       </div>
