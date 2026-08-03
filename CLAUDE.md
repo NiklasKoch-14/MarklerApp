@@ -1,273 +1,274 @@
-# MarklerApp Development Guidelines
+# CLAUDE.md
 
-**Updated**: 2026-06-22 | **Status**: Phase 1.5 complete — Railway backend live
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Context
+**Stand**: 2026-08-03 · **GitHub**: `NiklasKoch-14/MarklerApp`
 
-German Real Estate CRM (Spring Boot 17 + Angular 17) being converted into a **multi-tenant Stripe SaaS**.
-Plan tiers: Free/Trial · Basic 29€ · Pro 69€ · Agency 149€. Full roadmap in `PLAN.md`.
-
-**GitHub**: NiklasKoch-14/MarklerApp
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Backend | Java 17, Spring Boot 3.3.6, JWT auth, Flyway migrations |
-| Frontend | Angular 17 standalone components, TypeScript 5+, Tailwind CSS, i18n |
-| Database | Supabase (managed PostgreSQL 17.6) — Session Pooler in prod |
-| Storage | Supabase Storage (S3-compatible REST API) |
-| Hosting | Railway (backend Docker + frontend nginx — ein Dashboard, kein Vercel) |
-| Local dev | SQLite (dev profile), Docker Compose (`docker-compose.dev.yml`) |
-
-**Key Paths**:
-- Backend: `backend/src/main/java/com/marklerapp/crm/{controller,service,entity,dto,repository,config}`
-- Frontend: `frontend/src/app/{core,features,layout,shared}`
-- Migrations: `backend/src/main/resources/db/migration/`
-- Translations: `frontend/src/assets/i18n/{de,en}.json`
-
-## Implementation Status
-
-| Phase | Status | Notes |
-|---|---|---|
-| 1.1–1.3 | ✅ Done | Supabase Postgres + Storage integration |
-| 1.4 | ✅ Done | Supabase Storage for property images |
-| 1.5 | ✅ Done | Railway backend deployment |
-| 1.6 | ⏳ Next | Railway frontend (nginx Docker, kein Vercel) |
-| 2 | Planned | Multi-tenancy (Organization entity, tenant isolation) |
-| 3 | Planned | Plan limits |
-| 4 | Planned | Stripe integration |
-| 5 | Planned | Registration & onboarding |
+Deutsches Immobilien-CRM für selbstständige Makler. Spring Boot 3.3.6 (Java 17) + Angular 17,
+zweisprachig de/en, DSGVO-konform. Wird schrittweise zu einer mandantenfähigen Stripe-SaaS
+umgebaut — Roadmap in `PLAN.md`.
 
 ---
 
-## Production Deployment (Railway + Supabase)
-
-### Railway Environment Variables (must all be set)
-
-```
-DATABASE_URL=jdbc:postgresql://aws-1-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=require
-POSTGRES_USER=postgres.kewmoozwpuqzaekjvamg
-POSTGRES_PASSWORD=<from Supabase Dashboard → Settings → Database>
-SUPABASE_URL=https://kewmoozwpuqzaekjvamg.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=<from Supabase Dashboard → Settings → API → service_role>
-JWT_SECRET=<min 48 chars random>
-CORS_ALLOWED_ORIGINS=https://<vercel-frontend-domain>
-SPRING_PROFILES_ACTIVE=prod
-JAVA_OPTS=-Xmx400m -Xms200m -XX:+UseG1GC
-```
-
-Optional — Google Sign-In (`/auth/google` returns 503 while unset):
-
-```
-GOOGLE_CLIENT_ID=<OAuth Client ID from Google Cloud Console>
-```
-
-Must match `googleClientId` in `frontend/src/environments/environment.prod.ts`, and the
-frontend's domain must be listed under the OAuth client's *Authorized JavaScript origins*.
-The Client ID is not a secret — it ships in the frontend bundle by design.
-
-### Supabase Connection — Critical Facts
-
-- **Direct DB host** (`db.kewmoozwpuqzaekjvamg.supabase.co:5432`) is **IPv6-only** → Railway can't reach it.
-- **Correct pooler URL**: Get it from Supabase Dashboard → **Connect button** → Direct tab → **Session pooler**.
-  Current: `aws-1-eu-central-1.pooler.supabase.com:5432`
-- **Username format for pooler**: `postgres.{project-ref}` — NOT just `postgres`.
-- **SSL is mandatory**: append `?sslmode=require` to all JDBC URLs.
-- Flyway reuses the same HikariCP DataSource — no separate `FLYWAY_URL` needed.
-
-### Dockerfile (root-level)
-
-Railway always uses the repo root as build context. The `Dockerfile` at repo root copies `backend/` manually.
-`ENV SPRING_PROFILES_ACTIVE=prod` must be in the Dockerfile — Railway doesn't set it automatically.
-
-### application.yml — prod profile gotchas
-
-```yaml
-spring:
-  jpa:
-    defer-datasource-initialization: false  # MUST override base-profile's 'true' — causes circular dep with Flyway
-  flyway:
-    postgresql:
-      transactional-lock: false  # Required for PGBouncer (Session Pooler uses PGBouncer)
-  datasource:
-    hikari:
-      data-source-properties:
-        sslmode: require  # Belt-and-suspenders SSL enforcement
-```
-
-### Flyway + PostgreSQL 17
-
-`flyway-core` alone is not enough in Flyway 10.x. Always include:
-```xml
-<dependency>
-  <groupId>org.flywaydb</groupId>
-  <artifactId>flyway-database-postgresql</artifactId>
-  <!-- version managed by Spring Boot parent -->
-</dependency>
-```
-
-### UUID Rules for Migrations
-
-PostgreSQL enforces strict UUID hex format (0-9, a-f only). SQLite accepted any string.
-**Never use letter prefixes like p/i/n/s** — they are not hex. Use b/e/d/a instead.
-
-Before writing seed data, validate every UUID in `V*.sql` files.
-
-### Mail / Email
-
-`spring-boot-starter-mail` was **removed** on 2026-06-22.
-`MailHealthIndicator` caused Railway health checks to fail when SMTP isn't configured.
-`PasswordResetService` still generates tokens in the DB — email delivery is a future paid feature.
-
----
-
-## Development Commands
+## Befehle
 
 ```bash
-# Local dev (SQLite + H2)
-cd backend && mvn spring-boot:run
-cd frontend && npm install && npm start
-# Access: Frontend:4200, Backend:8085, API Docs:8085/swagger-ui.html
+# Lokale Entwicklung (dev-Profil: SQLite, kein Flyway)
+cd backend  && mvn spring-boot:run          # :8085, Swagger unter /swagger-ui.html
+cd frontend && npm install && npm start     # :4200
 
-# Docker stack
+# Vollständiger Stack (PostgreSQL 15, Flyway aktiv)
 docker compose -f docker-compose.dev.yml up --build
+```
 
-# Tests
-cd frontend && npm test && npm run lint
-cd backend && mvn test
+### Tests
+
+**Auf diesem Rechner gibt es kein lokales Maven und kein JDK.** Backend-Tests laufen im Container:
+
+```bash
+docker run --rm -v "$PWD/backend":/app -v "$HOME/.m2":/root/.m2 -w /app \
+  maven:3.9-eclipse-temurin-17 mvn test
+
+# Einzelne Testklasse
+docker run --rm -v "$PWD/backend":/app -v "$HOME/.m2":/root/.m2 -w /app \
+  maven:3.9-eclipse-temurin-17 mvn -q test -Dtest=PropertyServiceTest
+```
+
+`backend/target/` gehört danach root. Das ist erwartet — nicht reparieren, notfalls
+`sudo rm -rf backend/target`.
+
+```bash
+# Frontend (Karma/Jasmine)
+cd frontend && npx ng test --watch=false --browsers=ChromeHeadless
+cd frontend && npx ng test --watch=false --browsers=ChromeHeadless --include='**/geo.util.spec.ts'
 
 # E2E (Playwright) — braucht ein laufendes Backend auf :8085, startet ng serve selbst
-cd frontend && npm run e2e:pw                    # beide Projekte
-cd frontend && npm run e2e:pw:desktop            # nur Desktop Chromium
-E2E_PORT=4300 npm run e2e:pw:desktop             # anderer Port, falls :4200 belegt ist
-npx playwright install chromium webkit           # einmalig; webkit braucht zusaetzlich
-sudo npx playwright install-deps webkit          # Systembibliotheken fuer Mobile Safari
+cd frontend && npm run e2e:pw:desktop
+E2E_PORT=4300 npm run e2e:pw:desktop        # falls :4200 belegt ist
+npx playwright install chromium webkit      # einmalig
+sudo npx playwright install-deps webkit     # Systembibliotheken für Mobile Safari
 ```
+
+### `npm run lint` funktioniert nicht
+
+`ng lint` bricht mit *"No ESLint configuration found"* ab. Der `@angular-eslint`-Builder ist
+installiert und in `angular.json` verdrahtet, aber es existiert **nirgends im Repo** eine
+`.eslintrc*` oder `eslint.config.*`. Reproduzierbar auf `main`.
+
+Ersatzprüfung, bis das behoben ist:
+
+```bash
+cd frontend && npx tsc --noEmit
+```
+
+Behaupte nie „Lint ist grün" — der Befehl bricht ab, bevor er irgendetwas prüft.
 
 ---
 
-## Critical Coding Rules
+## Architektur
 
-### i18n MANDATORY — no hardcoded UI strings
+### Backend: Controller → Service → Repository
+
+15 Controller, 27 Services, 20 Entities, 41 DTOs, 9 MapStruct-Mapper. Zwei Muster tragen fast
+alles und sind beim Schreiben neuer Endpunkte verbindlich:
+
+**Agent-Scoping ist die Mandantentrennung.** Es gibt noch keine `Organization` — jede Zeile
+gehört einem `Agent`, und *jede* Service-Methode nimmt eine `agentId` entgegen und prüft sie
+über `OwnershipValidator` (`validateClientOwnership`, `validatePropertyOwnership`,
+`validateViewingOwnership`, `validateCallNoteOwnership`, `validateOwnerAssignment`). Eine
+Methode ohne diese Prüfung ist ein Datenleck zwischen Maklerbüros, kein Schönheitsfehler.
+
+**Controller erben von `BaseController`** und holen den Agenten über `getAgentIdFromAuth(auth)`
+bzw. `getAgentFromAuth(auth)` aus dem Spring-Security-Principal. Nie selbst casten.
+
+```java
+@RequestMapping("/properties")      // RICHTIG — context-path /api/v1 wird vorangestellt
+@RequestMapping("/api/properties")  // FALSCH — doppeltes Präfix
+```
+
+### Persistenz: drei Profile, drei Verhalten
+
+| Profil | Datenbank | Schema |
+|---|---|---|
+| `dev` (Default) | SQLite, `./data/realestate_crm.db` | `ddl-auto: update`, **Flyway aus** |
+| `docker` | PostgreSQL 15 im Compose-Stack | Flyway, `ddl-auto: none` |
+| `prod` | Supabase PostgreSQL 17 (Session Pooler) | Flyway, `ddl-auto: none` |
+
+Die Konsequenz, die regelmäßig überrascht: **Migrationen laufen im lokalen `dev`-Profil nie.**
+Ein Fehler in einer `V*.sql` fällt erst im Docker-Stack oder in Produktion auf. Wer eine
+Migration schreibt, testet sie über `docker-compose.dev.yml`, nicht über `mvn spring-boot:run`.
+
+35 Migrationen in `backend/src/main/resources/db/migration/`.
+
+### Frontend: Standalone-Komponenten
+
+`frontend/src/app/{core,features,layout,shared}`. Acht Feature-Bereiche: `analytics`, `auth`,
+`call-notes`, `client-management`, `dashboard`, `property-management`, `settings`,
+`viewing-management`. Zustand über BehaviorSubjects in `core/services`, reaktive Formulare,
+`core/interceptors` für querschnittliche HTTP-Belange.
+
+`shared/components` enthält die wiederverwendbaren Bausteine — darunter `confirm-dialog`,
+`command-palette`, `location-picker-map`, `file-attachment-manager`.
+
+---
+
+## Konventionen, die nicht aus dem Code ablesbar sind
+
+### i18n ist Pflicht
 
 ```html
-<!-- WRONG -->
+<!-- FALSCH -->
 <button>Add Property</button>
-<!-- CORRECT -->
+<!-- RICHTIG -->
 <button>{{ 'properties.add' | translate }}</button>
 {{ outcome | translateEnum:'callOutcome' }}
 ```
 
-Files: `frontend/src/assets/i18n/{de,en}.json` — both must be updated together.
+`frontend/src/assets/i18n/de.json` und `en.json` werden **immer gemeinsam** gepflegt und müssen
+identische Schlüsselbäume haben. Enums werden ausschließlich über die `translateEnum`-Pipe
+übersetzt, **nie** in einer Service-Methode formatiert.
 
-### Controller Endpoint Mapping
-
-```java
-@RequestMapping("/properties")   // CORRECT — context-path /api/v1 prefixes automatically
-@RequestMapping("/api/properties") // WRONG — double-prefix
-```
-
-### Enum Translation
-
-Always use `translateEnum` pipe in templates. NEVER format enums in service methods.
-
-### Jackson Enum Coercion
-
-`JacksonConfig.java` coerces empty strings to null for enums — needed because frontend sends `""` for optional enums.
+Auch das Backend erzeugt keine Anzeigetexte: strukturierte Fehler tragen `messageKey` + `params`,
+das Frontend löst auf. Ein deutscher oder englischer Satz in einer Java-Datei ist ein Befund.
 
 ### Styling — drei Systeme, drei Zuständigkeiten (ADR 0001)
 
-Volle Begründung mit Zahlen: `docs/adr/0001-styling-architektur.md`. Die Kurzform:
+Volle Begründung mit Zahlen: `docs/adr/0001-styling-architektur.md`.
 
 | Wofür | Womit |
 |---|---|
-| Farben | **nur** CSS-Variablen — `bg-surface`, `text-body-2`, `border-border`, `bg-page`, `text-error`, `bg-success-soft`. Sie sind themefähig; **kein `dark:` nötig** |
+| Farben | **nur** CSS-Variablen — `bg-surface`, `text-body-2`, `border-border`, `bg-page`, `text-error`. Themefähig, **kein `dark:` nötig** |
 | Layout, Abstand, Typografie | Tailwind — `flex`, `grid`, `gap-3`, `text-13`, `font-semibold` |
-| Wiederkehrende Bausteine | Klassen in `styles.scss` — `.surface-card`, `.kv-row`/`.kv-label`/`.kv-value`, `.section-label`, `.btn-primary`, `.form-input` |
+| Wiederkehrende Bausteine | Klassen in `styles.scss` — `.surface-card`, `.kv-row`, `.section-label`, `.btn-primary`, `.form-input` |
 | Berechnete Werte | `[style.x]`-Binding |
 
-**Nie** `bg-white`, `text-gray-*`, `border-gray-*` in neuem Code — das sind eingefrorene
-Hellmodus-Farben und im Dark Mode falsch. `tailwind.config.js` führt keine eigenen Hex-Werte
-mehr; neue Farben kommen als CSS-Variable dazu und werden dort verlinkt.
-
-Die Schriftgrade des Projekts sind Tailwind-Tokens: `text-11` … `text-26`. Tailwinds
-Standardskala passt nicht (`text-sm` = 14px, das Projekt benutzt 278× 13px).
-
-```html
-<!-- RICHTIG: statisches Styling in Klassen, Datenwerte per Binding -->
-<div class="surface-card">
-  <div class="kv-row"><span class="kv-label">Preis</span><span class="kv-value">…</span></div>
-</div>
-<div class="funnel-fill" [style.width.%]="s.widthPct" [style.background]="s.color"></div>
-
-<!-- FALSCH: konstantes Styling inline -->
-<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;">
-<span style="font-size:13px;font-weight:600;color:var(--text);">
-```
+**Nie** `bg-white`, `text-gray-*`, `border-gray-*` in neuem Code — eingefrorene Hellmodus-Farben,
+im Dark Mode falsch. Schriftgrade sind projekteigene Tokens `text-11` … `text-26`; Tailwinds
+Standardskala passt nicht (`text-sm` = 14px, das Projekt benutzt 278× 13px). Neue Farben kommen
+als CSS-Variable in `styles.scss` und werden in `tailwind.config.js` verlinkt — **keine Hex-Werte
+in der Tailwind-Config**.
 
 Statisches `style="…"` mit konstanten Werten ist ein Review-Befund. Bestand wird
-**opportunistisch** migriert (wer die Datei anfasst, stellt die berührten Stellen um) —
-kein Sammel-Refactor. Eine neue Klasse in `styles.scss` braucht mindestens eine
-Aufrufstelle; ungenutzte Klassen löschen.
+**opportunistisch** migriert (wer die Datei anfasst, stellt die berührten Stellen um), kein
+Sammel-Refactor. `ConfirmDialogComponent` ist noch voller Inline-Styles — Vorbild für Struktur
+und Verhalten, **nicht** fürs Styling.
 
-### Buttons & Icons (Issue #28)
+### Buttons & Icons
 
-Never style a button inline — use `.btn-primary` (filled `--primary`) or `.btn-secondary`
-(light surface + neutral `--border`), both in `styles.scss`.
+Nie einen Button inline stylen — `.btn-primary` (gefülltes `--primary`) oder `.btn-secondary`.
+Aktionszeile **unter** dem Formular, in einer Gruppe, in `.form-actions` (rechtsbündig) oder
+`.form-actions form-actions--centered` (Dialoge). **Der primäre Button steht zuerst im Markup** —
+er sitzt links, was die übliche LTR-Konvention bewusst umkehrt.
 
-Action rows go **below** the form, in one group, wrapped in `.form-actions`
-(right-aligned) or `.form-actions form-actions--centered` (dialogs). **The primary
-button comes first in the markup** — it sits on the left, deliberately inverting the
-usual LTR convention.
-
-One icon per operation, no exceptions:
+Ein Icon pro Operation:
 
 | Operation | Icon |
 |---|---|
-| Edit | `ri-pencil-line` |
-| Add / create | `ri-add-line` |
-| Close / cancel | `ri-close-line` |
-| Confirm / save | `ri-check-line` |
-| Delete | `ri-delete-bin-line` |
+| Bearbeiten | `ri-pencil-line` |
+| Hinzufügen | `ri-add-line` |
+| Schließen / Abbrechen | `ri-close-line` |
+| Bestätigen / Speichern | `ri-check-line` |
+| Löschen | `ri-delete-bin-line` |
 
-`ri-checkbox-circle-line`/`-fill` stay **status indicators** and are never button icons.
-Destructive confirmations keep `.btn-primary` but override `background` with the signal
-colour — teal on a delete would read as a routine confirmation.
+`ri-checkbox-circle-line`/`-fill` bleiben **Statusanzeigen** und sind nie Button-Icons.
+Destruktive Bestätigungen behalten `.btn-primary`, überschreiben aber `background` mit der
+Signalfarbe — Teal auf einem Löschen läse sich wie eine Routinebestätigung.
+
+**Kein `window.confirm()` / `alert()`.** Dafür gibt es `ConfirmDialogComponent`.
+
+### Schutzmechanismen, die nicht ausgehebelt werden dürfen
+
+Drei Vorkehrungen fangen je eine reale Fehlerklasse ab. Wer sie beim Anpassen abschwächt,
+entfernt genau den Schutz, für den sie gebaut wurden:
+
+- **`UpdateFieldParityTest`** — reflektiert über gemeinsame Feldnamen von Request-DTO und
+  Entität, befüllt sie und schlägt fehl, wenn ein Wert bei der handgeschriebenen Kopie
+  verlorengeht. Entstand aus dem Bug „Suchort wurde beim Bearbeiten nie gespeichert". Ein Feld
+  bewusst nicht kopieren? In die Ausschlussliste, **mit Kommentar** — nicht den Scan verengen.
+- **`PropertySearchCriteriaMapper`** trägt `unmappedTargetPolicy = ERROR`. Ein neues Feld ohne
+  Verdrahtung bricht den Build statt still zu verschwinden.
+- **`JacksonConfig`** wandelt leere Strings für Enums und Daten zu `null` — das Frontend sendet
+  `""` für optionale Enums. Siehe `EmptyDateCoercionTest`.
+
+### UUIDs in Migrationen
+
+PostgreSQL erzwingt striktes Hex (0-9, a-f). SQLite akzeptierte beliebige Strings. **Nie
+Buchstabenpräfixe wie p/i/n/s** — die sind kein Hex. Stattdessen b/e/d/a. Jede literale UUID in
+einer neuen `V*.sql` vorher prüfen.
 
 ---
 
-## Git Workflow
+## Betriebswissen (Railway + Supabase)
 
-```bash
-# Feature branches for major phases
-git checkout main && git pull
-git checkout -b feature/description
-# ... commits ...
-git push -u origin feature/description   # No PR creation
+Wissen, das in keinem Code steht und beim Neuaufsetzen teuer wäre.
+
+### Supabase-Verbindung
+
+- Der **direkte DB-Host** (`db.<ref>.supabase.co:5432`) ist **IPv6-only** → Railway erreicht ihn nicht.
+- Richtige Pooler-URL: Supabase Dashboard → **Connect** → Direct → **Session pooler**.
+  Aktuell `aws-1-eu-central-1.pooler.supabase.com:5432`.
+- **Username-Format am Pooler**: `postgres.{project-ref}` — nicht bloß `postgres`.
+- SSL ist Pflicht: `?sslmode=require` an jede JDBC-URL.
+- Flyway benutzt dieselbe HikariCP-DataSource — kein separates `FLYWAY_URL` nötig.
+
+### `application.yml`, prod-Profil
+
+```yaml
+spring:
+  jpa:
+    defer-datasource-initialization: false  # MUSS das 'true' des Basis-Profils überschreiben,
+                                            # sonst Zirkelbezug mit Flyway
+  flyway:
+    postgresql:
+      transactional-lock: false             # nötig für PGBouncer (Session Pooler)
 ```
 
-**Prohibited**: `git push --force`, `git reset --hard`, `git clean -f`, `git branch -D`
-**Confirm first**: architectural changes, security configs, production settings
+### Flyway + PostgreSQL 17
+
+`flyway-core` allein reicht in Flyway 10.x nicht. `flyway-database-postgresql` muss dabei sein
+(Version verwaltet der Spring-Boot-Parent).
+
+### Dockerfile
+
+Railway nimmt immer die Repo-Wurzel als Build-Kontext. Das `Dockerfile` dort kopiert `backend/`
+manuell. `ENV SPRING_PROFILES_ACTIVE=prod` muss **im Dockerfile** stehen — Railway setzt es nicht.
+
+### Mail
+
+`spring-boot-starter-mail` wurde am 2026-06-22 entfernt: `MailHealthIndicator` ließ Railways
+Health-Check scheitern, solange kein SMTP konfiguriert ist. `PasswordResetService` erzeugt weiter
+Tokens in der DB; der Versand ist ein späteres kostenpflichtiges Feature.
 
 ---
 
-## Code Conventions
+## Zusammenarbeit mit diesem Nutzer
 
-- **Backend**: Controller → Service → Repository, singular entity names, DTOs with "Dto" suffix
-- **Frontend**: Standalone components, reactive forms, BehaviorSubjects for state, Tailwind utilities
-- **Database**: snake_case columns, Flyway migrations only (no `ddl-auto: update` in prod), strategic indexes
-- **Security**: JWT tokens, role-based access, GDPR audit logging
-- **Comments**: Only when WHY is non-obvious. No docstrings rehashing what the code says.
+- **Sprache: Deutsch.** Auch Commit-Nachrichten — aber **ohne Umlaute in der Betreffzeile**
+  (Repo-Konvention: „Adress-Vervollstaendigung", „Verkaeufer-Strang").
+- **Ein Issue → ein `feature/<beschreibung>`-Branch → ein Pull Request gegen `main`.** Den PR
+  **nie selbst mergen**, nie nach `main` pushen. Wird ein Issue nicht fertig, kommt der
+  Zwischenstand auf den Branch und der PR beschreibt, was fehlt.
+- **Befunde werden echte GitHub-Issues**, keine Chat-Notizen. `gh` ist authentifiziert
+  (`~/.local/bin/gh`). Sinnvoll gebündelt, mit Datei-/Zeilenbezug und Abnahmekriterien.
+  Gelöstes schließen: `gh issue close <n> --comment "Behoben in <sha>."`
+  Gotcha: ASCII-`"` in `--title "..."` bricht das Shell-Quoting — typografische „" benutzen.
+- **Der Nutzer hat eine formale HCI-Ausbildung.** UX-Vokabular direkt verwenden (Affordanz,
+  Gestaltgesetze, Gulf of Execution, progressive Disclosure) — nicht umschreiben, nicht erklären.
+- **Größere Vorhaben laufen als Kette**: brainstorming → Spec in `docs/superpowers/specs/` →
+  Plan in `docs/superpowers/plans/` → Umsetzung Task für Task mit Review dazwischen. Der Nutzer
+  entscheidet an den Weggabelungen; Zwischenstände werden nicht zur Bestätigung vorgelegt.
+- **Verboten**: `git push --force`, `git reset --hard`, `git clean -f`, `git branch -D`.
+  **Vorher abstimmen**: Architekturänderungen, Sicherheitskonfiguration, Produktionseinstellungen.
+
+---
 
 ## Quality Gates
 
-- Backend compiles and starts without errors
-- No hardcoded UI strings
-- Both `de.json` and `en.json` updated
-- Flyway migrations are PostgreSQL-compatible (valid UUIDs, no SQLite-specific syntax)
-- Kein `bg-white` / `text-gray-*` / `border-gray-*` in neuem Markup (ADR 0001)
-- Kein statisches `style="…"` in neuem Markup — Klassen oder `[style.x]`-Binding
+- Backend kompiliert und startet fehlerfrei; die volle Suite ist grün
+- Keine hartcodierten UI-Strings; `de.json` und `en.json` gemeinsam gepflegt
+- Migrationen PostgreSQL-tauglich (gültige Hex-UUIDs, keine SQLite-Syntax), gegen den
+  Docker-Stack getestet — nicht gegen `dev`
+- Kein `bg-white` / `text-gray-*` / `border-gray-*` und kein statisches `style="…"` in neuem Markup
 
 ```bash
 # Prüft beides in den geänderten Dateien:
