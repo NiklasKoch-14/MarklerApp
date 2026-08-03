@@ -14,10 +14,13 @@ import { WorkflowViolation } from '../../../core/workflow/workflow-violation.mod
   standalone: true,
   imports: [CommonModule, TranslateModule],
   template: `
-    <div *ngIf="violations" class="fixed inset-0 z-[850] flex items-center justify-center p-5"
+    <!-- z-[2100]: must clear viewing-add-dialog's property picker (z-index 2000, the highest
+         feature-modal in app-root's stacking context), otherwise this dialog opens invisibly
+         beneath whichever modal triggered the workflow warning. -->
+    <div *ngIf="violations" class="fixed inset-0 z-[2100] flex items-center justify-center p-5"
          (click)="decide(false)">
       <div class="absolute inset-0 bg-overlay"></div>
-      <div class="surface-card relative w-full max-w-lg p-6 shadow-2xl" (click)="$event.stopPropagation()">
+      <div class="surface-card relative w-full max-w-lg p-6 shadow-card" (click)="$event.stopPropagation()">
 
         <div class="flex items-start gap-3.5">
           <div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-warning-soft">
