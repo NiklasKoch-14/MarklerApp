@@ -7,6 +7,7 @@ import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { workflowGuardInterceptor } from './core/interceptors/workflow-guard.interceptor';
 import { AppTitleStrategy } from './core/services/app-title.strategy';
 
 // Factory function for translation loader
@@ -18,7 +19,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     { provide: TitleStrategy, useClass: AppTitleStrategy },
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor, workflowGuardInterceptor])),
     importProvidersFrom(BrowserAnimationsModule),
     importProvidersFrom(
       TranslateModule.forRoot({

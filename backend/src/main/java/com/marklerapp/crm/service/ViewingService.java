@@ -11,6 +11,8 @@ import com.marklerapp.crm.repository.AgentRepository;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.PropertyRepository;
 import com.marklerapp.crm.repository.ViewingRepository;
+import com.marklerapp.crm.rules.ViewingChange;
+import com.marklerapp.crm.rules.WorkflowGuard;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -39,6 +41,8 @@ public class ViewingService {
     private final PropertyRepository propertyRepository;
     private final ViewingMapper viewingMapper;
     private final OwnershipValidator ownershipValidator;
+    private final WorkflowGuard workflowGuard;
+    private final WorkflowOverrideLogger workflowOverrideLogger;
 
     @Transactional
     public ViewingDto.Response createViewing(UUID agentId, ViewingDto.CreateRequest request) {
@@ -63,6 +67,10 @@ public class ViewingService {
             throw new IllegalArgumentException("Property does not belong to the specified agent");
         }
 
+        workflowGuard.check(
+                new ViewingChange(null, property, request.getViewingDate(), Viewing.ViewingStatus.SCHEDULED),
+                request.getAcknowledgedRules());
+
         Viewing viewing = Viewing.builder()
                 .agent(agent)
                 .client(client)
@@ -75,7 +83,10 @@ public class ViewingService {
                 .followUpAction(request.getFollowUpAction())
                 .build();
 
+        // Der Termin hat vor dem Save noch keine ID -- das Protokoll braucht die
+        // gespeicherte Entitaet.
         Viewing saved = viewingRepository.save(viewing);
+        workflowOverrideLogger.record(request.getAcknowledgedRules(), "VIEWING", saved.getId(), agentId);
         log.info("Viewing {} created successfully", saved.getId());
         return viewingMapper.toResponse(saved);
     }
@@ -86,6 +97,12 @@ public class ViewingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Viewing not found: " + viewingId));
         ownershipValidator.validateViewingOwnership(viewing, agentId);
 
+        Viewing.ViewingStatus targetStatus =
+                request.getStatus() != null ? request.getStatus() : viewing.getStatus();
+        workflowGuard.check(
+                new ViewingChange(viewing, viewing.getProperty(), request.getViewingDate(), targetStatus),
+                request.getAcknowledgedRules());
+
         viewing.setViewingDate(request.getViewingDate());
         if (request.getDurationMinutes() != null) viewing.setDurationMinutes(request.getDurationMinutes());
         if (request.getStatus() != null) viewing.setStatus(request.getStatus());
@@ -93,7 +110,9 @@ public class ViewingService {
         viewing.setClientNotes(request.getClientNotes());
         viewing.setFollowUpAction(request.getFollowUpAction());
 
-        return viewingMapper.toResponse(viewingRepository.save(viewing));
+        Viewing saved = viewingRepository.save(viewing);
+        workflowOverrideLogger.record(request.getAcknowledgedRules(), "VIEWING", saved.getId(), agentId);
+        return viewingMapper.toResponse(saved);
     }
 
     @Transactional

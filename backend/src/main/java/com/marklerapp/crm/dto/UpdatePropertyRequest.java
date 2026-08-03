@@ -3,6 +3,7 @@ package com.marklerapp.crm.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.marklerapp.crm.entity.*;
+import com.marklerapp.crm.rules.RuleCode;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -224,6 +226,12 @@ public class UpdatePropertyRequest {
 
     @Size(max = 5000, message = "Notes must not exceed 5000 characters")
     private String notes;
+
+    /**
+     * Vom Makler im Warnungsdialog quittierte Regeln (Issue #46). Kein Fachfeld —
+     * wird nie auf die Entitaet kopiert.
+     */
+    private Set<RuleCode> acknowledgedRules;
 
     // ========================================
     // Helper Methods

@@ -5,17 +5,19 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from './core/auth/auth.service';
 import { ThemeService } from './core/services/theme.service';
 import { environment } from '../environments/environment';
+import { WorkflowWarningDialogComponent } from './shared/components/workflow-warning-dialog/workflow-warning-dialog.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, TranslateModule],
+  imports: [CommonModule, RouterOutlet, TranslateModule, WorkflowWarningDialogComponent],
   template: `
     <!-- bg-page statt eines festen Graus: sonst ueberschreibt diese Flaeche im
          Dark Mode den --bg-Hintergrund, den styles.scss auf body setzt. -->
     <div class="min-h-screen bg-page">
       <router-outlet></router-outlet>
     </div>
+    <app-workflow-warning-dialog></app-workflow-warning-dialog>
   `
 })
 export class AppComponent implements OnInit {

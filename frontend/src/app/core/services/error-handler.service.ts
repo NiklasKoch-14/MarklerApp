@@ -15,6 +15,20 @@ export interface BackendErrorResponse {
   fieldErrors?: { [key: string]: string };
 }
 
+/** A single workflow-guard rule violation, as sent in WORKFLOW_WARNING/WORKFLOW_BLOCKED bodies. */
+export interface WorkflowViolationResponse {
+  code: string;
+  severity: 'BLOCK' | 'WARN';
+  messageKey: string;
+  params?: Record<string, unknown>;
+}
+
+/** Body shape of a 409 (WARN, overridable) or 422 (BLOCK, not overridable) workflow-guard response. */
+export interface WorkflowErrorResponse {
+  type: 'WORKFLOW_WARNING' | 'WORKFLOW_BLOCKED';
+  violations: WorkflowViolationResponse[];
+}
+
 /**
  * Processed error for display
  */
@@ -33,7 +47,11 @@ export enum ErrorType {
   NOT_FOUND = 'NOT_FOUND',
   SERVER_ERROR = 'SERVER_ERROR',
   NETWORK_ERROR = 'NETWORK_ERROR',
-  UNKNOWN = 'UNKNOWN'
+  UNKNOWN = 'UNKNOWN',
+  /** Non-overridable workflow-guard rule (HTTP 422). Translated first-violation message. */
+  WORKFLOW_BLOCKED = 'WORKFLOW_BLOCKED',
+  /** Broker declined an overridable workflow warning (HTTP 409). Benign, not a failure. */
+  WORKFLOW_CANCELLED = 'WORKFLOW_CANCELLED'
 }
 
 /**
@@ -288,6 +306,46 @@ export class ErrorHandlerService {
           originalError: error
         };
 
+      case 409: // Conflict — the interceptor already retried acceptable workflow warnings;
+                // a 409 reaching here means the broker declined it. That is a benign,
+                // user-initiated cancellation, not a failure — any other 409 falls through.
+        if ((backendError as unknown as WorkflowErrorResponse)?.type === 'WORKFLOW_WARNING') {
+          return {
+            message: '',
+            statusCode,
+            type: ErrorType.WORKFLOW_CANCELLED,
+            originalError: error
+          };
+        }
+        return {
+          message: this.extractErrorMessage(backendError) ||
+                   this.translate.instant('errors.unknownError'),
+          statusCode,
+          type: ErrorType.UNKNOWN,
+          originalError: error
+        };
+
+      case 422: // Unprocessable Entity — a non-overridable workflow-guard BLOCK. Surface the
+                // first violation's translated message; any other 422 falls through unchanged.
+        if ((backendError as unknown as WorkflowErrorResponse)?.type === 'WORKFLOW_BLOCKED') {
+          const firstViolation = (backendError as unknown as WorkflowErrorResponse).violations?.[0];
+          return {
+            message: firstViolation
+              ? this.translate.instant(firstViolation.messageKey, firstViolation.params)
+              : this.translate.instant('errors.unknownError'),
+            statusCode,
+            type: ErrorType.WORKFLOW_BLOCKED,
+            originalError: error
+          };
+        }
+        return {
+          message: this.extractErrorMessage(backendError) ||
+                   this.translate.instant('errors.unknownError'),
+          statusCode,
+          type: ErrorType.UNKNOWN,
+          originalError: error
+        };
+
       case 500: // Internal Server Error
       case 502: // Bad Gateway
       case 503: // Service Unavailable
@@ -359,8 +417,11 @@ export class ErrorHandlerService {
    * Use this method in components to show errors to users
    */
   getUserMessage(error: any): string {
-    // Check if it's already a ProcessedError (has type property)
-    if (error?.type && error?.message && error?.statusCode !== undefined) {
+    // Check if it's already a ProcessedError (has type property). Checked via `message`
+    // presence, not truthiness — a declined workflow warning intentionally carries ''
+    // (see WORKFLOW_CANCELLED in processError) and must not fall through to the generic
+    // unknownError text below.
+    if (error?.type && error?.message !== undefined && error?.statusCode !== undefined) {
       return error.message;
     }
 

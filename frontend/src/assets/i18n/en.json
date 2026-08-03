@@ -1617,5 +1617,24 @@
     "radiusLabel": "Radius",
     "noPinHint": "Click on the map to place a location pin.",
     "propertiesInRadius": "Properties within the search radius: {{count}}"
+  },
+  "workflow": {
+    "dialog": {
+      "title": "Unusual step",
+      "intro": "This is possible, but it does not match the usual workflow. Take a moment to check.",
+      "proceed": "Save anyway"
+    },
+    "rule": {
+      "propertyRentMarkedSold": "A rental property cannot be marked as sold.",
+      "viewingForClosedProperty": "No more viewings are possible for this property — it is already closed or withdrawn.",
+      "viewingCompletedInFuture": "A viewing in the future cannot be marked as completed.",
+      "viewingScheduledInPast": "This viewing is in the past but marked as scheduled. Should it be 'completed'?",
+      "propertySoldWithOpenViewings": "This property still has {{count}} scheduled viewings.",
+      "propertyReopened": "This property was already closed and is being put back on the market.",
+      "propertyReservedWithoutViewing": "Reserved without a single completed viewing — is a viewing missing from the system?"
+    },
+    "cascade": {
+      "cancelViewings": "Saving will cancel {{count}} viewings."
+    }
   }
 }

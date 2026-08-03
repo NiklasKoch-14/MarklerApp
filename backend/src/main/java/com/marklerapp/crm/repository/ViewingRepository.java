@@ -58,4 +58,12 @@ public interface ViewingRepository extends JpaRepository<Viewing, UUID> {
     List<Viewing> findByProperty_Id(UUID propertyId);
 
     List<Viewing> findByClient_Id(UUID clientId);
+
+    @Query("SELECT v FROM Viewing v JOIN FETCH v.client WHERE v.property.id = :propertyId AND v.status = :status")
+    List<Viewing> findByPropertyIdAndStatus(@Param("propertyId") UUID propertyId,
+                                            @Param("status") Viewing.ViewingStatus status);
+
+    @Query("SELECT COUNT(v) FROM Viewing v WHERE v.property.id = :propertyId AND v.status = :status")
+    long countByPropertyIdAndStatus(@Param("propertyId") UUID propertyId,
+                                    @Param("status") Viewing.ViewingStatus status);
 }

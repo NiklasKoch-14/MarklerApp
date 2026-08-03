@@ -46,6 +46,7 @@ module.exports = {
           2:       'var(--surface-2)',
         },
         page: 'var(--bg)',
+        overlay: 'var(--overlay)',
         border: {
           DEFAULT: 'var(--border)',
         },

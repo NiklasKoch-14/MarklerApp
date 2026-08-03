@@ -10,6 +10,11 @@ import com.marklerapp.crm.repository.AgentRepository;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.PropertyRepository;
 import com.marklerapp.crm.repository.PropertyImageRepository;
+import com.marklerapp.crm.repository.ViewingRepository;
+import com.marklerapp.crm.rules.CascadeAction;
+import com.marklerapp.crm.rules.CascadeType;
+import com.marklerapp.crm.rules.PropertyStatusChange;
+import com.marklerapp.crm.rules.WorkflowGuard;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -62,6 +67,9 @@ public class PropertyService {
     private final PropertyImageMapper propertyImageMapper;
     private final OwnershipValidator ownershipValidator;
     private final GeocodingService geocodingService;
+    private final ViewingRepository viewingRepository;
+    private final WorkflowGuard workflowGuard;
+    private final WorkflowOverrideLogger workflowOverrideLogger;
 
     /**
      * Create a new property with GDPR validation.
@@ -130,6 +138,31 @@ public class PropertyService {
             throw new ResourceNotFoundException("Property not found or access denied");
         }
 
+        // Regeln nur pruefen, wenn Status oder Angebotstyp sich tatsaechlich aendern — eine
+        // Preisaenderung soll keine Statuswarnung ausloesen und keine Besichtigungen nachladen.
+        // Beide Aenderungen muessen zusammen gewuertigt werden: eine PUT, die listingType UND
+        // status in einem Request umstellt, wuerde sonst mit dem alten listingType geprueft und
+        // den Widerspruch (RentMarkedSoldRule) uebersehen. Aendert sich nur der Angebotstyp,
+        // bleibt targetStatus der aktuelle Status — die statusabhaengigen Regeln sehen dann
+        // bewusst ein No-op und schweigen.
+        List<CascadeAction> cascades = List.of();
+        ListingType targetListingType = request.getListingType() != null
+                ? request.getListingType() : property.getListingType();
+        boolean listingTypeChanges = request.getListingType() != null
+                && request.getListingType() != property.getListingType();
+        boolean statusChanges = request.getStatus() != null && request.getStatus() != property.getStatus();
+        if (statusChanges || listingTypeChanges) {
+            List<Viewing> scheduled = viewingRepository.findByPropertyIdAndStatus(
+                    propertyId, Viewing.ViewingStatus.SCHEDULED);
+            long completed = viewingRepository.countByPropertyIdAndStatus(
+                    propertyId, Viewing.ViewingStatus.COMPLETED);
+            PropertyStatus targetStatus = statusChanges ? request.getStatus() : property.getStatus();
+
+            cascades = workflowGuard.check(
+                    new PropertyStatusChange(property, targetStatus, targetListingType, scheduled, completed),
+                    request.getAcknowledgedRules());
+        }
+
         // Update fields from request (only non-null values)
         updatePropertyFields(property, request);
 
@@ -160,7 +193,25 @@ public class PropertyService {
         Property updatedProperty = propertyRepository.save(property);
         log.info("Updated property: {} for agent: {}", propertyId, agentId);
 
+        // Kaskaden laufen in derselben Transaktion wie die Statusaenderung: ein Rollback
+        // laesst weder das Objekt noch die Termine veraendert zurueck.
+        applyCascades(cascades);
+        if (statusChanges || listingTypeChanges) {
+            workflowOverrideLogger.record(
+                    request.getAcknowledgedRules(), "PROPERTY", propertyId, agentId);
+        }
+
         return propertyMapper.toDto(updatedProperty);
+    }
+
+    private void applyCascades(List<CascadeAction> cascades) {
+        for (CascadeAction cascade : cascades) {
+            if (cascade.action() == CascadeType.CANCEL_VIEWINGS) {
+                List<Viewing> viewings = viewingRepository.findAllById(cascade.ids());
+                viewings.forEach(v -> v.setStatus(Viewing.ViewingStatus.CANCELLED));
+                viewingRepository.saveAll(viewings);
+            }
+        }
     }
 
     /**
