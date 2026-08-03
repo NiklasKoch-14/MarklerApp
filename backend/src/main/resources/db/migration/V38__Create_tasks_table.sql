@@ -28,6 +28,12 @@ CREATE INDEX idx_tasks_client_id      ON tasks (client_id);
 CREATE INDEX idx_tasks_property_id    ON tasks (property_id);
 CREATE INDEX idx_tasks_source_note    ON tasks (source_call_note_id);
 
+-- Die Spiegelung aus einer Gespraechsnotiz erlaubt hoechstens eine offene Aufgabe je Notiz;
+-- findOpenBySourceCallNoteId liefert ein Optional und wuerde sonst zur Laufzeit fliegen.
+CREATE UNIQUE INDEX idx_tasks_one_open_per_note
+    ON tasks (source_call_note_id)
+    WHERE status = 'OPEN' AND source_call_note_id IS NOT NULL;
+
 -- Backfill: jedes offene Follow-up wird eine Aufgabe. Ohne diesen Schritt verschwaende
 -- die Umstellung die Arbeitsliste, an der Nutzer heute haengen.
 INSERT INTO tasks (id, agent_id, client_id, property_id, title, due_date, status,
