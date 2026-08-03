@@ -4,6 +4,9 @@ import com.marklerapp.crm.exception.ExpiredTokenException;
 import com.marklerapp.crm.exception.FileStorageException;
 import com.marklerapp.crm.exception.InvalidTokenException;
 import com.marklerapp.crm.exception.RateLimitExceededException;
+import com.marklerapp.crm.exception.WorkflowRuleBlockedException;
+import com.marklerapp.crm.exception.WorkflowRuleWarningException;
+import com.marklerapp.crm.rules.RuleViolation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -22,6 +25,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -432,6 +437,52 @@ public class GlobalExceptionHandler {
         response.put("path", request.getDescription(false).replace("uri=", ""));
 
         return response;
+    }
+
+    /**
+     * Fachlich unmoegliche Aenderung. Bewusst ohne Wiederholungsmoeglichkeit —
+     * acknowledgedRules aendert daran nichts.
+     */
+    @ExceptionHandler(WorkflowRuleBlockedException.class)
+    public ResponseEntity<Map<String, Object>> handleWorkflowBlocked(WorkflowRuleBlockedException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(workflowBody("WORKFLOW_BLOCKED", ex.getViolations()));
+    }
+
+    /**
+     * Quittierbare Warnung. Das Frontend zeigt den Dialog und wiederholt denselben
+     * Request mit gesetztem acknowledgedRules.
+     */
+    @ExceptionHandler(WorkflowRuleWarningException.class)
+    public ResponseEntity<Map<String, Object>> handleWorkflowWarning(WorkflowRuleWarningException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(workflowBody("WORKFLOW_WARNING", ex.getViolations()));
+    }
+
+    private Map<String, Object> workflowBody(String type, List<RuleViolation> violations) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("type", type);
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("violations", violations.stream().map(this::violationBody).toList());
+        return body;
+    }
+
+    private Map<String, Object> violationBody(RuleViolation violation) {
+        Map<String, Object> item = new LinkedHashMap<>();
+        item.put("code", violation.code().name());
+        item.put("severity", violation.severity().name());
+        item.put("messageKey", violation.messageKey());
+        item.put("params", violation.params());
+        item.put("affected", violation.affected().stream()
+                .map(a -> Map.<String, Object>of("type", a.type(), "id", a.id(), "label", a.label()))
+                .toList());
+        if (violation.cascade() != null) {
+            item.put("cascade", Map.<String, Object>of(
+                    "action", violation.cascade().action().name(),
+                    "messageKey", violation.cascade().messageKey(),
+                    "ids", violation.cascade().ids()));
+        }
+        return item;
     }
 
     /**
