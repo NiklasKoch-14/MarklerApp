@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -88,6 +89,45 @@ public class TaskService {
                 .orElseThrow(() -> new ResourceNotFoundException("Property", "id", propertyId));
         denyIfForeign(() -> ownershipValidator.validatePropertyOwnership(property, agentId));
         return taskMapper.toSummaryList(taskRepository.findByPropertyId(propertyId));
+    }
+
+    /**
+     * Hakt ab. Traegt der Request ein Gespraechsergebnis und hat die Aufgabe einen
+     * Kundenbezug, entsteht zusaetzlich eine Gespraechsnotiz -- in derselben Transaktion,
+     * damit keine erledigte Aufgabe ohne die Notiz zurueckbleibt, die ihren Wert ausmacht.
+     */
+    @Transactional
+    public TaskDto.Response completeTask(UUID agentId, UUID taskId, TaskDto.CompleteRequest request) {
+        Task task = requireOwnTask(taskId, agentId);
+
+        if (task.getStatus() != Task.TaskStatus.DONE) {
+            task.setStatus(Task.TaskStatus.DONE);
+            task.setCompletedAt(LocalDateTime.now());
+        }
+
+        if (request != null && request.getOutcome() != null && task.getClient() != null) {
+            callNoteRepository.save(CallNote.builder()
+                    .agent(task.getAgent())
+                    .client(task.getClient())
+                    .property(task.getProperty())
+                    .callDate(LocalDateTime.now())
+                    .callType(CallNote.CallType.PHONE_OUTBOUND)
+                    .subject(task.getTitle())
+                    .notes(request.getNote())
+                    .outcome(request.getOutcome())
+                    .followUpRequired(false)
+                    .build());
+        }
+
+        return taskMapper.toResponse(taskRepository.save(task));
+    }
+
+    /** Verschiebt die Faelligkeit. Eine erledigte Aufgabe wird dadurch nicht wieder offen. */
+    @Transactional
+    public TaskDto.Response postponeTask(UUID agentId, UUID taskId, LocalDate newDueDate) {
+        Task task = requireOwnTask(taskId, agentId);
+        task.setDueDate(newDueDate);
+        return taskMapper.toResponse(taskRepository.save(task));
     }
 
     // ---- Hilfen, auch von Task 3 benutzt ----
