@@ -38,6 +38,7 @@ class CallNoteTaskMirrorTest {
     private UUID agentId;
     private Agent agent;
     private Client client;
+    private Property property;
 
     @BeforeEach
     void setUp() {
@@ -49,8 +50,11 @@ class CallNoteTaskMirrorTest {
         agent.setId(agentId);
         client = new Client();
         client.setId(UUID.randomUUID());
+        property = new Property();
+        property.setId(UUID.randomUUID());
         when(agentRepository.findById(agentId)).thenReturn(Optional.of(agent));
         when(clientRepository.findById(client.getId())).thenReturn(Optional.of(client));
+        when(propertyRepository.findById(property.getId())).thenReturn(Optional.of(property));
         when(callNoteRepository.save(any(CallNote.class))).thenAnswer(i -> {
             CallNote n = i.getArgument(0);
             if (n.getId() == null) n.setId(UUID.randomUUID());
@@ -72,8 +76,10 @@ class CallNoteTaskMirrorTest {
     @Test
     void followUpCreatesATask() {
         LocalDate due = LocalDate.now().plusDays(3);
+        CallNoteDto.CreateRequest r = noteWithFollowUp(true, due);
+        r.setPropertyId(property.getId());
 
-        service.createCallNote(agentId, noteWithFollowUp(true, due));
+        service.createCallNote(agentId, r);
 
         ArgumentCaptor<Task> captor = ArgumentCaptor.forClass(Task.class);
         verify(taskRepository).save(captor.capture());
@@ -81,6 +87,7 @@ class CallNoteTaskMirrorTest {
         assertThat(task.getTitle()).isEqualTo("Preisvorstellung besprochen");
         assertThat(task.getDueDate()).isEqualTo(due);
         assertThat(task.getClient()).isEqualTo(client);
+        assertThat(task.getProperty()).isEqualTo(property);
         assertThat(task.getStatus()).isEqualTo(Task.TaskStatus.OPEN);
         assertThat(task.getSourceCallNote()).isNotNull();
     }

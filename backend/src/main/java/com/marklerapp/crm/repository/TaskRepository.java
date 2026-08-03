@@ -34,4 +34,21 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
     Optional<Task> findOpenBySourceCallNoteId(@Param("callNoteId") UUID callNoteId);
 
     long countByClient(Client client);
+
+    /**
+     * Ueberfaellige offene Aufgaben -- heute zaehlt noch als ueberfaellig, konsistent mit der
+     * Tagesliste. Eine erledigte Aufgabe mit vergangenem Faelligkeitsdatum zaehlt nicht mit,
+     * weil der Status-Filter sie ausschliesst -- das war der Fehler im alten, notizbasierten Weg.
+     */
+    @Query("SELECT COUNT(t) FROM Task t WHERE t.agent = :agent "
+         + "AND t.status = com.marklerapp.crm.entity.Task$TaskStatus.OPEN AND t.dueDate <= :today")
+    long countOverdue(@Param("agent") Agent agent, @Param("today") LocalDate today);
+
+    /** Offene Aufgaben faellig im Zeitfenster [von, bis). */
+    @Query("SELECT COUNT(t) FROM Task t WHERE t.agent = :agent "
+         + "AND t.status = com.marklerapp.crm.entity.Task$TaskStatus.OPEN "
+         + "AND t.dueDate >= :fromInclusive AND t.dueDate < :toExclusive")
+    long countDueBetween(@Param("agent") Agent agent,
+                          @Param("fromInclusive") LocalDate fromInclusive,
+                          @Param("toExclusive") LocalDate toExclusive);
 }

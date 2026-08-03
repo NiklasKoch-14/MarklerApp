@@ -8,6 +8,7 @@ import com.marklerapp.crm.repository.AgentRepository;
 import com.marklerapp.crm.repository.CallNoteRepository;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.PropertyRepository;
+import com.marklerapp.crm.repository.TaskRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +39,7 @@ class DashboardAnalyticsSellerFunnelTest {
     @Mock private ClientRepository clientRepository;
     @Mock private PropertyRepository propertyRepository;
     @Mock private CallNoteRepository callNoteRepository;
+    @Mock private TaskRepository taskRepository;
 
     private DashboardAnalyticsService service;
     private Agent agent;
@@ -50,7 +52,7 @@ class DashboardAnalyticsSellerFunnelTest {
         agent.setId(agentId);
 
         service = new DashboardAnalyticsService(
-                agentRepository, clientRepository, propertyRepository, callNoteRepository);
+                agentRepository, clientRepository, propertyRepository, callNoteRepository, taskRepository);
     }
 
     private Client seller(Client.SellerPipelineStage stage) {
