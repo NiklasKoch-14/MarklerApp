@@ -123,4 +123,46 @@ describe('workflowGuardInterceptor', () => {
     expect(askSpy).not.toHaveBeenCalled();
     expect((error as { status: number }).status).toBe(422);
   });
+
+  it('resolves a displaced pending decision as declined so a first, still-unanswered request does not hang when a second guarded request opens the dialog first', () => {
+    // Deliberately uses the real WorkflowGuardService (no spy on ask()) -- this is the
+    // only way to reproduce the ask()-displaces-ask() race the fix addresses.
+    let resultA: unknown;
+    let errorA: unknown;
+
+    http.put('/api/v1/properties/a', { status: 'SOLD' }).subscribe({
+      next: res => (resultA = res),
+      error: err => (errorA = err)
+    });
+
+    const reqA1 = httpMock.expectOne('/api/v1/properties/a');
+    reqA1.flush(warningBody, { status: 409, statusText: 'Conflict' });
+
+    // Request A's ask() is now pending -- dialog open, nobody has answered yet.
+
+    let resultB: unknown;
+    http.put('/api/v1/properties/b', { status: 'SOLD' }).subscribe(res => (resultB = res));
+
+    const reqB1 = httpMock.expectOne('/api/v1/properties/b');
+    reqB1.flush(warningBody, { status: 409, statusText: 'Conflict' });
+
+    // B's ask() displaced A's still-pending decision. A must have reached a terminal
+    // outcome -- its original 409 propagating as an error -- rather than hanging with
+    // neither a value nor an error and no retry ever issued.
+    expect(errorA).toBeDefined();
+    expect((errorA as { status: number })?.status).toBe(409);
+    expect(resultA).toBeUndefined();
+    httpMock.expectNone('/api/v1/properties/a');
+
+    // B is still answerable normally through the real dialog flow.
+    guard.resolve(true);
+    const reqB2 = httpMock.expectOne('/api/v1/properties/b');
+    expect(reqB2.request.body).toEqual({
+      status: 'SOLD',
+      acknowledgedRules: ['PROPERTY_SOLD_WITH_OPEN_VIEWINGS']
+    });
+    reqB2.flush({ status: 'SOLD' });
+
+    expect(resultB).toEqual({ status: 'SOLD' });
+  });
 });

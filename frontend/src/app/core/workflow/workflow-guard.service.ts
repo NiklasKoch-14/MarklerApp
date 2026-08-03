@@ -13,8 +13,20 @@ export class WorkflowGuardService {
 
   private pendingDecision?: Subject<boolean>;
 
-  /** Oeffnet den Dialog und liefert true, sobald der Makler bestaetigt. */
+  /**
+   * Oeffnet den Dialog und liefert true, sobald der Makler bestaetigt.
+   *
+   * Eine bereits offene, noch unbeantwortete Anfrage wird hier verdraengt (der Dialog
+   * kann immer nur einen Verstoss-Satz zeigen). Sie muss trotzdem terminieren: ein
+   * bloßes complete() ohne vorherigen next() laesst switchMap() in der Pipeline des
+   * Interceptors ohne Wert oder Fehler durchlaufen -- der urspruengliche Aufrufer haengt
+   * dann fuer immer in seinem subscribe(), ohne Ergebnis und ohne Fehlermeldung. Die
+   * verdraengte Anfrage wird deshalb explizit als abgelehnt aufgeloest, bevor die naechste
+   * das Feld uebernimmt; ihr Request wirft dadurch ganz normal den urspruenglichen
+   * 409-Fehler weiter.
+   */
   ask(violations: WorkflowViolation[]): Observable<boolean> {
+    this.pendingDecision?.next(false);
     this.pendingDecision?.complete();
     this.pendingDecision = new Subject<boolean>();
     this.violationsSubject.next(violations);
