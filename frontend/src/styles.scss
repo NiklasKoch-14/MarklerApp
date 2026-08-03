@@ -20,6 +20,10 @@
   --primary-fg: #ffffff;
   --accent-soft: #e9f1f2;
   --shadow: 0 1px 2px rgba(20,40,45,0.05),0 4px 14px rgba(20,40,45,0.05);
+  /* Abdunkelnde Flaeche hinter modalen Dialogen. Bewusst gleich in Hell- und
+     Dunkelmodus -- ein schwarzer Schleier dimmt beide Hintergruende sinnvoll,
+     eine themeabhaengige Variante brauchte hier keine eigene Bedeutung. */
+  --overlay: rgba(0,0,0,.45);
 
   /* ── The palette: 5 colours, full stop ────────────────────────────────
      Brand teal + 4 semantic hues (success / warning / error / neutral).
@@ -575,6 +579,18 @@
     border: 1px solid var(--border);
     border-radius: 14px;
     overflow: hidden;
+  }
+
+  /* Zeile eines betroffenen Datensatzes im Workflow-Warnungsdialog. Eigene Klasse
+     statt Inline-Style, weil sie je Verstoss mehrfach vorkommt (ADR 0001). */
+  .violation-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
   }
 
   /* Beschriftung-Wert-Zeile in Info-Karten. 11 Vorkommen als Inline-Style.

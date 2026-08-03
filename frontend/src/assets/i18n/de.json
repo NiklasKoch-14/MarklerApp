@@ -1617,5 +1617,24 @@
     "radiusLabel": "Umkreis",
     "noPinHint": "Klicke auf die Karte, um einen Standort-Pin zu setzen.",
     "propertiesInRadius": "Immobilien im Suchradius: {{count}}"
+  },
+  "workflow": {
+    "dialog": {
+      "title": "Ungewöhnlicher Schritt",
+      "intro": "Das ist möglich, passt aber nicht zum üblichen Ablauf. Prüf kurz, ob es so gewollt ist.",
+      "proceed": "Trotzdem speichern"
+    },
+    "rule": {
+      "propertyRentMarkedSold": "Ein Mietobjekt kann nicht als verkauft geführt werden.",
+      "viewingForClosedProperty": "Für dieses Objekt sind keine Besichtigungen mehr möglich — es ist bereits abgeschlossen oder zurückgezogen.",
+      "viewingCompletedInFuture": "Ein Termin in der Zukunft kann nicht als stattgefunden markiert werden.",
+      "viewingScheduledInPast": "Der Termin liegt in der Vergangenheit, ist aber als geplant eingetragen. Sollte er auf „stattgefunden“ stehen?",
+      "propertySoldWithOpenViewings": "Für dieses Objekt sind noch {{count}} Besichtigungen geplant.",
+      "propertyReopened": "Das Objekt war bereits abgeschlossen und wird wieder in den Vertrieb genommen.",
+      "propertyReservedWithoutViewing": "Reservierung ohne eine einzige stattgefundene Besichtigung — fehlt vielleicht ein Termin im System?"
+    },
+    "cascade": {
+      "cancelViewings": "Beim Speichern werden {{count}} Termine abgesagt."
+    }
   }
 }
