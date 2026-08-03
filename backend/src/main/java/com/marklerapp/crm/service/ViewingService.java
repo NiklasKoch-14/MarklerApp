@@ -42,6 +42,7 @@ public class ViewingService {
     private final ViewingMapper viewingMapper;
     private final OwnershipValidator ownershipValidator;
     private final WorkflowGuard workflowGuard;
+    private final WorkflowOverrideLogger workflowOverrideLogger;
 
     @Transactional
     public ViewingDto.Response createViewing(UUID agentId, ViewingDto.CreateRequest request) {
@@ -82,7 +83,10 @@ public class ViewingService {
                 .followUpAction(request.getFollowUpAction())
                 .build();
 
+        // Der Termin hat vor dem Save noch keine ID -- das Protokoll braucht die
+        // gespeicherte Entitaet.
         Viewing saved = viewingRepository.save(viewing);
+        workflowOverrideLogger.record(request.getAcknowledgedRules(), "VIEWING", saved.getId(), agentId);
         log.info("Viewing {} created successfully", saved.getId());
         return viewingMapper.toResponse(saved);
     }
@@ -106,7 +110,9 @@ public class ViewingService {
         viewing.setClientNotes(request.getClientNotes());
         viewing.setFollowUpAction(request.getFollowUpAction());
 
-        return viewingMapper.toResponse(viewingRepository.save(viewing));
+        Viewing saved = viewingRepository.save(viewing);
+        workflowOverrideLogger.record(request.getAcknowledgedRules(), "VIEWING", saved.getId(), agentId);
+        return viewingMapper.toResponse(saved);
     }
 
     @Transactional

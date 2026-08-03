@@ -24,6 +24,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -72,7 +74,7 @@ class WorkflowGuardIntegrationTest {
 
         viewingService = new ViewingService(
                 viewingRepository, clientRepository, agentRepository, propertyRepository,
-                viewingMapper, ownershipValidator, guard);
+                viewingMapper, ownershipValidator, guard, overrideLogger);
 
         agentId = UUID.randomUUID();
         agent = new Agent();
@@ -116,6 +118,7 @@ class WorkflowGuardIntegrationTest {
                 .isInstanceOf(WorkflowRuleBlockedException.class);
 
         verify(propertyRepository, never()).save(any());
+        verify(viewingRepository, never()).saveAll(any());
     }
 
     @Test
@@ -131,11 +134,12 @@ class WorkflowGuardIntegrationTest {
         assertThatThrownBy(() -> propertyService.updateProperty(p.getId(), request, agentId))
                 .isInstanceOf(WorkflowRuleWarningException.class)
                 .extracting(e -> ((WorkflowRuleWarningException) e).getViolations())
-                .satisfies(violations -> assertThat((List<RuleViolation>) violations)
-                        .extracting(RuleViolation::code)
-                        .contains(RuleCode.PROPERTY_SOLD_WITH_OPEN_VIEWINGS));
+                .asInstanceOf(InstanceOfAssertFactories.list(RuleViolation.class))
+                .extracting(RuleViolation::code)
+                .contains(RuleCode.PROPERTY_SOLD_WITH_OPEN_VIEWINGS);
 
         verify(propertyRepository, never()).save(any());
+        verify(viewingRepository, never()).saveAll(any());
     }
 
     @Test
@@ -165,6 +169,21 @@ class WorkflowGuardIntegrationTest {
 
         UpdatePropertyRequest request = new UpdatePropertyRequest();
         request.setTitle("Neuer Titel");
+
+        propertyService.updateProperty(p.getId(), request, agentId);
+
+        verify(viewingRepository, never()).findByPropertyIdAndStatus(any(), any());
+        verify(propertyRepository).save(p);
+    }
+
+    @Test
+    void editWithStatusResentUnchangedSkipsRulesEntirely() {
+        // Ein vollstaendiges PUT vom Frontend sendet den Status auch dann mit, wenn er
+        // sich nicht geaendert hat -- das darf keine Regeln auswerten oder Termine nachladen.
+        Property p = property(ListingType.SALE, PropertyStatus.AVAILABLE);
+
+        UpdatePropertyRequest request = new UpdatePropertyRequest();
+        request.setStatus(PropertyStatus.AVAILABLE);
 
         propertyService.updateProperty(p.getId(), request, agentId);
 
@@ -205,5 +224,32 @@ class WorkflowGuardIntegrationTest {
         viewingService.updateViewing(agentId, existing.getId(), request);
 
         assertThat(existing.getStatus()).isEqualTo(Viewing.ViewingStatus.CANCELLED);
+    }
+
+    @Test
+    void acknowledgedWarningOnViewingCreateIsRecorded() {
+        Property p = property(ListingType.SALE, PropertyStatus.AVAILABLE);
+        Client client = new Client();
+        client.setId(UUID.randomUUID());
+        when(clientRepository.findById(client.getId())).thenReturn(Optional.of(client));
+        when(agentRepository.findById(agentId)).thenReturn(Optional.of(agent));
+
+        UUID viewingId = UUID.randomUUID();
+        when(viewingRepository.save(any(Viewing.class))).thenAnswer(i -> {
+            Viewing v = i.getArgument(0);
+            v.setId(viewingId);
+            return v;
+        });
+
+        ViewingDto.CreateRequest request = new ViewingDto.CreateRequest();
+        request.setClientId(client.getId());
+        request.setPropertyId(p.getId());
+        request.setViewingDate(LocalDateTime.now().minusDays(1));
+        request.setAcknowledgedRules(Set.of(RuleCode.VIEWING_SCHEDULED_IN_PAST));
+
+        viewingService.createViewing(agentId, request);
+
+        verify(overrideLogger).record(
+                Set.of(RuleCode.VIEWING_SCHEDULED_IN_PAST), "VIEWING", viewingId, agentId);
     }
 }
