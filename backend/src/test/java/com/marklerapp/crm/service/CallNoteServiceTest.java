@@ -13,6 +13,7 @@ import com.marklerapp.crm.repository.AgentRepository;
 import com.marklerapp.crm.repository.CallNoteRepository;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.PropertyRepository;
+import com.marklerapp.crm.repository.TaskRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,6 +57,9 @@ class CallNoteServiceTest {
     @Mock
     private CallNoteMapper callNoteMapper;
 
+    @Mock
+    private TaskRepository taskRepository;
+
     private OwnershipValidator ownershipValidator;
 
     private CallNoteService callNoteService;
@@ -80,7 +84,8 @@ class CallNoteServiceTest {
             agentRepository,
             propertyRepository,
             callNoteMapper,
-            ownershipValidator
+            ownershipValidator,
+            taskRepository
         );
         agentId = UUID.randomUUID();
         clientId = UUID.randomUUID();
@@ -587,82 +592,6 @@ class CallNoteServiceTest {
         assertThat(result).isNotNull();
         verify(callNoteRepository).findByAgentOrderByCallDateDesc(testAgent, pageable);
         verify(callNoteRepository, never()).findByAgentAndSearchTerm(any(), any(), any());
-    }
-
-    // ========================================
-    // getFollowUpReminders Tests
-    // ========================================
-
-    @Test
-    void getFollowUpReminders_WithPendingFollowUps_ShouldReturnReminders() {
-        // Given
-        CallNoteDto.FollowUpReminder reminder = CallNoteDto.FollowUpReminder.builder()
-            .id(callNoteId)
-            .build();
-
-        when(agentRepository.findById(agentId)).thenReturn(Optional.of(testAgent));
-        when(callNoteRepository.findCallNotesRequiringFollowUp())
-            .thenReturn(List.of(testCallNote));
-        when(callNoteMapper.toFollowUpReminder(testCallNote)).thenReturn(reminder);
-
-        // When
-        List<CallNoteDto.FollowUpReminder> result = callNoteService.getFollowUpReminders(agentId);
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result).hasSize(1);
-        verify(callNoteRepository).findCallNotesRequiringFollowUp();
-    }
-
-    @Test
-    void getFollowUpReminders_WithNoFollowUps_ShouldReturnEmptyList() {
-        // Given
-        when(agentRepository.findById(agentId)).thenReturn(Optional.of(testAgent));
-        when(callNoteRepository.findCallNotesRequiringFollowUp()).thenReturn(List.of());
-
-        // When
-        List<CallNoteDto.FollowUpReminder> result = callNoteService.getFollowUpReminders(agentId);
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result).isEmpty();
-    }
-
-    // ========================================
-    // getOverdueFollowUps Tests
-    // ========================================
-
-    @Test
-    void getOverdueFollowUps_WithOverdueFollowUps_ShouldReturnReminders() {
-        // Given
-        CallNoteDto.FollowUpReminder reminder = CallNoteDto.FollowUpReminder.builder()
-            .id(callNoteId)
-            .build();
-
-        when(callNoteRepository.findOverdueFollowUps(any(LocalDate.class)))
-            .thenReturn(List.of(testCallNote));
-        when(callNoteMapper.toFollowUpReminder(testCallNote)).thenReturn(reminder);
-
-        // When
-        List<CallNoteDto.FollowUpReminder> result = callNoteService.getOverdueFollowUps(agentId);
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result).hasSize(1);
-        verify(callNoteRepository).findOverdueFollowUps(any(LocalDate.class));
-    }
-
-    @Test
-    void getOverdueFollowUps_WithNoOverdueFollowUps_ShouldReturnEmptyList() {
-        // Given
-        when(callNoteRepository.findOverdueFollowUps(any(LocalDate.class))).thenReturn(List.of());
-
-        // When
-        List<CallNoteDto.FollowUpReminder> result = callNoteService.getOverdueFollowUps(agentId);
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result).isEmpty();
     }
 
     // ========================================

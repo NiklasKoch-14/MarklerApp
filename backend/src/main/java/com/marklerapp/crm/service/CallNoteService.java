@@ -8,11 +8,13 @@ import com.marklerapp.crm.entity.Agent;
 import com.marklerapp.crm.entity.Property;
 import com.marklerapp.crm.entity.PropertyType;
 import com.marklerapp.crm.entity.ListingType;
+import com.marklerapp.crm.entity.Task;
 import com.marklerapp.crm.mapper.CallNoteMapper;
 import com.marklerapp.crm.repository.CallNoteRepository;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.AgentRepository;
 import com.marklerapp.crm.repository.PropertyRepository;
+import com.marklerapp.crm.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -42,6 +45,7 @@ public class CallNoteService {
     private final PropertyRepository propertyRepository;
     private final CallNoteMapper callNoteMapper;
     private final OwnershipValidator ownershipValidator;
+    private final TaskRepository taskRepository;
 
     /**
      * Create a new call note for a client
@@ -94,6 +98,7 @@ public class CallNoteService {
 
         CallNote savedCallNote = callNoteRepository.save(callNote);
         log.info("Successfully created call note with id: {}", savedCallNote.getId());
+        syncTask(savedCallNote);
 
         return callNoteMapper.toResponse(savedCallNote);
     }
@@ -143,6 +148,7 @@ public class CallNoteService {
 
         CallNote updatedCallNote = callNoteRepository.save(existingCallNote);
         log.info("Successfully updated call note with id: {}", updatedCallNote.getId());
+        syncTask(updatedCallNote);
 
         return callNoteMapper.toResponse(updatedCallNote);
     }
@@ -236,39 +242,6 @@ public class CallNoteService {
     }
 
     /**
-     * Get follow-up reminders for an agent
-     */
-    @Transactional(readOnly = true)
-    public List<CallNoteDto.FollowUpReminder> getFollowUpReminders(UUID agentId) {
-        Agent agent = agentRepository.findById(agentId)
-            .orElseThrow(() -> new ResourceNotFoundException("Agent not found with id: " + agentId));
-
-        List<CallNote> followUpCallNotes = callNoteRepository.findCallNotesRequiringFollowUp()
-            .stream()
-            .filter(cn -> cn.getAgent().getId().equals(agentId))
-            .collect(Collectors.toList());
-
-        return followUpCallNotes.stream()
-            .map(callNoteMapper::toFollowUpReminder)
-            .collect(Collectors.toList());
-    }
-
-    /**
-     * Get overdue follow-ups for an agent
-     */
-    @Transactional(readOnly = true)
-    public List<CallNoteDto.FollowUpReminder> getOverdueFollowUps(UUID agentId) {
-        List<CallNote> overdueCallNotes = callNoteRepository.findOverdueFollowUps(LocalDate.now())
-            .stream()
-            .filter(cn -> cn.getAgent().getId().equals(agentId))
-            .collect(Collectors.toList());
-
-        return overdueCallNotes.stream()
-            .map(callNoteMapper::toFollowUpReminder)
-            .collect(Collectors.toList());
-    }
-
-    /**
      * Get call notes summary for a client
      */
     @Transactional(readOnly = true)
@@ -336,5 +309,42 @@ public class CallNoteService {
         private String address;
         private PropertyType propertyType;
         private ListingType listingType;
+    }
+
+    private static final String DEFAULT_TASK_TITLE = "Rückruf";
+
+    /**
+     * Haelt die aus einer Notiz gespiegelte Aufgabe im Gleichklang. Die Follow-up-Felder
+     * der Notiz bleiben Eingabefeld; gelesen wird ab jetzt nur noch die Aufgabe.
+     */
+    private void syncTask(CallNote note) {
+        boolean wanted = Boolean.TRUE.equals(note.getFollowUpRequired()) && note.getFollowUpDate() != null;
+        Optional<Task> existing = taskRepository.findOpenBySourceCallNoteId(note.getId());
+
+        if (!wanted) {
+            // Eine bereits erledigte Aufgabe bleibt als Historie stehen -- findOpenBy...
+            // liefert sie gar nicht erst.
+            existing.ifPresent(taskRepository::delete);
+            return;
+        }
+
+        if (existing.isPresent()) {
+            existing.get().setDueDate(note.getFollowUpDate());
+            taskRepository.save(existing.get());
+            return;
+        }
+
+        String title = note.getSubject() == null || note.getSubject().isBlank()
+                ? DEFAULT_TASK_TITLE : note.getSubject().trim();
+
+        taskRepository.save(Task.builder()
+                .agent(note.getAgent())
+                .client(note.getClient())
+                .property(note.getProperty())
+                .title(title)
+                .dueDate(note.getFollowUpDate())
+                .status(Task.TaskStatus.OPEN)
+                .sourceCallNote(note)
+                .build());
     }
 }

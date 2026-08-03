@@ -175,32 +175,6 @@ public class CallNoteController extends BaseController {
     }
 
     /**
-     * Get follow-up reminders for the agent
-     */
-    @GetMapping("/follow-ups")
-    @Operation(summary = "Get follow-up reminders", description = "Retrieves all follow-up reminders for the authenticated agent")
-    public ResponseEntity<List<CallNoteDto.FollowUpReminder>> getFollowUpReminders(
-            Authentication authentication) {
-
-        UUID agentId = getAgentIdFromAuth(authentication);
-        List<CallNoteDto.FollowUpReminder> reminders = callNoteService.getFollowUpReminders(agentId);
-        return ResponseEntity.ok(reminders);
-    }
-
-    /**
-     * Get overdue follow-ups for the agent
-     */
-    @GetMapping("/follow-ups/overdue")
-    @Operation(summary = "Get overdue follow-ups", description = "Retrieves overdue follow-up reminders for the authenticated agent")
-    public ResponseEntity<List<CallNoteDto.FollowUpReminder>> getOverdueFollowUps(
-            Authentication authentication) {
-
-        UUID agentId = getAgentIdFromAuth(authentication);
-        List<CallNoteDto.FollowUpReminder> overdue = callNoteService.getOverdueFollowUps(agentId);
-        return ResponseEntity.ok(overdue);
-    }
-
-    /**
      * Get call notes summary for a specific client
      */
     @GetMapping("/client/{clientId}/summary")
