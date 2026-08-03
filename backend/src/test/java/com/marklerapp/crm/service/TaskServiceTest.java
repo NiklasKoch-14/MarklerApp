@@ -159,4 +159,85 @@ class TaskServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class);
         verify(taskRepository, never()).delete(any());
     }
+
+    @Test
+    void updateRefusesForeignClient() {
+        Task existing = Task.builder().agent(agent).title("alt").dueDate(LocalDate.now()).build();
+        existing.setId(UUID.randomUUID());
+        when(taskRepository.findById(existing.getId())).thenReturn(Optional.of(existing));
+
+        Client foreign = new Client();
+        foreign.setId(UUID.randomUUID());
+        when(clientRepository.findById(foreign.getId())).thenReturn(Optional.of(foreign));
+        doThrow(new AccessDeniedException("denied"))
+                .when(ownershipValidator).validateClientOwnership(foreign, agentId);
+
+        assertThatThrownBy(() -> service.updateTask(agentId, existing.getId(),
+                TaskDto.UpdateRequest.builder().clientId(foreign.getId()).build()))
+                .isInstanceOf(ResourceNotFoundException.class);
+        verify(taskRepository, never()).save(any());
+    }
+
+    @Test
+    void updateRelinksOwnClient() {
+        Task existing = Task.builder().agent(agent).title("alt").dueDate(LocalDate.now()).build();
+        existing.setId(UUID.randomUUID());
+        when(taskRepository.findById(existing.getId())).thenReturn(Optional.of(existing));
+
+        Client client = new Client();
+        client.setId(UUID.randomUUID());
+        when(clientRepository.findById(client.getId())).thenReturn(Optional.of(client));
+
+        service.updateTask(agentId, existing.getId(),
+                TaskDto.UpdateRequest.builder().clientId(client.getId()).build());
+
+        verify(ownershipValidator).validateClientOwnership(client, agentId);
+        assertThat(existing.getClient()).isEqualTo(client);
+    }
+
+    @Test
+    void tasksByClientRefusesForeignClient() {
+        Client foreign = new Client();
+        foreign.setId(UUID.randomUUID());
+        when(clientRepository.findById(foreign.getId())).thenReturn(Optional.of(foreign));
+        doThrow(new AccessDeniedException("denied"))
+                .when(ownershipValidator).validateClientOwnership(foreign, agentId);
+
+        assertThatThrownBy(() -> service.getTasksByClient(agentId, foreign.getId()))
+                .isInstanceOf(ResourceNotFoundException.class);
+        verify(taskRepository, never()).findByClientId(any());
+    }
+
+    @Test
+    void tasksByPropertyRefusesForeignProperty() {
+        Property foreign = new Property();
+        foreign.setId(UUID.randomUUID());
+        when(propertyRepository.findById(foreign.getId())).thenReturn(Optional.of(foreign));
+        doThrow(new AccessDeniedException("denied"))
+                .when(ownershipValidator).validatePropertyOwnership(foreign, agentId);
+
+        assertThatThrownBy(() -> service.getTasksByProperty(agentId, foreign.getId()))
+                .isInstanceOf(ResourceNotFoundException.class);
+        verify(taskRepository, never()).findByPropertyId(any());
+    }
+
+    @Test
+    void tasksByClientReturnsMappedSummaries() {
+        Client client = new Client();
+        client.setId(UUID.randomUUID());
+        when(clientRepository.findById(client.getId())).thenReturn(Optional.of(client));
+
+        List<Task> tasks = List.of(Task.builder().agent(agent).client(client)
+                .title("Kaufvertrag pruefen").dueDate(LocalDate.now()).build());
+        when(taskRepository.findByClientId(client.getId())).thenReturn(tasks);
+        List<TaskDto.Summary> mapped = List.of(
+                TaskDto.Summary.builder().title("Kaufvertrag pruefen").build());
+        when(taskMapper.toSummaryList(tasks)).thenReturn(mapped);
+
+        List<TaskDto.Summary> result = service.getTasksByClient(agentId, client.getId());
+
+        verify(ownershipValidator).validateClientOwnership(client, agentId);
+        verify(taskRepository).findByClientId(client.getId());
+        assertThat(result).isEqualTo(mapped);
+    }
 }
