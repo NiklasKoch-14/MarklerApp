@@ -11,6 +11,8 @@ import com.marklerapp.crm.repository.AgentRepository;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.PropertyRepository;
 import com.marklerapp.crm.repository.ViewingRepository;
+import com.marklerapp.crm.rules.ViewingChange;
+import com.marklerapp.crm.rules.WorkflowGuard;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -39,6 +41,7 @@ public class ViewingService {
     private final PropertyRepository propertyRepository;
     private final ViewingMapper viewingMapper;
     private final OwnershipValidator ownershipValidator;
+    private final WorkflowGuard workflowGuard;
 
     @Transactional
     public ViewingDto.Response createViewing(UUID agentId, ViewingDto.CreateRequest request) {
@@ -63,6 +66,10 @@ public class ViewingService {
             throw new IllegalArgumentException("Property does not belong to the specified agent");
         }
 
+        workflowGuard.check(
+                new ViewingChange(null, property, request.getViewingDate(), Viewing.ViewingStatus.SCHEDULED),
+                request.getAcknowledgedRules());
+
         Viewing viewing = Viewing.builder()
                 .agent(agent)
                 .client(client)
@@ -85,6 +92,12 @@ public class ViewingService {
         Viewing viewing = viewingRepository.findByIdWithDetails(viewingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Viewing not found: " + viewingId));
         ownershipValidator.validateViewingOwnership(viewing, agentId);
+
+        Viewing.ViewingStatus targetStatus =
+                request.getStatus() != null ? request.getStatus() : viewing.getStatus();
+        workflowGuard.check(
+                new ViewingChange(viewing, viewing.getProperty(), request.getViewingDate(), targetStatus),
+                request.getAcknowledgedRules());
 
         viewing.setViewingDate(request.getViewingDate());
         if (request.getDurationMinutes() != null) viewing.setDurationMinutes(request.getDurationMinutes());

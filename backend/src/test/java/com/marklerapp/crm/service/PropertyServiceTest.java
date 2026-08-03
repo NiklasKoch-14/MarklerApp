@@ -9,6 +9,8 @@ import com.marklerapp.crm.repository.AgentRepository;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.PropertyImageRepository;
 import com.marklerapp.crm.repository.PropertyRepository;
+import com.marklerapp.crm.repository.ViewingRepository;
+import com.marklerapp.crm.rules.WorkflowGuard;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,6 +62,15 @@ class PropertyServiceTest {
     @Mock
     private GeocodingService geocodingService;
 
+    @Mock
+    private ViewingRepository viewingRepository;
+
+    @Mock
+    private WorkflowGuard workflowGuard;
+
+    @Mock
+    private WorkflowOverrideLogger workflowOverrideLogger;
+
     private OwnershipValidator ownershipValidator;
 
     private PropertyService propertyService;
@@ -90,7 +101,10 @@ class PropertyServiceTest {
             propertyMapper,
             propertyImageMapper,
             ownershipValidator,
-            geocodingService
+            geocodingService,
+            viewingRepository,
+            workflowGuard,
+            workflowOverrideLogger
         );
 
         testAgent = Agent.builder()

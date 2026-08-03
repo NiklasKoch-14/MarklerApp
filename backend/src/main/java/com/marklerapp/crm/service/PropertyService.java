@@ -10,6 +10,11 @@ import com.marklerapp.crm.repository.AgentRepository;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.PropertyRepository;
 import com.marklerapp.crm.repository.PropertyImageRepository;
+import com.marklerapp.crm.repository.ViewingRepository;
+import com.marklerapp.crm.rules.CascadeAction;
+import com.marklerapp.crm.rules.CascadeType;
+import com.marklerapp.crm.rules.PropertyStatusChange;
+import com.marklerapp.crm.rules.WorkflowGuard;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -62,6 +67,9 @@ public class PropertyService {
     private final PropertyImageMapper propertyImageMapper;
     private final OwnershipValidator ownershipValidator;
     private final GeocodingService geocodingService;
+    private final ViewingRepository viewingRepository;
+    private final WorkflowGuard workflowGuard;
+    private final WorkflowOverrideLogger workflowOverrideLogger;
 
     /**
      * Create a new property with GDPR validation.
@@ -130,6 +138,21 @@ public class PropertyService {
             throw new ResourceNotFoundException("Property not found or access denied");
         }
 
+        // Regeln nur pruefen, wenn der Status sich tatsaechlich aendert — eine Preisaenderung
+        // soll keine Statuswarnung ausloesen und keine Besichtigungen nachladen.
+        List<CascadeAction> cascades = List.of();
+        boolean statusChanges = request.getStatus() != null && request.getStatus() != property.getStatus();
+        if (statusChanges) {
+            List<Viewing> scheduled = viewingRepository.findByPropertyIdAndStatus(
+                    propertyId, Viewing.ViewingStatus.SCHEDULED);
+            long completed = viewingRepository.countByPropertyIdAndStatus(
+                    propertyId, Viewing.ViewingStatus.COMPLETED);
+
+            cascades = workflowGuard.check(
+                    new PropertyStatusChange(property, request.getStatus(), scheduled, completed),
+                    request.getAcknowledgedRules());
+        }
+
         // Update fields from request (only non-null values)
         updatePropertyFields(property, request);
 
@@ -160,7 +183,25 @@ public class PropertyService {
         Property updatedProperty = propertyRepository.save(property);
         log.info("Updated property: {} for agent: {}", propertyId, agentId);
 
+        // Kaskaden laufen in derselben Transaktion wie die Statusaenderung: ein Rollback
+        // laesst weder das Objekt noch die Termine veraendert zurueck.
+        applyCascades(cascades);
+        if (statusChanges) {
+            workflowOverrideLogger.record(
+                    request.getAcknowledgedRules(), "PROPERTY", propertyId, agentId);
+        }
+
         return propertyMapper.toDto(updatedProperty);
+    }
+
+    private void applyCascades(List<CascadeAction> cascades) {
+        for (CascadeAction cascade : cascades) {
+            if (cascade.action() == CascadeType.CANCEL_VIEWINGS) {
+                List<Viewing> viewings = viewingRepository.findAllById(cascade.ids());
+                viewings.forEach(v -> v.setStatus(Viewing.ViewingStatus.CANCELLED));
+                viewingRepository.saveAll(viewings);
+            }
+        }
     }
 
     /**

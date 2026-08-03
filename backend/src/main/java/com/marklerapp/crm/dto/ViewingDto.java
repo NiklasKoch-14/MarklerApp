@@ -1,6 +1,7 @@
 package com.marklerapp.crm.dto;
 
 import com.marklerapp.crm.entity.Viewing;
+import com.marklerapp.crm.rules.RuleCode;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 public class ViewingDto {
@@ -37,6 +39,12 @@ public class ViewingDto {
 
         @Size(max = 500, message = "Follow-up action must not exceed 500 characters")
         private String followUpAction;
+
+        /**
+         * Vom Makler im Warnungsdialog quittierte Regeln (Issue #46). Kein Fachfeld —
+         * wird nie auf die Entitaet kopiert.
+         */
+        private Set<RuleCode> acknowledgedRules;
     }
 
     @Data
@@ -59,6 +67,12 @@ public class ViewingDto {
 
         @Size(max = 500, message = "Follow-up action must not exceed 500 characters")
         private String followUpAction;
+
+        /**
+         * Vom Makler im Warnungsdialog quittierte Regeln (Issue #46). Kein Fachfeld —
+         * wird nie auf die Entitaet kopiert.
+         */
+        private Set<RuleCode> acknowledgedRules;
     }
 
     @Data

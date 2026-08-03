@@ -83,7 +83,7 @@ class UpdateFieldParityTest {
     void updatePropertyFields_CopiesEverySharedRequestField() throws Exception {
         // updatePropertyFields only touches its two parameters, so the service's
         // collaborators are irrelevant here.
-        PropertyService propertyService = new PropertyService(null, null, null, null, null, null, null, null);
+        PropertyService propertyService = new PropertyService(null, null, null, null, null, null, null, null, null, null, null);
 
         Property property = new Property();
         UpdatePropertyRequest request = new UpdatePropertyRequest();
