@@ -111,6 +111,23 @@ class PropertyRulesTest {
                 .isEmpty();
     }
 
+    @Test
+    void rentedWithOpenViewingsAlsoWarns() {
+        Viewing a = scheduledViewing("Mueller", LocalDateTime.of(2026, 8, 12, 14, 0));
+        Viewing b = scheduledViewing("Schmidt", LocalDateTime.of(2026, 8, 13, 10, 0));
+
+        Optional<RuleViolation> result = new SoldWithOpenViewingsRule().check(new PropertyStatusChange(
+                property(ListingType.RENT, PropertyStatus.AVAILABLE), PropertyStatus.RENTED, List.of(a, b), 0L));
+
+        assertThat(result).isPresent();
+        RuleViolation v = result.get();
+        assertThat(v.severity()).isEqualTo(Severity.WARN);
+        assertThat(v.params()).containsEntry("count", 2);
+        assertThat(v.affected()).hasSize(2);
+        assertThat(v.cascade().action()).isEqualTo(CascadeType.CANCEL_VIEWINGS);
+        assertThat(v.cascade().ids()).containsExactly(a.getId(), b.getId());
+    }
+
     // ---- PropertyReopenedRule ----
 
     @Test
@@ -134,6 +151,13 @@ class PropertyRulesTest {
     void availableToReservedIsNotReopening() {
         assertThat(new PropertyReopenedRule().check(new PropertyStatusChange(
                 property(ListingType.SALE, PropertyStatus.AVAILABLE), PropertyStatus.RESERVED, List.of(), 0L)))
+                .isEmpty();
+    }
+
+    @Test
+    void soldToSoldIsNotReopening() {
+        assertThat(new PropertyReopenedRule().check(new PropertyStatusChange(
+                property(ListingType.SALE, PropertyStatus.SOLD), PropertyStatus.SOLD, List.of(), 0L)))
                 .isEmpty();
     }
 
