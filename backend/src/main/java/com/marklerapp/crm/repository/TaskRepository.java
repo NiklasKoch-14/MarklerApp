@@ -1,0 +1,37 @@
+package com.marklerapp.crm.repository;
+
+import com.marklerapp.crm.entity.Agent;
+import com.marklerapp.crm.entity.Client;
+import com.marklerapp.crm.entity.Task;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+public interface TaskRepository extends JpaRepository<Task, UUID> {
+
+    /** Tagesliste: offen und faellig (heute oder ueberfaellig), aelteste zuerst. */
+    @Query("SELECT t FROM Task t LEFT JOIN FETCH t.client LEFT JOIN FETCH t.property "
+         + "WHERE t.agent = :agent AND t.status = com.marklerapp.crm.entity.Task$TaskStatus.OPEN "
+         + "AND t.dueDate <= :until ORDER BY t.dueDate ASC")
+    List<Task> findDue(@Param("agent") Agent agent, @Param("until") LocalDate until);
+
+    @Query("SELECT t FROM Task t LEFT JOIN FETCH t.property WHERE t.client.id = :clientId "
+         + "ORDER BY t.status ASC, t.dueDate ASC")
+    List<Task> findByClientId(@Param("clientId") UUID clientId);
+
+    @Query("SELECT t FROM Task t LEFT JOIN FETCH t.client WHERE t.property.id = :propertyId "
+         + "ORDER BY t.status ASC, t.dueDate ASC")
+    List<Task> findByPropertyId(@Param("propertyId") UUID propertyId);
+
+    /** Die aus einer Notiz gespiegelte, noch offene Aufgabe -- hoechstens eine. */
+    @Query("SELECT t FROM Task t WHERE t.sourceCallNote.id = :callNoteId "
+         + "AND t.status = com.marklerapp.crm.entity.Task$TaskStatus.OPEN")
+    Optional<Task> findOpenBySourceCallNoteId(@Param("callNoteId") UUID callNoteId);
+
+    long countByClient(Client client);
+}

@@ -62,6 +62,10 @@ public class ClientDeletionAuditLog extends BaseEntity {
     @Builder.Default
     private Integer deletedFileAttachmentsCount = 0;
 
+    @Column(name = "deleted_tasks_count")
+    @Builder.Default
+    private Integer deletedTasksCount = 0;
+
     @Column(name = "had_search_criteria", nullable = false)
     @Builder.Default
     private Boolean hadSearchCriteria = false;
