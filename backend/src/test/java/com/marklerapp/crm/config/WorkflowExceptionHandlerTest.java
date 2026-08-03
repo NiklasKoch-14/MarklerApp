@@ -53,7 +53,8 @@ class WorkflowExceptionHandlerTest {
         Map<String, Object> cascade = (Map<String, Object>) violations.get(0).get("cascade");
         assertThat(cascade)
                 .containsEntry("action", "CANCEL_VIEWINGS")
-                .containsEntry("messageKey", "workflow.cascade.cancelViewings");
+                .containsEntry("messageKey", "workflow.cascade.cancelViewings")
+                .containsEntry("ids", List.of(viewingId));
     }
 
     @Test
@@ -75,5 +76,25 @@ class WorkflowExceptionHandlerTest {
 
         List<Map<String, Object>> violations = (List<Map<String, Object>>) response.getBody().get("violations");
         assertThat(violations.get(0)).doesNotContainKey("cascade");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void nullLabelDoesNotThrowNullPointerException() {
+        UUID propertyId = UUID.randomUUID();
+        RuleViolation violation = RuleViolation
+                .of(RuleCode.PROPERTY_SOLD_WITH_OPEN_VIEWINGS, Severity.WARN)
+                .withAffected(List.of(new AffectedRecord("PROPERTY", propertyId, null)));
+
+        ResponseEntity<Map<String, Object>> response =
+                handler.handleWorkflowWarning(new WorkflowRuleWarningException(List.of(violation)));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        List<Map<String, Object>> violations = (List<Map<String, Object>>) response.getBody().get("violations");
+        List<Map<String, Object>> affected = (List<Map<String, Object>>) violations.get(0).get("affected");
+        assertThat(affected.get(0))
+                .containsEntry("type", "PROPERTY")
+                .containsEntry("id", propertyId)
+                .containsEntry("label", null);
     }
 }

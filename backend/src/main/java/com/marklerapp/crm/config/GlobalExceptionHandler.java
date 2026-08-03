@@ -474,15 +474,29 @@ public class GlobalExceptionHandler {
         item.put("messageKey", violation.messageKey());
         item.put("params", violation.params());
         item.put("affected", violation.affected().stream()
-                .map(a -> Map.<String, Object>of("type", a.type(), "id", a.id(), "label", a.label()))
+                .map(this::affectedItemBody)
                 .toList());
         if (violation.cascade() != null) {
-            item.put("cascade", Map.<String, Object>of(
-                    "action", violation.cascade().action().name(),
-                    "messageKey", violation.cascade().messageKey(),
-                    "ids", violation.cascade().ids()));
+            item.put("cascade", cascadeBody(violation.cascade()));
         }
         return item;
+    }
+
+    private Map<String, Object> affectedItemBody(Object a) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        var affected = (com.marklerapp.crm.rules.AffectedRecord) a;
+        map.put("type", affected.type());
+        map.put("id", affected.id());
+        map.put("label", affected.label());
+        return map;
+    }
+
+    private Map<String, Object> cascadeBody(com.marklerapp.crm.rules.CascadeAction cascade) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("action", cascade.action().name());
+        map.put("messageKey", cascade.messageKey());
+        map.put("ids", cascade.ids());
+        return map;
     }
 
     /**
