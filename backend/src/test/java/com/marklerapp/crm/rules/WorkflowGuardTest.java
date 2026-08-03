@@ -35,7 +35,7 @@ class WorkflowGuardTest {
     }
 
     private static PropertyStatusChange anyContext() {
-        return new PropertyStatusChange(null, null, List.of(), 0L);
+        return new PropertyStatusChange(null, null, null, List.of(), 0L);
     }
 
     @Test

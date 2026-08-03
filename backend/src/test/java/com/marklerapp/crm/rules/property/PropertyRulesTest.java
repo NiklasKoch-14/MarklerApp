@@ -47,7 +47,8 @@ class PropertyRulesTest {
     @Test
     void rentMarkedSoldBlocks() {
         Optional<RuleViolation> v = new RentMarkedSoldRule().check(new PropertyStatusChange(
-                property(ListingType.RENT, PropertyStatus.AVAILABLE), PropertyStatus.SOLD, List.of(), 0L));
+                property(ListingType.RENT, PropertyStatus.AVAILABLE), PropertyStatus.SOLD,
+                ListingType.RENT, List.of(), 0L));
 
         assertThat(v).isPresent();
         assertThat(v.get().code()).isEqualTo(RuleCode.PROPERTY_RENT_MARKED_SOLD);
@@ -57,22 +58,56 @@ class PropertyRulesTest {
     @Test
     void saleMarkedRentedBlocks() {
         assertThat(new RentMarkedSoldRule().check(new PropertyStatusChange(
-                property(ListingType.SALE, PropertyStatus.AVAILABLE), PropertyStatus.RENTED, List.of(), 0L)))
+                property(ListingType.SALE, PropertyStatus.AVAILABLE), PropertyStatus.RENTED,
+                ListingType.SALE, List.of(), 0L)))
                 .isPresent();
     }
 
     @Test
     void rentMarkedRentedIsFine() {
         assertThat(new RentMarkedSoldRule().check(new PropertyStatusChange(
-                property(ListingType.RENT, PropertyStatus.AVAILABLE), PropertyStatus.RENTED, List.of(), 0L)))
+                property(ListingType.RENT, PropertyStatus.AVAILABLE), PropertyStatus.RENTED,
+                ListingType.RENT, List.of(), 0L)))
                 .isEmpty();
     }
 
     @Test
     void unknownListingTypeIsNotBlocked() {
         assertThat(new RentMarkedSoldRule().check(new PropertyStatusChange(
-                property(null, PropertyStatus.AVAILABLE), PropertyStatus.SOLD, List.of(), 0L)))
+                property(null, PropertyStatus.AVAILABLE), PropertyStatus.SOLD,
+                null, List.of(), 0L)))
                 .isEmpty();
+    }
+
+    /**
+     * Der Kontext traegt den beabsichtigten neuen Angebotstyp, nicht den alten am Objekt.
+     * Ein SALE-Objekt, das per PUT gleichzeitig auf listingType=RENT und status=SOLD
+     * umgestellt wird, muss anhand des Ziel-Typs geblockt werden — nicht anhand des noch
+     * am Property haengenden alten SALE.
+     */
+    @Test
+    void targetListingTypeDecidesNotCurrentPropertyListingType() {
+        Optional<RuleViolation> v = new RentMarkedSoldRule().check(new PropertyStatusChange(
+                property(ListingType.SALE, PropertyStatus.AVAILABLE), PropertyStatus.SOLD,
+                ListingType.RENT, List.of(), 0L));
+
+        assertThat(v).isPresent();
+        assertThat(v.get().code()).isEqualTo(RuleCode.PROPERTY_RENT_MARKED_SOLD);
+    }
+
+    /**
+     * Umgekehrter Fall: das Objekt ist bereits SOLD (targetStatus bleibt bei
+     * Angebotstyp-only-Aenderungen der aktuelle Status), der Angebotstyp wechselt auf RENT.
+     * targetListingType=RENT + targetStatus=SOLD ist derselbe Widerspruch wie oben.
+     */
+    @Test
+    void listingTypeChangeAloneOnAlreadySoldPropertyBlocks() {
+        Optional<RuleViolation> v = new RentMarkedSoldRule().check(new PropertyStatusChange(
+                property(ListingType.SALE, PropertyStatus.SOLD), PropertyStatus.SOLD,
+                ListingType.RENT, List.of(), 0L));
+
+        assertThat(v).isPresent();
+        assertThat(v.get().code()).isEqualTo(RuleCode.PROPERTY_RENT_MARKED_SOLD);
     }
 
     // ---- SoldWithOpenViewingsRule ----
@@ -83,7 +118,8 @@ class PropertyRulesTest {
         Viewing b = scheduledViewing("Schmidt", LocalDateTime.of(2026, 8, 13, 10, 0));
 
         Optional<RuleViolation> result = new SoldWithOpenViewingsRule().check(new PropertyStatusChange(
-                property(ListingType.SALE, PropertyStatus.AVAILABLE), PropertyStatus.SOLD, List.of(a, b), 0L));
+                property(ListingType.SALE, PropertyStatus.AVAILABLE), PropertyStatus.SOLD,
+                ListingType.SALE, List.of(a, b), 0L));
 
         assertThat(result).isPresent();
         RuleViolation v = result.get();
@@ -99,7 +135,8 @@ class PropertyRulesTest {
     @Test
     void soldWithoutOpenViewingsIsFine() {
         assertThat(new SoldWithOpenViewingsRule().check(new PropertyStatusChange(
-                property(ListingType.SALE, PropertyStatus.AVAILABLE), PropertyStatus.SOLD, List.of(), 0L)))
+                property(ListingType.SALE, PropertyStatus.AVAILABLE), PropertyStatus.SOLD,
+                ListingType.SALE, List.of(), 0L)))
                 .isEmpty();
     }
 
@@ -107,7 +144,7 @@ class PropertyRulesTest {
     void reservingWithOpenViewingsIsFine() {
         assertThat(new SoldWithOpenViewingsRule().check(new PropertyStatusChange(
                 property(ListingType.SALE, PropertyStatus.AVAILABLE), PropertyStatus.RESERVED,
-                List.of(scheduledViewing("Mueller", LocalDateTime.now().plusDays(1))), 0L)))
+                ListingType.SALE, List.of(scheduledViewing("Mueller", LocalDateTime.now().plusDays(1))), 0L)))
                 .isEmpty();
     }
 
@@ -117,7 +154,8 @@ class PropertyRulesTest {
         Viewing b = scheduledViewing("Schmidt", LocalDateTime.of(2026, 8, 13, 10, 0));
 
         Optional<RuleViolation> result = new SoldWithOpenViewingsRule().check(new PropertyStatusChange(
-                property(ListingType.RENT, PropertyStatus.AVAILABLE), PropertyStatus.RENTED, List.of(a, b), 0L));
+                property(ListingType.RENT, PropertyStatus.AVAILABLE), PropertyStatus.RENTED,
+                ListingType.RENT, List.of(a, b), 0L));
 
         assertThat(result).isPresent();
         RuleViolation v = result.get();
@@ -133,7 +171,8 @@ class PropertyRulesTest {
     @Test
     void reopeningSoldPropertyWarns() {
         Optional<RuleViolation> v = new PropertyReopenedRule().check(new PropertyStatusChange(
-                property(ListingType.SALE, PropertyStatus.SOLD), PropertyStatus.AVAILABLE, List.of(), 0L));
+                property(ListingType.SALE, PropertyStatus.SOLD), PropertyStatus.AVAILABLE,
+                ListingType.SALE, List.of(), 0L));
 
         assertThat(v).isPresent();
         assertThat(v.get().code()).isEqualTo(RuleCode.PROPERTY_REOPENED);
@@ -143,21 +182,24 @@ class PropertyRulesTest {
     @Test
     void soldToWithdrawnIsNotReopening() {
         assertThat(new PropertyReopenedRule().check(new PropertyStatusChange(
-                property(ListingType.SALE, PropertyStatus.SOLD), PropertyStatus.WITHDRAWN, List.of(), 0L)))
+                property(ListingType.SALE, PropertyStatus.SOLD), PropertyStatus.WITHDRAWN,
+                ListingType.SALE, List.of(), 0L)))
                 .isEmpty();
     }
 
     @Test
     void availableToReservedIsNotReopening() {
         assertThat(new PropertyReopenedRule().check(new PropertyStatusChange(
-                property(ListingType.SALE, PropertyStatus.AVAILABLE), PropertyStatus.RESERVED, List.of(), 0L)))
+                property(ListingType.SALE, PropertyStatus.AVAILABLE), PropertyStatus.RESERVED,
+                ListingType.SALE, List.of(), 0L)))
                 .isEmpty();
     }
 
     @Test
     void soldToSoldIsNotReopening() {
         assertThat(new PropertyReopenedRule().check(new PropertyStatusChange(
-                property(ListingType.SALE, PropertyStatus.SOLD), PropertyStatus.SOLD, List.of(), 0L)))
+                property(ListingType.SALE, PropertyStatus.SOLD), PropertyStatus.SOLD,
+                ListingType.SALE, List.of(), 0L)))
                 .isEmpty();
     }
 
@@ -166,21 +208,24 @@ class PropertyRulesTest {
     @Test
     void reservingWithoutCompletedViewingWarns() {
         assertThat(new ReservedWithoutViewingRule().check(new PropertyStatusChange(
-                property(ListingType.SALE, PropertyStatus.AVAILABLE), PropertyStatus.RESERVED, List.of(), 0L)))
+                property(ListingType.SALE, PropertyStatus.AVAILABLE), PropertyStatus.RESERVED,
+                ListingType.SALE, List.of(), 0L)))
                 .isPresent();
     }
 
     @Test
     void reservingAfterCompletedViewingIsFine() {
         assertThat(new ReservedWithoutViewingRule().check(new PropertyStatusChange(
-                property(ListingType.SALE, PropertyStatus.AVAILABLE), PropertyStatus.RESERVED, List.of(), 1L)))
+                property(ListingType.SALE, PropertyStatus.AVAILABLE), PropertyStatus.RESERVED,
+                ListingType.SALE, List.of(), 1L)))
                 .isEmpty();
     }
 
     @Test
     void alreadyReservedDoesNotWarnAgain() {
         assertThat(new ReservedWithoutViewingRule().check(new PropertyStatusChange(
-                property(ListingType.SALE, PropertyStatus.RESERVED), PropertyStatus.RESERVED, List.of(), 0L)))
+                property(ListingType.SALE, PropertyStatus.RESERVED), PropertyStatus.RESERVED,
+                ListingType.SALE, List.of(), 0L)))
                 .isEmpty();
     }
 }

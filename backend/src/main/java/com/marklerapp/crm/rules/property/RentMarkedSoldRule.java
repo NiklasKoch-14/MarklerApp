@@ -30,7 +30,7 @@ public class RentMarkedSoldRule extends TypedWorkflowRule<PropertyStatusChange> 
 
     @Override
     protected Optional<RuleViolation> check(PropertyStatusChange context) {
-        ListingType listingType = context.property().getListingType();
+        ListingType listingType = context.targetListingType();
         PropertyStatus target = context.targetStatus();
         if (listingType == null || target == null) {
             return Optional.empty();

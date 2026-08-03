@@ -138,18 +138,28 @@ public class PropertyService {
             throw new ResourceNotFoundException("Property not found or access denied");
         }
 
-        // Regeln nur pruefen, wenn der Status sich tatsaechlich aendert — eine Preisaenderung
-        // soll keine Statuswarnung ausloesen und keine Besichtigungen nachladen.
+        // Regeln nur pruefen, wenn Status oder Angebotstyp sich tatsaechlich aendern — eine
+        // Preisaenderung soll keine Statuswarnung ausloesen und keine Besichtigungen nachladen.
+        // Beide Aenderungen muessen zusammen gewuertigt werden: eine PUT, die listingType UND
+        // status in einem Request umstellt, wuerde sonst mit dem alten listingType geprueft und
+        // den Widerspruch (RentMarkedSoldRule) uebersehen. Aendert sich nur der Angebotstyp,
+        // bleibt targetStatus der aktuelle Status — die statusabhaengigen Regeln sehen dann
+        // bewusst ein No-op und schweigen.
         List<CascadeAction> cascades = List.of();
+        ListingType targetListingType = request.getListingType() != null
+                ? request.getListingType() : property.getListingType();
+        boolean listingTypeChanges = request.getListingType() != null
+                && request.getListingType() != property.getListingType();
         boolean statusChanges = request.getStatus() != null && request.getStatus() != property.getStatus();
-        if (statusChanges) {
+        if (statusChanges || listingTypeChanges) {
             List<Viewing> scheduled = viewingRepository.findByPropertyIdAndStatus(
                     propertyId, Viewing.ViewingStatus.SCHEDULED);
             long completed = viewingRepository.countByPropertyIdAndStatus(
                     propertyId, Viewing.ViewingStatus.COMPLETED);
+            PropertyStatus targetStatus = statusChanges ? request.getStatus() : property.getStatus();
 
             cascades = workflowGuard.check(
-                    new PropertyStatusChange(property, request.getStatus(), scheduled, completed),
+                    new PropertyStatusChange(property, targetStatus, targetListingType, scheduled, completed),
                     request.getAcknowledgedRules());
         }
 
@@ -186,7 +196,7 @@ public class PropertyService {
         // Kaskaden laufen in derselben Transaktion wie die Statusaenderung: ein Rollback
         // laesst weder das Objekt noch die Termine veraendert zurueck.
         applyCascades(cascades);
-        if (statusChanges) {
+        if (statusChanges || listingTypeChanges) {
             workflowOverrideLogger.record(
                     request.getAcknowledgedRules(), "PROPERTY", propertyId, agentId);
         }

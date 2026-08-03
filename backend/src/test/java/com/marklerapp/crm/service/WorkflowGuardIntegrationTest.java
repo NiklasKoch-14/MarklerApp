@@ -177,6 +177,39 @@ class WorkflowGuardIntegrationTest {
     }
 
     @Test
+    void combinedListingTypeAndStatusChangeIsEvaluatedAgainstTheTargetType() {
+        // Ein einzelnes PUT, das listingType auf RENT UND status auf SOLD umstellt, darf nicht
+        // durchrutschen, nur weil property.getListingType() zum Pruefzeitpunkt noch SALE ist
+        // (Finding 4): der Kontext muss den Ziel-Typ tragen, nicht den Vorher-Zustand.
+        Property p = property(ListingType.SALE, PropertyStatus.AVAILABLE);
+
+        UpdatePropertyRequest request = new UpdatePropertyRequest();
+        request.setListingType(ListingType.RENT);
+        request.setStatus(PropertyStatus.SOLD);
+
+        assertThatThrownBy(() -> propertyService.updateProperty(p.getId(), request, agentId))
+                .isInstanceOf(WorkflowRuleBlockedException.class);
+
+        verify(propertyRepository, never()).save(any());
+    }
+
+    @Test
+    void listingTypeChangeAloneOnAlreadySoldPropertyIsBlocked() {
+        // Zweite Luecke aus Finding 4: nur der Angebotstyp aendert sich (kein status im
+        // Request), das Objekt ist aber bereits SOLD. statusChanges allein wuerde das
+        // uebersehen -- listingTypeChanges muss die Regelpruefung ebenfalls ausloesen.
+        Property p = property(ListingType.SALE, PropertyStatus.SOLD);
+
+        UpdatePropertyRequest request = new UpdatePropertyRequest();
+        request.setListingType(ListingType.RENT);
+
+        assertThatThrownBy(() -> propertyService.updateProperty(p.getId(), request, agentId))
+                .isInstanceOf(WorkflowRuleBlockedException.class);
+
+        verify(propertyRepository, never()).save(any());
+    }
+
+    @Test
     void editWithStatusResentUnchangedSkipsRulesEntirely() {
         // Ein vollstaendiges PUT vom Frontend sendet den Status auch dann mit, wenn er
         // sich nicht geaendert hat -- das darf keine Regeln auswerten oder Termine nachladen.
