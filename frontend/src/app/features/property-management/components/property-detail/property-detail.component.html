@@ -259,6 +259,24 @@
         </div>
       </div>
 
+      <!-- Aufgaben (#33) -->
+      <div class="surface-card px-5 py-4">
+        <div class="flex items-center gap-2 mb-3.5">
+          <i class="ri-checkbox-line text-16 text-primary"></i>
+          <span class="text-14 font-bold text-body flex-1">{{ 'tasks.sectionTitle' | translate }}</span>
+          <button class="btn-secondary" (click)="openTaskDialog()">
+            <i class="ri-add-line"></i>
+            {{ 'tasks.add' | translate }}
+          </button>
+        </div>
+        <app-task-list
+          [tasks]="tasks"
+          (completed)="completeTask($event)"
+          (postponed)="postponeTaskByWeek($event)"
+          (edited)="openTaskDialog($event)">
+        </app-task-list>
+      </div>
+
       <!-- Besichtigungen -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
         <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;">
@@ -719,6 +737,15 @@
   <div style="width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px;"></div>
   <p style="font-size:14px;color:var(--text-3);">Objekt wird geladen…</p>
 </div>
+
+<!-- Aufgaben-Dialog (#33) -->
+<app-task-form-dialog
+  [open]="showTaskDialog"
+  [propertyId]="property?.id"
+  [task]="editingTask"
+  (saved)="onTaskSaved()"
+  (cancelled)="closeTaskDialog()">
+</app-task-form-dialog>
 
 <!-- Viewing Add Dialog -->
 <app-viewing-add-dialog

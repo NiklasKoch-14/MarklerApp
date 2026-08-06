@@ -27,11 +27,15 @@ import { LocationPickerMapComponent, SecondaryMarker } from '../../../../shared/
 import { ClientService } from '../../../client-management/services/client.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { TaskService } from '../../../../core/services/task.service';
+import { TaskSummary } from '../../../../shared/models/task.model';
+import { TaskListComponent } from '../../../../shared/components/task-list/task-list.component';
+import { TaskFormDialogComponent } from '../../../../shared/components/task-form-dialog/task-form-dialog.component';
 
 @Component({
   selector: 'app-property-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent, ConfirmDialogComponent, LocationPickerMapComponent, MatchScorePopoverComponent, TranslateEnumPipe],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent, ConfirmDialogComponent, LocationPickerMapComponent, MatchScorePopoverComponent, TranslateEnumPipe, TaskListComponent, TaskFormDialogComponent],
   templateUrl: './property-detail.component.html',
   styleUrls: ['./property-detail.component.scss']
 })
@@ -79,6 +83,7 @@ export class PropertyDetailComponent implements OnInit {
     private viewingService: ViewingService,
     private propertyMatchingService: PropertyMatchingService,
     private clientService: ClientService,
+    private taskService: TaskService,
     private translate: TranslateService
   ) {}
 
@@ -90,7 +95,54 @@ export class PropertyDetailComponent implements OnInit {
       this.loadMatchingClients(propertyId);
       this.loadMapMarkers(propertyId);
       this.loadOwnerReport(propertyId);
+      this.loadTasks(propertyId);
     }
+  }
+
+  // ========================================
+  // Aufgaben (Issue #33)
+  // ========================================
+
+  tasks: TaskSummary[] = [];
+  showTaskDialog = false;
+  editingTask?: TaskSummary;
+
+  private loadTasks(propertyId: string): void {
+    this.taskService.getByProperty(propertyId).subscribe({
+      next: tasks => this.tasks = tasks,
+      error: () => this.tasks = []
+    });
+  }
+
+  openTaskDialog(task?: TaskSummary): void {
+    this.editingTask = task;
+    this.showTaskDialog = true;
+  }
+
+  closeTaskDialog(): void {
+    this.showTaskDialog = false;
+    this.editingTask = undefined;
+  }
+
+  onTaskSaved(): void {
+    this.closeTaskDialog();
+    this.reloadTasks();
+  }
+
+  completeTask(task: TaskSummary): void {
+    this.taskService.complete(task.id).subscribe({ next: () => this.reloadTasks() });
+  }
+
+  /** Schnellweg aus der Liste; jedes andere Datum laeuft ueber den Dialog. */
+  postponeTaskByWeek(task: TaskSummary): void {
+    const target = new Date(task.dueDate);
+    target.setDate(target.getDate() + 7);
+    this.taskService.postpone(task.id, target.toISOString().slice(0, 10))
+      .subscribe({ next: () => this.reloadTasks() });
+  }
+
+  private reloadTasks(): void {
+    if (this.property?.id) this.loadTasks(this.property.id);
   }
 
   // ========================================

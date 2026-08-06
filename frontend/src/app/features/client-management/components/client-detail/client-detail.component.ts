@@ -26,11 +26,15 @@ import { Property, PropertyService } from '../../../property-management/services
 import { filterWithinRadius } from '../../../../shared/utils/geo.util';
 import { GeocodingService } from '../../../../shared/services/geocoding.service';
 import { GdprExportService } from '../../services/gdpr-export.service';
+import { TaskService } from '../../../../core/services/task.service';
+import { TaskSummary } from '../../../../shared/models/task.model';
+import { TaskListComponent } from '../../../../shared/components/task-list/task-list.component';
+import { TaskFormDialogComponent } from '../../../../shared/components/task-form-dialog/task-form-dialog.component';
 
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent, TranslateEnumPipe, ConfirmDialogComponent, LocationPickerMapComponent, MatchScorePopoverComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, FileAttachmentManagerComponent, LoadingSpinnerComponent, ViewingAddDialogComponent, TranslateEnumPipe, ConfirmDialogComponent, LocationPickerMapComponent, MatchScorePopoverComponent, TaskListComponent, TaskFormDialogComponent],
   styles: [`
     .stage-option:hover { background:var(--surface-2) !important; }
     .qm-item { display:flex; align-items:center; gap:10px; width:100%; padding:10px 14px; border:none; background:none; cursor:pointer; font-size:13px; font-weight:500; color:var(--text); text-align:left; font-family:inherit; transition:background 0.1s; }
@@ -375,6 +379,24 @@ import { GdprExportService } from '../../services/gdpr-export.service';
 
           <!-- LEFT: Activity stream -->
           <div style="display:flex;flex-direction:column;gap:16px;">
+
+            <!-- Aufgaben (#33) -->
+            <div class="surface-card px-5 py-4">
+              <div class="flex items-center gap-2 mb-3.5">
+                <i class="ri-checkbox-line text-16 text-primary"></i>
+                <span class="text-15 font-bold text-body flex-1">{{ 'tasks.sectionTitle' | translate }}</span>
+                <button class="btn-secondary" (click)="openTaskDialog()">
+                  <i class="ri-add-line"></i>
+                  {{ 'tasks.add' | translate }}
+                </button>
+              </div>
+              <app-task-list
+                [tasks]="tasks"
+                (completed)="completeTask($event)"
+                (postponed)="postponeTaskByWeek($event)"
+                (edited)="openTaskDialog($event)">
+              </app-task-list>
+            </div>
 
             <!-- Besichtigungen -->
             <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;">
@@ -821,6 +843,15 @@ import { GdprExportService } from '../../services/gdpr-export.service';
       </div>
     </div>
 
+    <!-- Aufgaben-Dialog (#33) -->
+    <app-task-form-dialog
+      [open]="showTaskDialog"
+      [clientId]="client?.id"
+      [task]="editingTask"
+      (saved)="onTaskSaved()"
+      (cancelled)="closeTaskDialog()">
+    </app-task-form-dialog>
+
     <!-- Attachments Dialog -->
     <div *ngIf="showAttachmentsDialog && client"
          style="position:fixed;inset:0;z-index:600;display:flex;align-items:flex-start;justify-content:center;padding:48px 20px 20px;"
@@ -1065,6 +1096,7 @@ export class ClientDetailComponent implements OnInit {
     private propertyService: PropertyService,
     private geocodingService: GeocodingService,
     private gdprExportService: GdprExportService,
+    private taskService: TaskService,
     private zone: NgZone
   ) {}
 
@@ -1077,7 +1109,52 @@ export class ClientDetailComponent implements OnInit {
       this.loadClient(clientId);
       this.loadCallNotes(clientId);
       this.loadViewings(clientId);
+      this.loadTasks(clientId);
     }
+  }
+
+  // ── Aufgaben (#33) ───────────────────────────────────────────
+
+  tasks: TaskSummary[] = [];
+  showTaskDialog = false;
+  editingTask?: TaskSummary;
+
+  private loadTasks(clientId: string): void {
+    this.taskService.getByClient(clientId).subscribe({
+      next: tasks => this.tasks = tasks,
+      error: () => this.tasks = []
+    });
+  }
+
+  openTaskDialog(task?: TaskSummary): void {
+    this.editingTask = task;
+    this.showTaskDialog = true;
+  }
+
+  closeTaskDialog(): void {
+    this.showTaskDialog = false;
+    this.editingTask = undefined;
+  }
+
+  onTaskSaved(): void {
+    this.closeTaskDialog();
+    this.reloadTasks();
+  }
+
+  completeTask(task: TaskSummary): void {
+    this.taskService.complete(task.id).subscribe({ next: () => this.reloadTasks() });
+  }
+
+  /** Schnellweg aus der Liste; jedes andere Datum laeuft ueber den Dialog. */
+  postponeTaskByWeek(task: TaskSummary): void {
+    const target = new Date(task.dueDate);
+    target.setDate(target.getDate() + 7);
+    this.taskService.postpone(task.id, target.toISOString().slice(0, 10))
+      .subscribe({ next: () => this.reloadTasks() });
+  }
+
+  private reloadTasks(): void {
+    if (this.client?.id) this.loadTasks(this.client.id);
   }
 
   private loadClient(id: string): void {
