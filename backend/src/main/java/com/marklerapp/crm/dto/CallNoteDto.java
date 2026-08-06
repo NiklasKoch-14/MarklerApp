@@ -213,20 +213,4 @@ public class CallNoteDto {
         private Integer durationMinutes;
     }
 
-    /**
-     * DTO for follow-up reminders
-     */
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class FollowUpReminder {
-        private UUID id;
-        private UUID clientId;
-        private String clientName;
-        private String subject;
-        private LocalDate followUpDate;
-        private boolean isOverdue;
-        private long daysUntilDue;
-    }
 }

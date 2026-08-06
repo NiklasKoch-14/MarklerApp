@@ -12,26 +12,27 @@ import { PropertyService } from '../property-management/services/property.servic
 import {
   CallNotesService,
   CallNoteSummary,
-  FollowUpReminder,
   CallType,
   CallOutcome,
-  CallNoteCreateRequest,
 } from '../call-notes/services/call-notes.service';
 import { ViewingService, ViewingSummary, ViewingFeedback, ViewingStatus } from '../viewing-management/services/viewing.service';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { DragDropModule, CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+import { TaskService } from '../../core/services/task.service';
+import { TaskSummary } from '../../shared/models/task.model';
 
 
-interface FollowUpRow {
+/** Eine Zeile der Tagesliste. Der Bezug auf Kunde oder Objekt ist optional (Issue #33). */
+interface TaskRow {
   id: string;
-  clientId: string;
-  customerName: string;
-  customerInitials: string;
-  subject: string;
-  typeLabel: string;
+  title: string;
+  clientId?: string;
+  clientName?: string;
+  propertyId?: string;
+  propertyTitle?: string;
+  initials: string;
+  dueDate: string;
   dueLabel: string;
-  dueColor: string;
-  followupFmt: string;
   isOverdue: boolean;
 }
 
@@ -86,19 +87,19 @@ interface ViewingRow {
       <!-- Aktions-Zeile: was brennt heute? -->
       @if (!allClear) {
         <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
-          <!-- 1) Überfällige Rückrufe — schlagen alles -->
-          <button (click)="focusActivityTab('followups')"
+          <!-- 1) Überfällige Aufgaben — schlagen alles -->
+          <button (click)="focusActivityTab('tasks')"
                   style="flex:1; min-width:150px; display:flex; align-items:center; gap:13px; padding:15px 17px;
                          border-radius:14px; cursor:pointer; text-align:left; font-family:inherit;
                          box-shadow:var(--shadow); transition:transform .1s;"
                   [style.background]="overdueCount > 0 ? 'var(--color-error-soft)' : 'var(--surface)'"
                   [style.border]="overdueCount > 0 ? '1px solid var(--color-error)' : '1px solid var(--border)'">
-            <i class="ri-phone-fill" style="font-size:23px;"
+            <i class="ri-list-check-2 text-[23px]"
                [style.color]="overdueCount > 0 ? 'var(--color-error)' : 'var(--text-3)'"></i>
             <div>
               <div style="font-size:23px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums;"
                    [style.color]="overdueCount > 0 ? 'var(--color-error)' : 'var(--text)'">{{ overdueCount }}</div>
-              <div style="font-size:12px; font-weight:600; color:var(--text-2); margin-top:4px;">Rückrufe überfällig</div>
+              <div class="text-12 font-semibold text-body-2 mt-1">{{ 'tasks.overdueTile' | translate }}</div>
             </div>
           </button>
 
@@ -262,44 +263,50 @@ interface ViewingRow {
             </div>
           </div>
 
-          @if (activityTab === 'followups') {
+          @if (activityTab === 'tasks') {
 
-            @for (f of followUps.slice(0,5); track f.id) {
+            @for (t of dueTasks; track t.id) {
               <div class="followup-row">
-                <div class="customer-avatar-sm">{{ f.customerInitials }}</div>
-                <div style="flex:1; min-width:0;">
-                  <div style="font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                    {{ f.subject }}
-                  </div>
-                  <div style="font-size:12px; color:var(--text-2); margin-top:2px;">
-                    {{ f.customerName }}
-                  </div>
-                </div>
-                <div style="text-align:right; flex-shrink:0;">
-                  <div style="font-size:12px; font-weight:700;" [style.color]="f.dueColor">{{ f.dueLabel }}</div>
-                  <div style="font-size:11px; color:var(--text-3); font-variant-numeric:tabular-nums;">
-                    {{ f.followupFmt }}
+                <div class="customer-avatar-sm">{{ t.initials }}</div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-14 font-semibold truncate">{{ t.title }}</div>
+                  <div class="text-12 text-body-2 mt-0.5 truncate">
+                    @if (t.clientId) {
+                      <a [routerLink]="['/clients', t.clientId]" class="hover:underline">{{ t.clientName }}</a>
+                    }
+                    @if (t.clientId && t.propertyId) { <span class="text-body-3"> · </span> }
+                    @if (t.propertyId) {
+                      <a [routerLink]="['/properties', t.propertyId]" class="hover:underline">{{ t.propertyTitle }}</a>
+                    }
                   </div>
                 </div>
-                <button (click)="openFollowUpDone(f, $event)"
-                        style="padding:4px 10px; border:1.5px solid var(--color-success); border-radius:7px;
-                               background:none; color:var(--color-success); font-size:12px; font-weight:600;
-                               cursor:pointer; white-space:nowrap; flex-shrink:0; display:inline-flex; align-items:center; gap:5px;">
-                  <i class="ri-check-line" style="font-size:12px;"></i> Erledigt
+                <!-- Die Faelligkeit steht einmal. "Ueberfaellig" kommt als Marke darueber,
+                     nicht als Ersatz — sonst verliert die Zeile das Datum, das sie erklaert. -->
+                <div class="text-right shrink-0">
+                  <div *ngIf="t.isOverdue" class="text-12 font-bold text-error">
+                    {{ 'tasks.overdue' | translate }}
+                  </div>
+                  <div class="text-11 text-body-3 tabular-nums">{{ t.dueLabel }}</div>
+                </div>
+                <button class="btn-icon" (click)="completeTaskQuick(t, $event)"
+                        title="{{ 'tasks.complete' | translate }}">
+                  <i class="ri-check-line"></i>
                 </button>
-                <button class="btn-icon" [routerLink]="['/clients', f.clientId]"
-                        title="{{ 'dashboard.openCustomer' | translate }}">
-                  <i class="ri-arrow-right-line"></i>
+                <button class="btn-icon" (click)="openTaskDone(t, $event)"
+                        title="{{ 'tasks.completeWithNote' | translate }}">
+                  <i class="ri-chat-check-line"></i>
+                </button>
+                <button class="btn-icon" (click)="openPostpone(t, $event)"
+                        title="{{ 'tasks.postpone' | translate }}">
+                  <i class="ri-time-line"></i>
                 </button>
               </div>
             }
 
-            @if (followUps.length === 0 && !loading) {
-              <div style="padding:40px 18px; text-align:center; color:var(--text-3);">
-                <i class="ri-checkbox-circle-line" style="font-size:32px; color:#1f8a5b;"></i>
-                <div style="margin-top:10px; font-size:14px; font-weight:500;">
-                  {{ 'dashboard.noFollowups' | translate }}
-                </div>
+            @if (dueTasks.length === 0 && !loading) {
+              <div class="py-10 px-[18px] text-center text-body-3">
+                <i class="ri-checkbox-circle-line text-success text-[32px]"></i>
+                <div class="mt-2.5 text-14 font-medium">{{ 'tasks.empty' | translate }}</div>
               </div>
             }
           }
@@ -476,46 +483,64 @@ interface ViewingRow {
 
     </div>
 
-    <!-- ── Follow-up Erledigt Popover ──────────────────────────── -->
-    @if (activeFollowUp !== null) {
-      <div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;"
-           (click)="closeFollowUpPopover()">
-        <div style="background:var(--surface);border-radius:14px;width:380px;max-width:95vw;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3);"
-             (click)="$event.stopPropagation()">
-          <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px;">Follow-up abschließen</div>
-          <div style="font-size:13px;color:var(--text-3);margin-bottom:18px;">
-            {{ activeFollowUp.customerName }} · {{ activeFollowUp.subject }}
+    <!-- ── Aufgabe erledigen + Gespräch notieren ───────────────── -->
+    @if (activeTask !== null) {
+      <div class="fixed inset-0 bg-overlay z-[300] flex items-center justify-center p-4"
+           (click)="closeTaskPopover()">
+        <div class="surface-card w-[380px] max-w-[95vw] p-6 shadow-card" (click)="$event.stopPropagation()">
+          <div class="text-15 font-bold text-body mb-0.5">{{ 'tasks.completeWithNote' | translate }}</div>
+          <div class="text-13 text-body-3 mb-4">
+            {{ activeTask.clientName || activeTask.propertyTitle }}<span *ngIf="activeTask.clientName || activeTask.propertyTitle"> · </span>{{ activeTask.title }}
           </div>
-          <div style="font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Ergebnis</div>
-          <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px;">
+          <span class="section-label">{{ 'callNotes.outcome' | translate }}</span>
+          <div class="flex flex-wrap gap-[7px] mb-4">
             @for (o of followUpOutcomeOptions; track o.value) {
               <button (click)="followUpOutcome = followUpOutcome === o.value ? null : o.value"
+                      class="px-3 py-[7px] rounded-lg border-[1.5px] cursor-pointer text-13 font-medium"
                       [style.background]="followUpOutcome === o.value ? 'color-mix(in srgb,' + o.color + ' 14%,var(--surface))' : 'var(--surface-2)'"
                       [style.border-color]="followUpOutcome === o.value ? o.color : 'var(--border)'"
-                      [style.color]="followUpOutcome === o.value ? o.color : 'var(--text-2)'"
-                      style="padding:7px 12px;border-radius:8px;border:1.5px solid;cursor:pointer;font-size:13px;font-weight:500;">
-                {{ o.label }}
+                      [style.color]="followUpOutcome === o.value ? o.color : 'var(--text-2)'">
+                {{ o.value | translateEnum:'callOutcome' }}
               </button>
             }
           </div>
-          <textarea [(ngModel)]="followUpNoteText" placeholder="Kurze Notiz zum Gespräch..." rows="2"
-                    style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;
-                           font-size:13px;color:var(--text);background:var(--surface);resize:none;
-                           box-sizing:border-box;font-family:inherit;margin-bottom:16px;outline:none;"></textarea>
-          <div style="display:flex;gap:10px;">
-            <button (click)="closeFollowUpPopover()"
-                    style="flex:1;padding:9px;border:1px solid var(--border);border-radius:8px;
-                           background:var(--surface-2);color:var(--text-2);font-size:13px;cursor:pointer;">
-              Abbrechen
+          <textarea [(ngModel)]="followUpNoteText" rows="2" class="form-input resize-none mb-4"
+                    placeholder="{{ 'tasks.description' | translate }}"></textarea>
+          <div class="form-actions form-actions--centered">
+            <button class="btn-primary" (click)="submitTaskDone()" [disabled]="isSubmittingTask">
+              <i class="ri-check-line"></i>
+              {{ 'tasks.complete' | translate }}
             </button>
-            <button (click)="submitFollowUpDone()"
-                    [disabled]="isSubmittingFollowUp"
-                    style="flex:2;padding:9px;border:none;border-radius:8px;background:var(--color-success);
-                           color:#fff;font-size:13px;font-weight:600;cursor:pointer;
-                           display:inline-flex;align-items:center;justify-content:center;gap:6px;"
-                    [style.opacity]="isSubmittingFollowUp ? '0.6' : '1'">
-              <i class="ri-check-line" *ngIf="!isSubmittingFollowUp" style="font-size:14px;"></i>
-              {{ isSubmittingFollowUp ? 'Speichern...' : 'Als erledigt speichern' }}
+            <button class="btn-secondary" (click)="closeTaskPopover()">
+              <i class="ri-close-line"></i>
+              {{ 'common.cancel' | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── Aufgabe verschieben ─────────────────────────────────── -->
+    @if (postponeTask !== null) {
+      <div class="fixed inset-0 bg-overlay z-[300] flex items-center justify-center p-4"
+           (click)="closePostpone()">
+        <div class="surface-card w-[340px] max-w-[95vw] p-6 shadow-card" (click)="$event.stopPropagation()">
+          <div class="text-15 font-bold text-body mb-0.5">{{ 'tasks.postpone' | translate }}</div>
+          <div class="text-13 text-body-3 mb-4">{{ postponeTask.title }}</div>
+          <div class="flex flex-col gap-2 mb-4">
+            <button class="btn-secondary" (click)="submitPostpone(1)">{{ 'tasks.postponeTomorrow' | translate }}</button>
+            <button class="btn-secondary" (click)="submitPostpone(7)">{{ 'tasks.postponeNextWeek' | translate }}</button>
+          </div>
+          <span class="section-label">{{ 'tasks.postponePickDate' | translate }}</span>
+          <input type="date" class="form-input mb-4" [(ngModel)]="postponeDate">
+          <div class="form-actions form-actions--centered">
+            <button class="btn-primary" (click)="submitPostponeDate()" [disabled]="!postponeDate || isPostponing">
+              <i class="ri-check-line"></i>
+              {{ 'common.save' | translate }}
+            </button>
+            <button class="btn-secondary" (click)="closePostpone()">
+              <i class="ri-close-line"></i>
+              {{ 'common.cancel' | translate }}
             </button>
           </div>
         </div>
@@ -597,27 +622,27 @@ interface ViewingRow {
 export class DashboardComponent implements OnInit, OnDestroy {
   view: 'cards' | 'pipeline' = 'cards';
 
-  /** Follow-ups zuerst: das ist die Liste, aus der Arbeit entsteht — die beiden anderen
+  /** Die Tagesliste zuerst: das ist die Liste, aus der Arbeit entsteht — die beiden anderen
    *  Reiter sind Nachschlagen, nicht Handeln. */
-  activityTab: 'followups' | 'activity' | 'stale' = 'followups';
+  activityTab: 'tasks' | 'activity' | 'stale' = 'tasks';
 
   /** color faerbt nur noch das Zaehler-Badge — die Reiter selbst tragen kein Icon. */
   readonly activityTabs = [
-    { key: 'followups' as const, labelKey: 'dashboard.openFollowups',  color: '#c07a1e' },
-    { key: 'activity'  as const, labelKey: 'dashboard.recentActivity', color: 'var(--primary)' },
-    { key: 'stale'     as const, labelKey: 'dashboard.staleClients',   color: 'var(--color-warning)' },
+    { key: 'tasks'    as const, labelKey: 'tasks.dueTitle',           color: '#c07a1e' },
+    { key: 'activity' as const, labelKey: 'dashboard.recentActivity', color: 'var(--primary)' },
+    { key: 'stale'    as const, labelKey: 'dashboard.staleClients',   color: 'var(--color-warning)' },
   ];
 
   /** Die Aktivitaetsliste bekommt bewusst keinen Zaehler: sie ist immer gefuellt und
    *  eine Zahl daneben wuerde Dringlichkeit suggerieren, wo keine ist. */
-  tabCount(key: 'followups' | 'activity' | 'stale'): number {
-    if (key === 'followups') return this.followUps.length;
+  tabCount(key: 'tasks' | 'activity' | 'stale'): number {
+    if (key === 'tasks') return this.dueTasks.length;
     if (key === 'stale') return this.staleClientRows.length;
     return 0;
   }
   loading = true;
 
-  followUps: FollowUpRow[] = [];
+  dueTasks: TaskRow[] = [];
   recentActivity: ActivityRow[] = [];
   todayViewingRows: ViewingRow[] = [];
   staleClientRows: { id: string; name: string; initials: string; daysSince: string; phone?: string }[] = [];
@@ -645,9 +670,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.rebuildPipelineCols();
   }
 
-  /** Überfällige Rückrufe — die dringendste Zahl der Aktions-Zeile. */
+  /** Überfällige Aufgaben — die dringendste Zahl der Aktions-Zeile. */
   get overdueCount(): number {
-    return this.followUps.filter(f => f.isOverdue).length;
+    return this.dueTasks.filter(t => t.isOverdue).length;
   }
 
   /** Nichts brennt: keine überfälligen Rückrufe, keine Besichtigungen heute, keine liegengebliebenen Kunden. */
@@ -678,16 +703,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
    * in einer Card mit Reitern liegen, reicht Scrollen nicht mehr — der passende Reiter
    * muss mit aufgehen, sonst landet man auf der Card und sieht die falsche Liste.
    */
-  focusActivityTab(tab: 'followups' | 'activity' | 'stale'): void {
+  focusActivityTab(tab: 'tasks' | 'activity' | 'stale'): void {
     this.activityTab = tab;
     this.focusSection('sec-activity');
   }
 
-  // Follow-up popover
-  activeFollowUp: FollowUpRow | null = null;
+  // Aufgabe erledigen mit Gespraechsnotiz
+  activeTask: TaskRow | null = null;
   followUpNoteText = '';
   followUpOutcome: CallOutcome | null = null;
-  isSubmittingFollowUp = false;
+  isSubmittingTask = false;
+
+  // Aufgabe verschieben
+  postponeTask: TaskRow | null = null;
+  postponeDate = '';
+  isPostponing = false;
 
   // Viewing status popover
   activeViewingRow: ViewingRow | null = null;
@@ -695,11 +725,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   viewingPopoverNote = '';
   isUpdatingViewing = false;
 
+  /** Beschriftet wird ueber translateEnum:'callOutcome' — hier steht nur die Signalfarbe. */
   readonly followUpOutcomeOptions = [
-    { value: CallOutcome.INTERESTED,        label: 'Interessiert',   color: 'var(--color-success)' },
-    { value: CallOutcome.SCHEDULED_VIEWING, label: 'Besichtigung',   color: 'var(--color-viewing)' },
-    { value: CallOutcome.OFFER_MADE,        label: 'Angebot gemacht', color: 'var(--color-offer)' },
-    { value: CallOutcome.NOT_INTERESTED,    label: 'Kein Interesse', color: 'var(--color-error)' },
+    { value: CallOutcome.INTERESTED,        color: 'var(--color-success)' },
+    { value: CallOutcome.SCHEDULED_VIEWING, color: 'var(--color-viewing)' },
+    { value: CallOutcome.OFFER_MADE,        color: 'var(--color-offer)' },
+    { value: CallOutcome.NOT_INTERESTED,    color: 'var(--color-error)' },
   ];
 
   todayLabel = '';
@@ -712,6 +743,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private propertyService: PropertyService,
     private callNotesService: CallNotesService,
     private viewingService: ViewingService,
+    private taskService: TaskService,
     private translate: TranslateService,
     private router: Router,
   ) {}
@@ -742,19 +774,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private loadData(): void {
     forkJoin({
       notes:          this.callNotesService.getCallNotesByAgent(0, 10).pipe(catchError(() => of({ content: [], totalElements: 0 }))),
-      followUps:      this.callNotesService.getFollowUpReminders().pipe(catchError(() => of([]))),
+      dueTasks:       this.taskService.getDue().pipe(catchError(() => of([]))),
       todayViewings:  this.viewingService.getTodaysViewings().pipe(catchError(() => of([]))),
       clientsByStage: this.clientService.getClientsByStage().pipe(catchError(() => of({}))),
       sellersByStage: this.clientService.getSellersByStage().pipe(catchError(() => of({}))),
       staleClients:   this.clientService.getClientsWithoutRecentContact(30).pipe(catchError(() => of([]))),
     })
     .pipe(takeUntil(this.destroy$))
-    .subscribe(({ notes, followUps, todayViewings, clientsByStage, sellersByStage, staleClients }) => {
+    .subscribe(({ notes, dueTasks, todayViewings, clientsByStage, sellersByStage, staleClients }) => {
       this.loading = false;
 
       this.buildTodayViewings(todayViewings as ViewingSummary[]);
       this.buildStaleClients(staleClients as any[]);
-      this.buildFollowUps(followUps as FollowUpReminder[]);
+      this.buildTaskRows(dueTasks as TaskSummary[]);
       this.buildActivity((notes as any).content ?? []);
       this.clientsByStage = clientsByStage as Record<string, any[]>;
       this.sellersByStage = sellersByStage as Record<string, any[]>;
@@ -762,31 +794,38 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  private buildFollowUps(reminders: FollowUpReminder[]): void {
+  /**
+   * Die Tagesliste kommt bereits gefiltert und sortiert vom Server (offen, faellig bis
+   * heute). Hier entstehen nur noch die Anzeigewerte — insbesondere die Ueberfaelligkeit,
+   * die sich aus dem Datum ergibt und nicht mehr aus einem Flag der Gespraechsnotiz.
+   */
+  private buildTaskRows(tasks: TaskSummary[]): void {
     const lang = this.translate.currentLang || 'de';
     const locale = lang === 'de' ? 'de-DE' : 'en-US';
+    const today = new Date().toISOString().slice(0, 10);
 
-    this.followUps = reminders.map(r => {
-      const initials = r.clientName
+    this.dueTasks = tasks.map(t => {
+      const label = t.clientName ?? t.propertyTitle ?? t.title;
+      const initials = label
         .split(' ')
         .map(p => p.charAt(0).toUpperCase())
         .slice(0, 2)
         .join('');
 
-      const due = new Date(r.followUpDate);
-      const dueLabel = due.toLocaleDateString(locale, { day: '2-digit', month: 'short' });
-
       return {
-        id: r.id,
-        clientId: r.clientId,
-        customerName: r.clientName,
-        customerInitials: initials,
-        subject: r.subject,
-        typeLabel: '',
-        dueLabel: r.isOverdue ? 'Überfällig' : dueLabel,
-        dueColor: r.isOverdue ? 'var(--color-error)' : (r.daysUntilDue <= 2 ? 'var(--color-warning)' : 'var(--color-success)'),
-        followupFmt: dueLabel,
-        isOverdue: r.isOverdue,
+        id: t.id,
+        title: t.title,
+        clientId: t.clientId,
+        clientName: t.clientName,
+        propertyId: t.propertyId,
+        propertyTitle: t.propertyTitle,
+        initials,
+        dueDate: t.dueDate,
+        dueLabel: new Date(t.dueDate).toLocaleDateString(locale, { day: '2-digit', month: 'short' }),
+        // Streng vergangen. Die Tagesliste ist per Definition "faellig bis einschliesslich
+        // heute" -- wuerde heute schon als ueberfaellig gelten, waere jede Zeile rot und
+        // die Kennzahl der Aktions-Zeile identisch mit der Listenlaenge.
+        isOverdue: t.dueDate < today,
       };
     });
   }
@@ -942,41 +981,93 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ── Follow-up popover ─────────────────────────────────────────
+  // ── Aufgaben erledigen und verschieben ────────────────────────
 
-  openFollowUpDone(followUp: FollowUpRow, event: MouseEvent): void {
+  /** Ein Klick, kein Dialog: der haeufige Fall ist "erledigt, nichts zu notieren". */
+  completeTaskQuick(task: TaskRow, event: MouseEvent): void {
     event.stopPropagation();
     event.preventDefault();
-    this.activeFollowUp = followUp;
+    this.taskService.complete(task.id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => { this.dueTasks = this.dueTasks.filter(t => t.id !== task.id); },
+    });
+  }
+
+  openTaskDone(task: TaskRow, event: MouseEvent): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.activeTask = task;
     this.followUpNoteText = '';
     this.followUpOutcome = null;
   }
 
-  closeFollowUpPopover(): void {
-    this.activeFollowUp = null;
+  closeTaskPopover(): void {
+    this.activeTask = null;
     this.followUpNoteText = '';
     this.followUpOutcome = null;
   }
 
-  submitFollowUpDone(): void {
-    if (this.isSubmittingFollowUp || !this.activeFollowUp) return;
-    this.isSubmittingFollowUp = true;
-    const note: CallNoteCreateRequest = {
-      clientId: this.activeFollowUp.clientId,
-      callDate: new Date().toISOString(),
-      callType: CallType.PHONE_OUTBOUND,
-      subject: 'Follow-up: ' + this.activeFollowUp.subject,
-      notes: this.followUpNoteText || 'Erledigt',
+  /**
+   * Erledigen mit Gespraechsergebnis. Die Notiz entsteht serverseitig in derselben
+   * Transaktion — das Frontend legt sie nicht mehr selbst an.
+   */
+  submitTaskDone(): void {
+    if (this.isSubmittingTask || !this.activeTask) return;
+    this.isSubmittingTask = true;
+    const id = this.activeTask.id;
+    this.taskService.complete(id, {
       outcome: this.followUpOutcome ?? undefined,
-      followUpRequired: false,
-    };
-    this.callNotesService.createCallNote(note).pipe(takeUntil(this.destroy$)).subscribe({
+      note: this.followUpNoteText || undefined,
+    }).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
-        this.isSubmittingFollowUp = false;
-        this.closeFollowUpPopover();
+        this.isSubmittingTask = false;
+        this.closeTaskPopover();
+        this.dueTasks = this.dueTasks.filter(t => t.id !== id);
         this.loadData();
       },
-      error: () => { this.isSubmittingFollowUp = false; }
+      error: () => { this.isSubmittingTask = false; }
+    });
+  }
+
+  openPostpone(task: TaskRow, event: MouseEvent): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.postponeTask = task;
+    this.postponeDate = '';
+  }
+
+  closePostpone(): void {
+    this.postponeTask = null;
+    this.postponeDate = '';
+  }
+
+  submitPostpone(days: number): void {
+    const target = new Date();
+    target.setDate(target.getDate() + days);
+    this.persistPostpone(target.toISOString().slice(0, 10));
+  }
+
+  submitPostponeDate(): void {
+    if (!this.postponeDate) return;
+    this.persistPostpone(this.postponeDate);
+  }
+
+  private persistPostpone(dueDate: string): void {
+    if (this.isPostponing || !this.postponeTask) return;
+    this.isPostponing = true;
+    const id = this.postponeTask.id;
+    this.taskService.postpone(id, dueDate).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.isPostponing = false;
+        this.closePostpone();
+        // Verlaesst die Tagesliste nur, wenn das neue Datum in der Zukunft liegt --
+        // "auf heute verschoben" bleibt Arbeit fuer heute.
+        if (dueDate > new Date().toISOString().slice(0, 10)) {
+          this.dueTasks = this.dueTasks.filter(t => t.id !== id);
+        } else {
+          this.loadData();
+        }
+      },
+      error: () => { this.isPostponing = false; }
     });
   }
 

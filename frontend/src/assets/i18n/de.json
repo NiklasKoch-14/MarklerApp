@@ -280,11 +280,9 @@
     "showClosedStages": "Gewonnen/Verloren anzeigen",
     "pipelineBuyers": "Käufer",
     "pipelineSellers": "Akquise",
-    "openFollowups": "Offene Nachfassaktionen",
     "recentActivity": "Letzte Aktivität",
     "markDone": "Als erledigt markieren",
     "openCustomer": "Kunde öffnen",
-    "noFollowups": "Keine offenen Nachfassaktionen!",
     "noActivity": "Noch keine Aktivität",
     "allClearTitle": "Alles im Griff",
     "allClearMessage": "Keine überfälligen Rückrufe und keine Besichtigungen heute.",
@@ -1636,5 +1634,25 @@
     "cascade": {
       "cancelViewings": "Beim Speichern werden {{count}} Termine abgesagt."
     }
+  },
+  "tasks": {
+    "dueTitle": "Heute zu tun",
+    "empty": "Nichts offen — alles erledigt.",
+    "add": "Aufgabe",
+    "title": "Titel",
+    "description": "Notiz",
+    "dueDate": "Fällig am",
+    "overdue": "Überfällig",
+    "overdueTile": "Aufgaben überfällig",
+    "complete": "Erledigt",
+    "completeWithNote": "Erledigt + Gespräch notieren",
+    "postpone": "Verschieben",
+    "postponeTomorrow": "Morgen",
+    "postponeNextWeek": "Nächste Woche",
+    "postponePickDate": "Datum wählen",
+    "linkedClient": "Kunde",
+    "linkedProperty": "Objekt",
+    "openCount": "{{count}} offen",
+    "sectionTitle": "Aufgaben"
   }
 }

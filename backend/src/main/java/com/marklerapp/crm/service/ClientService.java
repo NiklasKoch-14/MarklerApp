@@ -18,6 +18,7 @@ import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.FileAttachmentRepository;
 import com.marklerapp.crm.repository.PropertyRepository;
 import com.marklerapp.crm.repository.PropertySearchCriteriaRepository;
+import com.marklerapp.crm.repository.TaskRepository;
 import com.marklerapp.crm.repository.ViewingRepository;
 import com.marklerapp.crm.util.CsvParseUtil;
 import com.marklerapp.crm.util.DuplicateMatchUtil;
@@ -63,6 +64,7 @@ public class ClientService {
     private final FileAttachmentRepository fileAttachmentRepository;
     private final ClientDeletionAuditService clientDeletionAuditService;
     private final PropertyRepository propertyRepository;
+    private final TaskRepository taskRepository;
 
     /**
      * Get all clients for an agent with pagination
@@ -376,10 +378,12 @@ public class ClientService {
         int callNotesCount = (int) callNoteRepository.countByClient(client);
         int viewingsCount = (int) viewingRepository.countByClient(client);
         int fileAttachmentsCount = (int) fileAttachmentRepository.countByClient(client);
+        int tasksCount = (int) taskRepository.countByClient(client);
         boolean hadSearchCriteria = client.getSearchCriteria() != null;
 
         clientDeletionAuditService.logDeletion(
-            client, client.getAgent(), callNotesCount, viewingsCount, fileAttachmentsCount, hadSearchCriteria
+            client, client.getAgent(), callNotesCount, viewingsCount,
+            fileAttachmentsCount, tasksCount, hadSearchCriteria
         );
 
         // Delete associated search criteria

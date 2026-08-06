@@ -13,6 +13,7 @@ import com.marklerapp.crm.repository.AgentRepository;
 import com.marklerapp.crm.repository.CallNoteRepository;
 import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.PropertyRepository;
+import com.marklerapp.crm.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -42,6 +43,7 @@ public class DashboardAnalyticsService {
     private final ClientRepository clientRepository;
     private final PropertyRepository propertyRepository;
     private final CallNoteRepository callNoteRepository;
+    private final TaskRepository taskRepository;
 
     /**
      * Generate complete dashboard analytics for an agent.
@@ -68,7 +70,7 @@ public class DashboardAnalyticsService {
         return DashboardAnalyticsDto.builder()
                 .conversionFunnel(calculateConversionFunnel(clients, callNotes))
                 .sellerPipeline(calculateSellerPipeline(clients))
-                .pipelineHealth(calculatePipelineHealth(clients, callNotes))
+                .pipelineHealth(calculatePipelineHealth(agent, clients, callNotes))
                 .propertyPortfolio(calculatePropertyPortfolio(properties))
                 .activityTrends(calculateActivityTrends(clients, callNotes, properties))
                 .revenue(calculateRevenue(properties))
@@ -223,25 +225,21 @@ public class DashboardAnalyticsService {
     // Pipeline Health Calculation
     // ========================================
 
-    private PipelineHealthDto calculatePipelineHealth(List<Client> clients, List<CallNote> callNotes) {
+    private PipelineHealthDto calculatePipelineHealth(Agent agent, List<Client> clients, List<CallNote> callNotes) {
         LocalDateTime now = LocalDateTime.now();
         LocalDate today = LocalDate.now();
 
         Map<String, Long> clientsByOutcome = latestOutcomeByClient(callNotes).values().stream()
                 .collect(Collectors.groupingBy(Enum::name, Collectors.counting()));
 
-        List<CallNote> openFollowUps = callNotes.stream()
-                .filter(n -> Boolean.TRUE.equals(n.getFollowUpRequired()))
-                .filter(n -> n.getFollowUpDate() != null)
-                .toList();
-
-        // "Überfällig" schließt heute mit ein — konsistent mit CallNoteService.
+        // Aufgaben sind die Quelle, nicht mehr die Notiz-Follow-up-Felder (#33): eine erledigte
+        // Aufgabe mit vergangenem Datum darf hier nicht mehr als ueberfaellig auftauchen, und
+        // TaskRepository.countOverdue schliesst DONE ueber den Status-Filter aus.
+        // "Überfällig" schließt heute mit ein — konsistent mit der Tagesliste.
         // Die Wochen-Buckets starten deshalb erst morgen, sonst zählt heute doppelt.
-        long overdueFollowUps = openFollowUps.stream()
-                .filter(n -> !n.getFollowUpDate().isAfter(today))
-                .count();
-        long followUpsDueThisWeek = countFollowUpsBetween(openFollowUps, today.plusDays(1), today.plusWeeks(1));
-        long followUpsDueNextWeek = countFollowUpsBetween(openFollowUps, today.plusWeeks(1), today.plusWeeks(2));
+        long overdueFollowUps = taskRepository.countOverdue(agent, today);
+        long followUpsDueThisWeek = taskRepository.countDueBetween(agent, today.plusDays(1), today.plusWeeks(1));
+        long followUpsDueNextWeek = taskRepository.countDueBetween(agent, today.plusWeeks(1), today.plusWeeks(2));
 
         Map<UUID, LocalDateTime> lastContact = new HashMap<>();
         for (CallNote note : callNotes) {
@@ -276,13 +274,6 @@ public class DashboardAnalyticsService {
                 .averageDaysSinceLastContact(averageDays)
                 .clientsWithContact((long) daysSinceContact.size())
                 .build();
-    }
-
-    private long countFollowUpsBetween(List<CallNote> followUps, LocalDate fromInclusive, LocalDate toExclusive) {
-        return followUps.stream()
-                .filter(n -> !n.getFollowUpDate().isBefore(fromInclusive))
-                .filter(n -> n.getFollowUpDate().isBefore(toExclusive))
-                .count();
     }
 
     // ========================================

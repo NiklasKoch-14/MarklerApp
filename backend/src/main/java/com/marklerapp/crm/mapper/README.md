@@ -67,9 +67,7 @@ PropertySearchCriteriaDto dto = searchCriteriaMapper.toDto(criteria);
 **Key Features**:
 - **Response DTO**: Full detailed view with agent name, client name, property title/address
 - **Summary DTO**: List view with truncated notes preview (150 chars)
-- **FollowUpReminder DTO**: Simplified view with overdue calculations
 - Computes property address from property entity
-- Calculates days until follow-up due (positive=future, negative=overdue)
 
 **Usage**:
 ```java
@@ -78,7 +76,6 @@ private CallNoteMapper callNoteMapper;
 
 CallNoteDto.Response response = callNoteMapper.toResponse(callNote);
 CallNoteDto.Summary summary = callNoteMapper.toSummary(callNote);
-CallNoteDto.FollowUpReminder reminder = callNoteMapper.toFollowUpReminder(callNote);
 ```
 
 ### 5. PropertyImageMapper

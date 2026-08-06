@@ -11,7 +11,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -69,28 +68,6 @@ public interface CallNoteRepository extends JpaRepository<CallNote, UUID> {
            "WHERE cn.agent = :agent AND cn.client = :client " +
            "ORDER BY cn.callDate DESC")
     List<CallNote> findByAgentAndClientOrderByCallDateDesc(@Param("agent") Agent agent, @Param("client") Client client);
-
-    /**
-     * Find call notes that require follow-up
-     * Uses JOIN FETCH to prevent N+1 query problem
-     */
-    @Query("SELECT cn FROM CallNote cn " +
-           "LEFT JOIN FETCH cn.agent " +
-           "LEFT JOIN FETCH cn.client " +
-           "LEFT JOIN FETCH cn.property " +
-           "WHERE cn.followUpRequired = true AND cn.followUpDate IS NOT NULL")
-    List<CallNote> findCallNotesRequiringFollowUp();
-
-    /**
-     * Find call notes with follow-up date before or equal to a specific date
-     * Uses JOIN FETCH to prevent N+1 query problem
-     */
-    @Query("SELECT cn FROM CallNote cn " +
-           "LEFT JOIN FETCH cn.agent " +
-           "LEFT JOIN FETCH cn.client " +
-           "LEFT JOIN FETCH cn.property " +
-           "WHERE cn.followUpRequired = true AND cn.followUpDate <= :date")
-    List<CallNote> findOverdueFollowUps(@Param("date") LocalDate date);
 
     /**
      * Find call notes within a date range for a specific client

@@ -280,11 +280,9 @@
     "showClosedStages": "Show won/lost",
     "pipelineBuyers": "Buyers",
     "pipelineSellers": "Acquisition",
-    "openFollowups": "Open Follow-ups",
     "recentActivity": "Recent Activity",
     "markDone": "Mark as done",
     "openCustomer": "Open client",
-    "noFollowups": "No open follow-ups!",
     "noActivity": "No activity yet",
     "allClearTitle": "All clear",
     "allClearMessage": "No overdue callbacks and no viewings today.",
@@ -1636,5 +1634,25 @@
     "cascade": {
       "cancelViewings": "Saving will cancel {{count}} viewings."
     }
+  },
+  "tasks": {
+    "dueTitle": "To do today",
+    "empty": "Nothing open — all clear.",
+    "add": "Task",
+    "title": "Title",
+    "description": "Note",
+    "dueDate": "Due",
+    "overdue": "Overdue",
+    "overdueTile": "Tasks overdue",
+    "complete": "Done",
+    "completeWithNote": "Done + log call",
+    "postpone": "Postpone",
+    "postponeTomorrow": "Tomorrow",
+    "postponeNextWeek": "Next week",
+    "postponePickDate": "Pick a date",
+    "linkedClient": "Client",
+    "linkedProperty": "Property",
+    "openCount": "{{count}} open",
+    "sectionTitle": "Tasks"
   }
 }

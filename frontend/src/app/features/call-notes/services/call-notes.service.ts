@@ -91,16 +91,6 @@ export interface BulkSummary {
   lastOutcome?: CallOutcome;
 }
 
-export interface FollowUpReminder {
-  id: string;
-  clientId: string;
-  clientName: string;
-  subject: string;
-  followUpDate: string;
-  isOverdue: boolean;
-  daysUntilDue: number;
-}
-
 export interface VoiceNoteDraft {
   subject?: string;
   notes?: string;
@@ -238,24 +228,6 @@ export class CallNotesService {
       .set('size', size.toString());
 
     return this.http.post<PagedResponse<CallNoteSummary>>(`${this.apiUrl}/search`, filter, { params }).pipe(
-      catchError(err => this.errorHandler.handleError(err))
-    );
-  }
-
-  /**
-   * Get follow-up reminders
-   */
-  getFollowUpReminders(): Observable<FollowUpReminder[]> {
-    return this.http.get<FollowUpReminder[]>(`${this.apiUrl}/follow-ups`).pipe(
-      catchError(err => this.errorHandler.handleError(err))
-    );
-  }
-
-  /**
-   * Get overdue follow-ups
-   */
-  getOverdueFollowUps(): Observable<FollowUpReminder[]> {
-    return this.http.get<FollowUpReminder[]>(`${this.apiUrl}/follow-ups/overdue`).pipe(
       catchError(err => this.errorHandler.handleError(err))
     );
   }
