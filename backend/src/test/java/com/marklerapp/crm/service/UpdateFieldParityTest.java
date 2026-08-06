@@ -13,6 +13,7 @@ import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.FileAttachmentRepository;
 import com.marklerapp.crm.repository.PropertyRepository;
 import com.marklerapp.crm.repository.PropertySearchCriteriaRepository;
+import com.marklerapp.crm.repository.TaskRepository;
 import com.marklerapp.crm.repository.ViewingRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -74,6 +75,8 @@ class UpdateFieldParityTest {
     private ClientDeletionAuditService clientDeletionAuditService;
     @Mock
     private PropertyRepository propertyRepository;
+    @Mock
+    private TaskRepository taskRepository;
 
     // ========================================
     // PropertyService.updatePropertyFields
@@ -106,7 +109,8 @@ class UpdateFieldParityTest {
         ClientService clientService = new ClientService(
             clientRepository, agentRepository, searchCriteriaRepository, callNoteRepository,
             clientMapper, new PropertySearchCriteriaMapperImpl(), new OwnershipValidator(),
-            viewingRepository, fileAttachmentRepository, clientDeletionAuditService, propertyRepository);
+            viewingRepository, fileAttachmentRepository, clientDeletionAuditService, propertyRepository,
+            taskRepository);
 
         UUID agentId = UUID.randomUUID();
         UUID clientId = UUID.randomUUID();
