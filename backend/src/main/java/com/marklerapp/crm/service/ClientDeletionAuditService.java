@@ -36,6 +36,7 @@ public class ClientDeletionAuditService {
                              int deletedCallNotesCount,
                              int deletedViewingsCount,
                              int deletedFileAttachmentsCount,
+                             int deletedTasksCount,
                              boolean hadSearchCriteria) {
         String ipAddress = null;
         String userAgent = null;
@@ -63,13 +64,15 @@ public class ClientDeletionAuditService {
                 .deletedCallNotesCount(deletedCallNotesCount)
                 .deletedViewingsCount(deletedViewingsCount)
                 .deletedFileAttachmentsCount(deletedFileAttachmentsCount)
+                .deletedTasksCount(deletedTasksCount)
                 .hadSearchCriteria(hadSearchCriteria)
                 .build();
 
         auditLogRepository.save(auditLog);
 
-        log.info("Client deletion audit log created: Client={}, Agent={}, CallNotes={}, Viewings={}, FileAttachments={}",
-                client.getId(), agent.getId(), deletedCallNotesCount, deletedViewingsCount, deletedFileAttachmentsCount);
+        log.info("Client deletion audit log created: Client={}, Agent={}, CallNotes={}, Viewings={}, FileAttachments={}, Tasks={}",
+                client.getId(), agent.getId(), deletedCallNotesCount, deletedViewingsCount,
+                deletedFileAttachmentsCount, deletedTasksCount);
     }
 
     private String extractIpAddress(HttpServletRequest request) {

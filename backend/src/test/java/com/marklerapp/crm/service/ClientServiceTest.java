@@ -15,6 +15,7 @@ import com.marklerapp.crm.repository.ClientRepository;
 import com.marklerapp.crm.repository.FileAttachmentRepository;
 import com.marklerapp.crm.repository.PropertyRepository;
 import com.marklerapp.crm.repository.PropertySearchCriteriaRepository;
+import com.marklerapp.crm.repository.TaskRepository;
 import com.marklerapp.crm.repository.ViewingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -76,6 +77,9 @@ class ClientServiceTest {
     @Mock
     private PropertyRepository propertyRepository;
 
+    @Mock
+    private TaskRepository taskRepository;
+
     private OwnershipValidator ownershipValidator;
 
     private ClientService clientService;
@@ -104,7 +108,8 @@ class ClientServiceTest {
             viewingRepository,
             fileAttachmentRepository,
             clientDeletionAuditService,
-            propertyRepository
+            propertyRepository,
+            taskRepository
         );
 
         testAgent = Agent.builder()
@@ -600,16 +605,18 @@ class ClientServiceTest {
         when(callNoteRepository.countByClient(testClient)).thenReturn(3L);
         when(viewingRepository.countByClient(testClient)).thenReturn(2L);
         when(fileAttachmentRepository.countByClient(testClient)).thenReturn(1L);
+        when(taskRepository.countByClient(testClient)).thenReturn(5L);
 
         // When
         clientService.deleteClient(clientId, agentId);
 
         // Then — audit log written with the correct snapshot, before the client row is gone
         verify(clientDeletionAuditService).logDeletion(
-            testClient, testAgent, 3, 2, 1, false
+            testClient, testAgent, 3, 2, 1, 5, false
         );
         InOrder inOrder = inOrder(clientDeletionAuditService, clientRepository);
-        inOrder.verify(clientDeletionAuditService).logDeletion(any(), any(), anyInt(), anyInt(), anyInt(), anyBoolean());
+        inOrder.verify(clientDeletionAuditService)
+            .logDeletion(any(), any(), anyInt(), anyInt(), anyInt(), anyInt(), anyBoolean());
         inOrder.verify(clientRepository).delete(testClient);
     }
 
@@ -618,7 +625,8 @@ class ClientServiceTest {
         // Given
         when(clientRepository.findById(clientId)).thenReturn(Optional.of(testClient));
         doThrow(new RuntimeException("audit db unavailable"))
-            .when(clientDeletionAuditService).logDeletion(any(), any(), anyInt(), anyInt(), anyInt(), anyBoolean());
+            .when(clientDeletionAuditService)
+            .logDeletion(any(), any(), anyInt(), anyInt(), anyInt(), anyInt(), anyBoolean());
 
         // When & Then — a client must never be deleted without a corresponding audit record
         assertThatThrownBy(() -> clientService.deleteClient(clientId, agentId))

@@ -44,7 +44,7 @@ class ClientDeletionAuditServiceTest {
         client.setId(UUID.randomUUID());
 
         // When
-        auditService.logDeletion(client, agent, 4, 2, 1, true);
+        auditService.logDeletion(client, agent, 4, 2, 1, 3, true);
 
         // Then
         ArgumentCaptor<ClientDeletionAuditLog> captor = ArgumentCaptor.forClass(ClientDeletionAuditLog.class);
@@ -58,6 +58,7 @@ class ClientDeletionAuditServiceTest {
         assertThat(saved.getDeletedCallNotesCount()).isEqualTo(4);
         assertThat(saved.getDeletedViewingsCount()).isEqualTo(2);
         assertThat(saved.getDeletedFileAttachmentsCount()).isEqualTo(1);
+        assertThat(saved.getDeletedTasksCount()).isEqualTo(3);
         assertThat(saved.getHadSearchCriteria()).isTrue();
         assertThat(saved.getDeletionTimestamp()).isNotNull();
     }
