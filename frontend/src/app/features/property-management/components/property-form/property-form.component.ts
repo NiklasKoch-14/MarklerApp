@@ -15,7 +15,6 @@ import {
 
 import { PropertyImageUploadComponent } from '../property-image-upload/property-image-upload.component';
 import { PropertyExposeComponent } from '../property-expose/property-expose.component';
-import { PropertyImageDto } from '../../models/property-image.model';
 import { PropertyOwner } from '../../services/property.service';
 import { PropertyOwnerPickerComponent } from '../property-owner-picker/property-owner-picker.component';
 import { GeocodingService } from '../../../../shared/services/geocoding.service';

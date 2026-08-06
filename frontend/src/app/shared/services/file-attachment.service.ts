@@ -1,12 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpEvent, HttpRequest, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpEvent, HttpRequest } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
   FileAttachmentDto,
-  FileAttachmentUploadDto,
-  FileAttachmentEntityType
+  FileAttachmentUploadDto
 } from '../models/file-attachment.model';
 import { ErrorHandlerService } from '../../core/services/error-handler.service';
 

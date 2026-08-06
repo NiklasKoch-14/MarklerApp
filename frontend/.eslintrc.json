@@ -1,0 +1,68 @@
+{
+  "root": true,
+  "ignorePatterns": ["projects/**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts"],
+      "parserOptions": {
+        // Beide tsconfigs, sonst faellt jede .spec.ts als "nicht im Programm" heraus.
+        "project": ["tsconfig.app.json", "tsconfig.spec.json"],
+        "createDefaultProgram": false
+      },
+      "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@angular-eslint/recommended",
+        // Wesentlich fuer dieses Projekt: fast alle Templates stehen inline in der
+        // Komponente. Ohne diese Zeile wuerde keine einzige Template-Regel greifen.
+        "plugin:@angular-eslint/template/process-inline-templates"
+      ],
+      "rules": {
+        "@angular-eslint/directive-selector": [
+          "error",
+          { "type": "attribute", "prefix": "app", "style": "camelCase" }
+        ],
+        "@angular-eslint/component-selector": [
+          "error",
+          { "type": "element", "prefix": "app", "style": "kebab-case" }
+        ],
+        // Der Unterstrich ist im Bestand die etablierte Markierung fuer "absichtlich
+        // ungenutzt" (Signatur erfuellen, Feld beim Destructuring wegwerfen).
+        "@typescript-eslint/no-unused-vars": [
+          "error",
+          {
+            "argsIgnorePattern": "^_",
+            "varsIgnorePattern": "^_",
+            "caughtErrorsIgnorePattern": "^_",
+            "ignoreRestSiblings": true
+          }
+        ],
+        // Bewusst "warn", nicht aus: 52 Vorkommen im Bestand, ueberwiegend an
+        // Backend-Rohdaten (Dashboard-Pipelines, Kartenmarker). Sie einzeln zu typisieren
+        // ist eigene Arbeit (#54) -- bis dahin soll der Bestand die Pipeline nicht rot
+        // faerben, neue Faelle aber sichtbar bleiben.
+        "@typescript-eslint/no-explicit-any": "warn"
+      }
+    },
+    {
+      "files": ["*.html"],
+      "extends": [
+        "plugin:@angular-eslint/template/recommended",
+        "plugin:@angular-eslint/template/accessibility"
+      ],
+      "rules": {
+        // `x != null` prueft absichtlich auf null UND undefined. `!==` waere hier keine
+        // Stilfrage, sondern eine Verhaltensaenderung: undefined liefe dann durch.
+        "@angular-eslint/template/eqeqeq": ["error", { "allowNullOrUndefined": true }],
+
+        // Die drei Barrierefreiheits-Regeln stehen auf "warn", weil der Bestand 151 Treffer
+        // hat -- durchweg klickbare <div>s ohne Tastaturweg und Labels ohne for-Bezug.
+        // Das ist echte Arbeit an echten Maengeln, aber sie gehoert in einen eigenen PR
+        // (#55) und nicht in die Einfuehrung des Gates. Sichtbar bleiben sie so trotzdem.
+        "@angular-eslint/template/label-has-associated-control": "warn",
+        "@angular-eslint/template/click-events-have-key-events": "warn",
+        "@angular-eslint/template/interactive-supports-focus": "warn"
+      }
+    }
+  ]
+}
