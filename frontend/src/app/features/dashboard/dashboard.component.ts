@@ -94,7 +94,7 @@ interface ViewingRow {
                          box-shadow:var(--shadow); transition:transform .1s;"
                   [style.background]="overdueCount > 0 ? 'var(--color-error-soft)' : 'var(--surface)'"
                   [style.border]="overdueCount > 0 ? '1px solid var(--color-error)' : '1px solid var(--border)'">
-            <i class="ri-phone-fill" style="font-size:23px;"
+            <i class="ri-list-check-2 text-[23px]"
                [style.color]="overdueCount > 0 ? 'var(--color-error)' : 'var(--text-3)'"></i>
             <div>
               <div style="font-size:23px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums;"
@@ -280,9 +280,11 @@ interface ViewingRow {
                     }
                   </div>
                 </div>
+                <!-- Die Faelligkeit steht einmal. "Ueberfaellig" kommt als Marke darueber,
+                     nicht als Ersatz — sonst verliert die Zeile das Datum, das sie erklaert. -->
                 <div class="text-right shrink-0">
-                  <div class="text-12 font-bold" [class.text-error]="t.isOverdue" [class.text-body-2]="!t.isOverdue">
-                    {{ t.isOverdue ? ('tasks.overdue' | translate) : t.dueLabel }}
+                  <div *ngIf="t.isOverdue" class="text-12 font-bold text-error">
+                    {{ 'tasks.overdue' | translate }}
                   </div>
                   <div class="text-11 text-body-3 tabular-nums">{{ t.dueLabel }}</div>
                 </div>

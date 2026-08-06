@@ -20,12 +20,19 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
          + "AND t.dueDate <= :until ORDER BY t.dueDate ASC")
     List<Task> findDue(@Param("agent") Agent agent, @Param("until") LocalDate until);
 
+    /**
+     * Offene zuerst, erledigte darunter. Die Reihenfolge kommt aus einem CASE, nicht aus
+     * dem Enum-Namen: {@code @Enumerated(STRING)} legt 'DONE' und 'OPEN' als Text ab, und
+     * alphabetisch stuende das Erledigte oben -- genau verkehrt herum.
+     */
     @Query("SELECT t FROM Task t LEFT JOIN FETCH t.property WHERE t.client.id = :clientId "
-         + "ORDER BY t.status ASC, t.dueDate ASC")
+         + "ORDER BY CASE WHEN t.status = com.marklerapp.crm.entity.Task$TaskStatus.OPEN "
+         + "THEN 0 ELSE 1 END ASC, t.dueDate ASC")
     List<Task> findByClientId(@Param("clientId") UUID clientId);
 
     @Query("SELECT t FROM Task t LEFT JOIN FETCH t.client WHERE t.property.id = :propertyId "
-         + "ORDER BY t.status ASC, t.dueDate ASC")
+         + "ORDER BY CASE WHEN t.status = com.marklerapp.crm.entity.Task$TaskStatus.OPEN "
+         + "THEN 0 ELSE 1 END ASC, t.dueDate ASC")
     List<Task> findByPropertyId(@Param("propertyId") UUID propertyId);
 
     /** Die aus einer Notiz gespiegelte, noch offene Aufgabe -- hoechstens eine. */
