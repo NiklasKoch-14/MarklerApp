@@ -7,6 +7,7 @@ import { ViewingService, ViewingResponse, ViewingFeedback } from '../../services
 import { ClientService, Client, PipelineStage } from '../../../client-management/services/client.service';
 import { PropertyService, Property, ListingType } from '../../../property-management/services/property.service';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { ErrorHandlerService } from '../../../../core/services/error-handler.service';
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
@@ -403,7 +404,8 @@ export class ViewingAddDialogComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private viewingService: ViewingService,
     private clientService: ClientService,
-    private propertyService: PropertyService
+    private propertyService: PropertyService,
+    private errorHandler: ErrorHandlerService
   ) {}
 
   ngOnInit(): void {
@@ -674,9 +676,13 @@ export class ViewingAddDialogComponent implements OnInit, OnDestroy {
         this.isSubmitting = false;
         this.viewingCreated.emit(viewing);
       },
+      // getUserMessage statt err.error.message: der ErrorHandlerService liefert bereits
+      // einen ProcessedError mit uebersetzter Meldung -- und mit '' fuer einen abgelehnten
+      // Workflow-Hinweis (409 WORKFLOW_WARNING). Der Makler hat dort nur "Abbrechen"
+      // geklickt; ein Fehlerbanner waere falsch.
       error: (err) => {
         this.isSubmitting = false;
-        this.errorMessage = err?.error?.message || 'Fehler beim Speichern der Besichtigung';
+        this.errorMessage = this.errorHandler.getUserMessage(err);
       }
     });
   }
