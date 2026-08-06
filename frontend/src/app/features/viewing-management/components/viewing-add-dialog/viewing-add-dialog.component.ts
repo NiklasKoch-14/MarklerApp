@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil, of } from 'rxjs';
@@ -85,9 +85,9 @@ import { TranslateModule } from '@ngx-translate/core';
             <div style="padding:14px 20px;border-bottom:1px solid var(--border);">
               <div style="position:relative;">
                 <i class="ri-search-line" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:15px;"></i>
-                <input type="text" [(ngModel)]="propertyPickerSearch" (input)="onPropertyPickerSearch()"
+                <input type="text" #propertyPickerInput
+                       [(ngModel)]="propertyPickerSearch" (input)="onPropertyPickerSearch()"
                        placeholder="Titel, Ort oder Typ suchen..."
-                       autofocus
                        style="width:100%;padding:9px 14px 9px 36px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--surface-2);color:var(--text-1);outline:none;box-sizing:border-box;">
                 <div *ngIf="searchingProperties" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);">
                   <app-loading-spinner size="xs" [centered]="false"></app-loading-spinner>
@@ -325,7 +325,7 @@ import { TranslateModule } from '@ngx-translate/core';
     <!-- ══ DIALOG MODE ══════════════════════════════════════════════ -->
     <ng-container *ngIf="!inline">
       <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;"
-           (click)="onBackdropClick($event)">
+           (click)="onBackdropClick()">
         <div style="background:var(--surface);border-radius:12px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);"
              (click)="$event.stopPropagation()">
           <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
@@ -380,6 +380,7 @@ export class ViewingAddDialogComponent implements OnInit, OnDestroy {
 
   // Property picker dialog state
   showPropertyPicker = false;
+  @ViewChild('propertyPickerInput') propertyPickerInput?: ElementRef<HTMLInputElement>;
   propertyPickerSearch = '';
   pickerPropertyList: Property[] = [];
   allProperties: Property[] = [];
@@ -507,6 +508,10 @@ export class ViewingAddDialogComponent implements OnInit, OnDestroy {
     this.propertyPickerSearch = '';
     this.pickerPropertyList = this.allProperties;
     this.showPropertyPicker = true;
+    // Fokus programmatisch statt ueber das autofocus-Attribut: das Attribut zieht den
+    // Fokus schon beim Rendern und desorientiert Screenreader-Nutzer. Im Dialog ist der
+    // Sprung ins Suchfeld dagegen erwuenscht -- nur eben erst, wenn er offen ist.
+    setTimeout(() => this.propertyPickerInput?.nativeElement.focus());
   }
 
   closePropertyPicker(): void {
@@ -685,7 +690,7 @@ export class ViewingAddDialogComponent implements OnInit, OnDestroy {
     this.cancelled.emit();
   }
 
-  onBackdropClick(event: MouseEvent): void {
+  onBackdropClick(): void {
     this.cancel();
   }
 }

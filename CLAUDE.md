@@ -49,19 +49,30 @@ npx playwright install chromium webkit      # einmalig
 sudo npx playwright install-deps webkit     # Systembibliotheken für Mobile Safari
 ```
 
-### `npm run lint` funktioniert nicht
-
-`ng lint` bricht mit *"No ESLint configuration found"* ab. Der `@angular-eslint`-Builder ist
-installiert und in `angular.json` verdrahtet, aber es existiert **nirgends im Repo** eine
-`.eslintrc*` oder `eslint.config.*`. Reproduzierbar auf `main`.
-
-Ersatzprüfung, bis das behoben ist:
+### Lint — grün heißt „keine Fehler", nicht „keine Befunde"
 
 ```bash
-cd frontend && npx tsc --noEmit
+cd frontend && npm run lint
 ```
 
-Behaupte nie „Lint ist grün" — der Befehl bricht ab, bevor er irgendetwas prüft.
+Läuft seit #49 gegen `frontend/.eslintrc.json` und liefert einen echten Exit-Code. Zwei Dinge
+sind beim Lesen der Ausgabe wichtig:
+
+**Der Bestand erzeugt rund 200 Warnungen, und das ist Absicht.** Vier Regeln stehen auf `warn`
+statt `error`, weil sie am Bestand zusammen 203-mal anschlagen und das Gate sonst von Tag eins
+an rot gewesen wäre — 151 Barrierefreiheits-Befunde (#55) und 52 `any` (#54). Die Begründung
+steht als Kommentar an jeder Regel in der Konfiguration. Wer eine dieser Regeln abräumt, hebt
+sie am Ende auf `error`. **Neue Warnungen dieser Art sind trotzdem Befunde** — die Zahl soll
+sinken, nicht steigen.
+
+**Lint ersetzt den Build nicht.** ESLint prüft keine Angular-Template-Typen. Ein `(click)="f($event)"`
+gegen ein `f()` ohne Parameter fällt weder ESLint noch `tsc --noEmit` auf, sondern erst hier:
+
+```bash
+cd frontend && npx ng build --configuration production
+```
+
+Vor einem PR laufen beide.
 
 ---
 
@@ -265,6 +276,8 @@ Tokens in der DB; der Versand ist ein späteres kostenpflichtiges Feature.
 ## Quality Gates
 
 - Backend kompiliert und startet fehlerfrei; die volle Suite ist grün
+- Frontend: `npm run lint` ohne Fehler, `ng build --configuration production` fehlerfrei,
+  `ng test` grün
 - Keine hartcodierten UI-Strings; `de.json` und `en.json` gemeinsam gepflegt
 - Migrationen PostgreSQL-tauglich (gültige Hex-UUIDs, keine SQLite-Syntax), gegen den
   Docker-Stack getestet — nicht gegen `dev`

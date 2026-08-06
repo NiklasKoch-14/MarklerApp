@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { PropertyService, Property, PagedResponse, PropertySearchFilter, PropertyType, ListingType, PropertyStatus } from '../../services/property.service';
 import { TranslateEnumPipe } from '../../../../shared/pipes/translate-enum.pipe';
@@ -312,7 +312,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
     }
   `]
 })
-export class PropertySearchComponent implements OnInit {
+export class PropertySearchComponent {
   searchForm: FormGroup;
   properties: Property[] = [];
   isLoading = false;
@@ -353,10 +353,6 @@ export class PropertySearchComponent implements OnInit {
       hasParking: [false],
       petsAllowed: [false]
     });
-  }
-
-  ngOnInit(): void {
-    // Component initialization
   }
 
   onSearch(): void {
@@ -468,7 +464,7 @@ export class PropertySearchComponent implements OnInit {
     const pages: number[] = [];
     const maxPagesToShow = 5;
     let startPage = Math.max(0, this.currentPage - Math.floor(maxPagesToShow / 2));
-    let endPage = Math.min(this.totalPages - 1, startPage + maxPagesToShow - 1);
+    const endPage = Math.min(this.totalPages - 1, startPage + maxPagesToShow - 1);
 
     if (endPage - startPage < maxPagesToShow - 1) {
       startPage = Math.max(0, endPage - maxPagesToShow + 1);

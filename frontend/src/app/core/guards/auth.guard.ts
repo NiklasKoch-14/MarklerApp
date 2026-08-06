@@ -22,7 +22,7 @@ export const authGuard: CanActivateFn = (route, state) => {
 /**
  * Guard to prevent authenticated users from accessing auth pages
  */
-export const noAuthGuard: CanActivateFn = (route, state) => {
+export const noAuthGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
